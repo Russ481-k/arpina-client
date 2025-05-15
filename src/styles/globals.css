@@ -1,0 +1,148 @@
+html {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+    Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    sans-serif;
+}
+
+:root {
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  outline: none;
+}
+
+/* 전역 select 스타일 */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.5em;
+  padding-right: 2.5rem;
+}
+
+select:hover {
+  border-color: var(--chakra-colors-blue-400);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%233B82F6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+select:focus {
+  border-color: var(--chakra-colors-blue-500);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%233B82F6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--chakra-colors-gray-50);
+  border-color: var(--chakra-colors-gray-200);
+}
+
+select option {
+  padding: 0.75rem;
+  background-color: var(--chakra-colors-white);
+  color: var(--chakra-colors-gray-700);
+  transition: background-color 0.2s ease;
+}
+
+select option:hover {
+  background-color: var(--chakra-colors-blue-50);
+}
+
+select option:checked {
+  background-color: var(--chakra-colors-blue-50);
+  color: var(--chakra-colors-blue-600);
+  font-weight: 500;
+}
+
+/* 드롭다운 애니메이션 */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+select:focus option {
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+
+.editor-paragraph {
+  margin-bottom: 8px;
+}
+.editor-text-bold {
+  font-weight: bold;
+}
+.editor-text-italic {
+  font-style: italic;
+}
+.editor-text-underline {
+  text-decoration: underline;
+}
+.editor-text-strikethrough {
+  text-decoration: line-through;
+}
+.editor-text-code {
+  background-color: #f0f0f0;
+  padding: 1px 4px;
+  font-family: monospace;
+  border-radius: 3px;
+}
+.editor-heading-h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 16px 0 8px 0;
+}
+.editor-heading-h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 12px 0 8px 0;
+}
+.editor-list-ul {
+  padding-left: 24px;
+  list-style-type: disc;
+  margin-bottom: 8px;
+}
+.editor-list-ol {
+  padding-left: 24px;
+  list-style-type: decimal;
+  margin-bottom: 8px;
+}
+.editor-listitem {
+  margin-left: 20px;
+  margin-bottom: 4px;
+}
+.editor-link {
+  color: #3182ce;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.editor-quote {
+  border-left: 4px solid #e2e8f0;
+  margin: 10px 0;
+  padding-left: 16px;
+  color: #718096;
+}
+.editor-code {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  font-family: monospace;
+  display: block;
+  padding: 8px;
+  margin: 8px 0;
+  border-radius: 4px;
+  white-space: pre-wrap;
+}

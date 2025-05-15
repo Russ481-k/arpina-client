@@ -1,0 +1,522 @@
+import { useState, useEffect, useCallback } from "react";
+import { boardApi } from "@/lib/api/board";
+import { Article, articleApi, type AttachmentInfoDto } from "@/lib/api/article";
+import { fileApi } from "@/lib/api/file";
+import { BoardMaster } from "@/types/api";
+import { useAuth } from "@/lib/AuthContext";
+import { toaster } from "@/components/ui/toaster";
+
+export interface ArticleFormData {
+  title: string;
+  author: string;
+  content: string;
+  externalLink?: string;
+  captcha?: string;
+}
+
+export interface UseArticleFormProps {
+  bbsId?: number;
+  menuId?: number;
+  initialData?: Partial<Article>;
+  maxFileAttachments?: number;
+  maxFileSizeMB?: number;
+  disableAttachments?: boolean;
+}
+
+export interface ExistingAttachment {
+  id: number;
+  name: string;
+  url: string;
+  size: number;
+  mimeType?: string;
+}
+
+export function useArticleForm({
+  bbsId,
+  menuId,
+  initialData,
+  maxFileAttachments,
+  maxFileSizeMB,
+  disableAttachments,
+}: UseArticleFormProps = {}) {
+  // Log the received arguments
+  console.log("[useArticleForm] Received initialData:", initialData);
+
+  const [formData, setFormData] = useState<ArticleFormData>(() => ({
+    title: initialData?.title || "",
+    author: initialData?.writer || "",
+    content: initialData?.content || "",
+    externalLink: initialData?.externalLink || "",
+    captcha: "",
+  }));
+
+  const [newlyAddedFiles, setNewlyAddedFiles] = useState<File[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<
+    ExistingAttachment[]
+  >([]);
+  const [attachmentsToDelete, setAttachmentsToDelete] = useState<number[]>([]);
+
+  const [files, setFiles] = useState<File[]>([]);
+  const [pendingMedia, setPendingMedia] = useState<Map<string, File>>(
+    new Map()
+  );
+  const [boardInfo, setBoardInfo] = useState<BoardMaster | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isAdminPageContext, setIsAdminPageContext] = useState(false);
+  const { user } = useAuth();
+
+  // Memoize updateFormField with useCallback
+  const updateFormField = useCallback(
+    (field: keyof ArticleFormData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    [] // No dependencies, so the function reference is stable
+  );
+
+  // 게시판 정보 조회
+  useEffect(() => {
+    async function fetchBoardInfo() {
+      // Only fetch if bbsId is present AND disableAttachments prop is NOT explicitly provided
+      // (i.e., parent is not handling attachment config directly)
+      const isAdminPage = window.location.pathname.includes("/cms/");
+      setIsAdminPageContext(isAdminPage);
+
+      // If on a public page AND attachment settings are being directly provided by props,
+      // skip fetching boardInfo from within this hook.
+      if (!isAdminPage && typeof disableAttachments === "boolean") {
+        // console.log("[useArticleForm] Skipping internal fetchBoardInfo on public page because disableAttachments prop is provided.");
+        setIsLoading(false); // Ensure loading is set to false if we skip
+        return;
+      }
+
+      if (!bbsId) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Proceed with fetching if on admin page OR (on public page AND disableAttachments prop is undefined)
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        let boardData: BoardMaster;
+        if (isAdminPage) {
+          const response = await boardApi.getBoard(bbsId);
+          boardData = response as BoardMaster;
+          if (user?.name) {
+            setFormData((prev) =>
+              !prev.author || prev.author !== user.name
+                ? { ...prev, author: user.name }
+                : prev
+            );
+          }
+        } else {
+          const response = await boardApi.getPublicBoardInfo(bbsId);
+          boardData = response as BoardMaster;
+        }
+
+        setBoardInfo(boardData);
+      } catch (err) {
+        // console.error("게시판 정보 로딩 실패:", err); // No error logging here
+        setError("게시판 정보를 불러오는데 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchBoardInfo();
+  }, [bbsId, user, disableAttachments]); // Add disableAttachments to dependency array
+
+  // NEW useEffect to process initialData.attachments
+  useEffect(() => {
+    if (initialData?.attachments && initialData.attachments.length > 0) {
+      const mappedAttachments: ExistingAttachment[] =
+        initialData.attachments.map((att: AttachmentInfoDto) => ({
+          id: att.fileId,
+          name: att.originName,
+          url: att.downloadUrl,
+          size: att.size,
+          mimeType: att.mimeType,
+        }));
+      setExistingAttachments(mappedAttachments);
+      console.log(
+        "[useArticleForm] Loaded existing attachments:",
+        mappedAttachments
+      );
+    } else {
+      setExistingAttachments([]);
+    }
+    setAttachmentsToDelete([]);
+  }, [initialData]);
+
+  // 폼 제출 핸들러
+  const handleSubmit = async (expectedCaptchaText?: string) => {
+    // Log menuId at the start of submit
+    console.log("[useArticleForm handleSubmit] Using menuId:", menuId);
+
+    if (!bbsId) {
+      return { success: false, message: "게시판 ID가 없습니다." };
+    }
+    if (!menuId) {
+      return { success: false, message: "메뉴 ID가 없습니다." };
+    }
+
+    if (!formData.title || !formData.author || !formData.content) {
+      return { success: false, message: "필수 항목을 모두 입력해주세요." };
+    }
+
+    // CAPTCHA 검증 (CMS 페이지가 아닐 때만 수행)
+    if (!isAdminPageContext && expectedCaptchaText !== undefined) {
+      if (!formData.captcha) {
+        return {
+          success: false,
+          message: "자동입력 방지 문자를 입력해주세요.",
+        };
+      }
+      // Case-insensitive comparison
+      if (
+        formData.captcha.toLowerCase() !== expectedCaptchaText.toLowerCase()
+      ) {
+        return {
+          success: false,
+          message: "자동입력 방지 문자가 일치하지 않습니다.",
+        };
+      }
+    }
+
+    // 첨부파일 제한 검증 - considers newly added files against remaining slots
+    if (
+      boardInfo?.attachmentYn === "Y" ||
+      (typeof disableAttachments === "boolean" && !disableAttachments)
+    ) {
+      const currentAttachmentCount =
+        existingAttachments.length -
+        attachmentsToDelete.length +
+        newlyAddedFiles.length;
+      const maxFiles = Number(maxFileAttachments) || 3;
+
+      if (currentAttachmentCount > maxFiles) {
+        return {
+          success: false,
+          message: `첨부파일은 최대 ${maxFiles}개까지 업로드 가능합니다. (현재 ${currentAttachmentCount}개)`,
+        };
+      }
+
+      // Newly added files size check
+      const maxSize = Number(maxFileSizeMB) || 5;
+      const maxSizeBytes = maxSize * 1024 * 1024;
+      const oversizedFile = newlyAddedFiles.find(
+        (file) => file.size > maxSizeBytes
+      );
+      if (oversizedFile) {
+        return {
+          success: false,
+          message: `새로 추가된 '${oversizedFile.name}' 파일이 제한 용량(${maxSize}MB)을 초과합니다.`,
+        };
+      }
+    } else if (
+      newlyAddedFiles.length > 0 &&
+      (boardInfo?.attachmentYn === "N" || disableAttachments === true)
+    ) {
+      return {
+        success: false,
+        message: "이 게시판은 첨부파일을 지원하지 않습니다.",
+      };
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 1. Prepare the object for the 'articleData' part (matching backend BbsArticleDto, excluding content)
+      const articleDtoPart = {
+        bbsId: bbsId,
+        menuId: menuId, // Ensure menuId is available and correct
+        title: formData.title,
+        writer: formData.author, // Assuming frontend author maps to backend writer
+        externalLink: formData.externalLink || null,
+        // Add other necessary fields from BbsArticleDto if required by backend for this part
+        // e.g., noticeState, publishState etc., if they are managed in formData
+      };
+
+      // 2. Create FormData
+      const dataToSend = new FormData();
+
+      // 3. Append 'articleData' part as a JSON Blob
+      dataToSend.append(
+        "articleData",
+        new Blob([JSON.stringify(articleDtoPart)], { type: "application/json" })
+      );
+
+      // 4. Append 'editorContentJson' part
+      // Make sure formData.content contains the full JSON string from Lexical with blob: URLs
+      dataToSend.append("editorContentJson", formData.content);
+
+      // 5. Append 'mediaFiles' parts for pending media
+      for (const [, file] of pendingMedia.entries()) {
+        dataToSend.append(`mediaFiles`, file, file.name); // Key: "mediaFiles"
+      }
+
+      // NEW: Append 'mediaLocalIds' as a single JSON array string part
+      const allMediaLocalIds = Array.from(pendingMedia.keys());
+      if (allMediaLocalIds.length > 0) {
+        dataToSend.append(
+          `mediaLocalIds`,
+          new Blob([JSON.stringify(allMediaLocalIds)], {
+            type: "application/json",
+          })
+        );
+      }
+
+      // 6. Append 'attachments' part for general attachments (ONLY NEW FILES)
+      newlyAddedFiles.forEach((file) => {
+        dataToSend.append(`attachments`, file, file.name);
+      });
+
+      // --- API Call ---
+      let nttIdToUpdate: number | undefined = initialData?.nttId;
+
+      // Log data just before sending
+      console.log("[useArticleForm handleSubmit] Data to send:", {
+        articleDtoPart,
+        editorContentJson: formData.content, // This is what's sent as editorContentJson
+        pendingMediaSize: pendingMedia.size,
+        mediaLocalIds: allMediaLocalIds,
+        newlyAddedFilesCount: newlyAddedFiles.length,
+        attachmentsToDeleteCount: attachmentsToDelete.length,
+        isUpdate: !!nttIdToUpdate,
+      });
+
+      // Before updating/creating the article, handle attachment deletions
+      if (attachmentsToDelete.length > 0) {
+        console.log(
+          "[useArticleForm] Deleting attachments:",
+          attachmentsToDelete
+        );
+        try {
+          for (const fileId of attachmentsToDelete) {
+            await articleApi.deleteAttachment(fileId);
+          }
+          toaster.info({
+            title: "정보",
+            description: `${attachmentsToDelete.length}개의 기존 첨부파일이 삭제 예약되었습니다.`,
+          });
+        } catch (deleteError) {
+          console.error(
+            "Failed to delete one or more attachments:",
+            deleteError
+          );
+          toaster.error({
+            title: "첨부파일 삭제 실패",
+            description:
+              "일부 기존 첨부파일 삭제에 실패했습니다. 내용은 저장될 수 있습니다.",
+          });
+        }
+      }
+
+      if (nttIdToUpdate) {
+        // Update existing post
+        if (typeof nttIdToUpdate !== "number") {
+          console.error("Invalid nttId for update");
+          throw new Error(
+            "게시글 수정 중 오류가 발생했습니다. (유효하지 않은 ID)"
+          );
+        }
+        await articleApi.updateArticle(nttIdToUpdate, dataToSend);
+      } else {
+        // Create new post
+        const response = await articleApi.createArticle(dataToSend);
+        if (
+          !response ||
+          !response.success ||
+          typeof response.data !== "number" ||
+          response.data <= 0
+        ) {
+          console.error(
+            "Create article failed or returned invalid nttId:",
+            response
+          );
+          throw new Error(
+            response?.message ||
+              "게시글 생성에 실패했습니다. (유효한 ID 미수신)"
+          );
+        }
+        nttIdToUpdate = response.data;
+      }
+
+      // Clear pending media after successful submission
+      pendingMedia.forEach((_file, localUrl) => URL.revokeObjectURL(localUrl));
+      setPendingMedia(new Map());
+      setNewlyAddedFiles([]);
+      setAttachmentsToDelete([]);
+
+      toaster.success({
+        title: "성공",
+        description: initialData?.nttId
+          ? "게시글이 성공적으로 수정되었습니다."
+          : "게시글이 성공적으로 등록되었습니다.",
+      });
+
+      return {
+        success: true,
+        message: initialData?.nttId
+          ? "게시글이 성공적으로 수정되었습니다."
+          : "게시글이 성공적으로 등록되었습니다.",
+        nttId: nttIdToUpdate,
+      };
+    } catch (error: any) {
+      console.error("Article creation/upload failed:", error);
+      setError(error.message || "알 수 없는 오류가 발생했습니다.");
+
+      // --- Revoke URLs on Error ---
+      pendingMedia.forEach((_file, localUrl) => URL.revokeObjectURL(localUrl));
+
+      return {
+        success: false,
+        message: error.message || "게시글 처리 중 오류가 발생했습니다.",
+      };
+    } finally {
+      setIsLoading(false);
+      // Clear states AFTER revoking (which happens in try/catch)
+      setPendingMedia(new Map());
+      setNewlyAddedFiles([]);
+      setAttachmentsToDelete([]);
+    }
+  };
+
+  // Function to clear pending media and revoke URLs (e.g., for cancellation)
+  const clearPendingMedia = useCallback(() => {
+    if (pendingMedia.size > 0) {
+      console.log(
+        "[useArticleForm] Clearing pending media and revoking URLs..."
+      );
+      pendingMedia.forEach((_file, localUrl) => {
+        URL.revokeObjectURL(localUrl);
+      });
+      setPendingMedia(new Map());
+    }
+  }, [pendingMedia]); // Depend on pendingMedia
+
+  // Function to manually set content (e.g., from LexicalEditor)
+  const setContent = useCallback((newContent: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      content: newContent,
+    }));
+  }, []);
+
+  // Callback for media added in LexicalEditor
+  const handleMediaAdded = useCallback((localUrl: string, file: File) => {
+    console.log("[useArticleForm] Media added to pendingMedia:", {
+      localUrl,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+    });
+    setPendingMedia((prev) => new Map(prev).set(localUrl, file));
+    // Consider revoking object URLs later, e.g., on unmount or when form is submitted/cleared
+  }, []);
+
+  // Calculate effective limits for FileUploader
+  const effectiveMaxFiles = isNaN(Number(maxFileAttachments))
+    ? 3
+    : Number(maxFileAttachments);
+  const effectiveMaxSize = isNaN(Number(maxFileSizeMB))
+    ? 5
+    : Number(maxFileSizeMB);
+  // Corrected logic for isAttachmentEnabled:
+  // Prioritize disableAttachments prop if it is explicitly passed (boolean).
+  // Otherwise, fall back to boardInfo.
+  const isAttachmentEnabled =
+    typeof disableAttachments === "boolean"
+      ? !disableAttachments // If true, not enabled; if false, enabled.
+      : boardInfo?.attachmentYn === "Y"; // Fallback if prop not provided
+
+  // Validation function for FileUploader
+  const validateFile = (file: File): { valid: boolean; error?: string } => {
+    if (file.size > effectiveMaxSize * 1024 * 1024) {
+      return {
+        valid: false,
+        error: `파일 크기가 너무 큽니다 (최대 ${effectiveMaxSize}MB).`,
+      };
+    }
+    // Add other validation rules if needed (e.g., file type)
+    return { valid: true };
+  };
+
+  // --- Effects ---
+
+  // Fetch board info when bbsId changes
+  useEffect(() => {
+    const fetchBoardInfo = async () => {
+      if (bbsId) {
+        try {
+          // Assuming getBoard(bbsId) directly returns BoardMaster data
+          const boardData = (await boardApi.getBoard(bbsId)) as BoardMaster; // Type assertion directly to BoardMaster
+
+          // Check if the returned data looks like BoardMaster (e.g., has bbsId)
+          if (boardData && typeof boardData.bbsId === "number") {
+            setBoardInfo(boardData);
+          } else {
+            // Handle cases where the response is not the expected BoardMaster object
+            console.error(
+              `Failed to fetch valid board info for bbsId ${bbsId}. Received:`,
+              boardData
+            );
+            setBoardInfo(null);
+          }
+        } catch (err) {
+          console.error("Error fetching board info:", err);
+          setBoardInfo(null);
+        }
+      }
+    };
+    fetchBoardInfo();
+  }, [bbsId]);
+
+  // Set initial author if user is authenticated and it's an admin page context
+  useEffect(() => {
+    if (isAdminPageContext && user?.name) {
+      updateFormField("author", user.name);
+    }
+  }, [isAdminPageContext, user, updateFormField]);
+
+  // NEW: Cleanup Object URLs on unmount
+  useEffect(() => {
+    // Cleanup function to revoke Object URLs on unmount
+    return () => {
+      if (pendingMedia.size > 0) {
+        console.log(
+          "[useArticleForm Cleanup] Revoking Object URLs for pending media..."
+        );
+        pendingMedia.forEach((_file, localUrl) => {
+          URL.revokeObjectURL(localUrl);
+        });
+      }
+    };
+  }, [pendingMedia]); // Depend only on pendingMedia
+
+  return {
+    formData,
+    updateFormField,
+    setContent,
+    files: newlyAddedFiles,
+    setFiles: setNewlyAddedFiles,
+    existingAttachments,
+    attachmentsToDelete,
+    setAttachmentsToDelete,
+    pendingMedia,
+    handleMediaAdded,
+    boardInfo,
+    isLoading,
+    error,
+    handleSubmit,
+    effectiveMaxFiles,
+    effectiveMaxSize,
+    isAttachmentEnabled,
+    validateFile,
+    isAdminPageContext,
+    clearPendingMedia,
+  };
+}
