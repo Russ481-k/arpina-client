@@ -4,8 +4,6 @@ import { Box } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
 import { getScrollbarStyle } from "@/styles/scrollbar";
 import { useUserStyles } from "@/styles/theme";
-import { MovieSection } from "@/components/sections/MovieSection";
-import { EnterpriseSection } from "@/components/sections/EnterpriseSection";
 import Layout from "@/components/layout/view/Layout";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useMenu } from "@/lib/hooks/useMenu";
@@ -46,8 +44,7 @@ export default function Home() {
     <Layout menus={treeMenus} currentPage="홈">
       <Global styles={getScrollbarStyle(isDark)} />
       <Box as="main" id="mainContent" fontFamily={styles.fonts.body}>
-        <MovieSection />
-        <EnterpriseSection />
+        <Box h="100vh" bg="blue.500"></Box>
       </Box>
     </Layout>
   );

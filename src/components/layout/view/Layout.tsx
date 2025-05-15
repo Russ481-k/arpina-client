@@ -1,7 +1,7 @@
 "use client";
 
 import { Box } from "@chakra-ui/react";
-import { Header } from "./Header";
+import { Header } from "./Header/Header";
 import { Footer } from "@/components/layout/view/Footer";
 import { memo, Suspense } from "react";
 import { useColors } from "@/styles/theme";

@@ -1,8 +1,9 @@
 "use client";
 
-import { Box, Link, VStack } from "@chakra-ui/react";
+import { Box, Link, VStack, Flex } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { Menu } from "@/types/api";
+import { useState } from "react";
 
 interface MenuItemProps {
   menu: Menu;
@@ -25,9 +26,42 @@ export function MenuItem({
 }: MenuItemProps) {
   const isActive = currentPage === menu.url;
   const hasChildren = menu.children && menu.children.length > 0;
+  const [isSelfHovered, setIsSelfHovered] = useState(false);
+
+  // Determine colors based on header state (isNavHovered) and dark mode
+  const topLevelColor = isNavHovered
+    ? isDark
+      ? isActive
+        ? "blue.200"
+        : "white"
+      : isActive
+      ? "blue.500"
+      : "#0D344E"
+    : isDark
+    ? isActive
+      ? "blue.200"
+      : "gray.300"
+    : isActive
+    ? "blue.500"
+    : "#0D344E";
+
+  const topLevelHoverFocusColor = isDark ? "blue.200" : "blue.500";
+
+  const childColor = isDark ? "gray.300" : "#373636";
+  const childHoverFocusColor = isDark ? "blue.200" : "#4CCEC6";
+  const childGroupHoverColor = isDark ? "blue.200" : "blue.500";
+
+  const grandChildColor = isDark ? "gray.400" : "gray.500";
+  const grandChildHoverFocusColor = isDark ? "blue.200" : "#4CCEC6";
+  const grandChildGroupHoverColor = isDark ? "blue.200" : "blue.500";
 
   return (
-    <Box position="relative" w="20%">
+    <Box
+      flex="1"
+      position="relative"
+      onMouseEnter={() => setIsSelfHovered(true)}
+      onMouseLeave={() => setIsSelfHovered(false)}
+    >
       <Box
         position="relative"
         role="group"
@@ -55,33 +89,23 @@ export function MenuItem({
           as={NextLink}
           href={menu.url}
           display="block"
-          py={10}
-          fontSize={{ base: "md", md: "xl", xl: "2xl" }}
+          py={6}
+          fontSize={{ base: "xs", md: "sm", lg: "md" }}
           fontWeight={isRoot ? "bold" : "medium"}
-          color={
-            isMainPage
-              ? "white"
-              : isActive
-              ? isDark
-                ? "blue.200"
-                : "blue.500"
-              : isDark
-              ? "gray.300"
-              : "#0D344E"
-          }
+          color={topLevelColor}
           _hover={{
             textDecoration: "none",
-            color: isMainPage ? "#0D344E" : isDark ? "blue.200" : "blue.500",
+            color: topLevelHoverFocusColor,
           }}
           _focus={{
             boxShadow: "none",
-            color: isMainPage ? "#0D344E" : isDark ? "blue.200" : "blue.500",
+            color: topLevelHoverFocusColor,
             transform: "translateY(-1px)",
             outline: "none",
             border: "none",
           }}
           _groupHover={{
-            color: isMainPage ? "#0D344E" : isDark ? "blue.200" : "blue.500",
+            color: topLevelHoverFocusColor,
           }}
           _active={{
             bg: "transparent",
@@ -98,195 +122,101 @@ export function MenuItem({
 
       {/* 하위 메뉴 컨테이너 */}
       <Box
-        position="static"
-        // overflow="hidden"
-        maxHeight={isNavHovered && hasChildren ? "1000vh" : "0"}
-        opacity={isNavHovered && hasChildren ? 1 : 0}
-        transform={`translateY(${isNavHovered && hasChildren ? "0" : "-10px"})`}
-        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-        visibility={isNavHovered && hasChildren ? "visible" : "hidden"}
+        position="absolute"
+        top="100%"
+        left={0}
+        zIndex={10}
+        maxHeight={isSelfHovered && hasChildren ? "1000vh" : "0"}
+        opacity={isSelfHovered && hasChildren ? 1 : 0}
+        transform={`translateY(${isSelfHovered && hasChildren ? "0" : "0px"})`}
+        transition="opacity 0.3s ease, visibility 0.3s ease, max-height 0.3s ease"
+        visibility={isSelfHovered && hasChildren ? "visible" : "hidden"}
+        pointerEvents={isSelfHovered && hasChildren ? "auto" : "none"}
+        bg={"transparent"}
+        backdropFilter={"none"}
+        boxShadow={"none"}
       >
-        {/* 하위 메뉴 내용 */}
-        <Box
-          pt={5}
-          pb={5}
-          position="relative"
-          _before={{
-            content: '""',
-            position: "absolute",
-            left: "0",
-            top: "0",
-            width: "1px",
-            height: "500px",
-            bg: "white",
-            opacity: isMainPage ? 1 : 0.5,
-          }}
-          _after={
-            isLastItem
-              ? {
-                  content: '""',
-                  position: "absolute",
-                  right: "0",
-                  top: "0",
-                  width: "1px",
-                  height: "500px",
-                  bg: "white",
-                  opacity: isMainPage ? 1 : 0.5,
-                }
-              : {}
-          }
-        >
-          <VStack align="stretch" gap={0}>
+        <Box pt={3} pb={3} px={{ base: 2, md: 4 }}>
+          <Flex
+            direction="row"
+            wrap="nowrap"
+            gap={{ base: 4, md: 8 }}
+            justify="flex-start"
+          >
             {menu.children?.map((child) => (
-              <Box
-                key={child.id}
-                role="group"
-                position="relative"
-                _before={{
-                  content: '""',
-                  position: "absolute",
-                  left: "0",
-                  width: "2px",
-                  height: "0%",
-                  bg: isMainPage ? "white" : isDark ? "blue.200" : "blue.500",
-                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                  opacity: "0",
-                }}
-                _hover={{}}
-              >
+              <Box key={child.id} position="relative" flexShrink={0}>
                 <Link
                   as={NextLink}
                   href={!!child.url ? child.url : "#"}
                   display="block"
-                  mb="10px"
-                  fontSize={{ base: "md", md: "lg", lg: "xl" }}
-                  textAlign="center"
-                  fontWeight="500"
-                  color={isMainPage ? "white" : isDark ? "gray.300" : "#373636"}
+                  px={3}
+                  py={1}
+                  fontSize={{ base: "xs", md: "sm" }}
+                  textAlign="left"
+                  fontWeight="medium"
+                  color={childColor}
                   _hover={{
                     textDecoration: "none",
-                    color: isMainPage
-                      ? "#0D344E"
-                      : isDark
-                      ? "blue.200"
-                      : "#4CCEC6",
+                    color: childHoverFocusColor,
+                    bg: isDark ? "gray.700" : "gray.100",
+                    borderRadius: "md",
                   }}
                   _focus={{
                     boxShadow: "none",
-                    color: isMainPage
-                      ? "#0D344E"
-                      : isDark
-                      ? "blue.200"
-                      : "#4CCEC6",
+                    color: childHoverFocusColor,
+                    bg: isDark ? "gray.700" : "gray.100",
+                    borderRadius: "md",
                     outline: "none",
                     border: "none",
-                  }}
-                  _groupHover={{
-                    color: isMainPage
-                      ? "#0D344E"
-                      : isDark
-                      ? "blue.200"
-                      : "blue.500",
                   }}
                   _active={{
                     bg: "transparent",
                   }}
                   transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
                   whiteSpace="nowrap"
-                  overflow="hidden"
-                  textOverflow="ellipsis"
                 >
                   {child.name}
                 </Link>
 
                 {/* 3차 메뉴 */}
                 {child.children && child.children.length > 0 && (
-                  <VStack align="stretch" gap={0} pl={4}>
+                  <VStack
+                    align="start"
+                    gap={0}
+                    p={0}
+                    mt={1}
+                    position="absolute"
+                    top="100%"
+                    left={0}
+                    minW="200px"
+                    bg="transparent"
+                    boxShadow="none"
+                    zIndex={20}
+                    display="flex"
+                  >
                     {child.children.map((grandChild) => (
-                      <Box
+                      <Link
                         key={grandChild.id}
-                        role="group"
-                        position="relative"
-                        _before={{
-                          content: '""',
-                          position: "absolute",
-                          left: "0",
-                          width: "2px",
-                          height: "0%",
-                          bg: isMainPage
-                            ? "white"
-                            : isDark
-                            ? "blue.200"
-                            : "blue.500",
-                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                          opacity: "0",
-                        }}
+                        href={grandChild.url || "#"}
+                        fontSize="sm"
+                        color={grandChildColor}
                         _hover={{
-                          _before: {
-                            height: "80%",
-                            opacity: "0.3",
-                          },
+                          color: grandChildHoverFocusColor,
+                          bg: isDark ? "gray.600" : "gray.50",
                         }}
+                        display="block"
+                        w="100%"
+                        py={1.5}
+                        px={3}
                       >
-                        <Link
-                          as={NextLink}
-                          href={!!grandChild.url ? grandChild.url : "#"}
-                          display="block"
-                          px={4}
-                          py={1.5}
-                          fontSize="sm"
-                          color={
-                            isMainPage
-                              ? "white"
-                              : isDark
-                              ? "gray.400"
-                              : "gray.500"
-                          }
-                          _hover={{
-                            textDecoration: "none",
-                            color: isMainPage
-                              ? "#0D344E"
-                              : isDark
-                              ? "blue.200"
-                              : "#4CCEC6",
-                            transform: "translateX(4px)",
-                          }}
-                          _focus={{
-                            boxShadow: "none",
-                            color: isMainPage
-                              ? "#0D344E"
-                              : isDark
-                              ? "blue.200"
-                              : "#4CCEC6",
-                            transform: "translateX(4px)",
-                            outline: "none",
-                            border: "none",
-                          }}
-                          _groupHover={{
-                            color: isMainPage
-                              ? "#0D344E"
-                              : isDark
-                              ? "blue.200"
-                              : "blue.500",
-                          }}
-                          _active={{
-                            bg: "transparent",
-                          }}
-                          transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                          borderRadius="md"
-                          whiteSpace="nowrap"
-                          overflow="hidden"
-                          textOverflow="ellipsis"
-                        >
-                          {grandChild.name}
-                        </Link>
-                      </Box>
+                        {grandChild.name}
+                      </Link>
                     ))}
                   </VStack>
                 )}
               </Box>
             ))}
-          </VStack>
+          </Flex>
         </Box>
       </Box>
     </Box>
