@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@ag-grid-community/client-side-row-model": "^32.3.3",
-    "@chakra-ui/icons": "@next",
-    "@chakra-ui/react": "@next",
+    "@chakra-ui/icons": "^2.2.4",
+    "@chakra-ui/react": "^3.19.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^4.1.3",

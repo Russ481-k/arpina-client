@@ -495,7 +495,9 @@ export default function MenuManagementPage() {
           </Box>
 
           <Box>
-            <Main menus={menus} isPreview={true} />
+            <Main menus={menus} isPreview={true} currentPage="preview">
+              <></>
+            </Main>
           </Box>
         </GridSection>
       </Box>
