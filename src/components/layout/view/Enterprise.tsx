@@ -21,7 +21,6 @@ import { Enterprise } from "@/app/cms/enterprise/types";
 export const EnterpriseView = memo(() => {
   const styles = useUserStyles(STYLES as Styles);
 
-  const [expandedItems, setExpandedItems] = useState<number[]>([]);
   const [years, setYears] = useState<number[]>([]);
 
   // 연도 목록을 동적으로 구성 (예시: 2023~2025)
