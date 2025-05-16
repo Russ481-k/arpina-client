@@ -1,16 +1,13 @@
 "use client";
 
-import { Box, Button, Flex, Tabs, Text } from "@chakra-ui/react";
-import { Menu } from "@/types/api";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import { memo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { enterpriseApi } from "@/lib/api/enterpriseApi";
 
-import Layout from "./Layout";
 import { useUserStyles } from "@/styles/theme";
 import { STYLES } from "@/styles/theme-tokens";
 import { Styles } from "@/styles/theme";
-import { HeroSection } from "@/components/sections/HeroSection";
 
 import ContentsHeading from "@/components/layout/ContentsHeading";
 import { TopInfoBox } from "@/components/layout/TopInfoBox";
