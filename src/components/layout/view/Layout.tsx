@@ -54,7 +54,7 @@ export default function Layout({
 }: LayoutProps) {
   const colors = useColors();
   return (
-    <Box bg={colors.bg} minHeight="100vh" fontFamily="SCoreDream, sans-serif">
+    <Box bg={colors.bg} minHeight="100vh" fontFamily="'Paperlogy', sans-serif">
       <MemoizedHeader
         currentPage={currentPage}
         menus={menus}
