@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   Box,
   Button,
@@ -17,8 +18,40 @@ import {
 } from "@chakra-ui/react";
 import Image from "next/image";
 import NextLink from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toaster } from "@/components/ui/toaster";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const reason = searchParams.get("reason");
+    const niceUsername = searchParams.get("nice_username");
+
+    if (reason === "duplicate_di") {
+      const message = niceUsername
+        ? `이미 가입된 계정입니다 (ID: ${decodeURIComponent(
+            niceUsername
+          )}). 로그인해 주세요.`
+        : "이미 가입된 계정입니다. 로그인해 주세요.";
+
+      console.log(
+        "Login page: Attempting to show DUPLICATE_DI toast. Message:",
+        message
+      );
+
+      queueMicrotask(() => {
+        toaster.create({
+          title: "계정 중복 안내",
+          description: message,
+          type: "info",
+          duration: 7000,
+        });
+      });
+    }
+  }, [searchParams, router]);
+
   return (
     <Flex
       direction="column"
@@ -79,10 +112,11 @@ export default function LoginPage() {
                   borderColor="#2E3192"
                   color="#2E3192"
                   fontWeight="normal"
+                  onClick={() => {
+                    router.push("/signup");
+                  }}
                 >
-                  <Link as={NextLink} href="/signup">
-                    회원가입
-                  </Link>
+                  회원가입
                 </Button>
                 <Button
                   variant="outline"
@@ -91,10 +125,11 @@ export default function LoginPage() {
                   borderColor="#2E3192"
                   color="#2E3192"
                   fontWeight="normal"
+                  onClick={() => {
+                    router.push("/find-credentials");
+                  }}
                 >
-                  <Link as={NextLink} href="/find-credentials">
-                    아이디/비밀번호 찾기
-                  </Link>
+                  아이디/비밀번호 찾기
                 </Button>
               </HStack>
             </VStack>

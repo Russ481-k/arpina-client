@@ -14,6 +14,7 @@ export interface NicePublicUserDataDto {
   mobileNo: string; // Phone number
   ci?: string; // Optional: Client Identifier
   di?: string; // Optional: Duplicate Information
+  nationalInfo: string; // 내/외국인 구분 (Korean/Foreigner)
   // Add any other fields the backend provides for pre-filling signup
 }
 
@@ -22,6 +23,14 @@ export interface NiceErrorDataDto {
   errorCode?: string; // NICE specific error code or backend error code
   errorMessage?: string;
   // any other structured error details
+}
+
+// DTO for the result of NICE authentication
+export interface NiceAuthResultDto {
+  success: boolean;
+  data?: NicePublicUserDataDto;
+  error?: NiceErrorDataDto;
+  key?: string;
 }
 
 export const niceApi = {
@@ -34,29 +43,51 @@ export const niceApi = {
     const endpoint = "/nice/checkplus/initiate";
 
     // This API call does not send a body, as the backend generates necessary info.
-    // The generic type for publicApi.post is <ResponseType, RequestBodyType>
-    // Since there's no request body, we can use 'unknown' or 'void' if preferred,
-    // but typically the second generic is for the data payload.
-    // An empty object {} is fine for a POST with no specific body if the backend expects an empty JSON object.
-    // If the backend expects no body at all, this might need adjustment based on how publicApi.post handles undefined 'data'.
-    const response = await publicApi.post<NiceInitiateResponse, {}>(
+    const response = await publicApi.post<NiceInitiateResponse, any>(
       endpoint,
       {}
     );
-    return response; // publicApi methods already return response.data
+    return response.data; // API 클라이언트가 response.data를 자동으로 반환하지 않는 경우
   },
 
   /**
    * Fetches the result of the NICE self-identification process.
    * @param key The key received from the NICE callback.
    */
-  getNiceAuthResult: async (key: string): Promise<any> => {
-    // You might want to define a specific type for the auth result
+  getNiceAuthResult: async (key: string): Promise<NiceAuthResultDto> => {
     // Endpoint updated as per the new specification.
-    // The actual API prefix like `/api/v1` might vary based on backend routing rules.
-    // The new spec explicitly mentions /api/v1/nice/checkplus/result/{key}
     const endpoint = `/nice/checkplus/result/${key}`;
-    const response = await publicApi.get<any>(endpoint);
-    return response; // publicApi methods already return response.data
+    try {
+      console.log("[NICE_API] Fetching result for key:", key);
+      const response = await publicApi.get(endpoint);
+      console.log("[NICE_API] Raw API response:", response);
+
+      // 백엔드 응답이 NiceAuthResultDto 구조가 아닐 경우 변환
+      if (response.data && !("success" in response.data)) {
+        console.log(
+          "[NICE_API] Converting direct data response to NiceAuthResultDto format"
+        );
+        // 백엔드가 직접 사용자 데이터를 반환하는 경우, NiceAuthResultDto 형식으로 감싸기
+        return {
+          success: true,
+          data: response.data,
+          key: key,
+        };
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("[NICE_API] Error fetching result:", error);
+      // 에러 발생 시 NiceAuthResultDto 형식으로 에러 반환
+      return {
+        success: false,
+        error: {
+          errorCode: "API_ERROR",
+          errorMessage:
+            error instanceof Error ? error.message : "Unknown error",
+        },
+        key: key,
+      };
+    }
   },
 };

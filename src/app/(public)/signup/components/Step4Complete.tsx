@@ -14,10 +14,14 @@ import {
 import NextLink from "next/link";
 import Image from "next/image"; // Added import
 
-export const Step4Complete = () => (
+interface Step4CompleteProps {
+  username: string | null;
+}
+
+export const Step4Complete = ({ username }: Step4CompleteProps) => (
   <VStack gap={8} align="center" w="full" textAlign="center" py={10}>
     <Heading size="xl" color="gray.700">
-      가입완료
+      회원가입
     </Heading>
 
     <Box my={6}>
@@ -35,7 +39,7 @@ export const Step4Complete = () => (
         회원가입이 성공적으로 완료되었습니다.
       </Text>
       <Text fontSize="md" color="gray.600">
-        안녕하세요, [사용자이름]님!{" "}
+        안녕하세요, {username || "회원"}님!{" "}
       </Text>
       <Text fontSize="md" color="gray.600">
         {" "}
@@ -48,7 +52,7 @@ export const Step4Complete = () => (
     </VStack>
 
     <HStack mt={6} gap={4}>
-      <NextLink href="/login" passHref legacyBehavior>
+      <NextLink href="/login" passHref>
         <Button
           as="a"
           bg="#2E3192"
@@ -60,7 +64,7 @@ export const Step4Complete = () => (
           로그인
         </Button>
       </NextLink>
-      <NextLink href="/" passHref legacyBehavior>
+      <NextLink href="/" passHref>
         <Button
           as="a"
           variant="outline"

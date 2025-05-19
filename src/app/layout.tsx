@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 import "@/styles/fonts.css";
 import { Providers } from "./providers";
+import { Toaster } from "@/components/ui/toaster";
 
 export default async function RootLayout({
   children,
@@ -10,7 +11,10 @@ export default async function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

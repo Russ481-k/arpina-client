@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Box,
   Button,
@@ -20,200 +20,174 @@ import {
   Center,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
+import { useRouter } from "next/navigation";
+import { toaster } from "@/components/ui/toaster";
 
 import { StepIndicator } from "./components/StepIndicator";
 import { AgreementItem } from "./components/AgreementItem";
 import { Step1Terms } from "./components/Step1Terms";
 import { Step2Identity } from "./components/Step2Identity";
-import { Step3UserInfo } from "./components/Step3UserInfo";
+import { Step3UserInfo, Step3UserInfoRef } from "./components/Step3UserInfo";
 import { Step4Complete } from "./components/Step4Complete";
+import { NicePublicUserDataDto } from "@/lib/api/niceApi";
+
+// Define a type for the data expected from onVerificationSuccess/Fail if not already globally defined
+// This should align with the structure passed from Step2Identity
+interface NiceVerificationSuccessPayload {
+  verificationData: NicePublicUserDataDto;
+  verificationKey?: string | null;
+}
+
+interface NiceVerificationFailPayload {
+  error: any;
+  verificationKey?: string | null;
+}
+
+// For messages from iframe
+interface NiceAuthCallbackBaseMessage {
+  source: "nice-auth-callback";
+  verificationKey: string | null;
+}
+interface NiceAuthDuplicateUserMessage extends NiceAuthCallbackBaseMessage {
+  type: "DUPLICATE_DI";
+  username?: string | null;
+}
+interface NiceAuthSuccessMessage extends NiceAuthCallbackBaseMessage {
+  type: "NICE_AUTH_SUCCESS";
+  data: NicePublicUserDataDto;
+}
+interface NiceAuthFailureMessage extends NiceAuthCallbackBaseMessage {
+  type: "NICE_AUTH_FAIL";
+  error: string;
+  errorCode?: string | null;
+  errorDetail?: string | null;
+}
+type NiceAuthCallbackMessage =
+  | NiceAuthDuplicateUserMessage
+  | NiceAuthSuccessMessage
+  | NiceAuthFailureMessage;
 
 const MAIN_FLOW_STEPS = 3; // Steps for the primary signup flow (excluding completion)
 const COMPLETION_STEP = 4; // The final "complete" step
 const HEADER_HEIGHT = "60px"; // Replace with your actual header height
 
-// Helper for styling the "STEP X/Y" indicator
-// const StepIndicator = ({
-//   current,
-//   total,
-// }: {
-//   current: number;
-//   total: number;
-// }) => (
-//   <Box
-//     border="1px solid"
-//     borderColor="blue.500"
-//     color="blue.500"
-//     borderRadius="full"
-//     px={3}
-//     py={1}
-//     fontSize="sm"
-//     fontWeight="bold"
-//     display="inline-block"
-//     mb={4}
-//   >
-//     STEP {current}/{total}
-//   </Box>
-// );
-
-// AgreementItem component
-// const AgreementItem = ({
-//   title,
-//   isRequired,
-//   isChecked,
-//   onChange,
-//   children,
-// }: {
-//   title: string;
-//   isRequired: boolean;
-//   isChecked: boolean;
-//   onChange: (isChecked: boolean) => void;
-//   children?: React.ReactNode;
-// }) => (
-//   <VStack align="start" w="full" gap={2}>
-//     <Flex justify="space-between" align="center" w="full" cursor="pointer">
-//       <HStack>
-//         <Checkbox.Root
-//           checked={isChecked}
-//           onChange={(e: any) => onChange(e.target.checked)}
-//         >
-//           <Checkbox.HiddenInput />
-//           <Checkbox.Control mr={2} />
-//         </Checkbox.Root>
-//         <Text fontWeight="medium">
-//           {title}{" "}
-//           {isRequired && (
-//             <Text as="span" color="orange.500">
-//               (필수)
-//             </Text>
-//           )}
-//         </Text>
-//       </HStack>
-//       {/* Placeholder for expand icon if we add accordion behavior later */}
-//       {/* {children && <ChevronDownIcon />} */}
-//     </Flex>
-//     {children && (
-//       <Box pl={8} pb={2}>
-//         {children}
-//       </Box>
-//     )}
-//   </VStack>
-// );
-
-// Step1Terms component
-// const Step1Terms = ({
-//   onMasterAgree,
-//   allAgreed,
-//   agreements,
-//   onAgreementChange,
-// }: {
-//   onMasterAgree: (agreed: boolean) => void;
-//   allAgreed: boolean;
-//   agreements: {
-//     id: string;
-//     label: string;
-//     isRequired: boolean;
-//     isChecked: boolean;
-//     details?: string;
-//   }[];
-//   onAgreementChange: (id: string, isChecked: boolean) => void;
-// }) => (
-//   <VStack gap={4} align="stretch" w="full">
-//     <Heading size="xl" textAlign="center" mb={2}>
-//       개인정보동의서
-//     </Heading>
-//     <Center>
-//       <StepIndicator current={1} total={MAIN_FLOW_STEPS} />
-//     </Center>
-//     <Checkbox.Root
-//       checked={allAgreed}
-//       onChange={(e: any) => onMasterAgree(e.target.checked)}
-//     >
-//       <Checkbox.HiddenInput />
-//       <Checkbox.Control mr={2} />
-//       <Checkbox.Label fontWeight="bold" fontSize="lg">
-//         아래의 사항에 대해 전체 동의합니다.
-//       </Checkbox.Label>
-//     </Checkbox.Root>
-//     <Separator my={4} />
-//     {agreements.map((agreement) => (
-//       <AgreementItem
-//         key={agreement.id}
-//         title={agreement.label}
-//         isRequired={agreement.isRequired}
-//         isChecked={agreement.isChecked}
-//         onChange={(isChecked) => onAgreementChange(agreement.id, isChecked)}
-//       >
-//         {agreement.details && (
-//           <Box
-//             border="1px solid"
-//             borderColor="gray.200"
-//             p={3}
-//             borderRadius="md"
-//             mt={2}
-//             fontSize="sm"
-//             h="100px"
-//             overflowY="auto"
-//           >
-//             <Text whiteSpace="pre-wrap">{agreement.details}</Text>
-//           </Box>
-//         )}
-//       </AgreementItem>
-//     ))}
-//   </VStack>
-// );
-
-// identityOptions - This might be needed by Step2Identity if it were fully implemented
-// For now, it's not used by the refactored Step2Identity placeholder
-// const identityOptions = [
-//   { label: "휴대폰 인증", value: "phone" },
-//   { label: "아이핀 인증", value: "ipin" },
-// ];
-
-// Step2Identity component
-// const Step2Identity = () => (
-//   <VStack gap={6} align="center" w="full">
-//     <Heading size="xl" textAlign="center" mb={2}>
-//       본인인증
-//     </Heading>
-//     <StepIndicator current={2} total={MAIN_FLOW_STEPS} />
-//     <Text>본인인증 내용 (구현 예정)</Text>
-//   </VStack>
-// );
-
-// Step3UserInfo component
-// const Step3UserInfo = () => (
-//   <VStack gap={6} align="center" w="full">
-//     <Heading size="xl" textAlign="center" mb={2}>
-//       정보입력
-//     </Heading>
-//     <StepIndicator current={3} total={MAIN_FLOW_STEPS} />
-//     <Text>정보입력 내용 (구현 예정)</Text>
-//   </VStack>
-// );
-
-// Step4Complete component
-// const Step4Complete = () => (
-//   <VStack gap={6} align="center" w="full" textAlign="center">
-//     <Heading size="xl">가입완료</Heading>
-//     <Text>회원가입이 성공적으로 완료되었습니다.</Text>
-//     <HStack>
-//       <NextLink href="/login" passHref legacyBehavior>
-//         <Button as="a" bg="#2E3192" color="white" _hover={{ bg: "#1A365D" }}>
-//           로그인
-//         </Button>
-//       </NextLink>
-//       <NextLink href="/" passHref legacyBehavior>
-//         <Button as="a" variant="outline">
-//           홈으로
-//         </Button>
-//       </NextLink>
-//     </HStack>
-//   </VStack>
-// );
-
 export default function SignupPage() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [niceAuthData, setNiceAuthData] = useState<any | null>(null);
+  const [niceAuthKey, setNiceAuthKey] = useState<string | null>(null);
+  const step3FormRef = useRef<Step3UserInfoRef>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registeredUsername, setRegisteredUsername] = useState<string | null>(
+    null
+  );
+  const router = useRouter();
+
+  // Define handlers before useEffect that depends on them
+  const handleVerificationSuccess = useCallback(
+    (result: NiceVerificationSuccessPayload) => {
+      console.log("SignupPage: NICE Verification Success", result);
+      setNiceAuthData(result.verificationData);
+      setNiceAuthKey(result.verificationKey || null);
+    },
+    []
+  );
+
+  const handleVerificationFail = useCallback(
+    (result: NiceVerificationFailPayload) => {
+      console.log("SignupPage: NICE Verification Fail", result);
+      setNiceAuthData(null);
+      setNiceAuthKey(null);
+    },
+    []
+  );
+
+  const handleSignupSuccess = useCallback(
+    (username: string) => {
+      console.log(
+        "Signup successful, navigating to completion step. Username:",
+        username
+      );
+      setRegisteredUsername(username);
+      setCurrentStep(COMPLETION_STEP);
+      setIsSubmitting(false);
+    },
+    [setCurrentStep, setIsSubmitting]
+  );
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Basic security: check the origin of the message
+      if (event.origin !== window.location.origin) {
+        console.warn("Message received from untrusted origin:", event.origin);
+        return;
+      }
+
+      const messageData = event.data as NiceAuthCallbackMessage;
+
+      // Check if the message is from our NICE callback
+      if (messageData && messageData.source === "nice-auth-callback") {
+        console.log(
+          "SignupPage: Received NICE Auth Callback Message:",
+          messageData
+        );
+
+        switch (messageData.type) {
+          case "DUPLICATE_DI":
+            console.log("SignupPage: Handling DUPLICATE_DI.");
+            setNiceAuthData(null);
+            setNiceAuthKey(null);
+            const usernameParam = messageData.username
+              ? encodeURIComponent(messageData.username)
+              : "";
+            router.push(
+              `/login?reason=duplicate_di&nice_username=${usernameParam}`
+            );
+            break;
+
+          case "NICE_AUTH_SUCCESS":
+            console.log("SignupPage: Handling NICE_AUTH_SUCCESS.");
+            handleVerificationSuccess({
+              verificationData: messageData.data,
+              verificationKey: messageData.verificationKey,
+            });
+            break;
+
+          case "NICE_AUTH_FAIL":
+            console.log(
+              "SignupPage: Handling NICE_AUTH_FAIL.",
+              messageData.error
+            );
+            handleVerificationFail({
+              error: messageData.error,
+              verificationKey: messageData.verificationKey,
+            });
+            toaster.create({
+              title: "본인인증 실패",
+              description:
+                messageData.error || "본인인증 과정 중 오류가 발생했습니다.",
+              type: "error",
+            });
+            break;
+
+          default:
+            // Exhaustive check, or handle unknown types if necessary
+            const exhaustiveCheck: never = messageData;
+            console.warn(
+              "SignupPage: Received unknown NICE message type:",
+              exhaustiveCheck
+            );
+            break;
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    // Cleanup listener when component unmounts
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleVerificationSuccess, handleVerificationFail, router]);
 
   const initialAgreements = [
     {
@@ -221,150 +195,168 @@ export default function SignupPage() {
       label: "개인정보 수집 및 이용 동의",
       isRequired: true,
       isChecked: false,
-      details: `[필수] 개인정보 수집·이용 동의서 (회원가입용)
-
-아르피나유스호텔은 회원가입 및 서비스 이용을 위해 아래와 같이 개인정보를 수집·이용합니다.
-
-1. 수집 항목
-- 이름
-- 생년월일
-- 성별
-- 아이디, 비밀번호
-- 휴대전화번호
-- 이메일
-- 주소 (선택 시 입력 가능)
-- 접속 로그, IP 주소, 쿠키 등 서비스 이용 기록
-
-2. 수집 목적
-- 회원 가입 및 본인 식별/인증
-- 예약/결제 등 서비스 제공
-- 공지사항 전달 및 고객 응대
-- 법령상 의무 이행 (예: 계약, 세금 신고 등)
-
-3. 보유 및 이용 기간
-- 회원 탈퇴 후 지체 없이 파기
-- 단, 관계 법령(전자상거래법, 통신비밀보호법 등)에 따라 일정 기간 보존될 수 있음
-  - 계약/청약철회/결제/재화공급 기록: 5년
-  - 소비자 불만 또는 분쟁처리 기록: 3년
-  - 웹사이트 방문 기록(IP 등): 3개월
-
+      details: `개인정보 수집 및 이용 동의서
+부산도시공사 아르피나는 귀하의 소중한 개인정보를 다음과 같은 목적과 범위 내에서 수집ㆍ이용됩니다.
+본 동의는 서비스 이용을 위한 필수사항으로, 아래 내용을 충분히 읽고 동의 여부를 결정해 주시기 바랍니다.
+  
+1. 수집항목
+필수 : 이름, 휴대전화번호, 생년월일, 아이디, 비밀번호, 홈페이지 접속 로그, IP 주소, 쿠키 등 서비스 이용 기록
+선택 : 주소
+  
+2. 수집 및 이용목적
+ - 회원가입 및 본인 확인(식별/인증)
+ - 예약 및 스포츠센터 이용 결제
+ - 공지사항 전달 및 고객 응대
+  
+3. 보유 및 이용기간
+회원 탈퇴 시까지 보유 및 이용되며, 탈퇴 후에는 지체 없이 파기합니다.
+단, 아래의 관련 법령에 따라 일정기간 보관할 수 있습니다.
+- 계약 또는 청약철회 등 거래에 관한 기록 / 전자상거래 등에서의 소비자 보호에 관한 법률 (5년)
+- 대금결제 및 재화 등의 공급에 관한 기록 / 전자상거래 등에서의 소비자 보호에 관한 법률 (5년)
+- 소비자의 불만 또는 분쟁처리에 관한 기록 / 전자상거래 등에서 소비자 보호에 관한 법률 (3년)
+- 웹 사이트 방문기록(IP 등)               / 통신비밀보호법(3개월)
+  
 4. 동의 거부 권리 및 불이익 안내
-- 귀하는 개인정보 수집·이용에 대한 동의를 거부할 수 있습니다.
-- 단, 회원가입에 필요한 최소한의 정보이므로, 동의하지 않으실 경우 회원가입이 제한될 수 있습니다.
-
-위 내용을 충분히 확인하였으며, 개인정보 수집·이용에 동의합니다.`,
+귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다.
+단, 위에서 명시한 필수 항목에 대한 동의를 거부하실 경우, 회원가입 및 서비스 이용이 제한될 수 있습니다.`,
     },
     {
       id: "policy",
       label: "홈페이지 이용약관",
       isRequired: true,
       isChecked: false,
-      details: `[아르피나유스호텔 홈페이지 이용약관]
-
-제1조 (목적)
-이 약관은 아르피나유스호텔(이하 "회사"라 함)이 제공하는 인터넷 관련 서비스(이하 "서비스")를 이용함에 있어 회사와 이용자의 권리, 의무 및 책임사항 등을 규정함을 목적으로 합니다.
-
-제2조 (정의)
-1. "홈페이지"란 회사가 재화 또는 용역(서비스 포함)을 이용자에게 제공하기 위하여 컴퓨터 등 정보통신설비를 이용하여 운영하는 웹사이트를 말합니다.
-2. "이용자"란 홈페이지에 접속하여 이 약관에 따라 회사가 제공하는 서비스를 받는 회원 및 비회원을 말합니다.
-3. "회원"이란 홈페이지에 개인정보를 제공하여 회원등록을 한 자로서, 회사의 정보를 지속적으로 제공받으며 서비스를 계속적으로 이용할 수 있는 자를 말합니다.
-
-제3조 (약관의 게시와 개정)
-1. 회사는 본 약관의 내용을 이용자가 쉽게 확인할 수 있도록 홈페이지 초기화면 또는 연결화면에 게시합니다.
-2. 회사는 관련 법령(전자상거래법, 약관의 규제에 관한 법률 등)에 위배되지 않는 범위에서 본 약관을 개정할 수 있습니다.
-3. 약관이 개정되는 경우 회사는 개정내용과 적용일자를 명시하여 현행 약관과 함께 홈페이지에 최소 7일 이상 공지합니다.
-
-제4조 (서비스의 제공 및 변경)
-1. 회사는 다음과 같은 업무를 수행합니다.
-  ① 서비스 예약 신청의 접수 및 확인
-  ② 행사/이벤트 안내
-  ③ 기타 회사가 정하는 서비스
-2. 회사는 기술적 사양 변경 등으로 서비스 내용을 변경할 수 있으며, 이 경우 사전에 공지합니다.
-
-제5조 (서비스의 중단)
-1. 회사는 시스템 점검, 교체 또는 기타 불가피한 사유가 발생한 경우 서비스의 제공을 일시적으로 중단할 수 있습니다.
-2. 제1항에 의한 서비스 중단 시 회사는 사전에 공지하며, 사후 공지가 불가피한 경우에는 지체 없이 이를 이용자에게 통지합니다.
-
-제6조 (회원가입)
-1. 이용자는 회사가 정한 가입 양식에 따라 회원정보를 입력하고 "가입하기" 버튼을 누름으로써 회원가입을 신청합니다.
-2. 회사는 제1항과 같이 회원으로 가입할 것을 신청한 이용자 중 다음 각 호에 해당하지 않는 한 회원으로 등록합니다.
-  ① 등록 내용에 허위, 기재누락, 오기가 있는 경우
-  ② 기타 회원으로 등록하는 것이 회사의 기술상 현저히 지장이 있다고 판단되는 경우
-
-제7조 (회원의 탈퇴 및 자격상실)
-1. 회원은 언제든지 홈페이지를 통해 회원 탈퇴를 요청할 수 있으며, 회사는 즉시 처리합니다.
-2. 회사는 회원이 다음 각 호의 사유에 해당하는 경우 회원자격을 제한 또는 상실시킬 수 있습니다.
-  ① 타인의 개인정보를 도용한 경우
-  ② 홈페이지 운영을 고의로 방해한 경우
-  ③ 공공질서 및 미풍양속에 반하는 행위를 한 경우
-  ④ 기타 회사가 정한 이용조건을 위반한 경우
-
-제8조 (회원에 대한 통지)
-1. 회사는 회원에게 통지를 하는 경우, 회원이 회사에 제출한 전자우편 주소로 할 수 있습니다.
-2. 회사는 불특정다수 회원에게 통지하는 경우 1주일 이상 홈페이지에 게시함으로써 개별 통지에 갈음할 수 있습니다.
-
-제9조 (개인정보보호)
-1. 회사는 이용자의 개인정보 수집 시 서비스 제공에 필요한 최소한의 정보를 수집합니다.
-2. 회사는 수집된 개인정보를 본인의 동의 없이 목적 외로 이용하거나 제3자에게 제공하지 않습니다.
-3. 기타 개인정보 보호에 관한 사항은 별도의 '개인정보처리방침'에 따릅니다.
-
-제10조 (회사의 의무)
-1. 회사는 관련 법령과 본 약관이 정하는 바에 따라 안정적이고 지속적인 서비스를 제공하는 데 최선을 다합니다.
+      details: `홈페이지 이용약관
+  
+제1조(목적)
+이 약관은 부산도시공사 아르피나(이하 "회사"라 함)가 운영하는 웹사이트 "www.arpina.co.kr"(이하 "홈페이지"라 함)에서 제공하는 서비스 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
+  
+제2조(정의)
+ 1. "홈페이지"란 회사가 정보를 이용자에게 제공하기 위하여 구축한 가상의 공간을 의미합니다.
+ 2. "이용자"란 홈페이지에 접속하여 본 약관에 따라 회사가 제공하는 서비스를 받는 회원 및 비회원을 말합니다.
+  
+제3조(약관의 효력 및 변경)
+1. 본 약관은 홈페이지에 게시하거나 기타 방법으로 이용자에게 공지함으로써 효력이 발생합니다.
+2. 회사는 관련 법령(전자상거래법, 약관의 규제에 관한 법률 등)에 위배되지 않는 범위에서 약관을 변경할 수 있으며, 변경 시 홈페이지를 통해 사전 공지합니다.
+3. 변경된 약관은 공지 시 명시된 효력 발생일로부터 적용하며, 약관이 개정되는 경우 회사는 개정 내용과 적용 일자를 명시하여 현행 약관과 함께 홈페이지에 최소 7일이상 공지합니다.
+  
+제4조(서비스의 제공 및 변경)
+1. 회사는 홈페이지를 통해 다음과 같은 서비스를 제공합니다.
+ - 서비스 예약 신청의 접수 확인(수영장 강습 접수, 회의장 예약 문의 등)
+ - 행사/이벤트 안내
+ - 기타 회사가 정하는 서비스
+  
+제5조(서비스의 중단)
+회사는 시스템 점검, 교체, 고장 또는 통신 두절 등의 사유가 발생한 경우 서비스 제공을 일시적으로 중단할 수 있습니다. 이 경우 사전에 공지하되, 불가피한 경우 사후에 통지할 수 있습니다.
+  
+제6조(회원가입)
+1. 이용자는 회사가 정한 절차에 따라 회원가입을 신청하고, "가입하기" 버튼을 누름으로써 회원가입을 신청합니다.
+2. 회원가입은 실명으로 이루어져야 하며, 회사는 필요한 경우 실명 확인 조치를 요청할 수 있습니다.
+3. 회사는 다음 각 호에 해당하는 경우 회원가입 신청을 거부하거나 취소할 수 있습니다.
+   (1) 등록 내용에 허위, 누락, 오기가 있는 경우
+   (2) 타인의 명의를 도용하거나 관련 법령을 위반한 경우
+   (3) 기타 회원으로 등록하는 것이 회사의 기술상 또는 업무상 현저히 지장이 있다고 판단되는 경우
+  
+제7조(이용자의 의무)
+이용자는 다음 행위를 하여서는 안됩니다.
+1. 신청 또는 변경 시 허위 내용의 등록
+2. 타인의 정보 도용
+3. 홈페이지에 게시된 정보의 무단 변경, 복제, 유통, 상업적 이용
+4. 회사 및 제3자의 저작권 등 권리를 침해하거나 업무를 방해하는 행위
+5. 기타 법령 또는 공서양속에 반하는 행위
+제8조(회사의 의무)
+1. 회사는 관련 법령과 본 약관이 정하는 바에 따라 안정적이고 지속적인 서비스를 제공하는데 최선을 다합니다.
 2. 회사는 이용자의 개인정보를 보호하기 위한 보안 시스템을 구축합니다.
-
-제11조 (이용자의 의무)
-이용자는 다음 행위를 하여서는 안 됩니다.
-  ① 신청 또는 변경 시 허위내용의 등록
-  ② 타인의 정보 도용
-  ③ 회사가 게시한 정보의 무단 변경
-  ④ 회사의 명예를 손상시키거나 업무를 방해하는 행위
-
-제12조 (저작권의 귀속 및 이용제한)
-1. 회사가 작성한 저작물에 대한 저작권은 회사에 귀속합니다.
-2. 이용자는 회사의 사전 승낙 없이 홈페이지의 정보를 영리목적으로 사용하거나 제3자에게 이용하게 할 수 없습니다.
-
-제13조 (분쟁해결 및 관할)
-1. 본 약관에 명시되지 않은 사항은 관련 법령과 상관례에 따릅니다.
-2. 서비스 이용과 관련하여 회사와 이용자 간에 분쟁이 발생한 경우, 관할 법원은 회사 본점 소재지를 관할하는 법원으로 합니다.
+  
+제9조(나이 제한)
+1. 홈페이지 회원가입은 만 14세 이상인 자만 가능하며, 만 14세 미만인 경우 법정대리인의 동의 없이는 회원가입이 제한됩니다.
+2. 회사는 필요한 경우 회원들의 나이를 확인할 수 있으며, 허위로 정보를 제공한 경우 회원자격을 제한하거나 상실시킬 수 있습니다.
+  
+제10조(회원 탈퇴 및 자격상실)
+1. 회원은 언제든지 홈페이지를 통해 회원 탈퇴를 할 수 있으며, 회사는 지체 없이 처리 합니다.
+2. 회원이 다음 각 호의 사유에 해당하는 경우, 회사는 회원자격을 상실시킬 수 있습니다.
+ (1) 회원가입 시 허위 정보를 등록한 경우
+ (2) 타인의 홈페이지 이용을 방해하거나 정보를 도용한 경우
+ (3) 홈페이지를 이용하여 법령또는 본 약관이 금지하는 행위를 한 경우
+ (4) 기타 회원으로서 부적절한 행위를 한 경우
+  
+제11조(회원에 대한 통지)
+1. 회사가 회원에 대해 통지를 하는 경우, 회원이 제공한 전자우편주소 또는 홈페이지 알림 기능을 통해 통지할 수 있습니다.
+2. 불특정 다수 회원에 대한 통지의 경우, 홈페이지에 게시함으로써 개별 통지에 갈음할 수 있습니다. 다만, 회원 본인의 권리ㆍ의무에 중대한 영향을 미치는 사항에 대해서는 개별 통지합니다.
+  
+제12조(저작권 및 이용제한)
+1. 홈페이지에 게시된 콘텐츠에 대한 저작권은 회사에 있으며, 이용자는 사전 승낙 없이 이를 복제, 전송, 출판, 배포, 방송 기타 방법으로 이용하거나 제3자에게 이용하게 하여서는 안됩니다.
+2. 이용자가 홈페이지에 게시한 게시물에 대한 권리와 책임은 게시자 본인에게 있으며, 회사는 이를 홈페이지 홍보 목적으로 사용할 수 있습니다.
+  
+제13조(개인정보 보호)
+회사는 이용자의 개인정보를 보호하기 위해 관련 법령 및 개인정보처리방침에 따릅니다. 자세한 사항은 홈페이지에 게시된 개인정보처리방침을 따릅니다.
+  
+제14조(면책조항)
+1. 회사는 천재지변, 불가항력적 사유로 인해 서비스를 제공할 수 없는 경우 책임을 지지 않습니다.
+2. 이용자가 홈페이지를 이용하며 기대하는 수익을 얻지 못하거나 손해를 입는 경우, 회사는 이에 대해 책임을지지 않습니다.
+  
+제15조(분쟁해결 및 관할법원)
+1. 회사와 이용자는 서비스와 관련하여 분쟁이 발생한 경우 원만히 해결하기 위해 성실히 협의합니다.
+2. 협의가 이루어지지 않을 경우, 민사소송법에 따라 회사 본사 소재지 관할 법원을 제1심 관할법원으로 합니다.
 `,
     },
     // Add more agreements here if needed
   ];
   const [agreements, setAgreements] = useState(initialAgreements);
-
-  const allRequiredAgreed = agreements
-    .filter((a) => a.isRequired)
-    .every((a) => a.isChecked);
-
-  const allAgreed = agreements.every((a) => a.isChecked);
+  const [allAgreed, setAllAgreed] = useState(false);
 
   const handleMasterAgreeChange = (isChecked: boolean) => {
     setAgreements(agreements.map((a) => ({ ...a, isChecked })));
+    setAllAgreed(isChecked);
   };
 
   const handleAgreementChange = (id: string, isChecked: boolean) => {
-    setAgreements(
-      agreements.map((a) => (a.id === id ? { ...a, isChecked } : a))
+    const updatedAgreements = agreements.map((a) =>
+      a.id === id ? { ...a, isChecked } : a
     );
+    setAgreements(updatedAgreements);
+    const allCurrentlyChecked = updatedAgreements.every((a) => a.isChecked);
+    setAllAgreed(allCurrentlyChecked);
+  };
+
+  const isNextButtonDisabled = () => {
+    if (currentStep === 1) {
+      return !agreements.filter((a) => a.isRequired).every((a) => a.isChecked);
+    }
+    if (currentStep === 2) {
+      return !niceAuthData || !niceAuthKey; // Disable if NICE auth not done
+    }
+    // For step 3 (MAIN_FLOW_STEPS), primary disable is via isSubmitting, handled directly in button
+    // No specific condition here, but isSubmitting will cover it.
+    return false; // Default to not disabled for other cases not covered by isSubmitting
   };
 
   const handleNext = () => {
-    if (currentStep === 1 && !allRequiredAgreed) {
-      alert("필수 약관에 모두 동의해야 다음 단계로 진행할 수 있습니다.");
-      return;
-    }
-    if (currentStep < COMPLETION_STEP) {
+    if (currentStep === 1) {
+      const allRequiredAgreed = agreements
+        .filter((a) => a.isRequired)
+        .every((a) => a.isChecked);
+      if (!allRequiredAgreed) {
+        // Consider using a toaster for this notification
+        alert("필수 약관에 모두 동의해주세요.");
+        return;
+      }
       setCurrentStep(currentStep + 1);
+    } else if (currentStep === 2) {
+      if (!niceAuthData || !niceAuthKey) {
+        alert("본인인증을 완료해주세요.");
+        return;
+      }
+      setCurrentStep(currentStep + 1);
+    } else if (currentStep === MAIN_FLOW_STEPS) {
+      // Trigger form submission in Step3UserInfo
+      if (step3FormRef.current) {
+        // setIsSubmitting(true); // Removed: will be handled by onSubmittingChange via Step3UserInfo
+        step3FormRef.current.submitForm();
+      }
     }
   };
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  let bottomButtonLabel = "다음";
+  let bottomButtonLabel;
   if (currentStep === 1) bottomButtonLabel = "동의하기";
   if (currentStep === MAIN_FLOW_STEPS) bottomButtonLabel = "회원신청";
   if (currentStep === COMPLETION_STEP) bottomButtonLabel = "";
@@ -422,15 +414,24 @@ export default function SignupPage() {
                 <Step2Identity
                   mainFlowSteps={MAIN_FLOW_STEPS}
                   currentProgressValue={currentStep}
+                  onVerificationSuccess={handleVerificationSuccess}
+                  onVerificationFail={handleVerificationFail}
                 />
               )}
-              {currentStep === 3 && (
+              {currentStep === MAIN_FLOW_STEPS && (
                 <Step3UserInfo
+                  ref={step3FormRef}
                   mainFlowSteps={MAIN_FLOW_STEPS}
                   currentProgressValue={currentStep}
+                  initialAuthData={niceAuthData}
+                  authKey={niceAuthKey}
+                  onSignupSuccess={handleSignupSuccess}
+                  onSubmittingChange={setIsSubmitting}
                 />
               )}
-              {currentStep === COMPLETION_STEP && <Step4Complete />}
+              {currentStep === COMPLETION_STEP && (
+                <Step4Complete username={registeredUsername} />
+              )}
             </Box>
 
             {currentStep < COMPLETION_STEP && (
@@ -439,26 +440,20 @@ export default function SignupPage() {
                 justify={currentStep === 1 ? "flex-end" : "space-between"}
                 mt={8}
               >
-                {currentStep > 1 && (
-                  <Button
-                    onClick={handlePrevious}
-                    variant="outline"
-                    size="lg"
-                    minW="120px"
-                  >
-                    이전
-                  </Button>
-                )}
+                {currentStep > 1 && <Box />}
                 <Button
                   onClick={handleNext}
-                  disabled={currentStep === 1 && !allRequiredAgreed}
+                  disabled={isNextButtonDisabled() || isSubmitting}
+                  loading={isSubmitting}
+                  loadingText="처리중..."
+                  colorScheme="blue"
                   bg="#2E3192"
                   color="white"
                   _hover={{ bg: "#1A365D" }}
                   size="lg"
                   minW="120px"
                 >
-                  {bottomButtonLabel}
+                  {currentStep === MAIN_FLOW_STEPS ? "가입 완료" : "다음"}
                 </Button>
               </HStack>
             )}

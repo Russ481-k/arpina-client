@@ -3,7 +3,12 @@
 import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { niceApi, NicePublicUserDataDto } from "@/lib/api/niceApi";
+import {
+  niceApi,
+  NicePublicUserDataDto,
+  NiceErrorDataDto,
+  NiceAuthResultDto,
+} from "@/lib/api/niceApi";
 import { Box, Spinner, Text } from "@chakra-ui/react";
 
 // New NiceAuthMessage structures
@@ -65,7 +70,7 @@ function NiceCallbackContent() {
     error: queryError, // This is of type Error | null
     isLoading: queryIsLoading,
   } = useQuery<
-    NicePublicUserDataDto,
+    NiceAuthResultDto,
     Error,
     NicePublicUserDataDto,
     (string | null)[]
@@ -80,7 +85,38 @@ function NiceCallbackContent() {
           new Error("NICE_CB_ERR: Missing key for auth result")
         );
       }
-      return niceApi.getNiceAuthResult(key); // Expects NicePublicUserDataDto or throws
+      return niceApi
+        .getNiceAuthResult(key)
+        .then((response) => {
+          console.log(
+            "[NICE_CB] API Response:",
+            JSON.stringify(response, null, 2)
+          );
+          return response;
+        })
+        .catch((error) => {
+          console.error("[NICE_CB] API Error:", error);
+          throw error;
+        });
+    },
+    select: (data) => {
+      // Extract NicePublicUserDataDto from the response
+      console.log(
+        "[NICE_CB] Select function received:",
+        JSON.stringify(data, null, 2)
+      );
+      if (!data.success || !data.data) {
+        console.log("[NICE_CB] API returned unsuccessful response:", data);
+        // 오류 발생 대신 빈 객체를 반환하고 useEffect에서 처리
+        return {} as NicePublicUserDataDto;
+      }
+
+      // 데이터 구조 확인
+      console.log(
+        "[NICE_CB] Extracted data:",
+        JSON.stringify(data.data, null, 2)
+      );
+      return data.data;
     },
     enabled: shouldFetchNiceData,
     retry: false,
@@ -122,12 +158,34 @@ function NiceCallbackContent() {
             "[NICE_CB] status 'success', data fetched successfully:",
             authResult
           );
-          messageToSend = {
-            source: "nice-auth-callback",
-            type: "NICE_AUTH_SUCCESS",
-            verificationKey: key,
-            data: authResult,
-          };
+
+          // 데이터 구조 유효성 검사
+          const isValidData =
+            authResult &&
+            typeof authResult === "object" &&
+            "name" in authResult &&
+            "birthDate" in authResult;
+
+          if (!isValidData) {
+            console.error(
+              "[NICE_CB] Invalid user data structure received:",
+              authResult
+            );
+            messageToSend = {
+              source: "nice-auth-callback",
+              type: "NICE_AUTH_FAIL",
+              verificationKey: key,
+              error: "인증 정보 구조가 올바르지 않습니다",
+              errorCode: "DATA_STRUCTURE_ERROR",
+            };
+          } else {
+            messageToSend = {
+              source: "nice-auth-callback",
+              type: "NICE_AUTH_SUCCESS",
+              verificationKey: key,
+              data: authResult,
+            };
+          }
         } else if (queryIsError) {
           console.error(
             "[NICE_CB] status 'success', but failed to fetch NICE data:",
