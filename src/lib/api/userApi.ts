@@ -30,9 +30,17 @@ export interface UserSignupResponse {
   success: boolean;
 }
 
-export interface CheckUsernameResponse {
+export interface CheckUsernameResponseData {
   available: boolean;
   message?: string;
+}
+
+export interface CheckUsernameResponse {
+  success: boolean;
+  message?: string;
+  data?: CheckUsernameResponseData;
+  errorCode?: string | null;
+  stackTrace?: string | null;
 }
 
 const USER_API_BASE_URL = "/auth"; // Or your actual user API base path
@@ -47,14 +55,14 @@ export const userApi = {
       `${USER_API_BASE_URL}/signup`,
       payload
     );
-    return response;
+    return response.data;
   },
 
   checkUsername: async (username: string): Promise<CheckUsernameResponse> => {
     const response = await publicApi.get<CheckUsernameResponse>(
       `${USER_API_BASE_URL}/check-username/${encodeURIComponent(username)}`
     );
-    return response;
+    return response.data;
   },
 
   // TODO: Add other user-related API functions here if needed

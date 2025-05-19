@@ -206,16 +206,24 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
         setUsernameSuccessMessage("");
         setUsernameCheckMessage("");
       },
-      onSuccess: (data) => {
+      onSuccess: (response) => {
         setIsCheckingUsername(false);
-        setUsernameAvailable(data.available);
-        if (data.available) {
+
+        // API 응답 구조에 맞게 수정
+        const isAvailable = response.data?.available ?? false;
+        const responseMessage =
+          response.data?.message || response.message || "";
+
+        setUsernameAvailable(isAvailable);
+        if (isAvailable) {
           setUsernameSuccessMessage(
-            data.message || "사용 가능한 사용자 ID입니다."
+            responseMessage || "사용 가능한 사용자 ID입니다."
           );
           setUsernameError("");
         } else {
-          setUsernameError(data.message || "이미 사용 중인 사용자 ID입니다.");
+          setUsernameError(
+            responseMessage || "이미 사용 중인 사용자 ID입니다."
+          );
           setUsernameSuccessMessage("");
         }
       },
@@ -341,11 +349,38 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
         onSignupSuccess(usernameInput);
       },
       onError: (error: any) => {
-        toaster.create({
-          title: "회원가입 실패",
-          description: error.message || "회원가입 중 오류가 발생했습니다.",
-          type: "error",
-        });
+        // 에러 메시지에서 사용자 ID 중복 관련 오류인지 확인
+        const errorMessage =
+          error.message || "회원가입 중 오류가 발생했습니다.";
+        const isDuplicateUsernameError =
+          errorMessage.includes("중복된 사용자") ||
+          errorMessage.includes("duplicate") ||
+          errorMessage.includes("already exists") ||
+          errorMessage.includes("already taken") ||
+          errorMessage.includes("이미 사용 중인") ||
+          error.response?.status === 409; // 충돌 상태코드도 확인
+
+        if (isDuplicateUsernameError) {
+          setUsernameAvailable(false);
+          setUsernameError("이미 사용 중인 사용자 ID입니다.");
+          setUsernameSuccessMessage("");
+
+          toaster.create({
+            title: "사용자 ID 중복",
+            description:
+              "이미 사용 중인 사용자 ID입니다. 다른 ID를 입력해주세요.",
+            type: "error",
+          });
+
+          // 사용자 ID 입력란에 포커스
+          document.getElementsByName("username")[0]?.focus();
+        } else {
+          toaster.create({
+            title: "회원가입 실패",
+            description: errorMessage,
+            type: "error",
+          });
+        }
       },
     });
 
@@ -631,25 +666,38 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
 
                 <Field.Root id="username">
                   <Field.Label fontWeight="semibold">사용자 ID</Field.Label>
-                  <HStack w="full" gap={2}>
-                    <Input
-                      type="text"
-                      placeholder="4~50자 영문, 숫자"
-                      name="username"
-                      value={usernameInput}
-                      onChange={handleUsernameChange}
-                      onBlur={handleUsernameBlur}
-                      _invalid={{ borderColor: "red.500" }}
-                    />
-                  </HStack>
-                  {isCheckingUsername && <Spinner size="sm" mt={1} />}
+                  <Input
+                    type="text"
+                    placeholder="4~50자 영문, 숫자 (입력 후 자동으로 중복 확인됩니다)"
+                    name="username"
+                    value={usernameInput}
+                    onChange={handleUsernameChange}
+                    onBlur={handleUsernameBlur}
+                    borderColor={
+                      usernameAvailable === true
+                        ? "green.500"
+                        : usernameAvailable === false
+                        ? "red.500"
+                        : undefined
+                    }
+                  />
+                  {isCheckingUsername && (
+                    <HStack fontSize="sm" color="gray.500" mt={1}>
+                      <Spinner size="xs" />
+                      <Text>중복 확인 중...</Text>
+                    </HStack>
+                  )}
                   {usernameSuccessMessage && !usernameError && (
-                    <Text fontSize="sm" color="green.500" mt={1}>
-                      {usernameSuccessMessage}
-                    </Text>
+                    <HStack fontSize="sm" color="green.500" mt={1}>
+                      <CheckCircleIcon size={16} />
+                      <Text>{usernameSuccessMessage}</Text>
+                    </HStack>
                   )}
                   {usernameError && (
-                    <Field.ErrorText>{usernameError}</Field.ErrorText>
+                    <HStack fontSize="sm" color="red.500" mt={1}>
+                      <XCircleIcon size={16} />
+                      <Text>{usernameError}</Text>
+                    </HStack>
                   )}
                 </Field.Root>
 
