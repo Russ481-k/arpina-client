@@ -10,6 +10,48 @@ import {
 const BASE_URL =
   (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080") + "/api/v1";
 
+// 기본 API 클라이언트 설정
+export const api = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 토큰 인증 헤더 설정
+export const setAuthToken = (token: string) => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
+
+// 인증이 필요 없는 API 호출용
+export const publicApi = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 항상 인증 헤더를 포함하는 API 호출용
+export const privateApi = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// API 인터셉터 설정
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // 에러 처리 로직 (예: 401 에러 시 자동 로그아웃 등)
+    return Promise.reject(error);
+  }
+);
+
 // API 클라이언트 생성 함수
 const createApiClient = (isPrivate: boolean): AxiosInstance => {
   const client = axios.create({
@@ -117,10 +159,6 @@ const createApiClient = (isPrivate: boolean): AxiosInstance => {
   return client;
 };
 
-// API 클라이언트 인스턴스
-const publicApiClient = createApiClient(false);
-const privateApiClient = createApiClient(true);
-
 // API 메서드 생성 함수
 const createApiMethods = (client: AxiosInstance) => ({
   get: async <T>(endpoint: string, config?: AxiosRequestConfig) => {
@@ -158,5 +196,5 @@ const createApiMethods = (client: AxiosInstance) => ({
 });
 
 // Export API methods
-export const publicApi = createApiMethods(publicApiClient);
-export const privateApi = createApiMethods(privateApiClient);
+export const publicApiMethods = createApiMethods(publicApi);
+export const privateApiMethods = createApiMethods(privateApi);
