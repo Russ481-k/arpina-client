@@ -3,7 +3,7 @@
 import { Flex, IconButton } from "@chakra-ui/react";
 import { memo } from "react";
 import { Grid3X3Icon, SearchCodeIcon, User2Icon } from "lucide-react";
-import router from "next/router"; // Keep for existing mypage/login logic
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 interface UtilityIconsProps {
@@ -13,6 +13,8 @@ interface UtilityIconsProps {
 
 export const UtilityIcons = memo(
   ({ iconColor, onSitemapOpen }: UtilityIconsProps) => {
+    const router = useRouter();
+
     return (
       <Flex
         alignItems="center"
