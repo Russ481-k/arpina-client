@@ -33,7 +33,6 @@ export function StatisticsSection() {
       hour: `${i}시`,
       value: Math.floor(Math.random() * 100),
     }));
-    console.log(_);
     setData(newData);
     setTotalCount(newData.reduce((sum, item) => sum + item.value, 0));
   }, [_]);

@@ -49,16 +49,6 @@ function NiceCallbackContent() {
   const backendError = searchParams.get("error"); // general backend error on status=fail
   const backendErrorDetail = searchParams.get("detail"); // general backend error detail on status=fail
 
-  console.log("[NICE_CB] Initializing Callback. URL Params:", {
-    status,
-    key,
-    joined,
-    username,
-    niceErrorCode,
-    backendError,
-    backendErrorDetail,
-  });
-
   // Query to fetch NICE data if status is success and it's not a DUPLICATE_DI case
   const shouldFetchNiceData =
     status === "success" && niceErrorCode !== "DUPLICATE_DI" && !!key;
@@ -78,7 +68,6 @@ function NiceCallbackContent() {
     // Specify DTO
     queryKey: ["niceAuthResult", key],
     queryFn: () => {
-      console.log("[NICE_CB] useQuery - queryFn called with key:", key);
       if (!key) {
         // Should be caught by 'enabled' but as a safeguard
         return Promise.reject(
@@ -88,10 +77,6 @@ function NiceCallbackContent() {
       return niceApi
         .getNiceAuthResult(key)
         .then((response) => {
-          console.log(
-            "[NICE_CB] API Response:",
-            JSON.stringify(response, null, 2)
-          );
           return response;
         })
         .catch((error) => {
@@ -101,21 +86,10 @@ function NiceCallbackContent() {
     },
     select: (data) => {
       // Extract NicePublicUserDataDto from the response
-      console.log(
-        "[NICE_CB] Select function received:",
-        JSON.stringify(data, null, 2)
-      );
       if (!data.success || !data.data) {
-        console.log("[NICE_CB] API returned unsuccessful response:", data);
-        // 오류 발생 대신 빈 객체를 반환하고 useEffect에서 처리
         return {} as NicePublicUserDataDto;
       }
-
       // 데이터 구조 확인
-      console.log(
-        "[NICE_CB] Extracted data:",
-        JSON.stringify(data.data, null, 2)
-      );
       return data.data;
     },
     enabled: shouldFetchNiceData,
@@ -126,21 +100,8 @@ function NiceCallbackContent() {
     let messageToSend: NiceAuthTypedMessage | null = null;
     let attemptedPost = false;
 
-    console.log("[NICE_CB] useEffect triggered. States:", {
-      status,
-      key,
-      niceErrorCode,
-      username,
-      shouldFetchNiceData,
-      queryIsLoading,
-      queryIsSuccess,
-      queryIsError,
-      authResultIsPresent: !!authResult,
-    });
-
     if (status === "success") {
       if (niceErrorCode === "DUPLICATE_DI") {
-        console.log("[NICE_CB] Handling DUPLICATE_DI case.");
         messageToSend = {
           source: "nice-auth-callback",
           type: "DUPLICATE_DI",
@@ -150,15 +111,9 @@ function NiceCallbackContent() {
       } else if (key) {
         // Proceed to fetch/use fetched data
         if (queryIsLoading) {
-          console.log("[NICE_CB] status 'success', data fetch in progress...");
           return; // Wait for query
         }
         if (queryIsSuccess && authResult) {
-          console.log(
-            "[NICE_CB] status 'success', data fetched successfully:",
-            authResult
-          );
-
           // 데이터 구조 유효성 검사
           const isValidData =
             authResult &&
@@ -223,10 +178,6 @@ function NiceCallbackContent() {
         };
       }
     } else if (status === "fail") {
-      console.log(
-        "[NICE_CB] Handling status 'fail'. Backend error:",
-        backendError
-      );
       messageToSend = {
         source: "nice-auth-callback",
         type: "NICE_AUTH_FAIL",
@@ -238,10 +189,6 @@ function NiceCallbackContent() {
       };
     } else if (key) {
       // Invalid status, but key is present - potentially an issue
-      console.error(
-        "[NICE_CB] Invalid or missing status, but key was present:",
-        status
-      );
       messageToSend = {
         source: "nice-auth-callback",
         type: "NICE_AUTH_FAIL",
@@ -254,12 +201,7 @@ function NiceCallbackContent() {
       attemptedPost = true;
       if (window.opener && typeof window.opener.postMessage === "function") {
         try {
-          console.log(
-            "[NICE_CB] Attempting to postMessage to window.opener:",
-            messageToSend
-          );
           window.opener.postMessage(messageToSend, window.location.origin);
-          console.log("[NICE_CB] postMessage successful.");
         } catch (e) {
           console.error("[NICE_CB] Failed to postMessage to opener:", e);
         }
@@ -272,7 +214,6 @@ function NiceCallbackContent() {
       // Close window if a message was determined and posted (or attempted)
       // except for truly unexpected scenarios where we might want the window to stay for debugging.
       // For now, close on any determined message.
-      console.log("[NICE_CB] Attempting window.close().");
       window.close();
     } else if (!queryIsLoading && !shouldFetchNiceData && status) {
       // This case means status was 'success' but shouldFetchNiceData was false (e.g. DUPLICATE_DI already handled, or key missing)
@@ -282,9 +223,6 @@ function NiceCallbackContent() {
       // However, the original code had a specific "DO NOT CLOSE FOR INVALID STATUS" for debugging.
       // Let's stick to closing only if messageToSend was formed.
       // If no messageToSend and query isn't loading, it means logic path was exhausted or condition not met to send message.
-      console.log(
-        "[NICE_CB] No message to send and not loading. Window will not be closed by this effect path."
-      );
     }
   }, [
     status,

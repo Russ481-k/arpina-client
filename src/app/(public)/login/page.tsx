@@ -100,11 +100,6 @@ export default function LoginPage() {
           )}). 로그인해 주세요.`
         : "이미 가입된 계정입니다. 로그인해 주세요.";
 
-      console.log(
-        "Login page: Attempting to show DUPLICATE_DI toast. Message:",
-        message
-      );
-
       queueMicrotask(() => {
         toaster.create({
           title: "계정 중복 안내",

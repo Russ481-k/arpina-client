@@ -55,10 +55,8 @@ function LoginForm() {
     // Only redirect if authenticated and has admin role
     if (isAuthenticated) {
       if (hasAdminRole) {
-        console.log("User has admin role, redirecting to CMS");
         router.push("/cms/menu");
       } else {
-        console.log("User does not have admin role, showing error");
         toaster.create({
           title: "권한이 없습니다",
           description: "관리자 계정이 아닙니다. 관리자 계정으로 로그인하세요.",
@@ -114,7 +112,6 @@ function LoginForm() {
 
     // Attempt login
     try {
-      console.log("Attempting to login with:", { username });
       await login({ username, password });
 
       // Store username in localStorage if "remember me" is checked
@@ -123,16 +120,6 @@ function LoginForm() {
       } else {
         localStorage.removeItem("rememberedId");
       }
-
-      // Debug token in localStorage after login
-      console.log("Login completed, checking local storage");
-      setTimeout(() => {
-        const token = localStorage.getItem("auth_token");
-        console.log(
-          "Token in localStorage:",
-          token ? token.substring(0, 15) + "..." : "No token"
-        );
-      }, 500);
 
       // Login success message
       toaster.create({

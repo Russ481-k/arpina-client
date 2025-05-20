@@ -127,10 +127,6 @@ export default function MyPage() {
           if (authUserStr) {
             try {
               localUserData = JSON.parse(authUserStr);
-              console.log(
-                "[Mypage] Parsed auth_user from localStorage:",
-                localUserData
-              );
 
               setProfile((prevProfile) => ({
                 ...(prevProfile || {}),
@@ -144,7 +140,6 @@ export default function MyPage() {
                 carNo: prevProfile?.carNo || "",
               }));
               // setProfile의 비동기적 특성 때문에 바로 다음 줄에서 profile을 console.log하면 이전 값이 나올 수 있습니다.
-              // console.log("[Mypage] Profile state after setting from localStorage:", profile);
             } catch (e) {
               console.error("Error parsing auth_user from localStorage:", e);
             }
@@ -152,10 +147,6 @@ export default function MyPage() {
         }
 
         const profileData = await mypageApi.getProfile();
-        console.log(
-          "[Mypage] Profile data from API (mypageApi.getProfile):",
-          profileData
-        );
 
         if (
           profileData &&
@@ -185,9 +176,6 @@ export default function MyPage() {
                 : prevProfile?.carNo ?? "",
           }));
         } else {
-          console.warn(
-            "[Mypage] API did not return valid profile data, or userId is missing. Using localStorage data if available."
-          );
           if (localUserData && (!profile || !profile.userId)) {
             setProfile((prevProfile) => ({
               ...(prevProfile || {}),
@@ -219,9 +207,6 @@ export default function MyPage() {
           profile.name &&
           profile.name !== (localUserData?.name || localUserData?.username)
         ) {
-          console.log(
-            "[Mypage] Error occurred (e.g., enroll/payment failed), but profile.name was already updated from API. Not overwriting name with localStorage version."
-          );
           // 이 경우, enrollments, payments 로딩 실패에 대한 메시지만 표시하고
           // profile.name 등 핵심 정보는 유지한다.
           // 필요하다면 enrollments, payments를 빈 배열로 설정할 수 있다.
@@ -229,9 +214,6 @@ export default function MyPage() {
           setPayments([]); // 에러 발생 시 빈 배열로 초기화
         } else if (localUserData && (!profile || !profile.userId)) {
           // getProfile 자체가 실패했거나, profile이 초기화되지 않은 경우 localStorage 정보로 fallback
-          console.log(
-            "[Mypage] API error (likely getProfile itself failed or profile not initialized), attempting to set profile from localStorage as fallback (in catch)."
-          );
           setProfile((prevProfile) => ({
             ...(prevProfile || {}),
             userId: localUserData.username || prevProfile?.userId || "",
@@ -245,9 +227,6 @@ export default function MyPage() {
           setPayments([]);
         } else if (!profile || !profile.userId) {
           // localUserData도 없고 profile도 제대로 설정 안된 최악의 경우
-          console.log(
-            "[Mypage] Critical error: No profile data and no localStorage fallback."
-          );
           setEnrollments([]);
           setPayments([]);
         }
@@ -267,15 +246,6 @@ export default function MyPage() {
 
     fetchUserData();
   }, []);
-
-  // [추가] profile 상태 변경 추적용 useEffect
-  useEffect(() => {
-    console.log("[Mypage Debug] Profile state changed:", profile);
-    if (profile) {
-      console.log("[Mypage Debug] Current profile.name:", profile.name);
-      console.log("[Mypage Debug] Current profile.userId:", profile.userId);
-    }
-  }, [profile]); // profile 상태가 변경될 때마다 실행
 
   // Password validation logic (adapted from Step3UserInfo)
   const validateNewPasswordCriteria = (password: string) => {

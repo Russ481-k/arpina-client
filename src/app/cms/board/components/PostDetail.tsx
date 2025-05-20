@@ -71,8 +71,6 @@ export function PostDetail({
   const textColor = colors.text.primary;
   const secondaryTextColor = colors.text.secondary;
 
-  console.log("--- Post attachments received: ---", post.attachments);
-
   return (
     <Box p={4}>
       <VStack align="stretch" gap={4}>
@@ -138,8 +136,6 @@ export function PostDetail({
             </Text>
             <VStack align="stretch" gap={2}>
               {post.attachments.map((file: File) => {
-                console.log("--- Mapping attachment file: ---", file);
-
                 const FileIcon = getFileIcon(file.mimeType, file.ext);
                 const downloadUrl = getPublicFileDownloadUrl(file.fileId);
                 return (

@@ -224,7 +224,6 @@ export function MenuEditor({
     staleTime: 5 * 60 * 1000, // 5분 동안 캐시 유지
     enabled: menuType === "BOARD", // BOARD 타입일 때만 데이터 가져오기
   });
-  console.log(boardsData);
 
   const { data: contentsData } = useQuery({
     queryKey: ["contents"],
@@ -267,7 +266,6 @@ export function MenuEditor({
   };
 
   const handleFormSubmit: SubmitHandler<MenuFormData> = async (data) => {
-    console.log("Form submitted with data:", data);
     try {
       setIsSubmitting(true);
 
@@ -297,9 +295,7 @@ export function MenuEditor({
         targetId: data.targetId ? Number(data.targetId) : undefined,
       };
 
-      console.log("Submitting data to server:", submitData);
       await onSubmit(submitData);
-      console.log("Form submission successful");
     } catch (error) {
       console.error("Error submitting form:", error);
       toaster.error({
@@ -310,15 +306,6 @@ export function MenuEditor({
       setIsSubmitting(false);
     }
   };
-
-  // 폼 제출 핸들러를 디버깅하기 위한 useEffect
-  useEffect(() => {
-    console.log("Form state:", {
-      isSubmitting,
-      errors,
-      values: watch(),
-    });
-  }, [isSubmitting, errors, watch]);
 
   return (
     <>

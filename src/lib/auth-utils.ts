@@ -41,7 +41,6 @@ export const setToken = (
   }
 
   const trimmedToken = token.trim();
-  console.log("[DEBUG] Setting token:", trimmedToken.substring(0, 15) + "...");
 
   // Store in localStorage
   localStorage.setItem(TOKEN_KEY, trimmedToken);
@@ -62,22 +61,10 @@ export const setToken = (
   if (user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
-
-  // Verify tokens were properly set
-  setTimeout(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    console.log(
-      "[DEBUG] Token after setting:",
-      storedToken ? storedToken.substring(0, 15) + "..." : "No token"
-    );
-    console.log("[DEBUG] Tokens match:", storedToken === trimmedToken);
-  }, 100);
 };
 
 export const removeToken = (): void => {
   if (typeof window === "undefined") return;
-
-  console.log("[DEBUG] Removing token");
   // Remove from localStorage
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);

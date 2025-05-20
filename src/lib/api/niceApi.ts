@@ -58,15 +58,10 @@ export const niceApi = {
     // Endpoint updated as per the new specification.
     const endpoint = `/nice/checkplus/result/${key}`;
     try {
-      console.log("[NICE_API] Fetching result for key:", key);
       const response = await publicApi.get(endpoint);
-      console.log("[NICE_API] Raw API response:", response);
 
       // 백엔드 응답이 NiceAuthResultDto 구조가 아닐 경우 변환
       if (response.data && !("success" in response.data)) {
-        console.log(
-          "[NICE_API] Converting direct data response to NiceAuthResultDto format"
-        );
         // 백엔드가 직접 사용자 데이터를 반환하는 경우, NiceAuthResultDto 형식으로 감싸기
         return {
           success: true,

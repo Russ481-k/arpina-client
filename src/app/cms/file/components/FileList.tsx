@@ -120,8 +120,6 @@ export function FileList({
   };
 
   const handleAddMenu = (parentMenu: Menu) => {
-    console.log("FileList handleAddMenu called with parentMenu:", parentMenu);
-
     // 전체 메뉴인 경우 (id가 -1)
     if (parentMenu.id === -1) {
       // 전체 메뉴를 부모로 사용하고 parentId를 undefined로 설정
@@ -134,7 +132,6 @@ export function FileList({
 
     // 부모 메뉴가 접혀있으면 펼치기
     if (!expandedMenus.has(parentMenu.id)) {
-      console.log("Expanding parent menu:", parentMenu.id);
       toggleMenu(parentMenu.id);
     }
 
@@ -185,7 +182,6 @@ export function FileList({
   // forceExpandMenuId가 변경될 때 해당 메뉴를 강제로 펼치고 포커스
   useEffect(() => {
     if (forceExpandMenuId) {
-      console.log("Force expanding menu:", forceExpandMenuId);
       setExpandedMenus((prev) => {
         const next = new Set(prev);
         next.add(forceExpandMenuId);
@@ -197,7 +193,6 @@ export function FileList({
         const element = FileListRef.current?.querySelector(
           `[data-menu-id="${forceExpandMenuId}"]`
         );
-        console.log("Scrolling to element:", element);
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
         }

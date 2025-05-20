@@ -114,8 +114,6 @@ export const mypageApi = {
       `${MYPAGE_API_BASE_URL}/profile`
     );
 
-    // console.log("getProfile - responseData from privateApi.get:", responseData); // 디버깅 로그
-
     if (responseData && typeof responseData === "object") {
       // 경우 1: responseData 자체가 ProfileDto인 경우 (주요 필드 존재 여부로 확인)
       if (

@@ -44,10 +44,6 @@ export async function findMenuByPath(pathname: string): Promise<Menu | null> {
     });
 
     if (exactNonFolderMatch) {
-      console.log(
-        `[findMenuByPath] Found exact non-FOLDER match for ${pathname}:`,
-        exactNonFolderMatch
-      );
       return exactNonFolderMatch;
     }
 
@@ -73,10 +69,6 @@ export async function findMenuByPath(pathname: string): Promise<Menu | null> {
         (a, b) => (b.url?.trim().length || 0) - (a.url?.trim().length || 0)
       );
       const bestPartialMatch = partialMatches[0];
-      console.log(
-        `[findMenuByPath] Found best partial non-FOLDER match for ${pathname}:`,
-        bestPartialMatch
-      );
       return bestPartialMatch;
     }
 

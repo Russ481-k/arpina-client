@@ -536,7 +536,6 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
 
     useEffect(() => {
       if (initialAuthData) {
-        // console.log("Name from auth data:", initialAuthData.utf8Name || initialAuthData.name);
         if (initialAuthData.mobileNo) {
           setFormattedMobileNo(formatPhoneNumber(initialAuthData.mobileNo));
         }

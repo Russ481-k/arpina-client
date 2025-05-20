@@ -38,54 +38,24 @@ export const fileApi = {
     menu: string,
     menuId: number
   ): Promise<FileUploadResponse> => {
-    console.log("[fileApi.upload] Received params:", {
-      filesToUpload,
-      menu,
-      menuId,
-    });
-
     const formData = new FormData();
 
     // Handle single or multiple files
     if (Array.isArray(filesToUpload)) {
       if (filesToUpload.length > 0) {
-        console.log(
-          `[fileApi.upload] Adding ${filesToUpload.length} files with field name 'files'`
-        );
         filesToUpload.forEach((file, index) => {
           formData.append("files", file, file.name); // Always use 'files' key
-          console.log(
-            `[fileApi.upload] Added file ${index + 1}/${
-              filesToUpload.length
-            }: ${file.name} (${file.size} bytes)`
-          );
         });
       } else {
         console.warn("[fileApi.upload] No files to upload (empty array)");
       }
     } else {
       // Single file case
-      console.log("[fileApi.upload] Attempting single file upload strategy");
       formData.append("files", filesToUpload, filesToUpload.name); // Always use 'files' key
-      console.log(
-        `[fileApi.upload] Added single file: ${filesToUpload.name} (${filesToUpload.size} bytes)`
-      );
     }
 
     formData.append("menu", menu);
     formData.append("menuId", String(menuId));
-
-    // FormData 내용 로깅 (optional, but good for debugging)
-    console.log("[fileApi.upload] FormData entries:");
-    for (const pair of formData.entries()) {
-      console.log(
-        `${pair[0]}: ${
-          pair[1] instanceof File
-            ? `File(${pair[1].name}, ${pair[1].size} bytes)`
-            : pair[1]
-        }`
-      );
-    }
 
     const response = await publicApi.post<FileUploadResponse>(
       `${BASE_URL}/public/upload`,

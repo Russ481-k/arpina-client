@@ -45,13 +45,6 @@ const PostListItem: React.FC<PostListItemProps> = ({
   let thumbnailUrl: string | null = null;
   let isFirstAttachmentImage = false;
 
-  console.log(`[PostListItem] Rendering post ID: ${post.nttId}`);
-  console.log(`[PostListItem] post.hasAttachment: ${post.hasAttachment}`);
-  console.log(
-    `[PostListItem] post.hasImageInContent: ${post.hasImageInContent}`
-  );
-  console.log(`[PostListItem] colors.text.secondary: ${colors.text.secondary}`);
-
   if (post.attachments && post.attachments.length > 0) {
     const firstFile = post.attachments[0];
     if (

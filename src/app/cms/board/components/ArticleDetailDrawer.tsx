@@ -13,15 +13,7 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
 import { Article } from "@/lib/api/article";
-import {
-  LuFileText,
-  LuImage,
-  LuFileArchive,
-  LuFileAudio,
-  LuFileVideo,
-  LuPaperclip,
-} from "react-icons/lu";
-import { useColors } from "@/styles/theme";
+
 import { ArticleDisplay } from "@/components/articles/ArticleDisplay";
 import { toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/lib/AuthContext";
@@ -44,31 +36,6 @@ interface ArticleDetailDrawerProps {
   canDelete?: boolean;
 }
 
-const getFileIcon = (mimeType: string | undefined, ext: string | undefined) => {
-  if (mimeType?.startsWith("image/")) return LuImage;
-  if (mimeType === "application/pdf") return LuFileText;
-  if (mimeType?.includes("word") || ext === "doc" || ext === "docx")
-    return LuFileText;
-  if (
-    mimeType?.includes("excel") ||
-    mimeType?.includes("spreadsheet") ||
-    ext === "xls" ||
-    ext === "xlsx"
-  )
-    return LuFileText;
-  if (mimeType?.includes("presentation") || ext === "ppt" || ext === "pptx")
-    return LuFileText;
-  if (mimeType?.startsWith("audio/")) return LuFileAudio;
-  if (mimeType?.startsWith("video/")) return LuFileVideo;
-  if (
-    mimeType === "application/zip" ||
-    mimeType === "application/x-zip-compressed" ||
-    ext === "zip"
-  )
-    return LuFileArchive;
-  return LuFileText;
-};
-
 export const ArticleDetailDrawer = ({
   open,
   onOpenChange,
@@ -86,14 +53,8 @@ export const ArticleDetailDrawer = ({
   canEdit = false,
   canDelete = false,
 }: ArticleDetailDrawerProps) => {
-  const colors = useColors();
   const { isAuthenticated, user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
-
-  console.log("ArticleDetailDrawer article prop:", article);
-  console.log("Is FAQ mode?", isFaq);
-  console.log("Previous Article:", previousArticle);
-  console.log("Next Article:", nextArticle);
 
   const handlePrevClick = () => {
     if (onNavigateToPrevious) {

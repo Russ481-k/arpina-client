@@ -116,26 +116,19 @@ export async function initializeDatabase() {
           }
         }
       }
-      console.log("[DB] Initial menus created");
     } else {
-      console.log("[DB] Tables already exist. Checking for admin account...");
-
       // admin 계정 존재 여부 확인
       const [adminUsers] = await connection.query(
         "SELECT * FROM users WHERE username = 'admin'"
       );
 
       if ((adminUsers as unknown[]).length === 0) {
-        console.log("[DB] Admin account not found. Creating admin account...");
         const adminQuery = await createInitialAdmin();
         await connection.query(adminQuery);
-        console.log("Initial admin account created with credentials:");
       } else {
         console.log("[DB] Admin account already exists");
       }
     }
-
-    console.log("[DB] Database initialization completed");
   } catch (error) {
     console.error("[DB] Database initialization failed:", error);
     throw error;

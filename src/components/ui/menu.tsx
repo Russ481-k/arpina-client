@@ -158,12 +158,6 @@ export function MenuRoot({
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
 
-      console.log("=== Menu Positioning Debug ===");
-      console.log("Window Width:", window.innerWidth);
-      console.log("Is Mobile:", isMobile);
-      console.log("Positioning prop:", positioning);
-      console.log("IDs prop:", ids);
-
       // Calculate new values
       let newPlacement: PlacementType;
       let newTriggerId: TriggerType;
@@ -187,13 +181,8 @@ export function MenuRoot({
           : ids.md?.trigger || "side-bar-avatar-menu-trigger-closed";
       }
 
-      console.log("New placement:", newPlacement);
-      console.log("New triggerId:", newTriggerId);
-
       setPlacement(newPlacement);
       setTriggerId(newTriggerId);
-
-      console.log("========================");
     };
 
     handleResize();

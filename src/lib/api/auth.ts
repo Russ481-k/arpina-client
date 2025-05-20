@@ -27,8 +27,6 @@ export const authApi = {
       "/auth/login",
       credentials
     );
-    console.log("login response:", response);
-
     return response;
   },
 
@@ -37,19 +35,10 @@ export const authApi = {
   },
 
   verifyToken: async () => {
-    console.log("Verifying token with privateApi");
     const token = getToken();
-    console.log(
-      "Current token when verifying:",
-      token ? token.substring(0, 15) + "..." : "No token"
-    );
     const response = await privateApi.get<VerifyTokenResponse>("/auth/verify", {
       headers: token ? { Authorization: `Bearer ${token.trim()}` } : undefined,
     });
-    console.log(
-      "Full verify response:",
-      JSON.stringify(response.data, null, 2)
-    );
     return response;
   },
 };

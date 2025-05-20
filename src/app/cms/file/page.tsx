@@ -124,10 +124,8 @@ export default function MenuManagementPage() {
     queryFn: async () => {
       try {
         const response = await fileApi.getAllFiles();
-        console.log("File List:", response);
         return response.data;
       } catch (error) {
-        console.error("Error fetching files:", error);
         return [];
       }
     },
@@ -149,13 +147,6 @@ export default function MenuManagementPage() {
       return acc;
     }, {});
   }, [fileList]);
-
-  // 파일 목록이 업데이트될 때마다 콘솔에 출력
-  useEffect(() => {
-    if (fileList) {
-      console.log("Grouped Files:", groupedFiles);
-    }
-  }, [fileList, groupedFiles]);
 
   // 메뉴 순서 업데이트 뮤테이션
   const updateOrderMutation = useMutation({
@@ -469,12 +460,6 @@ export default function MenuManagementPage() {
       }
     }
   }, [menus, tempMenu, selectedMenu]);
-
-  // 메뉴 선택 시 파일 목록 조회
-  const handleMenuSelect = (menu: Menu) => {
-    setSelectedMenu(menu);
-    console.log("Selected Menu:", menu);
-  };
 
   return (
     <Box bg={colors.bg} minH="100vh" w="full" position="relative">

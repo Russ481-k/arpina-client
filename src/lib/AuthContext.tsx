@@ -53,18 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    console.log("verifyResponse", verifyResponse);
     if (verifyResponse?.data?.success) {
-      console.log("Token verification successful:", verifyResponse);
       const responseData = verifyResponse.data.data;
-      console.log("Response data from verify:", responseData);
 
       // Extract role from authorities array
       let role = "USER";
       if (responseData.authorities && responseData.authorities.length > 0) {
         const authority = responseData.authorities[0].authority;
         role = authority.replace("ROLE_", "");
-        console.log("Extracted role from authorities:", role);
       }
 
       // localStorage에 저장할 사용자 정보 객체 (필드 축소 및 정의된 필드만 포함)
@@ -95,17 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: "", // 컨텍스트용 데이터에도 일관성 있게 빈 문자열
       };
 
-      console.log("User data to store in localStorage:", userToStore);
-      console.log(
-        "Setting user data for context with role:",
-        fullUserDataForContext.role
-      );
-
       setUser(fullUserDataForContext);
       setIsAuthenticated(true);
       setToken(getToken()!, undefined, undefined, userToStore);
     } else if (!isVerifying && (verifyError || getToken())) {
-      console.log("Token verification failed, removing token");
       console.error("Verify error details:", verifyError);
       removeToken();
       setUser(null);
@@ -123,13 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onSuccess: (response) => {
       const data = response.data;
       if (data?.success && data?.data?.accessToken) {
-        console.log("Login successful, setting token:", data.data.accessToken);
-
         // Extract user data
         const userData = data.data.user;
-        console.log("Login user data from API:", userData);
-        console.log("User role from login:", userData.role);
-
         // Set token and user state
         setToken(
           data.data.accessToken,
@@ -141,7 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAuthenticated(true);
 
         // Manually make a verification request after token is set
-        console.log("Manually triggering token verification after login...");
         setTimeout(() => {
           authApi
             .verifyToken()
@@ -163,20 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userData.role === "ROLE_ADMIN" ||
           userData.role === "ROLE_SYSTEM_ADMIN";
 
-        console.log(
-          "Login redirect - Path:",
-          currentPath,
-          "Role:",
-          userData.role,
-          "Is Admin:",
-          isAdmin
-        );
-
         // Determine redirect based on login page and user role
         if (currentPath === "/cms/login") {
           // From CMS login page
           if (isAdmin) {
-            console.log("CMS login successful, redirecting to CMS dashboard");
             router.push("/cms");
           } else {
             console.log(
@@ -197,7 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
-      console.log("Logout successful, removing token");
       removeToken();
       setUser(null);
       setIsAuthenticated(false);

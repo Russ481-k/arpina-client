@@ -35,12 +35,6 @@ export function useHeroSectionData(boardUrl?: string) {
   useEffect(() => {
     const originalPath = boardUrl || pathname;
     const keyPath = getBasePath(originalPath);
-    console.log(
-      "Updated path for hero data:",
-      originalPath,
-      "-> Key path:",
-      keyPath
-    );
 
     const newData = heroSectionData[keyPath] || {
       header: "기본 헤더",

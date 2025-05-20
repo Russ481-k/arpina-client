@@ -55,7 +55,6 @@ export default function ContentManagementPage() {
         throw new Error("Failed to fetch contents");
       }
       const data = await response.json();
-      console.log("API Response:", data);
       setContents(data);
     } catch (error) {
       console.error("Error fetching contents:", error);

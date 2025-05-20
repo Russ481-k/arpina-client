@@ -53,23 +53,16 @@ export function ContentList({
   const fetchMenus = async () => {
     try {
       setError(null);
-      console.log("Fetching content menus...");
-      console.log("Auth header:", getAuthHeader());
       const response = await fetch("/api/cms/menu?type=CONTENT", {
         headers: getAuthHeader(),
       });
-      console.log("Response status:", response.status);
-      console.log("Response headers:", response.headers);
       if (!response.ok) {
         throw new Error("Failed to fetch menus");
       }
       const data = await response.json();
-      console.log("Raw content data:", data);
       const transformedData = data.map(transformMenuToTreeItem);
-      console.log("Transformed content data:", transformedData);
       return transformedData;
     } catch (error) {
-      console.error("Error fetching menus:", error);
       setError("컨텐츠 목록을 불러오는데 실패했습니다.");
       toaster.error({
         title: "컨텐츠 목록을 불러오는데 실패했습니다.",

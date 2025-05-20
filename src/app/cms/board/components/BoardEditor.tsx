@@ -405,10 +405,6 @@ export const BoardEditor = React.memo(function BoardEditor({
                   colorPalette="blue"
                   checked={formData.attachmentYn === "Y"}
                   onCheckedChange={({ checked }) => {
-                    console.log(
-                      "첨부파일 설정 변경:",
-                      checked ? "허용" : "비허용"
-                    );
                     setFormData((prev) => ({
                       ...prev,
                       attachmentYn: checked ? "Y" : "N",
@@ -437,7 +433,6 @@ export const BoardEditor = React.memo(function BoardEditor({
                       value={formData.attachmentLimit}
                       onChange={(e) => {
                         const value = e.target.value;
-                        console.log("첨부파일 개수 제한 변경:", value);
                         setFormData((prev) => ({
                           ...prev,
                           attachmentLimit: value,
@@ -462,7 +457,6 @@ export const BoardEditor = React.memo(function BoardEditor({
                       value={formData.attachmentSize}
                       onChange={(e) => {
                         const value = e.target.value;
-                        console.log("첨부파일 용량 제한 변경:", value);
                         setFormData((prev) => ({
                           ...prev,
                           attachmentSize: value,

@@ -20,11 +20,6 @@ export default function ProtectedMypageClient({
     const authToken = localStorage.getItem("auth_token");
     const authUser = localStorage.getItem("auth_user");
 
-    console.log("Mypage auth check:", {
-      hasToken: !!authToken,
-      hasUser: !!authUser,
-    });
-
     if (authToken && authUser) {
       setIsAuthorized(true);
     } else {

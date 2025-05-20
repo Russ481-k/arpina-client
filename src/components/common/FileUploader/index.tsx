@@ -478,11 +478,6 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     }
   }, [onChange]);
 
-  // Debug log moved to useEffect for better debugging
-  useEffect(() => {
-    console.log("FileUploader props:", { maxFiles, maxSizeInMB });
-  }, [maxFiles, maxSizeInMB]);
-
   return (
     <Box w="100%">
       <DndProvider backend={HTML5Backend}>

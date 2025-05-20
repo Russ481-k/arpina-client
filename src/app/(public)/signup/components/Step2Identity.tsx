@@ -195,15 +195,8 @@ export const Step2Identity = ({
 
       // Check if the message is from our NICE callback
       if (messageData && messageData.source === "nice-auth-callback") {
-        console.log(
-          "Step2Identity: Received NICE Auth Callback Message:",
-          messageData
-        );
-
         switch (messageData.type) {
           case "NICE_AUTH_SUCCESS":
-            console.log("Step2Identity: Handling NICE_AUTH_SUCCESS");
-
             // 요청번호 검증
             if (messageData.data.reqSeq !== storedReqSeq) {
               console.error("Invalid request sequence detected");
@@ -244,11 +237,6 @@ export const Step2Identity = ({
             break;
 
           case "NICE_AUTH_FAIL":
-            console.log(
-              "Step2Identity: Handling NICE_AUTH_FAIL",
-              messageData.error
-            );
-
             const errorMessage =
               messageData.errorDetail ||
               messageData.error ||
@@ -277,9 +265,6 @@ export const Step2Identity = ({
 
           case "DUPLICATE_DI":
             // 중복 가입 처리는 상위 컴포넌트에서 처리
-            console.log(
-              "Step2Identity: Received DUPLICATE_DI, parent will handle redirect"
-            );
             break;
         }
       }

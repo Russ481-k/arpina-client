@@ -85,7 +85,6 @@ export default function SignupPage() {
   // Define handlers before useEffect that depends on them
   const handleVerificationSuccess = useCallback(
     (result: NiceVerificationSuccessPayload) => {
-      console.log("SignupPage: NICE Verification Success", result);
       setNiceAuthData(result.verificationData);
       setNiceAuthKey(result.verificationKey || null);
     },
@@ -94,7 +93,6 @@ export default function SignupPage() {
 
   const handleVerificationFail = useCallback(
     (result: NiceVerificationFailPayload) => {
-      console.log("SignupPage: NICE Verification Fail", result);
       setNiceAuthData(null);
       setNiceAuthKey(null);
     },
@@ -103,10 +101,6 @@ export default function SignupPage() {
 
   const handleSignupSuccess = useCallback(
     (username: string) => {
-      console.log(
-        "Signup successful, navigating to completion step. Username:",
-        username
-      );
       setRegisteredUsername(username);
       setCurrentStep(COMPLETION_STEP);
       setIsSubmitting(false);
@@ -126,14 +120,8 @@ export default function SignupPage() {
 
       // Check if the message is from our NICE callback
       if (messageData && messageData.source === "nice-auth-callback") {
-        console.log(
-          "SignupPage: Received NICE Auth Callback Message:",
-          messageData
-        );
-
         switch (messageData.type) {
           case "DUPLICATE_DI":
-            console.log("SignupPage: Handling DUPLICATE_DI.");
             setNiceAuthData(null);
             setNiceAuthKey(null);
             const usernameParam = messageData.username
@@ -145,7 +133,6 @@ export default function SignupPage() {
             break;
 
           case "NICE_AUTH_SUCCESS":
-            console.log("SignupPage: Handling NICE_AUTH_SUCCESS.");
             handleVerificationSuccess({
               verificationData: messageData.data,
               verificationKey: messageData.verificationKey,
@@ -153,10 +140,6 @@ export default function SignupPage() {
             break;
 
           case "NICE_AUTH_FAIL":
-            console.log(
-              "SignupPage: Handling NICE_AUTH_FAIL.",
-              messageData.error
-            );
             handleVerificationFail({
               error: messageData.error,
               verificationKey: messageData.verificationKey,

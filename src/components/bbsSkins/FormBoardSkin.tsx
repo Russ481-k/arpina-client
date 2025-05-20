@@ -177,13 +177,6 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
     router.push(`/${currentPathId}?page=1&size=${newSize}`);
   };
 
-  const handleRowClick = useCallback(
-    (event: RowClickedEvent<Post>) => {
-      console.log("Row clicked (Form skin):", event.data);
-    },
-    [router, currentPathId]
-  );
-
   const agGridContext = useMemo(() => ({ currentPathId }), [currentPathId]);
 
   const agGridThemeClass =
@@ -261,7 +254,6 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
             defaultColDef={defaultColDef}
             domLayout="autoHeight"
             context={agGridContext}
-            onRowClicked={handleRowClick}
             enableCellTextSelection={true}
             getRowStyle={() => ({
               background: rowBackgroundColor,

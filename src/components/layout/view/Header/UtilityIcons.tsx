@@ -23,11 +23,6 @@ export const UtilityIcons = memo(
       const authToken = localStorage.getItem("auth_token");
       const authUser = localStorage.getItem("auth_user");
 
-      console.log("Auth check for mypage:", {
-        hasToken: !!authToken,
-        hasUser: !!authUser,
-      });
-
       if (authToken && authUser) {
         // 인증 정보가 있으면 마이페이지로 이동
         router.push("/mypage");

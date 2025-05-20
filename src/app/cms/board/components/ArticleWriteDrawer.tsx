@@ -30,9 +30,6 @@ export const ArticleWriteDrawer = ({
   // This function is called by internal components (e.g., ArticleEditor's onSubmit/onCancel)
   // It should start the closing process by calling the parent's handler via onOpenChange.
   const handleClose = () => {
-    console.log(
-      "[ArticleWriteDrawer] handleClose triggered, calling parent onOpenChange(false)."
-    );
     onOpenChange(false); // This will call handleCloseDrawer in the parent
     // Setting local state might be redundant if parent unmounts quickly, but good practice
     setIsDrawerOpen(false);
@@ -40,10 +37,6 @@ export const ArticleWriteDrawer = ({
 
   // This handles the Drawer.Root's own state change request (e.g., clicking backdrop/esc)
   const handleDrawerOpenChange = (e: { open: boolean }) => {
-    console.log(
-      "[ArticleWriteDrawer] Drawer.Root onOpenChange triggered with:",
-      e.open
-    );
     if (!e.open) {
       // If the drawer requests to be closed, update local state AND notify parent
       setIsDrawerOpen(false);
@@ -53,7 +46,6 @@ export const ArticleWriteDrawer = ({
   };
 
   // Log before rendering ArticleEditor
-  console.log("[ArticleWriteDrawer] Passing menuId to ArticleEditor:", menuId);
 
   return (
     <Drawer.Root

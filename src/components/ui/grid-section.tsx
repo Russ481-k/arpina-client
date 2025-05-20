@@ -87,7 +87,6 @@ export function GridSection({
   });
 
   const onLayoutChange = (currentLayout: Layout[], allLayouts: Layouts) => {
-    console.log(currentLayout, allLayouts);
     setLayouts(allLayouts);
   };
 

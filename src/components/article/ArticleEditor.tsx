@@ -50,11 +50,6 @@ export function ArticleEditor({
   maxFileSizeMB,
   disableAttachments,
 }: ArticleEditorProps) {
-  // Log the received menuId prop
-  console.log("[ArticleEditor] Received menuId prop:", menuId);
-
-  // Log menuId before passing to useArticleForm hook
-  console.log("[ArticleEditor] Passing menuId to useArticleForm hook:", menuId);
   const {
     formData,
     updateFormField,

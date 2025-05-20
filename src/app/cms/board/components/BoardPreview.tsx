@@ -589,7 +589,6 @@ const BoardPreview = React.memo(function BoardPreview({
     (open: boolean) => {
       setDetailDrawerOpen(open);
       if (!open && refetchArticles) {
-        console.log("Detail drawer closed, refetching articles...");
         refetchArticles();
       }
     },
@@ -821,9 +820,6 @@ const BoardPreview = React.memo(function BoardPreview({
                 alignItems: "center",
               })}
               rowSelection="single"
-              onCellValueChanged={(event: CellValueChangedEvent<Article>) =>
-                console.log(`New Cell Value: ${event.newValue}`)
-              }
               onRowClicked={handleRowClick}
               context={agGridContext}
             />

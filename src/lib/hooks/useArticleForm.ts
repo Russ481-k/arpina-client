@@ -39,9 +39,6 @@ export function useArticleForm({
   maxFileSizeMB,
   disableAttachments,
 }: UseArticleFormProps = {}) {
-  // Log the received arguments
-  console.log("[useArticleForm] Received initialData:", initialData);
-
   const [formData, setFormData] = useState<ArticleFormData>(() => ({
     title: initialData?.title || "",
     author: initialData?.writer || "",
@@ -85,7 +82,6 @@ export function useArticleForm({
       // If on a public page AND attachment settings are being directly provided by props,
       // skip fetching boardInfo from within this hook.
       if (!isAdminPage && typeof disableAttachments === "boolean") {
-        // console.log("[useArticleForm] Skipping internal fetchBoardInfo on public page because disableAttachments prop is provided.");
         setIsLoading(false); // Ensure loading is set to false if we skip
         return;
       }
@@ -140,10 +136,6 @@ export function useArticleForm({
           mimeType: att.mimeType,
         }));
       setExistingAttachments(mappedAttachments);
-      console.log(
-        "[useArticleForm] Loaded existing attachments:",
-        mappedAttachments
-      );
     } else {
       setExistingAttachments([]);
     }
@@ -152,9 +144,6 @@ export function useArticleForm({
 
   // 폼 제출 핸들러
   const handleSubmit = async (expectedCaptchaText?: string) => {
-    // Log menuId at the start of submit
-    console.log("[useArticleForm handleSubmit] Using menuId:", menuId);
-
     if (!bbsId) {
       return { success: false, message: "게시판 ID가 없습니다." };
     }
@@ -277,23 +266,8 @@ export function useArticleForm({
       // --- API Call ---
       let nttIdToUpdate: number | undefined = initialData?.nttId;
 
-      // Log data just before sending
-      console.log("[useArticleForm handleSubmit] Data to send:", {
-        articleDtoPart,
-        editorContentJson: formData.content, // This is what's sent as editorContentJson
-        pendingMediaSize: pendingMedia.size,
-        mediaLocalIds: allMediaLocalIds,
-        newlyAddedFilesCount: newlyAddedFiles.length,
-        attachmentsToDeleteCount: attachmentsToDelete.length,
-        isUpdate: !!nttIdToUpdate,
-      });
-
       // Before updating/creating the article, handle attachment deletions
       if (attachmentsToDelete.length > 0) {
-        console.log(
-          "[useArticleForm] Deleting attachments:",
-          attachmentsToDelete
-        );
         try {
           for (const fileId of attachmentsToDelete) {
             await articleApi.deleteAttachment(fileId);
@@ -388,9 +362,6 @@ export function useArticleForm({
   // Function to clear pending media and revoke URLs (e.g., for cancellation)
   const clearPendingMedia = useCallback(() => {
     if (pendingMedia.size > 0) {
-      console.log(
-        "[useArticleForm] Clearing pending media and revoking URLs..."
-      );
       pendingMedia.forEach((_file, localUrl) => {
         URL.revokeObjectURL(localUrl);
       });
@@ -408,12 +379,6 @@ export function useArticleForm({
 
   // Callback for media added in LexicalEditor
   const handleMediaAdded = useCallback((localUrl: string, file: File) => {
-    console.log("[useArticleForm] Media added to pendingMedia:", {
-      localUrl,
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-    });
     setPendingMedia((prev) => new Map(prev).set(localUrl, file));
     // Consider revoking object URLs later, e.g., on unmount or when form is submitted/cleared
   }, []);
@@ -487,9 +452,6 @@ export function useArticleForm({
     // Cleanup function to revoke Object URLs on unmount
     return () => {
       if (pendingMedia.size > 0) {
-        console.log(
-          "[useArticleForm Cleanup] Revoking Object URLs for pending media..."
-        );
         pendingMedia.forEach((_file, localUrl) => {
           URL.revokeObjectURL(localUrl);
         });

@@ -213,7 +213,6 @@ export default function MenuManagementPage() {
   const handleSubmit = useCallback(
     async (menuData: Omit<Menu, "id" | "createdAt" | "updatedAt">) => {
       try {
-        console.log("Submitting menu data:", menuData);
         const menuId = tempMenu ? undefined : selectedMenu?.id;
         if (menuId !== undefined) {
           setLoadingMenuId(menuId);
@@ -222,7 +221,6 @@ export default function MenuManagementPage() {
           id: menuId,
           menuData,
         });
-        console.log("Save result:", result);
         setSelectedMenu(null);
         setTempMenu(null);
       } catch (error) {

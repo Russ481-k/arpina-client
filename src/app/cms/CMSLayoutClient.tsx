@@ -25,23 +25,15 @@ function CMSLayoutContent({ children }: { children: React.ReactNode }) {
     user?.role === "ROLE_ADMIN" ||
     user?.role === "ROLE_SYSTEM_ADMIN";
 
-  console.log("Current user data:", user);
-  console.log("User role:", user?.role);
-  console.log("Is authorized for CMS:", isAuthorized);
-
   // Handle auth redirect
   useEffect(() => {
     if (isLoading || isLoginPage || redirecting) return;
 
     if (!isAuthenticated) {
       // Not logged in, redirect to login
-      console.log("CMSLayout: Not authenticated, redirecting to login");
       router.push("/cms/login");
     } else if (!isAuthorized) {
       // Logged in but not authorized for CMS
-      console.log(
-        "CMSLayout: Not authorized for CMS, showing toast and redirecting to login"
-      );
       setRedirecting(true);
 
       // Show toast message

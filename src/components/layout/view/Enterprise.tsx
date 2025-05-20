@@ -35,7 +35,6 @@ export const EnterpriseView = memo(() => {
       const response = await enterpriseApi.getEnterprises({
         year: selectedYear,
       });
-      console.log("API Response:", response);
 
       // Use type assertion to handle the actual response structure
       const responseData = response as any;

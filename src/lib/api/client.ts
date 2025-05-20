@@ -47,13 +47,6 @@ export const privateApi = axios.create({
 privateApi.interceptors.request.use(
   (config) => {
     const token = getToken();
-    console.log("[DEBUG] Request to:", config.url);
-    console.log("[DEBUG] Auth token present:", !!token);
-    console.log(
-      "[DEBUG] Auth header:",
-      token ? `Bearer ${token.substring(0, 15)}...` : "None"
-    );
-
     if (token) {
       config.headers.Authorization = `Bearer ${token.trim()}`;
     }
@@ -132,13 +125,11 @@ const createApiClient = (isPrivate: boolean): AxiosInstance => {
               withCredentials: true,
             });
 
-            console.log("Attempting to refresh token...");
             const response = await refreshClient.post("/auth/refresh", {
               refreshToken,
             });
 
             if (response.data?.success && response.data?.data?.accessToken) {
-              console.log("Token refreshed successfully.");
               setToken(
                 response.data.data.accessToken,
                 response.data.data.refreshToken

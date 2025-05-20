@@ -44,27 +44,7 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
   } = useForm<ScheduleFormData>({});
 
   useEffect(() => {
-    // Log the schedule object when useEffect runs
-    console.log(
-      "[ScheduleForm useEffect] Received schedule prop:",
-      JSON.parse(JSON.stringify(schedule || {}))
-    );
-    console.log(
-      "[ScheduleForm useEffect] Received selectedDateForNew:",
-      selectedDateForNew
-    );
-
     if (schedule) {
-      console.log(
-        "[ScheduleForm useEffect] Resetting form with existing schedule:",
-        {
-          title: schedule.title,
-          content: schedule.content,
-          startDateTime: schedule.startDateTime,
-          endDateTime: schedule.endDateTime,
-          displayYn: schedule.displayYn,
-        }
-      );
       reset({
         title: schedule.title ?? "", // Ensure title is also handled if null/undefined
         content: schedule.content ?? "",
@@ -86,10 +66,6 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
       newStartDate.setMilliseconds(0);
       const newEndDate = new Date(newStartDate.getTime() + 60 * 60 * 1000);
 
-      console.log(
-        "[ScheduleForm useEffect] Resetting form for new schedule based on date:",
-        baseDate
-      );
       reset({
         title: "",
         content: "",

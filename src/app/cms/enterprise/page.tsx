@@ -291,15 +291,7 @@ export default function EnterpriseManagementPage() {
   // Handler to open the drawer by setting the drawerMenuId
   const handleOpenDrawer = useCallback(() => {
     // Log the state right before checking the id
-    console.log(
-      "[handleOpenDrawer] Check before setting ID. selectedEnterpriseMenu:",
-      selectedEnterpriseMenu
-    );
     if (selectedEnterpriseMenu?.id) {
-      console.log(
-        "[handleOpenDrawer] Selected menu ID:",
-        selectedEnterpriseMenu.id
-      );
       setDrawerMenuId(selectedEnterpriseMenu.id);
     } else {
       console.error(
@@ -714,12 +706,6 @@ export default function EnterpriseManagementPage() {
       </Box>
     );
   }
-
-  // Log state values right before the conditional rendering check
-  console.log(
-    "[EnterpriseManagementPage Render Check]",
-    { drawerMenuId, selectedEnterprisePreview: !!selectedEnterprisePreview } // Log boolean for preview
-  );
 
   if (isEnterprisesError) {
     return (

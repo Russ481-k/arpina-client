@@ -56,7 +56,6 @@ export default function GuidePage() {
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    console.log("Date selected in GuidePage:", date);
 
     // Find all schedules for the selected date
     const formattedDate = date.toISOString().split("T")[0]; // YYYY-MM-DD format
@@ -76,7 +75,6 @@ export default function GuidePage() {
   };
 
   const handleScheduleClick = (schedule: Schedule | null) => {
-    console.log("Schedule clicked in GuidePage:", schedule);
     if (schedule) {
       setSelectedSchedule(schedule);
       setIsDialogOpen(true);

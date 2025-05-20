@@ -33,7 +33,6 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
   const colors = useColors();
   const { colorMode } = useColorModeComponent(); // Use the aliased import
 
-  console.log(cardData);
   // Assuming cardData.createdAt is a string parsable by new Date()
   // If it's already formatted, this logic can be removed or adapted.
   const formattedDate = cardData.createdAt
