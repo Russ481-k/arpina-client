@@ -137,13 +137,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Check user roles
         const isAdmin =
-          userData.role === "ADMIN" || userData.role === "SYSTEM_ADMIN";
+          userData.role === "ADMIN" ||
+          userData.role === "SYSTEM_ADMIN" ||
+          userData.role === "ROLE_ADMIN" ||
+          userData.role === "ROLE_SYSTEM_ADMIN";
 
         console.log(
           "Login redirect - Path:",
           currentPath,
           "Role:",
-          userData.role
+          userData.role,
+          "Is Admin:",
+          isAdmin
         );
 
         // Determine redirect based on login page and user role
@@ -154,9 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             router.push("/cms");
           } else {
             console.log(
-              "Non-admin tried to access CMS, redirecting to homepage"
+              "Non-admin tried to access CMS, showing error and staying on login page"
             );
-            router.push("/");
+            // We don't redirect here - the login page will show the error message
+            // and clear the token to force re-login
           }
         } else {
           // From public login page

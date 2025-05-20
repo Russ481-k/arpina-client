@@ -23,7 +23,7 @@ import { toaster } from "@/components/ui/toaster";
 import { Logo } from "@/components/ui/logo";
 
 function LoginForm() {
-  const { isAuthenticated, isLoading, login } = useAuth();
+  const { isAuthenticated, isLoading, login, user } = useAuth();
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -43,11 +43,38 @@ function LoginForm() {
   const pageBg = useColorModeValue("gray.50", "gray.900");
   const headingColor = useColorModeValue("gray.900", "white");
 
+  // Check if user has admin role
+  const hasAdminRole =
+    !!user &&
+    (user.role === "ADMIN" ||
+      user.role === "SYSTEM_ADMIN" ||
+      user.role === "ROLE_ADMIN" ||
+      user.role === "ROLE_SYSTEM_ADMIN");
+
   useEffect(() => {
-    if (isAuthenticated === true) {
-      router.push("/cms/menu");
+    // Only redirect if authenticated and has admin role
+    if (isAuthenticated) {
+      if (hasAdminRole) {
+        console.log("User has admin role, redirecting to CMS");
+        router.push("/cms/menu");
+      } else {
+        console.log("User does not have admin role, showing error");
+        toaster.create({
+          title: "권한이 없습니다",
+          description: "관리자 계정이 아닙니다. 관리자 계정으로 로그인하세요.",
+          type: "error",
+          duration: 5000,
+        });
+        // Clear auth data to force re-login
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("token_expiry");
+        localStorage.removeItem("auth_user");
+        // Force page refresh to clear auth context
+        window.location.reload();
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, hasAdminRole, user]);
 
   useEffect(() => {
     const rememberedId = localStorage.getItem("rememberedId");
