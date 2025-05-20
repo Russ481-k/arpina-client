@@ -1,6 +1,6 @@
 "use client"; // 클라이언트 컴포넌트로 전환
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Tabs,
@@ -29,6 +29,69 @@ import {
   PaymentDto,
 } from "@/lib/api/mypageApi";
 import { toaster } from "@/components/ui/toaster";
+import {
+  PasswordInput,
+  PasswordStrengthMeter,
+} from "@/components/ui/password-input";
+import { Tooltip } from "@/components/ui/tooltip";
+import { CheckCircle2Icon, XCircleIcon } from "lucide-react";
+
+const initialPasswordCriteria = {
+  minLength: false,
+  uppercase: false,
+  lowercase: false,
+  number: false,
+  specialChar: false,
+};
+
+// Helper component for individual checklist item in tooltip
+const PasswordTooltipChecklistItem = ({
+  label,
+  isMet,
+}: {
+  label: string;
+  isMet: boolean;
+}) => (
+  <HStack gap={2}>
+    <Box color={isMet ? "green.400" : "red.400"}>
+      {isMet ? <CheckCircle2Icon size={14} /> : <XCircleIcon size={14} />}
+    </Box>
+    <Text fontSize="xs" color={isMet ? "green.400" : "red.400"}>
+      {label}
+    </Text>
+  </HStack>
+);
+
+// Helper function to extract detailed error messages from API responses
+const getApiErrorMessage = (error: any, defaultMessage: string): string => {
+  // Check for Axios-like error structure (most common from API calls)
+  if (error && error.response && error.response.data) {
+    const data = error.response.data;
+    // Prioritize validationErrors if they exist and are not empty
+    if (data.validationErrors) {
+      if (
+        Array.isArray(data.validationErrors) &&
+        data.validationErrors.length > 0
+      ) {
+        return data.validationErrors.join("\\n"); // Join if it's an array of messages
+      } else if (
+        typeof data.validationErrors === "object" &&
+        Object.keys(data.validationErrors).length > 0
+      ) {
+        return Object.values(data.validationErrors).join("\\n"); // Join values if it's an object of messages
+      }
+    }
+    // Fallback to general message from API response
+    if (data.message && typeof data.message === "string") {
+      return data.message;
+    }
+  }
+  // Fallback for other types of errors (e.g., network error, or error.message is more direct)
+  if (error && error.message && typeof error.message === "string") {
+    return error.message;
+  }
+  return defaultMessage; // Ultimate fallback to a provided default message
+};
 
 export default function MyPage() {
   const [profile, setProfile] = useState<ProfileDto | null>(null);
@@ -40,6 +103,15 @@ export default function MyPage() {
   const [enrollments, setEnrollments] = useState<EnrollDto[]>([]);
   const [payments, setPayments] = useState<PaymentDto[]>([]);
   const router = useRouter();
+
+  // State for new password validation
+  const [passwordCriteriaMet, setPasswordCriteriaMet] = useState(
+    initialPasswordCriteria
+  );
+  const [newPasswordStrength, setNewPasswordStrength] = useState(0);
+  const [isPasswordTooltipVisible, setIsPasswordTooltipVisible] =
+    useState(false);
+  const [passwordsMatch, setPasswordsMatch] = useState(true);
 
   // 사용자 프로필 정보 불러오기
   useEffect(() => {
@@ -182,8 +254,10 @@ export default function MyPage() {
 
         toaster.create({
           title: "데이터 로딩 중 오류 발생",
-          description:
-            "마이페이지 정보 중 일부를 불러오는데 실패했습니다. 문제가 지속되면 문의해주세요.",
+          description: getApiErrorMessage(
+            error,
+            "마이페이지 정보 중 일부를 불러오는데 실패했습니다. 문제가 지속되면 문의해주세요."
+          ),
           type: "error",
         });
       } finally {
@@ -202,6 +276,38 @@ export default function MyPage() {
       console.log("[Mypage Debug] Current profile.userId:", profile.userId);
     }
   }, [profile]); // profile 상태가 변경될 때마다 실행
+
+  // Password validation logic (adapted from Step3UserInfo)
+  const validateNewPasswordCriteria = (password: string) => {
+    const criteria = {
+      minLength: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      specialChar: /[^A-Za-z0-9]/.test(password),
+    };
+    setPasswordCriteriaMet(criteria);
+    const strengthScore = Object.values(criteria).filter(Boolean).length;
+    setNewPasswordStrength(strengthScore);
+    return Object.values(criteria).every(Boolean);
+  };
+
+  const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPasswordValue = e.target.value;
+    setNewPw(newPasswordValue);
+    validateNewPasswordCriteria(newPasswordValue);
+    if (newPwConfirm) {
+      setPasswordsMatch(newPasswordValue === newPwConfirm);
+    }
+  };
+
+  const handleNewPasswordConfirmChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newConfirmPasswordValue = e.target.value;
+    setNewPwConfirm(newConfirmPasswordValue);
+    setPasswordsMatch(newPw === newConfirmPasswordValue);
+  };
 
   // 회원정보 수정 핸들러
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -233,7 +339,10 @@ export default function MyPage() {
       console.error("Failed to update profile:", error);
       toaster.create({
         title: "정보 변경 실패",
-        description: "회원정보 변경에 실패했습니다. 비밀번호를 확인해주세요.",
+        description: getApiErrorMessage(
+          error,
+          "회원정보 변경에 실패했습니다. 입력 내용을 확인하거나 비밀번호를 확인해주세요."
+        ),
         type: "error",
       });
     }
@@ -243,12 +352,33 @@ export default function MyPage() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!currentPw.trim()) {
+      toaster.create({
+        title: "현재 비밀번호 필요",
+        description: "현재 비밀번호를 입력해주세요.",
+        type: "error",
+      });
+      return;
+    }
+
     if (newPw !== newPwConfirm) {
       toaster.create({
         title: "비밀번호 불일치",
         description: "새 비밀번호와 비밀번호 확인이 일치하지 않습니다.",
         type: "error",
       });
+      return;
+    }
+
+    const isNewPasswordValid = validateNewPasswordCriteria(newPw);
+    if (!isNewPasswordValid) {
+      toaster.create({
+        title: "유효하지 않은 새 비밀번호",
+        description:
+          "새 비밀번호가 모든 조건을 충족하지 않습니다. 다시 확인해주세요.",
+        type: "error",
+      });
+      setIsPasswordTooltipVisible(true); // Show tooltip if validation fails on submit
       return;
     }
 
@@ -272,11 +402,43 @@ export default function MyPage() {
       console.error("Failed to change password:", error);
       toaster.create({
         title: "비밀번호 변경 실패",
-        description: "비밀번호 변경에 실패했습니다.",
+        description: getApiErrorMessage(
+          error,
+          "비밀번호 변경 중 오류가 발생했습니다. 현재 비밀번호를 확인하거나 입력값을 확인해주세요."
+        ),
         type: "error",
       });
     }
   };
+
+  // Password tooltip content
+  const passwordTooltipContent = useMemo(
+    () => (
+      <VStack align="start" gap={0.5}>
+        <PasswordTooltipChecklistItem
+          label="8자 이상"
+          isMet={passwordCriteriaMet.minLength}
+        />
+        <PasswordTooltipChecklistItem
+          label="영문 대문자 포함"
+          isMet={passwordCriteriaMet.uppercase}
+        />
+        <PasswordTooltipChecklistItem
+          label="영문 소문자 포함"
+          isMet={passwordCriteriaMet.lowercase}
+        />
+        <PasswordTooltipChecklistItem
+          label="숫자 포함"
+          isMet={passwordCriteriaMet.number}
+        />
+        <PasswordTooltipChecklistItem
+          label="특수문자 포함"
+          isMet={passwordCriteriaMet.specialChar}
+        />
+      </VStack>
+    ),
+    [passwordCriteriaMet]
+  );
 
   return (
     <Container maxW="container.lg" py={8}>
@@ -429,33 +591,67 @@ export default function MyPage() {
                 </Field.Root>
 
                 <Field.Root>
-                  <Field.Label>새 비밀번호</Field.Label>
-                  <Input
-                    type="password"
-                    value={newPw}
-                    onChange={(e) => setNewPw(e.target.value)}
-                    placeholder="새로운 비밀번호를 입력해주세요"
-                  />
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>새 비밀번호 확인</Field.Label>
-                  <Input
-                    type="password"
-                    value={newPwConfirm}
-                    onChange={(e) => setNewPwConfirm(e.target.value)}
-                    placeholder="새로운 비밀번호를 한번 더 입력해주세요"
-                  />
-                </Field.Root>
-
-                <Field.Root>
                   <Field.Label>현재 비밀번호</Field.Label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     value={currentPw}
                     onChange={(e) => setCurrentPw(e.target.value)}
                     placeholder="현재 비밀번호를 입력해주세요"
                   />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>새 비밀번호</Field.Label>
+                  <Stack w="full">
+                    <Tooltip
+                      content={passwordTooltipContent}
+                      open={isPasswordTooltipVisible}
+                      positioning={{ placement: "bottom-start" }}
+                      contentProps={{
+                        bg: "white",
+                        color: "gray.800",
+                        _dark: {
+                          bg: "gray.700",
+                          color: "whiteAlpha.900",
+                        },
+                        mt: 2,
+                        p: 3,
+                        fontSize: "sm",
+                        borderRadius: "md",
+                        boxShadow: "md",
+                        zIndex: "tooltip",
+                      }}
+                    >
+                      <PasswordInput
+                        value={newPw}
+                        onChange={handleNewPasswordChange}
+                        onFocus={() => setIsPasswordTooltipVisible(true)}
+                        onBlur={() => setIsPasswordTooltipVisible(false)}
+                        placeholder="새로운 비밀번호를 입력해주세요"
+                      />
+                    </Tooltip>
+                    {newPw.length > 0 && (
+                      <PasswordStrengthMeter
+                        value={newPasswordStrength}
+                        max={5}
+                      />
+                    )}
+                  </Stack>
+                </Field.Root>
+
+                <Field.Root
+                  invalid={!passwordsMatch && newPwConfirm.length > 0}
+                >
+                  <Field.Label>새 비밀번호 확인</Field.Label>
+                  <PasswordInput
+                    value={newPwConfirm}
+                    onChange={handleNewPasswordConfirmChange}
+                    placeholder="새로운 비밀번호를 한번 더 입력해주세요"
+                  />
+                  {!passwordsMatch && newPwConfirm.length > 0 && (
+                    <Field.ErrorText>
+                      비밀번호가 일치하지 않습니다.
+                    </Field.ErrorText>
+                  )}
                 </Field.Root>
               </Fieldset.Content>
 
