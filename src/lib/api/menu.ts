@@ -1,6 +1,7 @@
 import { Menu } from "@/types/api";
 import { PageDetailsDto } from "@/types/menu";
 import { privateApi, publicApi } from "./client";
+import { MenuApiResponse, PageDetailsApiResponse } from "@/types/api-response";
 
 // 메뉴를 sortOrder 기준으로 정렬하는 헬퍼 함수
 export function sortMenus(menus: Menu[]): Menu[] {
@@ -58,7 +59,7 @@ export async function fetchMenus(): Promise<Menu[]> {
     if (!response) {
       throw new Error("Failed to fetch menus");
     }
-    const sortedMenus = sortMenus(response);
+    const sortedMenus = sortMenus(response.data);
     return sortedMenus;
   } catch (error) {
     console.error("Error fetching menus:", error);
@@ -94,18 +95,6 @@ export interface UpdateMenuOrderRequest {
   position: "before" | "after" | "inside";
 }
 
-// Helper interface for the expected API response structure for PageDetails
-interface PageDetailsApiResponse {
-  status: number; // HTTP status code (as per doc, though usually not in body if using axios default parsing)
-  data: PageDetailsDto;
-  message: string;
-  error?: {
-    // For structured error responses from the API
-    code: string;
-    message: string;
-  };
-}
-
 // 메뉴 API 구현
 export const menuApi = {
   getMenus: async () => {
@@ -116,10 +105,7 @@ export const menuApi = {
     return response;
   },
   getPublicMenus: async () => {
-    const response = await privateApi.get<{
-      data: Menu[];
-      status: number;
-    }>("/cms/menu/public");
+    const response = await privateApi.get<MenuApiResponse>("/cms/menu/public");
     return response;
   },
   getMenusByType: async (type: string) => {
@@ -163,29 +149,12 @@ export const menuApi = {
 
   // New function to get page details for a menu item
   getPageDetails: async (menuId: number): Promise<PageDetailsDto> => {
-    // The endpoint from documentation is /cms/menu/{id}/page-details
-    // It's marked as PUBLIC.
-    // The publicApi.get method returns the `data` part of the axios response.
-    // So, we expect it to return the PageDetailsApiResponse structure.
     const response = await publicApi.get<PageDetailsApiResponse>(
       `/cms/menu/public/${menuId}/page-details`
     );
 
-    // According to the API doc, successful response has PageDetailsDto in the 'data' field
-    // and error responses might also be 200 OK from HTTP but with an 'error' object in the JSON.
-    // However, the API doc also mentions 404s with a specific JSON error structure.
-    // The axios client interceptors might handle HTTP errors (4xx, 5xx) already.
-    // This check is for cases where HTTP status is 200 but the API indicates an error in the body.
-    if (response.error) {
-      console.error("API Error in getPageDetails:", response.error);
-      throw new Error(
-        response.error.message || `API error code: ${response.error.code}`
-      );
-    }
-
-    // If no error field, and assuming the structure matches PageDetailsApiResponse,
-    // the actual DTO is in response.data
-    return response.data;
+    // API 응답에서 data 필드를 반환
+    return response.data.data;
   },
 };
 

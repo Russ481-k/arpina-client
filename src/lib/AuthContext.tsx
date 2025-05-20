@@ -47,14 +47,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (verifyResponse?.success) {
+    console.log("verifyResponse", verifyResponse);
+    if (verifyResponse?.data?.success) {
       console.log("Token verification successful:", verifyResponse);
+      const responseData = verifyResponse.data.data;
       const userData = {
-        uuid: verifyResponse.data.userId,
-        username: verifyResponse.data.username,
-        name: verifyResponse.data.username,
+        uuid: responseData.userId,
+        username: responseData.username,
+        name: responseData.username,
         email: "",
-        role: verifyResponse.data.role,
+        role: responseData.role,
         status: "ACTIVE",
         createdAt: "",
         updatedAt: "",
@@ -77,18 +79,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
-    onSuccess: (data) => {
+    onSuccess: (response) => {
+      const data = response.data;
       if (data?.success && data?.data?.accessToken) {
         console.log("Login successful, setting token:", data.data.accessToken);
+
+        // Extract user data
+        const userData = data.data.user;
+
+        // Set token and user state
         setToken(
           data.data.accessToken,
           data.data.refreshToken,
           undefined,
-          data.data.user
+          userData
         );
-        setUser(data.data.user);
+        setUser(userData);
         setIsAuthenticated(true);
-        router.push("/cms");
+
+        // Get the current URL path using window.location
+        const currentPath = window.location.pathname;
+
+        // Check user roles
+        const isAdmin =
+          userData.role === "ADMIN" || userData.role === "SYSTEM_ADMIN";
+
+        console.log(
+          "Login redirect - Path:",
+          currentPath,
+          "Role:",
+          userData.role
+        );
+
+        // Determine redirect based on login page and user role
+        if (currentPath === "/cms/login") {
+          // From CMS login page
+          if (isAdmin) {
+            console.log("CMS login successful, redirecting to CMS dashboard");
+            router.push("/cms");
+          } else {
+            console.log(
+              "Non-admin tried to access CMS, redirecting to homepage"
+            );
+            router.push("/");
+          }
+        } else {
+          // From public login page
+          console.log("Public login successful, redirecting to homepage");
+          router.push("/");
+        }
       }
     },
   });

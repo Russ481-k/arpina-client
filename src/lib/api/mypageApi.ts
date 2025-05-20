@@ -108,23 +108,30 @@ const MYPAGE_API_BASE_URL = "/mypage";
 export const mypageApi = {
   // 3.1 회원정보 (Profile)
   getProfile: async (): Promise<ProfileDto> => {
-    return privateApi.get<ProfileDto>(`${MYPAGE_API_BASE_URL}/profile`);
+    const response = await privateApi.get<ProfileDto>(
+      `${MYPAGE_API_BASE_URL}/profile`
+    );
+    return response.data;
   },
   updateProfile: async (data: Partial<ProfileDto>): Promise<ProfileDto> => {
     // Assuming response is the updated ProfileDto
-    return privateApi.patch<ProfileDto>(`${MYPAGE_API_BASE_URL}/profile`, data);
+    const response = await privateApi.patch<ProfileDto>(
+      `${MYPAGE_API_BASE_URL}/profile`,
+      data
+    );
+    return response.data;
   },
 
   // 3.2 비밀번호 (Pass & Temp)
   changePassword: async (data: PasswordChangeDto): Promise<void> => {
     // Spec says 200, implies void or a simple success message
-    return privateApi.patch<void>(`${MYPAGE_API_BASE_URL}/password`, data);
+    await privateApi.patch<void>(`${MYPAGE_API_BASE_URL}/password`, data);
   },
   requestTemporaryPassword: async (
     data: TemporaryPasswordRequestDto
   ): Promise<void> => {
     // Spec says "Sent", implies void
-    return privateApi.post<void>(`${MYPAGE_API_BASE_URL}/password/temp`, data);
+    await privateApi.post<void>(`${MYPAGE_API_BASE_URL}/password/temp`, data);
   },
 
   // 3.3 수영장 신청 & 결제 (Enroll)
@@ -132,21 +139,29 @@ export const mypageApi = {
     params?: GetEnrollmentsParams
   ): Promise<EnrollDto[]> => {
     // Spec: List<EnrollDto>
-    return privateApi.get<EnrollDto[]>(`${MYPAGE_API_BASE_URL}/enroll`, {
-      params,
-    });
+    const response = await privateApi.get<EnrollDto[]>(
+      `${MYPAGE_API_BASE_URL}/enroll`,
+      {
+        params,
+      }
+    );
+    return response.data;
   },
   getEnrollmentById: async (id: number): Promise<EnrollDto> => {
-    return privateApi.get<EnrollDto>(`${MYPAGE_API_BASE_URL}/enroll/${id}`);
+    const response = await privateApi.get<EnrollDto>(
+      `${MYPAGE_API_BASE_URL}/enroll/${id}`
+    );
+    return response.data;
   },
   checkoutEnrollment: async (id: number): Promise<CheckoutDto> => {
-    return privateApi.post<CheckoutDto>(
+    const response = await privateApi.post<CheckoutDto>(
       `${MYPAGE_API_BASE_URL}/enroll/${id}/checkout`
     );
+    return response.data;
   },
   payEnrollment: async (id: number, data: PayRequestDto): Promise<void> => {
     // Spec says 200 / Error
-    return privateApi.post<void>(
+    await privateApi.post<void>(
       `${MYPAGE_API_BASE_URL}/enroll/${id}/pay`,
       data
     );
@@ -156,28 +171,36 @@ export const mypageApi = {
     data: CancelEnrollmentRequestDto
   ): Promise<void> => {
     // Spec says "Requested"
-    return privateApi.patch<void>(
+    await privateApi.patch<void>(
       `${MYPAGE_API_BASE_URL}/enroll/${id}/cancel`,
       data
     );
   },
   renewEnrollment: async (data: RenewalRequestDto): Promise<EnrollDto> => {
     // Spec says "Created", assuming returns created/updated EnrollDto
-    return privateApi.post<EnrollDto>(`${MYPAGE_API_BASE_URL}/renewal`, data);
+    const response = await privateApi.post<EnrollDto>(
+      `${MYPAGE_API_BASE_URL}/renewal`,
+      data
+    );
+    return response.data;
   },
 
   // 3.4 결제 내역 (Payment)
   getPayments: async (params?: GetPaymentsParams): Promise<PaymentDto[]> => {
     // Spec: List<PaymentDto>
-    return privateApi.get<PaymentDto[]>(`${MYPAGE_API_BASE_URL}/payment`, {
-      params,
-    });
+    const response = await privateApi.get<PaymentDto[]>(
+      `${MYPAGE_API_BASE_URL}/payment`,
+      {
+        params,
+      }
+    );
+    return response.data;
   },
   requestPaymentCancel: async (paymentId: number): Promise<void> => {
     // Spec says "Requested"
     // The spec URL is /payment/{id}/cancel, which implies it's a POST, but often cancel can be PATCH or DELETE too.
     // Sticking to POST as per example cURL and lack of other indicators.
-    return privateApi.post<void>(
+    await privateApi.post<void>(
       `${MYPAGE_API_BASE_URL}/payment/${paymentId}/cancel`
     );
   },

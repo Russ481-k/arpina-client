@@ -23,48 +23,33 @@ export default function RoutesLayout({
   const colors = useColors();
 
   // 메뉴 목록 가져오기
-  const { data: menuResponse, isLoading: isMenusLoading } = useQuery<Menu[]>({
+  const { data: menuResponse, isLoading: isMenusLoading } = useQuery({
     queryKey: menuKeys.list(""),
     queryFn: async () => {
       const response = await menuApi.getPublicMenus();
-      // Convert targetId to string if needed
-      return response.data.map((menu: any) => ({
-        ...menu,
-        targetId:
-          menu.targetId !== undefined && menu.targetId !== null
-            ? String(menu.targetId)
-            : undefined,
-      }));
+      return response;
     },
   });
 
   const menus = useMemo(() => {
     try {
-      const responseData = menuResponse;
-      if (!responseData) return [];
-
-      // API 응답이 배열인 경우
-      if (Array.isArray(responseData)) {
-        // Convert targetId to number for sortMenus
-        return sortMenus(
-          responseData.map((menu: any) => ({
-            ...menu,
-            targetId:
-              menu.targetId !== undefined &&
-              menu.targetId !== null &&
-              menu.targetId !== ""
-                ? Number(menu.targetId)
-                : undefined,
-          }))
-        );
+      if (!menuResponse) {
+        return [];
       }
 
-      // API 응답이 객체인 경우 data 필드를 확인
-      const menuData = responseData;
-      if (!menuData) return [];
+      // API response structure: { success, message, data, errorCode, stackTrace }
+      // Get the menu array from the data property
+      const menuData = Array.isArray(menuResponse.data)
+        ? menuResponse.data
+        : (menuResponse as any).data;
 
-      // menuData가 배열인지 확인
-      return Array.isArray(menuData) ? sortMenus(menuData) : [menuData];
+      if (!menuData || !Array.isArray(menuData)) {
+        console.warn("Menu data is not an array:", menuData);
+        return [];
+      }
+
+      // Process the flat menu array into a hierarchical structure
+      return sortMenus(menuData);
     } catch (error) {
       console.error("Error processing menu data:", error);
       return [];

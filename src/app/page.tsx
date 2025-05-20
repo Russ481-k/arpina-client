@@ -19,27 +19,28 @@ export default function Home() {
 
   const treeMenus = useMemo(() => {
     try {
-      const responseData = menus;
-      if (!responseData) return [];
-
-      // API 응답이 배열인 경우
-      if (Array.isArray(responseData)) {
-        return sortMenus(responseData);
+      // API 응답이 성공했는지 확인
+      if (!menus?.success) {
+        console.error("Menu API call was not successful");
+        return [];
       }
 
-      // API 응답이 객체인 경우 data 필드를 확인
-      const menuData = responseData;
-      if (!menuData) return [];
+      // data 배열이 존재하는지 확인
+      const menuData = menus.data;
+      if (!menuData || !Array.isArray(menuData)) {
+        console.error("Menu data is not an array:", menuData);
+        return [];
+      }
 
-      // menuData가 배열인지 확인
-      return Array.isArray(menuData) ? sortMenus(menuData) : [menuData];
+      // 메뉴 데이터를 정렬해서 반환
+      return sortMenus(menuData);
     } catch (error) {
       console.error("Error processing menu data:", error);
       return [];
     }
   }, [menus]);
-  const styles = useUserStyles(STYLES as Styles);
 
+  const styles = useUserStyles(STYLES as Styles);
   return (
     <Layout menus={treeMenus} currentPage="홈">
       <Global styles={getScrollbarStyle(isDark)} />

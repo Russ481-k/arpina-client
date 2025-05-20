@@ -1,30 +1,94 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Center,
-  Container,
   Flex,
   Heading,
   Input,
-  Link,
   VStack,
   HStack,
-  Text,
   Fieldset,
   Field,
+  Text,
 } from "@chakra-ui/react";
+import { Field as CustomField } from "@/components/ui/field";
 import Image from "next/image";
-import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toaster } from "@/components/ui/toaster";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login, isLoading: authLoading } = useAuth();
 
+  // Form state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({
+    username: "",
+    password: "",
+    general: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Validation function
+  const validateForm = () => {
+    const newErrors = {
+      username: username ? "" : "아이디를 입력해주세요",
+      password: password ? "" : "비밀번호를 입력해주세요",
+      general: "",
+    };
+
+    setErrors(newErrors);
+    return !newErrors.username && !newErrors.password;
+  };
+
+  // Handle login submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({ ...errors, general: "" });
+
+    try {
+      await login({ username, password });
+      // Login successful - toast will be shown during redirect
+      toaster.create({
+        title: "로그인 성공",
+        description: "메인 페이지로 이동합니다.",
+        type: "success",
+        duration: 3000,
+      });
+      // The redirect is handled in the AuthContext
+    } catch (error: any) {
+      console.error("Login error:", error);
+      let errorMessage = "로그인에 실패했습니다. 다시 시도해주세요.";
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      setErrors({ ...errors, general: errorMessage });
+
+      toaster.create({
+        title: "로그인 실패",
+        description: errorMessage,
+        type: "error",
+        duration: 5000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle notification from URL parameters
   useEffect(() => {
     const reason = searchParams.get("reason");
     const niceUsername = searchParams.get("nice_username");
@@ -50,7 +114,10 @@ export default function LoginPage() {
         });
       });
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
+
+  // Check if the form is in loading state
+  const isLoading = isSubmitting || authLoading;
 
   return (
     <Flex
@@ -74,66 +141,95 @@ export default function LoginPage() {
           </Heading>
         </VStack>
         <Box w="full">
-          <Fieldset.Root>
-            <VStack gap="5">
-              <Field.Root id="username-field" w="full">
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="아이디를 입력하세요"
-                  size="lg"
-                />
-              </Field.Root>
-              <Field.Root id="password-field" w="full">
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="비밀번호를 입력하세요"
-                  size="lg"
-                />
-              </Field.Root>
-            </VStack>
-            <VStack gap="6" mt="8">
-              <Button
-                bg="#2E3192"
-                color="white"
-                _hover={{ bg: "#1A365D" }}
-                size="lg"
-                fontSize="md"
-                w="full"
-              >
-                로그인
-              </Button>
-              <HStack gap="3" justify="center" fontSize="sm" w="full">
-                <Button
-                  variant="outline"
-                  size="md"
-                  flex={1}
-                  borderColor="#2E3192"
-                  color="#2E3192"
-                  fontWeight="normal"
-                  onClick={() => {
-                    router.push("/signup");
-                  }}
+          <form onSubmit={handleSubmit}>
+            <Fieldset.Root>
+              <VStack gap="5">
+                <CustomField
+                  id="username-field"
+                  w="full"
+                  errorText={errors.username}
                 >
-                  회원가입
-                </Button>
-                <Button
-                  variant="outline"
-                  size="md"
-                  flex={1}
-                  borderColor="#2E3192"
-                  color="#2E3192"
-                  fontWeight="normal"
-                  onClick={() => {
-                    router.push("/find-credentials");
-                  }}
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="아이디를 입력하세요"
+                    size="lg"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </CustomField>
+
+                <CustomField
+                  id="password-field"
+                  w="full"
+                  errorText={errors.password}
                 >
-                  아이디/비밀번호 찾기
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="비밀번호를 입력하세요"
+                    size="lg"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </CustomField>
+              </VStack>
+
+              {errors.general && (
+                <Text color="red.500" mt="3" fontSize="sm">
+                  {errors.general}
+                </Text>
+              )}
+
+              <VStack gap="6" mt="8">
+                <Button
+                  type="submit"
+                  bg="#2E3192"
+                  color="white"
+                  _hover={{ bg: "#1A365D" }}
+                  size="lg"
+                  fontSize="md"
+                  w="full"
+                  disabled={isLoading}
+                  loadingText="로그인 중..."
+                >
+                  {isLoading ? "로그인 중..." : "로그인"}
                 </Button>
-              </HStack>
-            </VStack>
-          </Fieldset.Root>
+                <HStack gap="3" justify="center" fontSize="sm" w="full">
+                  <Button
+                    variant="outline"
+                    size="md"
+                    flex={1}
+                    borderColor="#2E3192"
+                    color="#2E3192"
+                    fontWeight="normal"
+                    onClick={() => {
+                      router.push("/signup");
+                    }}
+                    disabled={isLoading}
+                  >
+                    회원가입
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    flex={1}
+                    borderColor="#2E3192"
+                    color="#2E3192"
+                    fontWeight="normal"
+                    onClick={() => {
+                      router.push("/find-credentials");
+                    }}
+                    disabled={isLoading}
+                  >
+                    아이디/비밀번호 찾기
+                  </Button>
+                </HStack>
+              </VStack>
+            </Fieldset.Root>
+          </form>
         </Box>
       </VStack>
     </Flex>

@@ -30,6 +30,29 @@ export interface UserSignupResponse {
   success: boolean;
 }
 
+export interface LoginCredentials {
+  username: string;
+  password: string;
+  // rememberMe?: boolean; // 추가 옵션
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    token: string;
+    refreshToken?: string;
+    user?: {
+      id: string;
+      username: string;
+      name: string;
+      role: string;
+    };
+  };
+  errorCode?: string | null;
+  stackTrace?: string | null;
+}
+
 export interface CheckUsernameResponseData {
   available: boolean;
   message?: string;
@@ -54,6 +77,19 @@ export const userApi = {
     const response = await publicApi.post<UserSignupResponse>(
       `${USER_API_BASE_URL}/signup`,
       payload
+    );
+    return response.data;
+  },
+
+  /**
+   * 사용자 로그인
+   * @param credentials 사용자 아이디와 비밀번호
+   * @returns 로그인 결과 및 토큰 정보
+   */
+  login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
+    const response = await publicApi.post<LoginResponse>(
+      `${USER_API_BASE_URL}/login`,
+      credentials
     );
     return response.data;
   },

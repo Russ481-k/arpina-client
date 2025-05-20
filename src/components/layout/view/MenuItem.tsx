@@ -24,7 +24,15 @@ export function MenuItem({
   isMainPage = false,
   isLastItem = false,
 }: MenuItemProps) {
-  const isActive = currentPage === menu.url;
+  // Safety checks for menu properties
+  if (!menu) {
+    console.warn("MenuItem received undefined or null menu");
+    return null;
+  }
+
+  // Check if the menu has a valid URL
+  const menuUrl = menu.url || "#";
+  const isActive = currentPage === menuUrl;
   const hasChildren = menu.children && menu.children.length > 0;
   const [isSelfHovered, setIsSelfHovered] = useState(false);
 
@@ -87,7 +95,7 @@ export function MenuItem({
       >
         <Link
           as={NextLink}
-          href={menu.url}
+          href={menuUrl}
           display="block"
           py={6}
           fontSize={{ base: "xs", md: "sm", lg: "md" }}
@@ -143,79 +151,98 @@ export function MenuItem({
             gap={{ base: 4, md: 8 }}
             justify="flex-start"
           >
-            {menu.children?.map((child) => (
-              <Box key={child.id} position="relative" flexShrink={0}>
-                <Link
-                  as={NextLink}
-                  href={!!child.url ? child.url : "#"}
-                  display="block"
-                  px={3}
-                  py={1}
-                  fontSize={{ base: "xs", md: "sm" }}
-                  textAlign="left"
-                  fontWeight="medium"
-                  color={childColor}
-                  _hover={{
-                    textDecoration: "none",
-                    color: childHoverFocusColor,
-                    bg: isDark ? "gray.700" : "gray.100",
-                    borderRadius: "md",
-                  }}
-                  _focus={{
-                    boxShadow: "none",
-                    color: childHoverFocusColor,
-                    bg: isDark ? "gray.700" : "gray.100",
-                    borderRadius: "md",
-                    outline: "none",
-                    border: "none",
-                  }}
-                  _active={{
-                    bg: "transparent",
-                  }}
-                  transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                  whiteSpace="nowrap"
-                >
-                  {child.name}
-                </Link>
+            {hasChildren &&
+              menu.children?.map((child) => {
+                // Safety check for child menu item
+                if (!child || typeof child !== "object") return null;
 
-                {/* 3차 메뉴 */}
-                {child.children && child.children.length > 0 && (
-                  <VStack
-                    align="start"
-                    gap={0}
-                    p={0}
-                    mt={1}
-                    position="absolute"
-                    top="100%"
-                    left={0}
-                    minW="200px"
-                    bg="transparent"
-                    boxShadow="none"
-                    zIndex={20}
-                    display="flex"
+                return (
+                  <Box
+                    key={child.id || `child-${Math.random()}`}
+                    position="relative"
+                    flexShrink={0}
                   >
-                    {child.children.map((grandChild) => (
-                      <Link
-                        key={grandChild.id}
-                        href={grandChild.url || "#"}
-                        fontSize="sm"
-                        color={grandChildColor}
-                        _hover={{
-                          color: grandChildHoverFocusColor,
-                          bg: isDark ? "gray.600" : "gray.50",
-                        }}
-                        display="block"
-                        w="100%"
-                        py={1.5}
-                        px={3}
+                    <Link
+                      as={NextLink}
+                      href={child.url || "#"}
+                      display="block"
+                      px={3}
+                      py={1}
+                      fontSize={{ base: "xs", md: "sm" }}
+                      textAlign="left"
+                      fontWeight="medium"
+                      color={childColor}
+                      _hover={{
+                        textDecoration: "none",
+                        color: childHoverFocusColor,
+                        bg: isDark ? "gray.700" : "gray.100",
+                        borderRadius: "md",
+                      }}
+                      _focus={{
+                        boxShadow: "none",
+                        color: childHoverFocusColor,
+                        bg: isDark ? "gray.700" : "gray.100",
+                        borderRadius: "md",
+                        outline: "none",
+                        border: "none",
+                      }}
+                      _active={{
+                        bg: "transparent",
+                      }}
+                      transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                      whiteSpace="nowrap"
+                    >
+                      {child.name || "Menu"}
+                    </Link>
+
+                    {/* 3차 메뉴 */}
+                    {child.children && child.children.length > 0 && (
+                      <VStack
+                        align="start"
+                        gap={0}
+                        p={0}
+                        mt={1}
+                        position="absolute"
+                        top="100%"
+                        left={0}
+                        minW="200px"
+                        bg="transparent"
+                        boxShadow="none"
+                        zIndex={20}
+                        display="flex"
                       >
-                        {grandChild.name}
-                      </Link>
-                    ))}
-                  </VStack>
-                )}
-              </Box>
-            ))}
+                        {child.children.map((grandChild) => {
+                          // Safety check for grandchild menu item
+                          if (!grandChild || typeof grandChild !== "object")
+                            return null;
+
+                          return (
+                            <Link
+                              key={
+                                grandChild.id || `grandchild-${Math.random()}`
+                              }
+                              as={NextLink}
+                              href={grandChild.url || "#"}
+                              fontSize="sm"
+                              color={grandChildColor}
+                              _hover={{
+                                color: grandChildHoverFocusColor,
+                                bg: isDark ? "gray.600" : "gray.50",
+                              }}
+                              display="block"
+                              w="100%"
+                              py={1.5}
+                              px={3}
+                            >
+                              {grandChild.name || "Submenu"}
+                            </Link>
+                          );
+                        })}
+                      </VStack>
+                    )}
+                  </Box>
+                );
+              })}
           </Flex>
         </Box>
       </Box>
