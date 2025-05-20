@@ -10,7 +10,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <Box>
       <HeroSection slideContents={[heroData]} />
-
       <ProtectedMypageClient>{children}</ProtectedMypageClient>
     </Box>
   );

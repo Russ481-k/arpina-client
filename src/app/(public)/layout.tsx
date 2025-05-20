@@ -39,9 +39,7 @@ export default function RoutesLayout({
 
       // API response structure: { success, message, data, errorCode, stackTrace }
       // Get the menu array from the data property
-      const menuData = Array.isArray(menuResponse.data)
-        ? menuResponse.data
-        : (menuResponse as any).data;
+      const menuData = menuResponse.data.data;
 
       if (!menuData || !Array.isArray(menuData)) {
         console.warn("Menu data is not an array:", menuData);
