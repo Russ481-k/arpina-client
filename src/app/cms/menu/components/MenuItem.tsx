@@ -171,7 +171,7 @@ export const MenuItem = ({
       menuApi.updateMenu(data.id, { ...menu, name: data.name }),
     onSuccess: (updatedMenu) => {
       queryClient.invalidateQueries({ queryKey: menuKeys.lists() });
-      onEditMenu(updatedMenu);
+      onEditMenu(updatedMenu.data);
       toaster.create({
         title: "메뉴 이름이 수정되었습니다.",
         type: "success",

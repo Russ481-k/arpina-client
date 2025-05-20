@@ -104,7 +104,7 @@ export default function PostManagementPage() {
   };
 
   const handleViewPost = (postId: number) => {
-    const post = posts?.content.find((p) => p.nttId === postId);
+    const post = posts?.data.content.find((p: Post) => p.nttId === postId);
     if (post) {
       setSelectedPost(post);
       setIsEditorOpen(false);
@@ -178,7 +178,7 @@ export default function PostManagementPage() {
       ) : (
         <PostList
           bbsId={boardId}
-          posts={posts?.content || []}
+          posts={posts?.data.content || []}
           onAddPost={handleAddPost}
           onEditPost={handleEditPost}
           onDeletePost={handleDeletePost}

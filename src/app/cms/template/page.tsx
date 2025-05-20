@@ -31,7 +31,10 @@ export default function TemplateManagementPage() {
 
   const { data: templates, isLoading } = useQuery<TemplateListResponse>({
     queryKey: ["templates"],
-    queryFn: () => templateApi.getTemplates(),
+    queryFn: async () => {
+      const response = await templateApi.getTemplates();
+      return response.data;
+    },
   });
 
   // 페이지 로드 시 메인 템플릿 선택
@@ -96,9 +99,9 @@ export default function TemplateManagementPage() {
         ? templateApi.updateTemplate(data.id, mappedData)
         : templateApi.createTemplate(mappedData);
     },
-    onSuccess: (savedTemplate) => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
-      setSelectedTemplateId(savedTemplate.id);
+      setSelectedTemplateId(response.data.id);
       setTempTemplate(null);
       toaster.create({
         title: tempTemplate
@@ -240,7 +243,7 @@ export default function TemplateManagementPage() {
   const borderColor = colors.border;
 
   const selectedTemplate = templates?.data?.content.find(
-    (template) => template.id === selectedTemplateId
+    (template: Template) => template.id === selectedTemplateId
   );
 
   if (isLoading) {

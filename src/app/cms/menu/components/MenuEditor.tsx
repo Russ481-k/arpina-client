@@ -215,8 +215,8 @@ export function MenuEditor({
     queryKey: boardKeys.all,
     queryFn: boardApi.getBoardMasters,
     select: (response) => {
-      if (!response.data?.content) return [];
-      return response.data.content.map((board) => ({
+      if (!response.data?.data?.content) return [];
+      return response.data.data.content.map((board) => ({
         id: board.bbsId,
         name: board.bbsName,
       }));

@@ -28,8 +28,8 @@ export function MenuProvider({ children }: { children: React.ReactNode }) {
     queryFn: async () => {
       // 실제 API 호출
       const response = await menuApi.getPublicMenus();
-      // API 응답 형식이 변경되어 response.data가 MenuApiResponse 타입이어야 함
-      return response.data as MenuApiResponse;
+      // Axios response contains the data in response.data
+      return response.data;
     },
   });
 

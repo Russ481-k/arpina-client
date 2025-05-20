@@ -92,7 +92,7 @@ export default function EnterpriseManagementPage() {
     queryKey: menuKeys.list(""),
     queryFn: async () => {
       const response = await menuApi.getMenus();
-      return response.data;
+      return response.data.data;
     },
   });
 
@@ -125,7 +125,7 @@ export default function EnterpriseManagementPage() {
     queryKey: boardKeys.all,
     queryFn: async () => {
       const response = await boardApi.getBoardMasters();
-      return response;
+      return response.data;
     },
   });
 
@@ -193,7 +193,7 @@ export default function EnterpriseManagementPage() {
       queryKey: ["boardMenus"],
       queryFn: async () => {
         const response = await menuApi.getMenusByType("BOARD");
-        return (response as any).content;
+        return response.data.content;
       },
     });
 

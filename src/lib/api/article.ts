@@ -134,24 +134,27 @@ export const articleApi = {
     if (keyword) {
       queryParams.append("keyword", keyword);
     }
-    return await publicApi.get<ApiResponse<ArticleListResponse>>(
+    const response = await publicApi.get<ApiResponse<ArticleListResponse>>(
       `/cms/bbs/article?${queryParams.toString()}`
     );
+    return response.data;
   },
 
   // 게시글 상세 조회
   getArticle: async (nttId: number): Promise<ApiResponse<Article>> => {
-    return await privateApi.get<ApiResponse<Article>>(
+    const response = await privateApi.get<ApiResponse<Article>>(
       `/cms/bbs/article/${nttId}`
     );
+    return response.data;
   },
 
   // 게시글 생성
   createArticle: async (formData: FormData): Promise<ApiResponse<number>> => {
-    return await privateApi.post<ApiResponse<number>>(
+    const response = await privateApi.post<ApiResponse<number>>(
       "/cms/bbs/article",
       formData
     );
+    return response.data;
   },
 
   // 게시글 수정
@@ -159,17 +162,19 @@ export const articleApi = {
     nttId: number,
     formData: FormData
   ): Promise<ApiResponse<void>> => {
-    return await privateApi.put<ApiResponse<void>>(
+    const response = await privateApi.put<ApiResponse<void>>(
       `/cms/bbs/article/${nttId}`,
       formData
     );
+    return response.data;
   },
 
   // 게시글 삭제
   deleteArticle: async (nttId: number): Promise<ApiResponse<void>> => {
-    return await privateApi.delete<ApiResponse<void>>(
+    const response = await privateApi.delete<ApiResponse<void>>(
       `/cms/bbs/article/${nttId}`
     );
+    return response.data;
   },
 
   // 첨부파일 업로드
@@ -181,35 +186,39 @@ export const articleApi = {
     files.forEach((file) => {
       formData.append("files", file);
     });
-    return await privateApi.post<ApiResponse<void>>(
+    const response = await privateApi.post<ApiResponse<void>>(
       `/cms/bbs/article/${nttId}/attach`,
       formData
     );
+    return response.data;
   },
 
   // 첨부파일 목록 조회
   getAttachments: async (nttId: number): Promise<ApiResponse<any[]>> => {
-    return await privateApi.get<ApiResponse<any[]>>(
+    const response = await privateApi.get<ApiResponse<any[]>>(
       `/cms/bbs/article/${nttId}/attach`
     );
+    return response.data;
   },
 
   // 첨부파일 삭제
   deleteAttachment: async (
     attachmentId: number
   ): Promise<ApiResponse<void>> => {
-    return await privateApi.delete<ApiResponse<void>>(
+    const response = await privateApi.delete<ApiResponse<void>>(
       `/cms/bbs/attach/${attachmentId}`
     );
+    return response.data;
   },
 
   // 비로그인 QNA 작성
   createAnonymousArticle: async (
     params: AnonymousArticleParams
   ): Promise<ApiResponse<{ nttId: number }>> => {
-    return await privateApi.post<ApiResponse<{ nttId: number }>>(
+    const response = await privateApi.post<ApiResponse<{ nttId: number }>>(
       "/cms/bbs/article/anonymous",
       params
     );
+    return response.data;
   },
 };

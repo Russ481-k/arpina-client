@@ -11,13 +11,13 @@ interface MenuContextType {
 const MenuContext = createContext<MenuContextType | null>(null);
 
 export const MenuProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data: menus = [], isLoading } = useQuery({
+  const { data: menus, isLoading } = useQuery({
     queryKey: ["menus"],
     queryFn: () => publicApi.get<Menu[]>("/menu"),
   });
 
   const value = {
-    menus,
+    menus: menus?.data || [],
     isLoading,
   };
 

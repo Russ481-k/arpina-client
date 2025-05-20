@@ -49,7 +49,7 @@ export function ContentPreview({ content }: ContentPreviewProps) {
     queryKey: menuKeys.list(""),
     queryFn: async () => {
       const response = await menuApi.getMenus();
-      return response.data;
+      return response.data.data;
     },
   });
 

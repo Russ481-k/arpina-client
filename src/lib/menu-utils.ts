@@ -20,7 +20,7 @@ export async function findMenuByPath(pathname: string): Promise<Menu | null> {
     const apiResponse = await publicApi.get<PublicMenusApiResponse>(
       "/cms/menu/public"
     );
-    const allMenus: Menu[] = apiResponse.data;
+    const allMenus: Menu[] = apiResponse.data.data;
 
     if (!allMenus || allMenus.length === 0) {
       console.warn("[findMenuByPath] No menus fetched or menu list is empty.");

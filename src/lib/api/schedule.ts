@@ -24,7 +24,7 @@ export const scheduleApi = {
     const response = await publicApi.get<ScheduleListResponse>(
       `/cms/schedule/${params.year}/${params.month}`
     );
-    return response;
+    return response.data;
   },
 
   // Get schedules by date range
@@ -35,7 +35,7 @@ export const scheduleApi = {
     const response = await publicApi.get<ScheduleListResponse>(
       `/cms/schedule/range/${dateFrom}/${dateTo}`
     );
-    return response;
+    return response.data;
   },
 
   // Get a single schedule
@@ -43,7 +43,7 @@ export const scheduleApi = {
     const response = await publicApi.get<ScheduleResponse>(
       `/cms/schedule/${id}`
     );
-    return response;
+    return response.data;
   },
 
   // Create a new schedule
@@ -52,7 +52,7 @@ export const scheduleApi = {
       "/cms/schedule",
       data
     );
-    return response;
+    return response.data;
   },
 
   // Update a schedule
@@ -64,7 +64,7 @@ export const scheduleApi = {
       `/cms/schedule/${id}`,
       data
     );
-    return response;
+    return response.data;
   },
 
   // Delete a schedule

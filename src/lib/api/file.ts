@@ -33,7 +33,7 @@ export const fileApi = {
    * @param menuId 관련 리소스 ID
    * @returns 업로드 결과 Promise (FileUploadResponse)
    */
-  upload: (
+  upload: async (
     filesToUpload: File | File[],
     menu: string,
     menuId: number
@@ -87,11 +87,13 @@ export const fileApi = {
       );
     }
 
-    return publicApi.post<FileUploadResponse>(
+    const response = await publicApi.post<FileUploadResponse>(
       `${BASE_URL}/public/upload`,
       formData
       // Axios will automatically set Content-Type for FormData
     );
+
+    return response.data;
   },
 
   getList: (params: {

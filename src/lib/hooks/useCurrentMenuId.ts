@@ -13,7 +13,7 @@ export function useCurrentMenuId(): number | undefined {
   const rawPathname = usePathname();
 
   return useMemo(() => {
-    if (!rawPathname || !menus?.length) return undefined;
+    if (!rawPathname || !menus?.data?.length) return undefined;
 
     let pathname = rawPathname;
 
@@ -24,7 +24,7 @@ export function useCurrentMenuId(): number | undefined {
       : pathname;
 
     // 1. 정확히 일치하는 메뉴 찾기
-    const exactMatch = menus.find((menu) => {
+    const exactMatch = menus.data?.find((menu: Menu) => {
       const menuUrl = menu.url?.trim();
       return (
         menuUrl === pathname ||
@@ -36,7 +36,7 @@ export function useCurrentMenuId(): number | undefined {
     if (exactMatch) return exactMatch.id;
 
     // 2. 가장 구체적인 부분 일치 메뉴 찾기
-    const partialMatches = menus.filter((menu) => {
+    const partialMatches = menus.data?.filter((menu: Menu) => {
       const menuUrl = menu.url?.trim();
       if (!menuUrl) return false;
 
@@ -121,10 +121,11 @@ export function useCurrentMenu() {
     }
 
     // 메뉴 ID로 메뉴 객체 찾기
-    const findMenuById = (id: number) => menus.find((menu) => menu.id === id);
+    const findMenuById = (id: number) =>
+      menus.data?.find((menu: Menu) => menu.id === id);
 
     // 현재 메뉴 경로 찾기
-    const menuPath = findMenuPath(menus, currentMenuId);
+    const menuPath = findMenuPath(menus.data, currentMenuId);
 
     // 현재 메뉴와 부모 메뉴 객체
     const currentMenu = findMenuById(currentMenuId);

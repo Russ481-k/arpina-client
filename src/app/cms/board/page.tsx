@@ -45,7 +45,7 @@ export default function BoardManagementPage() {
       queryKey: boardKeys.all,
       queryFn: async () => {
         const response = await boardApi.getBoardMasters();
-        return response;
+        return response.data;
       },
     });
 
@@ -113,7 +113,7 @@ export default function BoardManagementPage() {
     queryKey: ["boardMenus"],
     queryFn: async () => {
       const response = await menuApi.getMenusByType("BOARD");
-      return (response as any).content;
+      return response.data.content;
     },
   });
 

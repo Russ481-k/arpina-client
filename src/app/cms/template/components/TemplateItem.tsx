@@ -143,7 +143,7 @@ export const TemplateItem = ({
       }),
     onSuccess: (updatedTemplate) => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
-      onEditTemplate(updatedTemplate);
+      onEditTemplate(updatedTemplate.data);
       toaster.create({
         title: "템플릿 이름이 수정되었습니다.",
         type: "success",

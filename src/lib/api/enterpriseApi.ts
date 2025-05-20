@@ -24,7 +24,7 @@ export const getEnterprises = async (
       API_BASE_URL,
       { params }
     );
-    return responseData;
+    return responseData.data;
   } catch (error: any) {
     console.error("Error fetching enterprises:", error);
     return {
@@ -72,7 +72,7 @@ export const createEnterprise = async (
       formData
     );
 
-    return responseData;
+    return responseData.data;
   } catch (error: any) {
     console.error("Error creating enterprise:", error);
     return {
@@ -95,7 +95,7 @@ export const getEnterpriseById = async (
     const responseData = await privateApi.get<EnterpriseDetailApiResponse>(
       `${API_BASE_URL}/${id}`
     );
-    return responseData;
+    return responseData.data;
   } catch (error: any) {
     console.error(`Error fetching enterprise ${id}:`, error);
     return {
@@ -134,7 +134,7 @@ export const updateEnterprise = async (
       formData
     );
 
-    return responseData;
+    return responseData.data;
   } catch (error: any) {
     console.error(`Error updating enterprise ${id}:`, error);
     return {

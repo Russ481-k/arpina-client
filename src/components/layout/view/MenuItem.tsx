@@ -24,6 +24,8 @@ export function MenuItem({
   isMainPage = false,
   isLastItem = false,
 }: MenuItemProps) {
+  const [isSelfHovered, setIsSelfHovered] = useState(false);
+
   // Safety checks for menu properties
   if (!menu) {
     console.warn("MenuItem received undefined or null menu");
@@ -34,7 +36,6 @@ export function MenuItem({
   const menuUrl = menu.url || "#";
   const isActive = currentPage === menuUrl;
   const hasChildren = menu.children && menu.children.length > 0;
-  const [isSelfHovered, setIsSelfHovered] = useState(false);
 
   // Determine colors based on header state (isNavHovered) and dark mode
   const topLevelColor = isNavHovered

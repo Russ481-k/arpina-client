@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Box, VStack, Text, Flex, Badge, Button } from "@chakra-ui/react";
 import { useColors } from "@/styles/theme";
 import { useColorModeValue } from "@/components/ui/color-mode";

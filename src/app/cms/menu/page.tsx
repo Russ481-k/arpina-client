@@ -69,7 +69,7 @@ export default function MenuManagementPage() {
     queryKey: menuKeys.list(""),
     queryFn: async () => {
       const response = await menuApi.getMenus();
-      return response.data;
+      return response.data.data;
     },
   });
 
@@ -146,8 +146,8 @@ export default function MenuManagementPage() {
     },
     onSuccess: (savedMenu) => {
       queryClient.invalidateQueries({ queryKey: menuKeys.lists() });
-      setSelectedMenu(savedMenu);
-      setParentMenuId(savedMenu.parentId || null);
+      setSelectedMenu(savedMenu.data);
+      setParentMenuId(savedMenu.data.parentId || null);
       setTempMenu(null);
       toaster.create({
         title: tempMenu ? "메뉴가 생성되었습니다." : "메뉴가 수정되었습니다.",
