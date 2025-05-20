@@ -105,7 +105,7 @@ export const menuApi = {
     return response;
   },
   getPublicMenus: async () => {
-    const response = await privateApi.get<MenuApiResponse>("/cms/menu/public");
+    const response = await publicApi.get<MenuApiResponse>("/cms/menu/public");
     return response;
   },
   getMenusByType: async (type: string) => {

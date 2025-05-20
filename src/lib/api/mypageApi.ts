@@ -108,16 +108,62 @@ const MYPAGE_API_BASE_URL = "/mypage";
 export const mypageApi = {
   // 3.1 회원정보 (Profile)
   getProfile: async (): Promise<ProfileDto> => {
-    const response = await privateApi.get<ProfileDto>(
+    // privateApi.get<T>는 AxiosResponse<T>["data"]를 반환하므로, T는 ProfileDto이거나
+    // ProfileDto를 포함하는 래퍼 객체일 수 있습니다.
+    const responseData: any = await privateApi.get<any>(
       `${MYPAGE_API_BASE_URL}/profile`
     );
-    return response.data;
+
+    // console.log("getProfile - responseData from privateApi.get:", responseData); // 디버깅 로그
+
+    if (responseData && typeof responseData === "object") {
+      // 경우 1: responseData 자체가 ProfileDto인 경우 (주요 필드 존재 여부로 확인)
+      if (
+        "userId" in responseData &&
+        "name" in responseData &&
+        "phone" in responseData
+      ) {
+        return responseData as ProfileDto;
+      }
+      // 경우 2: responseData가 { data: ProfileDto, ... } 형태의 래퍼 객체인 경우
+      if (
+        responseData.data &&
+        typeof responseData.data === "object" &&
+        responseData.data !== null &&
+        "userId" in responseData.data &&
+        "name" in responseData.data &&
+        "phone" in responseData.data
+      ) {
+        return responseData.data as ProfileDto;
+      }
+    }
+
+    // 위의 두 경우에 해당하지 않으면, 예상치 못한 구조이거나 필수 데이터가 누락된 것입니다.
+    console.error(
+      "Failed to parse profile data from API or missing essential fields. Received:",
+      responseData
+    );
+    // 이 경우, 사용자에게 오류를 알리거나, 안전한 기본값을 반환하거나, 에러를 throw해야 합니다.
+    // 개발 중에는 에러를 throw하여 문제를 빠르게 인지하는 것이 좋습니다.
+    throw new Error(
+      "Invalid or unexpected profile data structure received from API."
+    );
+    // 또는, 빈 ProfileDto 객체를 반환하여 UI가 깨지지 않도록 할 수도 있습니다.
+    // return { name: "", userId: "", phone: "", address: "", email: "", carNo: "" } as ProfileDto;
   },
-  updateProfile: async (data: Partial<ProfileDto>): Promise<ProfileDto> => {
+  updateProfile: async (
+    data: Partial<ProfileDto>,
+    currentPassword?: string
+  ): Promise<ProfileDto> => {
+    // 비밀번호 인증이 필요한 경우
+    const payload = currentPassword
+      ? { ...data, currentPassword } // 백엔드에서 currentPassword로 인증 처리
+      : data;
+
     // Assuming response is the updated ProfileDto
     const response = await privateApi.patch<ProfileDto>(
       `${MYPAGE_API_BASE_URL}/profile`,
-      data
+      payload
     );
     return response.data;
   },

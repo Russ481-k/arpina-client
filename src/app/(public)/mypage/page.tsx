@@ -1,449 +1,600 @@
 "use client"; // 클라이언트 컴포넌트로 전환
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { menuApi } from "@/lib/api/menu";
-import { articleApi, Article } from "@/lib/api/article";
-import { PageDetailsDto } from "@/types/menu";
-import { Post } from "@/types/api"; // Keep Post for mapping
-import { PaginationData } from "@/types/common";
-import { File } from "@/app/cms/file/types"; // Explicitly import File type
-import { findMenuByPath } from "@/lib/menu-utils"; // Import findMenuByPath
-import { Box, Flex, Heading, Text, Button } from "@chakra-ui/react"; // Chakra UI 컴포넌트 임포트
-import React, { useState, useEffect, useCallback } from "react"; // React 훅 임포트
-import NextLink from "next/link"; // NextLink import 경로 수정
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Tabs,
+  Container,
+  Flex,
+  Heading,
+  Input,
+  Button,
+  Stack,
+  VStack,
+  HStack,
+  Text,
+  Grid,
+  GridItem,
+  Badge,
+  Field,
+  Fieldset,
+  Table,
+} from "@chakra-ui/react";
+import { useAuth } from "@/lib/AuthContext";
+import { useRouter } from "next/navigation";
+import {
+  mypageApi,
+  ProfileDto,
+  EnrollDto,
+  PaymentDto,
+} from "@/lib/api/mypageApi";
+import { toaster } from "@/components/ui/toaster";
 
-// 스킨 컴포넌트 임포트
-import BasicBoardSkin from "@/components/bbsSkins/BasicBoardSkin";
-import FaqBoardSkin from "@/components/bbsSkins/FaqBoardSkin";
-import QnaBoardSkin from "@/components/bbsSkins/QnaBoardSkin";
-import PressBoardSkin from "@/components/bbsSkins/PressBoardSkin";
-import FormBoardSkin from "@/components/bbsSkins/FormBoardSkin";
-import CustomPagination from "@/components/common/CustomPagination"; // Import CustomPagination
-import BoardControls from "@/components/bbsCommon/BoardControls"; // Import BoardControls
-import { PageContainer } from "@/components/layout/PageContainer";
-
-interface BoardPageProps {
-  params: Promise<{ id: string }>; // params is a Promise again
-  // searchParams는 props로 받지 않고, useSearchParams() 훅을 사용하므로 제거 가능
-}
-
-interface BoardPageData {
-  pageDetails: PageDetailsDto;
-  posts: Post[]; // Skins expect Post[]
-  pagination: PaginationData;
-}
-
-const DEFAULT_PAGE_SIZE = 10;
-const DEFAULT_SORT_ORDER = "createdAt,desc"; // Default sort for articles
-
-// Helper to map Article to Post
-function mapArticleToPost(article: Article): Post {
-  // Explicitly type attachments to satisfy Post.attachments?: File[] | null
-  const mappedAttachments: File[] | null = article.attachments
-    ? article.attachments.map((att): File => {
-        // Use the imported File type for the return type of the map callback
-        const savedNameDerived =
-          att.downloadUrl.substring(att.downloadUrl.lastIndexOf("/") + 1) ||
-          att.originName;
-        return {
-          // Fields from AttachmentInfoDto
-          fileId: att.fileId,
-          originName: att.originName,
-          mimeType: att.mimeType,
-          size: att.size,
-          ext: att.ext,
-
-          // Fields from File interface requiring mapping/defaults
-          menu: "BBS", // Default module
-          menuId: article.menuId, // from article context
-          savedName: savedNameDerived, // derived or default
-          version: 1, // default
-          publicYn: "Y", // default
-          fileOrder: 0, // default
-
-          // Audit fields (nullable in File interface, set to null)
-          createdBy: null,
-          createdDate: null,
-          createdIp: null,
-          updatedBy: null,
-          updatedDate: null,
-          updatedIp: null,
-        };
-      })
-    : null;
-
-  return {
-    no: article.no,
-    nttId: article.nttId,
-    bbsId: article.bbsId,
-    parentNttId: article.parentNttId,
-    threadDepth: article.threadDepth,
-    writer: article.writer,
-    title: article.title,
-    content: article.content,
-    hasImageInContent: article.hasImageInContent,
-    hasAttachment: article.hasAttachment,
-    noticeState: article.noticeState as "Y" | "N" | "P",
-    noticeStartDt: article.noticeStartDt,
-    noticeEndDt: article.noticeEndDt,
-    publishState: article.publishState as "Y" | "N" | "P",
-    publishStartDt: article.publishStartDt,
-    publishEndDt: article.publishEndDt,
-    externalLink: article.externalLink,
-    hits: article.hits,
-    createdAt: article.createdAt,
-    updatedAt: article.updatedAt,
-    thumbnailUrl: article.thumbnailUrl,
-    status: article.status,
-    attachments: mappedAttachments, // Use the correctly typed variable
-    categories: [],
-  };
-}
-
-async function getBoardPageData(
-  menuId: number,
-  currentPage: number,
-  requestedPageSize?: number,
-  keyword?: string // Add keyword parameter
-): Promise<BoardPageData | null> {
-  const pageSizeToUse = requestedPageSize || DEFAULT_PAGE_SIZE;
-  try {
-    const pageDetails = await menuApi.getPageDetails(menuId);
-
-    if (
-      !pageDetails ||
-      pageDetails.menuType !== "BOARD" ||
-      typeof pageDetails.boardId !== "number" // Ensure boardId is a number
-    ) {
-      console.warn(
-        `Invalid pageDetails or boardId for menuId ${menuId}:`,
-        pageDetails
-      );
-      return null;
-    }
-
-    // Use articleApi.getArticles
-    const apiResponse = await articleApi.getArticles({
-      bbsId: pageDetails.boardId,
-      menuId: menuId, // Pass menuId as well
-      page: currentPage - 1, // API is 0-indexed
-      size: pageSizeToUse,
-      keyword: keyword, // Pass keyword
-      sort: DEFAULT_SORT_ORDER, // Add sort order
-    });
-
-    // Assuming privateApi in articleApi returns ApiResponse<ArticleListResponse>
-    // and we need to access its .data property
-    if (!apiResponse.success || !apiResponse.data) {
-      console.error(
-        `Failed to fetch articles for menuId ${menuId}, bbsId ${pageDetails.boardId}:`,
-        apiResponse.message || "No data in response"
-      );
-      return null;
-    }
-
-    const articlesData = apiResponse.data; // This is ArticleListResponse
-
-    const articles = articlesData.content || [];
-    // Map Article[] to Post[]
-    const posts: Post[] = articles.map(mapArticleToPost);
-
-    // Correctly access pageable properties and totalElements
-    const { pageNumber, pageSize } = articlesData.pageable || {
-      pageNumber: 0,
-      pageSize: pageSizeToUse,
-    };
-    const totalElements = articlesData.totalElements || 0;
-
-    const totalPages = Math.ceil(totalElements / pageSize) || 1;
-
-    const pagination: PaginationData = {
-      currentPage: pageNumber + 1, // UI is 1-indexed
-      totalPages,
-      pageSize,
-      totalElements,
-    };
-
-    return { pageDetails, posts, pagination };
-  } catch (error) {
-    console.error(
-      `Error fetching data for board page (menuId: ${menuId}, page: ${currentPage}, size: ${pageSizeToUse}, keyword: ${keyword}):`,
-      error
-    );
-    return null;
-  }
-}
-
-export default function BoardPage({
-  params, // params is a Promise again
-}: BoardPageProps) {
-  const router = useRouter();
-  const searchParamsHook = useSearchParams(); // hook 사용
-
-  const [awaitedParams, setAwaitedParams] = useState<{ id: string } | null>(
-    null
-  );
-  const [keywordInput, setKeywordInput] = useState("");
-  const [currentMenuPath, setCurrentMenuPath] = useState<string | null>(null);
-  const [boardData, setBoardData] = useState<BoardPageData | null>(null);
+export default function MyPage() {
+  const [profile, setProfile] = useState<ProfileDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"list" | "card">("list");
+  const [newPw, setNewPw] = useState("");
+  const [newPwConfirm, setNewPwConfirm] = useState("");
+  const [currentPw, setCurrentPw] = useState("");
+  const [profilePw, setProfilePw] = useState("");
+  const [enrollments, setEnrollments] = useState<EnrollDto[]>([]);
+  const [payments, setPayments] = useState<PaymentDto[]>([]);
+  const router = useRouter();
 
-  // 컴포넌트 마운트 및 params 변경 시 awaitedParams 설정, currentMenuPath 설정 및 keyword 초기화
+  // 사용자 프로필 정보 불러오기
   useEffect(() => {
-    async function resolveAndSetParams() {
-      const resolvedParams = await params;
-      setAwaitedParams(resolvedParams);
-      if (resolvedParams && resolvedParams.id) {
-        setCurrentMenuPath(`/bbs/${resolvedParams.id}`);
-        // URL에서 keyword 가져와 검색창 초기화
-        setKeywordInput(searchParamsHook.get("keyword") || "");
-      }
-    }
-    resolveAndSetParams();
-  }, [params, searchParamsHook]);
+    let localUserData: any = null; // useEffect 스코프 최상단으로 이동
 
-  // 검색 실행 함수
-  const handleSearch = useCallback(() => {
-    if (currentMenuPath) {
-      const query = new URLSearchParams();
-      query.set("page", "1");
-      if (keywordInput.trim()) {
-        query.set("keyword", keywordInput.trim());
-      }
-      const currentSize =
-        searchParamsHook.get("size") || String(DEFAULT_PAGE_SIZE);
-      query.set("size", currentSize);
-      router.push(`${currentMenuPath}?${query.toString()}`);
-    }
-  }, [router, currentMenuPath, keywordInput, searchParamsHook]);
+    async function fetchUserData() {
+      try {
+        setIsLoading(true);
 
-  // 검색 초기화 함수
-  const handleClearSearch = useCallback(() => {
-    if (currentMenuPath) {
-      setKeywordInput("");
-      const query = new URLSearchParams();
-      query.set("page", "1");
-      const currentSize =
-        searchParamsHook.get("size") || String(DEFAULT_PAGE_SIZE);
-      query.set("size", currentSize);
-      router.push(`${currentMenuPath}?${query.toString()}`);
-    }
-  }, [router, currentMenuPath, searchParamsHook]);
+        // localStorage에서 사용자 정보 가져오기
+        if (typeof window !== "undefined") {
+          const authUserStr = localStorage.getItem("auth_user");
+          if (authUserStr) {
+            try {
+              localUserData = JSON.parse(authUserStr);
+              console.log(
+                "[Mypage] Parsed auth_user from localStorage:",
+                localUserData
+              );
 
-  const currentPathId = awaitedParams?.id; // Use awaitedParams
-  const currentPageFromUrl = parseInt(searchParamsHook.get("page") || "1", 10);
-  const requestedPageSizeFromUrl = parseInt(
-    searchParamsHook.get("size") || String(DEFAULT_PAGE_SIZE),
-    10
-  );
-  const currentKeyword = searchParamsHook.get("keyword") || undefined;
-
-  useEffect(() => {
-    async function fetchData() {
-      if (!awaitedParams || !currentPathId || !currentMenuPath) {
-        // Check awaitedParams
-        setBoardData(null);
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
-      const menu = await findMenuByPath(currentMenuPath); // currentMenuPath is checked above
-      if (!menu || !menu.id) {
-        console.warn(`[BoardPage] Menu not found for path: ${currentMenuPath}`);
-        setBoardData(null); // No menu found
-        setIsLoading(false); // Stop loading
-        return;
-      }
-      const menuIdToUse = menu.id;
-      const data = await getBoardPageData(
-        menuIdToUse,
-        currentPageFromUrl, // Use value from URL for fetching
-        requestedPageSizeFromUrl, // Use value from URL for fetching
-        currentKeyword
-      );
-      if (!data) {
-        console.warn(
-          `[BoardPage] No board data found for menuId: ${menuIdToUse} at path ${currentMenuPath}`
-        );
-        setBoardData(null);
-      } else {
-        setBoardData(data);
-      }
-      setIsLoading(false);
-    }
-    fetchData();
-  }, [
-    awaitedParams, // Add awaitedParams to dependency array
-    currentPathId,
-    currentPageFromUrl,
-    requestedPageSizeFromUrl,
-    currentKeyword,
-    currentMenuPath,
-  ]);
-
-  // Pagination Handlers
-  const handlePageChange = useCallback(
-    (page: number) => {
-      // page is 0-indexed from CustomPagination
-      if (currentMenuPath) {
-        const query = new URLSearchParams(searchParamsHook.toString());
-        query.set("page", String(page + 1)); // URL is 1-indexed
-        router.push(`${currentMenuPath}?${query.toString()}`);
-      }
-    },
-    [router, currentMenuPath, searchParamsHook]
-  );
-
-  const handlePageSizeChange = useCallback(
-    (newPageSize: number) => {
-      if (currentMenuPath) {
-        const query = new URLSearchParams(searchParamsHook.toString());
-        query.set("page", "1"); // Reset to first page
-        query.set("size", String(newPageSize));
-        router.push(`${currentMenuPath}?${query.toString()}`);
-      }
-    },
-    [router, currentMenuPath, searchParamsHook]
-  );
-
-  // awaitedParams가 설정될 때까지 로딩 상태 등을 표시할 수 있음
-  if (!awaitedParams || !currentMenuPath || isLoading) {
-    // Restore check for awaitedParams
-    return (
-      <Flex justify="center" align="center" h="100vh">
-        <Box
-          width="40px"
-          height="40px"
-          border="4px solid"
-          borderColor="blue.500"
-          borderTopColor="transparent"
-          borderRadius="full"
-          animation="spin 1s linear infinite"
-        />
-      </Flex>
-    );
-  }
-
-  if (!boardData) {
-    // 데이터가 없거나 로드 실패 시 (FOLDER 타입 메뉴 등 포함)
-    // 혹은 findMenuByPath에서 menu를 못찾은 경우도 여기에 포함될 수 있도록 notFound() 호출
-    // findMenuByPath에서 못찾으면 이미 useEffect에서 notFound() 호출됨
-    return (
-      <Flex direction="column" justify="center" align="center" h="80vh">
-        <Heading mb={4}>게시판 정보를 찾을 수 없습니다.</Heading>
-        <Text>
-          선택하신 경로에 해당하는 게시판이 없거나 데이터를 불러올 수 없습니다.
-        </Text>
-        <Text>주소가 올바른지 확인하거나 잠시 후 다시 시도해 주세요.</Text>
-        <NextLink href="/" passHref>
-          <Button mt={6} colorScheme="teal" size="xs">
-            홈으로 가기
-          </Button>
-        </NextLink>
-      </Flex>
-    );
-  }
-
-  const { pageDetails, posts, pagination } = boardData;
-
-  // 기존 렌더링 로직 (Switch 문 등)
-  return (
-    <PageContainer>
-      {/* Use BoardControls component */}
-      <BoardControls
-        pageDetails={pageDetails}
-        pagination={pagination}
-        currentPathId={currentPathId!}
-        keywordInput={keywordInput}
-        onKeywordChange={setKeywordInput}
-        onSearch={handleSearch}
-        onClearSearch={handleClearSearch} // Pass the new handler
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        currentKeyword={currentKeyword} // Pass currentKeyword for clear button logic
-        requestedPageSize={requestedPageSizeFromUrl} // Pass for clear button
-        defaultPageSize={DEFAULT_PAGE_SIZE} // Pass for clear button
-      />
-
-      {/* 스킨 렌더링 ... */}
-      {(() => {
-        switch (pageDetails.boardSkinType) {
-          case "BASIC":
-            return (
-              <BasicBoardSkin
-                pageDetails={pageDetails}
-                posts={posts}
-                currentPathId={currentPathId!}
-                viewMode={viewMode}
-              />
-            );
-          case "FAQ":
-            return (
-              <FaqBoardSkin
-                pageDetails={pageDetails}
-                posts={posts}
-                pagination={pagination}
-                currentPathId={currentPathId!}
-              />
-            );
-          case "QNA":
-            return (
-              <QnaBoardSkin
-                pageDetails={pageDetails}
-                posts={posts}
-                pagination={pagination}
-                currentPathId={currentPathId!}
-              />
-            );
-          case "PRESS":
-            return (
-              <PressBoardSkin
-                pageDetails={pageDetails}
-                posts={posts}
-                pagination={pagination}
-                currentPathId={currentPathId!}
-                viewMode={viewMode}
-              />
-            );
-          case "FORM":
-            return (
-              <FormBoardSkin
-                pageDetails={pageDetails}
-                posts={posts}
-                pagination={pagination}
-                currentPathId={currentPathId!}
-              />
-            );
-          default:
-            console.warn(
-              `[BoardPage] Unknown or unsupported boardSkinType: "${pageDetails.boardSkinType}" for menuId: ${pageDetails.menuId}. Falling back to BasicBoardSkin.`
-            );
-            return (
-              <BasicBoardSkin
-                pageDetails={pageDetails}
-                posts={posts}
-                currentPathId={currentPathId!}
-                viewMode={viewMode}
-              />
-            );
+              setProfile((prevProfile) => ({
+                ...(prevProfile || {}),
+                userId: localUserData.username || prevProfile?.userId || "",
+                name: localUserData.name || prevProfile?.name || "",
+                email: localUserData.email || prevProfile?.email || "",
+                // phone, address, carNo는 API 응답을 기다립니다.
+                // 만약 localStorage에도 있다면 여기서 채울 수 있습니다.
+                phone: prevProfile?.phone || "", // API 응답 전까지는 기존 값 또는 빈 문자열 유지
+                address: prevProfile?.address || "",
+                carNo: prevProfile?.carNo || "",
+              }));
+              // setProfile의 비동기적 특성 때문에 바로 다음 줄에서 profile을 console.log하면 이전 값이 나올 수 있습니다.
+              // console.log("[Mypage] Profile state after setting from localStorage:", profile);
+            } catch (e) {
+              console.error("Error parsing auth_user from localStorage:", e);
+            }
+          }
         }
-      })()}
-      {/* Render CustomPagination if boardData and pagination data exist */}
-      {boardData &&
-        boardData.pagination &&
-        boardData.pagination.totalPages > 0 && (
-          <Flex justify="center">
-            {/* Added mt for spacing */}
-            <CustomPagination
-              currentPage={boardData.pagination.currentPage - 1} // CustomPagination is 0-indexed
-              totalPages={boardData.pagination.totalPages}
-              onPageChange={handlePageChange}
-              pageSize={boardData.pagination.pageSize}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          </Flex>
-        )}
-    </PageContainer>
+
+        const profileData = await mypageApi.getProfile();
+        console.log(
+          "[Mypage] Profile data from API (mypageApi.getProfile):",
+          profileData
+        );
+
+        if (
+          profileData &&
+          typeof profileData === "object" &&
+          profileData.userId
+        ) {
+          // API 응답으로 전체 프로필 업데이트 (이름 포함)
+          setProfile((prevProfile) => ({
+            ...prevProfile,
+            userId: profileData.userId,
+            name: profileData.name,
+            phone:
+              profileData.phone !== undefined
+                ? profileData.phone
+                : prevProfile?.phone ?? "",
+            address:
+              profileData.address !== undefined
+                ? profileData.address
+                : prevProfile?.address ?? "",
+            email:
+              profileData.email !== undefined
+                ? profileData.email
+                : prevProfile?.email ?? "",
+            carNo:
+              profileData.carNo !== undefined
+                ? profileData.carNo
+                : prevProfile?.carNo ?? "",
+          }));
+        } else {
+          console.warn(
+            "[Mypage] API did not return valid profile data, or userId is missing. Using localStorage data if available."
+          );
+          if (localUserData && (!profile || !profile.userId)) {
+            setProfile((prevProfile) => ({
+              ...(prevProfile || {}),
+              userId: localUserData.username || prevProfile?.userId || "",
+              name: localUserData.name || prevProfile?.name || "",
+              email: localUserData.email || prevProfile?.email || "",
+              phone: localUserData.phone || prevProfile?.phone || "",
+              address: localUserData.address || prevProfile?.address || "",
+              carNo: localUserData.carNo || prevProfile?.carNo || "",
+            }));
+          }
+        }
+
+        const enrollmentsData = await mypageApi.getEnrollments();
+        setEnrollments(enrollmentsData);
+
+        const paymentsData = await mypageApi.getPayments();
+        setPayments(paymentsData);
+      } catch (error) {
+        console.error(
+          "[Mypage] Failed to load user data (in catch block):",
+          error
+        );
+
+        // profile 상태가 이전에 getProfile API 호출로 성공적으로 설정되었다면 (즉, name이 '윤수빈'으로 이미 설정된 상태라면)
+        // enrollments나 payments 호출 실패 시 localStorage 값으로 name을 덮어쓰지 않도록 한다.
+        if (
+          profile &&
+          profile.name &&
+          profile.name !== (localUserData?.name || localUserData?.username)
+        ) {
+          console.log(
+            "[Mypage] Error occurred (e.g., enroll/payment failed), but profile.name was already updated from API. Not overwriting name with localStorage version."
+          );
+          // 이 경우, enrollments, payments 로딩 실패에 대한 메시지만 표시하고
+          // profile.name 등 핵심 정보는 유지한다.
+          // 필요하다면 enrollments, payments를 빈 배열로 설정할 수 있다.
+          setEnrollments([]); // 에러 발생 시 빈 배열로 초기화
+          setPayments([]); // 에러 발생 시 빈 배열로 초기화
+        } else if (localUserData && (!profile || !profile.userId)) {
+          // getProfile 자체가 실패했거나, profile이 초기화되지 않은 경우 localStorage 정보로 fallback
+          console.log(
+            "[Mypage] API error (likely getProfile itself failed or profile not initialized), attempting to set profile from localStorage as fallback (in catch)."
+          );
+          setProfile((prevProfile) => ({
+            ...(prevProfile || {}),
+            userId: localUserData.username || prevProfile?.userId || "",
+            name: localUserData.name || prevProfile?.name || "", // 이 시점에서는 localUserData.name이 username일 수 있음
+            email: localUserData.email || prevProfile?.email || "",
+            phone: localUserData.phone || prevProfile?.phone || "",
+            address: localUserData.address || prevProfile?.address || "",
+            carNo: localUserData.carNo || prevProfile?.carNo || "",
+          }));
+          setEnrollments([]);
+          setPayments([]);
+        } else if (!profile || !profile.userId) {
+          // localUserData도 없고 profile도 제대로 설정 안된 최악의 경우
+          console.log(
+            "[Mypage] Critical error: No profile data and no localStorage fallback."
+          );
+          setEnrollments([]);
+          setPayments([]);
+        }
+
+        toaster.create({
+          title: "데이터 로딩 중 오류 발생",
+          description:
+            "마이페이지 정보 중 일부를 불러오는데 실패했습니다. 문제가 지속되면 문의해주세요.",
+          type: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUserData();
+  }, []);
+
+  // [추가] profile 상태 변경 추적용 useEffect
+  useEffect(() => {
+    console.log("[Mypage Debug] Profile state changed:", profile);
+    if (profile) {
+      console.log("[Mypage Debug] Current profile.name:", profile.name);
+      console.log("[Mypage Debug] Current profile.userId:", profile.userId);
+    }
+  }, [profile]); // profile 상태가 변경될 때마다 실행
+
+  // 회원정보 수정 핸들러
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile) return;
+
+    // 비밀번호가 입력되지 않은 경우
+    if (!profilePw.trim()) {
+      toaster.create({
+        title: "비밀번호 필요",
+        description: "회원정보 변경을 위해 현재 비밀번호를 입력해주세요.",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      // 프로필 정보와 현재 비밀번호를 별도로 전송
+      await mypageApi.updateProfile(profile, profilePw);
+
+      setProfilePw("");
+
+      toaster.create({
+        title: "정보 변경 완료",
+        description: "회원정보가 성공적으로 변경되었습니다.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      toaster.create({
+        title: "정보 변경 실패",
+        description: "회원정보 변경에 실패했습니다. 비밀번호를 확인해주세요.",
+        type: "error",
+      });
+    }
+  };
+
+  // 비밀번호 변경 핸들러
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPw !== newPwConfirm) {
+      toaster.create({
+        title: "비밀번호 불일치",
+        description: "새 비밀번호와 비밀번호 확인이 일치하지 않습니다.",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      await mypageApi.changePassword({
+        currentPw,
+        newPw,
+      });
+
+      // 필드 초기화
+      setCurrentPw("");
+      setNewPw("");
+      setNewPwConfirm("");
+
+      toaster.create({
+        title: "비밀번호 변경 완료",
+        description: "비밀번호가 성공적으로 변경되었습니다.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to change password:", error);
+      toaster.create({
+        title: "비밀번호 변경 실패",
+        description: "비밀번호 변경에 실패했습니다.",
+        type: "error",
+      });
+    }
+  };
+
+  return (
+    <Container maxW="container.lg" py={8}>
+      <Heading as="h1" mb={8} fontSize="3xl">
+        마이페이지
+      </Heading>
+
+      <Tabs.Root
+        defaultValue="회원정보_수정"
+        variant="line"
+        colorPalette="blue"
+      >
+        <Tabs.List mb={6}>
+          <Tabs.Trigger value="회원정보_수정">회원정보 수정</Tabs.Trigger>
+          <Tabs.Trigger value="비밀번호_변경">비밀번호 변경</Tabs.Trigger>
+          <Tabs.Trigger value="수영장_신청정보">수영장 신청정보</Tabs.Trigger>
+          <Tabs.Trigger value="수영장_결제정보">수영장 결제정보</Tabs.Trigger>
+        </Tabs.List>
+
+        {/* 회원정보 수정 */}
+        <Tabs.Content value="회원정보_수정">
+          {isLoading ? (
+            <Box textAlign="center" p={8}>
+              <Text>로딩 중...</Text>
+            </Box>
+          ) : profile ? (
+            <Box
+              as="form"
+              onSubmit={handleProfileUpdate}
+              py={4}
+              maxW="672px"
+              mx="auto"
+            >
+              <Fieldset.Root>
+                <Fieldset.Content>
+                  <Field.Root>
+                    <Field.Label>이름</Field.Label>
+                    <Input
+                      value={profile.name || ""}
+                      readOnly
+                      bg="gray.100"
+                      placeholder="이름"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>아이디</Field.Label>
+                    <Input
+                      value={profile.userId || ""}
+                      readOnly
+                      bg="gray.100"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>핸드폰 번호</Field.Label>
+                    <Input
+                      value={profile.phone || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, phone: e.target.value })
+                      }
+                      placeholder="핸드폰 번호를 입력해주세요 (ex: 123-1234-1234)"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>주소</Field.Label>
+                    <Input
+                      value={profile.address || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, address: e.target.value })
+                      }
+                      placeholder="주소를 입력해주세요"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>이메일</Field.Label>
+                    <Input
+                      value={profile.email || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, email: e.target.value })
+                      }
+                      placeholder="이메일을 입력해주세요"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>차량번호</Field.Label>
+                    <Input
+                      value={profile.carNo || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, carNo: e.target.value })
+                      }
+                      placeholder="차량번호를 입력해주세요"
+                    />
+                  </Field.Root>
+
+                  <Field.Root mt={4}>
+                    <Field.Label>본인 확인을 위한 비밀번호</Field.Label>
+                    <Input
+                      type="password"
+                      value={profilePw}
+                      onChange={(e) => setProfilePw(e.target.value)}
+                      placeholder="회원정보 변경을 위해 현재 비밀번호를 입력해주세요"
+                      required
+                    />
+                  </Field.Root>
+                </Fieldset.Content>
+
+                <Box textAlign="center" mt={4}>
+                  <Button type="submit" colorScheme="orange" size="md" px={8}>
+                    정보변경
+                  </Button>
+                </Box>
+              </Fieldset.Root>
+            </Box>
+          ) : (
+            <Box textAlign="center" p={8}>
+              <Text>사용자 정보를 불러올 수 없습니다.</Text>
+            </Box>
+          )}
+        </Tabs.Content>
+
+        {/* 비밀번호 변경 */}
+        <Tabs.Content value="비밀번호_변경">
+          <Box
+            as="form"
+            onSubmit={handlePasswordChange}
+            py={4}
+            maxW="672px"
+            mx="auto"
+          >
+            <Fieldset.Root>
+              <Fieldset.Content>
+                <Box p={4} bg="gray.50" borderRadius="md" mb={4}>
+                  <Text fontSize="sm">
+                    <strong>현재 비밀번호를 입력하세요.</strong>
+                    <br />
+                    안전을 위해 새 비밀번호를 설정해주세요.
+                    <br />
+                    비밀번호는 최소 6자 이상이며, 영문+숫자+특수문자를 포함해야
+                    합니다.
+                  </Text>
+                </Box>
+
+                <Field.Root>
+                  <Field.Label>아이디</Field.Label>
+                  <Input value={profile?.userId || ""} readOnly bg="gray.100" />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>새 비밀번호</Field.Label>
+                  <Input
+                    type="password"
+                    value={newPw}
+                    onChange={(e) => setNewPw(e.target.value)}
+                    placeholder="새로운 비밀번호를 입력해주세요"
+                  />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>새 비밀번호 확인</Field.Label>
+                  <Input
+                    type="password"
+                    value={newPwConfirm}
+                    onChange={(e) => setNewPwConfirm(e.target.value)}
+                    placeholder="새로운 비밀번호를 한번 더 입력해주세요"
+                  />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>현재 비밀번호</Field.Label>
+                  <Input
+                    type="password"
+                    value={currentPw}
+                    onChange={(e) => setCurrentPw(e.target.value)}
+                    placeholder="현재 비밀번호를 입력해주세요"
+                  />
+                </Field.Root>
+              </Fieldset.Content>
+
+              <Box textAlign="center" mt={4}>
+                <Button type="submit" colorScheme="orange" size="md" px={8}>
+                  정보변경
+                </Button>
+              </Box>
+            </Fieldset.Root>
+          </Box>
+        </Tabs.Content>
+
+        {/* 수영장 신청정보 */}
+        <Tabs.Content value="수영장_신청정보">
+          {isLoading ? (
+            <Box textAlign="center" p={8}>
+              <Text>로딩 중...</Text>
+            </Box>
+          ) : enrollments && enrollments.length > 0 ? (
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "repeat(2, 1fr)",
+                lg: "repeat(4, 1fr)",
+              }}
+              gap={6}
+              py={4}
+            >
+              {enrollments.map((enrollment, index) => (
+                <GridItem key={index}>
+                  <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
+                    <Box p={4}>
+                      <Flex direction="column" gap={2}>
+                        <Flex justify="space-between" align="center">
+                          <Text fontWeight="bold" fontSize="md">
+                            {enrollment.lesson?.title || "수영장 강습 프로그램"}
+                          </Text>
+                          <Badge
+                            colorScheme={
+                              enrollment.status === "PAID" ? "green" : "red"
+                            }
+                          >
+                            {enrollment.status === "PAID"
+                              ? "승인완료"
+                              : "승인취소"}
+                          </Badge>
+                        </Flex>
+                        <Box borderBottomWidth="1px" my={2} />
+                        <Text fontSize="sm">
+                          강습시간:{" "}
+                          {enrollment.lesson?.time || "오전 06:00 - 06:50"}
+                        </Text>
+                        <Text fontSize="sm">
+                          강습일정:{" "}
+                          {enrollment.lesson?.period ||
+                            "25년 05월 01일 ~ 25년 05월 30일"}
+                        </Text>
+                        <Text fontSize="sm">
+                          결제금액:{" "}
+                          {enrollment.lesson?.price
+                            ? `${enrollment.lesson.price.toLocaleString()}원`
+                            : "65,000원"}
+                        </Text>
+                        <Text fontSize="sm">
+                          결제/취소 시간: {new Date().toLocaleString()}
+                        </Text>
+                      </Flex>
+                    </Box>
+                  </Box>
+                </GridItem>
+              ))}
+            </Grid>
+          ) : (
+            <Box textAlign="center" p={8}>
+              <Text>신청한 수영장 강습 정보가 없습니다.</Text>
+            </Box>
+          )}
+        </Tabs.Content>
+
+        {/* 수영장 결제정보 */}
+        <Tabs.Content value="수영장_결제정보">
+          {isLoading ? (
+            <Box textAlign="center" p={8}>
+              <Text>로딩 중...</Text>
+            </Box>
+          ) : payments && payments.length > 0 ? (
+            <Box overflowX="auto" py={4}>
+              <Table.Root>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeader>번호</Table.ColumnHeader>
+                    <Table.ColumnHeader>강습일정</Table.ColumnHeader>
+                    <Table.ColumnHeader>강습시간</Table.ColumnHeader>
+                    <Table.ColumnHeader>결제/취소 시간</Table.ColumnHeader>
+                    <Table.ColumnHeader>결제금액</Table.ColumnHeader>
+                    <Table.ColumnHeader>결제상태</Table.ColumnHeader>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {Array.isArray(payments) ? (
+                    payments.map((payment, index) => (
+                      <Table.Row key={index}>
+                        <Table.Cell>9999</Table.Cell>
+                        <Table.Cell>25년 05월 01일 ~ 25년 05월 30일</Table.Cell>
+                        <Table.Cell>
+                          (월,화,수,목,금) 오전 06:00 - 06:50
+                        </Table.Cell>
+                        <Table.Cell>2025.04.18 13:00:00</Table.Cell>
+                        <Table.Cell>65,000원</Table.Cell>
+                        <Table.Cell>
+                          <Badge
+                            colorScheme={
+                              payment.status === "SUCCESS" ? "green" : "red"
+                            }
+                          >
+                            {payment.status === "SUCCESS"
+                              ? "승인완료"
+                              : "승인취소"}
+                          </Badge>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
+                  ) : (
+                    <Table.Row>
+                      <Table.Cell colSpan={6} textAlign="center">
+                        결제 내역이 없습니다.
+                      </Table.Cell>
+                    </Table.Row>
+                  )}
+                </Table.Body>
+              </Table.Root>
+            </Box>
+          ) : (
+            <Box textAlign="center" p={8}>
+              <Text>결제 내역이 없습니다.</Text>
+            </Box>
+          )}
+        </Tabs.Content>
+      </Tabs.Root>
+    </Container>
   );
 }

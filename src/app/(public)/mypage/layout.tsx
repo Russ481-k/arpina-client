@@ -3,6 +3,7 @@
 import { HeroSection } from "@/components/sections/HeroSection";
 import { Box } from "@chakra-ui/react";
 import { useHeroSectionData } from "@/lib/hooks/useHeroSectionData";
+import ProtectedMypageClient from "./ProtectedMypageClient";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const heroData = useHeroSectionData();
@@ -10,7 +11,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <Box>
       <HeroSection slideContents={[heroData]} />
 
-      {children}
+      <ProtectedMypageClient>{children}</ProtectedMypageClient>
     </Box>
   );
 };

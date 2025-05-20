@@ -60,29 +60,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Response data from verify:", responseData);
 
       // Extract role from authorities array
-      let role = "USER"; // Default role if no authorities found
+      let role = "USER";
       if (responseData.authorities && responseData.authorities.length > 0) {
         const authority = responseData.authorities[0].authority;
-        // Remove 'ROLE_' prefix if exists
         role = authority.replace("ROLE_", "");
         console.log("Extracted role from authorities:", role);
       }
 
-      const userData = {
-        uuid: responseData.uuid,
-        username: responseData.username,
-        name: responseData.username,
-        email: "",
-        role: role,
-        status: "ACTIVE",
-        createdAt: "",
-        updatedAt: "",
+      // localStorage에 저장할 사용자 정보 객체 (필드 축소 및 정의된 필드만 포함)
+      const userToStore: {
+        username: string;
+        role: string;
+        status: string;
+        createdAt: string;
+        updatedAt: string;
+      } = {
+        username: responseData.username, // username은 필수
+        role: role, // role 정보
+        status: "ACTIVE", // status (API에 없다면 기본값)
+        createdAt: "", // API 응답에 없으므로 빈 문자열로 설정
+        updatedAt: "", // API 응답에 없으므로 빈 문자열로 설정
+        // uuid, name, email은 localStorage 저장에서 제외
       };
 
-      console.log("Setting user data with role:", userData.role);
-      setUser(userData);
+      // setUser에는 UI에서 사용할 수 있는 전체 정보를 담은 객체를 전달 (기존 구조 유지 시도)
+      const fullUserDataForContext = {
+        uuid: responseData.uuid,
+        username: responseData.username,
+        name: responseData.username, // UI 초기 표시용 (어차피 나중에 API로 대체됨)
+        email: "", // API에 없다면 빈 값 또는 responseData.email (만약 있다면)
+        role: role,
+        status: "ACTIVE",
+        createdAt: "", // 컨텍스트용 데이터에도 일관성 있게 빈 문자열
+        updatedAt: "", // 컨텍스트용 데이터에도 일관성 있게 빈 문자열
+      };
+
+      console.log("User data to store in localStorage:", userToStore);
+      console.log(
+        "Setting user data for context with role:",
+        fullUserDataForContext.role
+      );
+
+      setUser(fullUserDataForContext);
       setIsAuthenticated(true);
-      setToken(getToken()!, undefined, undefined, userData);
+      setToken(getToken()!, undefined, undefined, userToStore);
     } else if (!isVerifying && (verifyError || getToken())) {
       console.log("Token verification failed, removing token");
       console.error("Verify error details:", verifyError);
