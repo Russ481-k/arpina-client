@@ -30,8 +30,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(getUser());
   const [isAuthenticated, setIsAuthenticated] = useState(!!getToken());
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   const colors = useColors();
+
+  // Set isClient to true when component mounts on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const {
     data: verifyResponse,
@@ -51,21 +57,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (verifyResponse?.data?.success) {
       console.log("Token verification successful:", verifyResponse);
       const responseData = verifyResponse.data.data;
+      console.log("Response data from verify:", responseData);
+
+      // Extract role from authorities array
+      let role = "USER"; // Default role if no authorities found
+      if (responseData.authorities && responseData.authorities.length > 0) {
+        const authority = responseData.authorities[0].authority;
+        // Remove 'ROLE_' prefix if exists
+        role = authority.replace("ROLE_", "");
+        console.log("Extracted role from authorities:", role);
+      }
+
       const userData = {
-        uuid: responseData.userId,
+        uuid: responseData.uuid,
         username: responseData.username,
         name: responseData.username,
         email: "",
-        role: responseData.role,
+        role: role,
         status: "ACTIVE",
         createdAt: "",
         updatedAt: "",
       };
+
+      console.log("Setting user data with role:", userData.role);
       setUser(userData);
       setIsAuthenticated(true);
       setToken(getToken()!, undefined, undefined, userData);
     } else if (!isVerifying && (verifyError || getToken())) {
       console.log("Token verification failed, removing token");
+      console.error("Verify error details:", verifyError);
       removeToken();
       setUser(null);
       setIsAuthenticated(false);
@@ -86,6 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Extract user data
         const userData = data.data.user;
+        console.log("Login user data from API:", userData);
+        console.log("User role from login:", userData.role);
 
         // Set token and user state
         setToken(
@@ -96,6 +118,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
         setUser(userData);
         setIsAuthenticated(true);
+
+        // Manually make a verification request after token is set
+        console.log("Manually triggering token verification after login...");
+        setTimeout(() => {
+          authApi
+            .verifyToken()
+            .then((verifyResponse) => {
+              console.log("Manual verification result:", verifyResponse);
+            })
+            .catch((error) => {
+              console.error("Manual verification failed:", error);
+            });
+        }, 1000); // Give browser time to store token
 
         // Get the current URL path using window.location
         const currentPath = window.location.pathname;
@@ -151,7 +186,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return logoutMutation.mutateAsync();
   };
 
-  if (!isInitialized || isVerifying) {
+  // Use isClient flag to prevent hydration errors
+  if (!isClient || !isInitialized || isVerifying) {
+    // Don't render the spinner on server or during hydration
+    if (!isClient) {
+      return null;
+    }
+
     return (
       <Box
         display="flex"

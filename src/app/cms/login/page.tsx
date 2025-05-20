@@ -75,28 +75,57 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    // Validate form
+    const validationErrors: any = {};
+    if (!username) validationErrors.username = "아이디를 입력해주세요";
+    if (!password) validationErrors.password = "비밀번호를 입력해주세요";
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
+    // Attempt login
     try {
+      console.log("Attempting to login with:", { username });
       await login({ username, password });
 
+      // Store username in localStorage if "remember me" is checked
       if (rememberMe) {
         localStorage.setItem("rememberedId", username);
       } else {
         localStorage.removeItem("rememberedId");
       }
 
+      // Debug token in localStorage after login
+      console.log("Login completed, checking local storage");
+      setTimeout(() => {
+        const token = localStorage.getItem("auth_token");
+        console.log(
+          "Token in localStorage:",
+          token ? token.substring(0, 15) + "..." : "No token"
+        );
+      }, 500);
+
+      // Login success message
       toaster.create({
         title: "로그인 성공",
         type: "success",
       });
-    } catch (error) {
-      toaster.create({
-        title: "로그인에 실패했습니다.",
-        type: "error",
-      });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      // Handle login errors
+      if (error?.response?.data?.message) {
+        toaster.create({
+          title: error.response.data.message,
+          type: "error",
+        });
+      } else {
+        toaster.create({
+          title: "로그인에 실패했습니다.",
+          type: "error",
+        });
+      }
     }
   };
 

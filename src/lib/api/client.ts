@@ -14,16 +14,16 @@ const BASE_URL =
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // 토큰 인증 헤더 설정
 export const setAuthToken = (token: string) => {
   if (token) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   } else {
-    delete api.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common["Authorization"];
   }
 };
 
@@ -31,7 +31,7 @@ export const setAuthToken = (token: string) => {
 export const publicApi = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -39,9 +39,31 @@ export const publicApi = axios.create({
 export const privateApi = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
+
+// Add debugging interceptors for auth token issues
+privateApi.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    console.log("[DEBUG] Request to:", config.url);
+    console.log("[DEBUG] Auth token present:", !!token);
+    console.log(
+      "[DEBUG] Auth header:",
+      token ? `Bearer ${token.substring(0, 15)}...` : "None"
+    );
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token.trim()}`;
+    }
+    return config;
+  },
+  (error) => {
+    console.error("[DEBUG] Request error:", error);
+    return Promise.reject(error);
+  }
+);
 
 // API 인터셉터 설정
 api.interceptors.response.use(

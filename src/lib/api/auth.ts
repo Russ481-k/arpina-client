@@ -4,6 +4,7 @@ import {
   VerifyTokenResponse,
 } from "@/types/api";
 import { publicApi, privateApi } from "./client";
+import { getToken } from "../auth-utils";
 
 // React Query 키 정의
 export const authKeys = {
@@ -36,7 +37,19 @@ export const authApi = {
   },
 
   verifyToken: async () => {
-    const response = await privateApi.get<VerifyTokenResponse>("/auth/verify");
+    console.log("Verifying token with privateApi");
+    const token = getToken();
+    console.log(
+      "Current token when verifying:",
+      token ? token.substring(0, 15) + "..." : "No token"
+    );
+    const response = await privateApi.get<VerifyTokenResponse>("/auth/verify", {
+      headers: token ? { Authorization: `Bearer ${token.trim()}` } : undefined,
+    });
+    console.log(
+      "Full verify response:",
+      JSON.stringify(response.data, null, 2)
+    );
     return response;
   },
 };

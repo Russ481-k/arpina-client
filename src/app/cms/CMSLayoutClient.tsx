@@ -17,7 +17,15 @@ function CMSLayoutContent({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === "/cms/login";
 
   // Check for admin/manager role
-  const isAuthorized = user?.role === "ADMIN" || user?.role === "MANAGER";
+  const isAuthorized =
+    user?.role === "ADMIN" ||
+    user?.role === "SYSTEM_ADMIN" ||
+    user?.role === "ROLE_ADMIN" ||
+    user?.role === "ROLE_SYSTEM_ADMIN";
+
+  console.log("Current user data:", user);
+  console.log("User role:", user?.role);
+  console.log("Is authorized for CMS:", isAuthorized);
 
   // Handle auth redirect
   useEffect(() => {

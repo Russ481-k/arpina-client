@@ -230,9 +230,11 @@ export interface VerifyTokenResponse {
   message: string | null;
   data: {
     valid: boolean;
-    userId: string;
+    uuid: string;
     username: string;
-    role: string;
+    authorities: {
+      authority: string;
+    }[];
   };
   errorCode: string | null;
   stackTrace: string | null;
