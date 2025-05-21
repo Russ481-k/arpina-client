@@ -431,19 +431,24 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
             </Accordion.ItemContent>
           </Accordion.Item>
         </Accordion.Root>
-
-        <SelectedFilterTags
-          selectedFilterLabels={selectedFilters}
-          onRemoveFilter={removeFilterInternal}
-        />
-
-        <Separator
-          orientation="horizontal"
-          borderColor="#E0E0E0"
-          borderWidth="1px"
-          borderStyle="solid"
-          my={4}
-        />
+        {selectedFilters.length > 0 && (
+          <>
+            <SelectedFilterTags
+              selectedFilterLabels={selectedFilters}
+              onRemoveFilter={removeFilterInternal}
+            />
+            <Separator
+              orientation="horizontal"
+              borderColor="#E0E0E0"
+              borderTopWidth={0}
+              borderLeftWidth={0}
+              borderRightWidth={0}
+              borderBottomWidth="1px"
+              borderStyle="solid"
+              my={4}
+            />
+          </>
+        )}
       </>
     );
   }

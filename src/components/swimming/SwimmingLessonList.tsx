@@ -1,19 +1,20 @@
 "use client";
 
 import { Box, Flex, Text, Grid, GridItem } from "@chakra-ui/react";
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { useLessons, useEnrollLesson } from "@/lib/hooks/useSwimming"; // Adjusted path if necessary
-import { LessonDTO } from "@/types/swimming"; // Adjusted path if necessary
-import { LessonFilterControls } from "./LessonFilterControls"; // Assuming it's in the same directory
-import { LessonCard } from "./LessonCard"; // Assuming it's in the same directory
-import {
-  statusOptions,
-  monthOptions,
-  timeTypeOptions,
-  timeSlots,
-} from "./filterConstants"; // Import constants
+import { useState, useCallback, useMemo } from "react";
+import { useLessons, useEnrollLesson } from "@/lib/hooks/useSwimming";
+import { LessonDTO } from "@/types/swimming";
+import { LessonFilterControls } from "./LessonFilterControls";
+import { LessonCard } from "./LessonCard";
+import { statusOptions } from "./filterConstants";
 
-// Updated FilterState to support multi-select (array-based)
+const statusApiToFilterValue: { [key: string]: string } = {};
+statusOptions.forEach((option) => {
+  if (option.value !== "all") {
+    statusApiToFilterValue[option.label] = option.value;
+  }
+});
+
 interface FilterState {
   status: string[];
   month: number[];
@@ -22,31 +23,28 @@ interface FilterState {
 }
 
 export const SwimmingLessonList = () => {
-  console.log("SwimmingLessonList: Rendering");
-
-  const [filter, setFilter] = useState<FilterState>(() => {
-    console.log("SwimmingLessonList: Initializing filter state");
-    return {
-      status: [],
-      month: [],
-      timeType: [],
-      timeSlot: [],
-    };
-  });
-
-  useEffect(() => {
-    console.log("SwimmingLessonList: filter state changed", filter);
-  }, [filter]);
+  const [filter, setFilter] = useState<FilterState>(() => ({
+    status: [],
+    month: [],
+    timeType: [],
+    timeSlot: [],
+  }));
 
   const [showAvailableOnly, setShowAvailableOnly] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [categoryOpen, setCategoryOpen] = useState(false);
 
-  console.log("SwimmingLessonList: Props for LessonFilterControls", {
-    filter,
-    selectedFilters,
-    categoryOpen,
-  });
+  let statusForApi: string | undefined;
+  if (showAvailableOnly) {
+    statusForApi = "OPEN";
+  } else {
+    if (filter.status.length > 0) {
+      statusForApi = filter.status.map((s) => s.toUpperCase()).join(",");
+    }
+  }
+
+  const monthForApi =
+    filter.month.length > 0 ? filter.month.join(",") : undefined;
 
   const {
     data: lessonsData,
@@ -55,75 +53,58 @@ export const SwimmingLessonList = () => {
   } = useLessons({
     page: 0,
     size: 50,
-    ...(filter.status.length > 0 && { status: filter.status.join(",") }),
-    ...(filter.month.length > 0 && { month: filter.month.join(",") }),
+    ...(statusForApi && { status: statusForApi }),
+    ...(monthForApi && { month: monthForApi }),
   });
-
-  useEffect(() => {
-    console.log("SwimmingLessonList: lessonsData changed", lessonsData);
-  }, [lessonsData]);
 
   const enrollMutation = useEnrollLesson();
   const handleApply = useCallback(
     (lessonId: number) => {
-      console.log("SwimmingLessonList: handleApply called with ID:", lessonId);
-      enrollMutation.mutate({ lessonId });
+      enrollMutation.mutate({ lessonId, wantsLocker: false });
     },
     [enrollMutation]
   );
 
-  const lessons = lessonsData?.data?.content || [
-    {
-      id: 1,
-      title: "수영 강습 프로그램",
-      name: "힐링수영반",
-      startDate: "25년05월01일",
-      endDate: "25년05월30일",
-      timeSlot: "06:00~06:50",
-      timePrefix: "오전",
-      days: "(월,화,수,목,금)",
-      capacity: 15,
-      remaining: 11,
-      price: 105000,
-      status: "접수중",
-      reservationId: "2025.04.17 13:00:00부터",
-      receiptId: "2025.04.20 18:00:00까지",
-      instructor: "성인(온라인)",
-      location: "아르피나 수영장",
-    },
-  ];
-
-  console.log("SwimmingLessonList: Raw lessons before filtering", lessons);
+  const lessons = lessonsData?.data?.content;
 
   const filteredLessons = useMemo(() => {
-    console.log(
-      "SwimmingLessonList: Recalculating filteredLessons. Dependencies:",
-      {
-        lessonsL: lessons,
-        filterL: filter,
-        showAvailableOnlyL: showAvailableOnly,
-      }
-    );
+    if (!lessons || lessons.length === 0) {
+      return [];
+    }
+
     const result = lessons.filter((lesson: LessonDTO) => {
       if (showAvailableOnly && lesson.remaining === 0) {
         return false;
       }
+
       if (filter.status.length > 0) {
-        if (
-          !lesson.status ||
-          !filter.status.includes(lesson.status.toLowerCase())
-        ) {
+        if (!lesson.status) {
+          return false;
+        }
+        const lessonStatusInFilterFormat =
+          statusApiToFilterValue[lesson.status];
+        if (!lessonStatusInFilterFormat) {
+          return false;
+        }
+        if (!filter.status.includes(lessonStatusInFilterFormat)) {
           return false;
         }
       }
+
       if (filter.month.length > 0) {
-        if (!lesson.startDate) return false;
+        if (!lesson.startDate) {
+          return false;
+        }
         const lessonMonth = new Date(lesson.startDate).getMonth() + 1;
         if (!filter.month.includes(lessonMonth)) {
           return false;
         }
       }
+
       if (filter.timeType.length > 0) {
+        if (!lesson.timePrefix) {
+          return false;
+        }
         const lessonIsMorning = lesson.timePrefix === "오전";
         const lessonIsAfternoon = lesson.timePrefix === "오후";
         const typeMatch = filter.timeType.some(
@@ -131,75 +112,78 @@ export const SwimmingLessonList = () => {
             (type === "morning" && lessonIsMorning) ||
             (type === "afternoon" && lessonIsAfternoon)
         );
-        if (!typeMatch) return false;
-      }
-      if (filter.timeSlot.length > 0) {
-        const lessonTimeSlot = lesson.timeSlot?.replace("~", "-");
-        if (!lessonTimeSlot || !filter.timeSlot.includes(lessonTimeSlot)) {
+        if (!typeMatch) {
           return false;
         }
       }
+
+      if (filter.timeSlot.length > 0) {
+        if (!lesson.timeSlot) {
+          return false;
+        }
+        const lessonTimeSlotInternal = lesson.timeSlot?.replace("~", "-");
+        if (
+          !lessonTimeSlotInternal ||
+          !filter.timeSlot.includes(lessonTimeSlotInternal)
+        ) {
+          return false;
+        }
+      }
+
       return true;
     });
-    console.log(
-      "SwimmingLessonList: Recalculated filteredLessons result",
-      result
-    );
     return result;
   }, [lessons, filter, showAvailableOnly]);
 
-  console.log(
-    "SwimmingLessonList: Final filteredLessons to render",
-    filteredLessons
-  );
-
   const handleSetFilter = useCallback((newFilter: FilterState) => {
-    console.log(
-      "SwimmingLessonList: setFilter (onFilterChange in child) called with newFilter:",
-      newFilter
-    );
     setFilter(newFilter);
   }, []);
 
   const handleSetSelectedFilters = useCallback(
     (newSelectedFilters: string[]) => {
-      console.log(
-        "SwimmingLessonList: setSelectedFilters (onSelectedFiltersChange in child) called with:",
-        newSelectedFilters
-      );
       setSelectedFilters(newSelectedFilters);
     },
     []
   );
 
   const handleSetCategoryOpen = useCallback((isOpen: boolean) => {
-    console.log(
-      "SwimmingLessonList: setCategoryOpen (onCategoryToggle in child) called with:",
-      isOpen
-    );
     setCategoryOpen(isOpen);
   }, []);
 
+  let lessonContent;
   if (lessonsLoading) {
-    console.log("SwimmingLessonList: Showing loading state");
-    return (
-      <Box textAlign="center" py={10}>
+    lessonContent = (
+      <Box textAlign="center" py={10} width="100%">
         <Text fontSize="lg">강습 정보를 불러오는 중입니다...</Text>
       </Box>
     );
-  }
-
-  if (lessonsError) {
-    console.log("SwimmingLessonList: Showing error state", lessonsError);
-    return (
-      <Box textAlign="center" py={10} color="red.500">
+  } else if (lessonsError) {
+    lessonContent = (
+      <Box textAlign="center" py={10} color="red.500" width="100%">
         <Text fontSize="lg">강습 정보를 불러오는데 문제가 발생했습니다.</Text>
         <Text mt={2}>다시 시도해주세요.</Text>
       </Box>
     );
+  } else {
+    lessonContent = (
+      <Grid
+        templateColumns={{
+          base: "repeat(1, 1fr)",
+          md: "repeat(2, 1fr)",
+          lg: "repeat(4, 1fr)",
+        }}
+        gap={6}
+        justifyItems="center"
+      >
+        {filteredLessons.map((lesson: LessonDTO) => (
+          <GridItem key={lesson.id}>
+            <LessonCard lesson={lesson} onApply={handleApply} />
+          </GridItem>
+        ))}
+      </Grid>
+    );
   }
 
-  console.log("SwimmingLessonList: Rendering main content");
   return (
     <Box>
       <Flex
@@ -221,7 +205,13 @@ export const SwimmingLessonList = () => {
           >
             신청정보{" "}
             <Text as="span" color="#2E3192" fontWeight="700">
-              {lessonsData?.data?.totalElements || filteredLessons.length}
+              {lessonsData?.data?.totalElements != null &&
+              !filter.status.length &&
+              !filter.month.length &&
+              !filter.timeType.length &&
+              !filter.timeSlot.length
+                ? lessonsData.data.totalElements
+                : filteredLessons.length}
             </Text>
             건이 있습니다
           </Text>
@@ -244,13 +234,7 @@ export const SwimmingLessonList = () => {
             height="30px"
             borderRadius="33.3333px"
             bg={showAvailableOnly ? "#2E3192" : "#ccc"}
-            onClick={() => {
-              console.log(
-                "SwimmingLessonList: Toggling showAvailableOnly. Prev:",
-                showAvailableOnly
-              );
-              setShowAvailableOnly(!showAvailableOnly);
-            }}
+            onClick={() => setShowAvailableOnly(!showAvailableOnly)}
             cursor="pointer"
             transition="background-color 0.2s"
           >
@@ -276,21 +260,7 @@ export const SwimmingLessonList = () => {
         onCategoryToggle={handleSetCategoryOpen}
       />
 
-      <Grid
-        templateColumns={{
-          base: "repeat(1, 1fr)",
-          md: "repeat(2, 1fr)",
-          lg: "repeat(4, 1fr)",
-        }}
-        gap={6}
-        justifyItems="center"
-      >
-        {filteredLessons.map((lesson: LessonDTO) => (
-          <GridItem key={lesson.id}>
-            <LessonCard lesson={lesson} onApply={handleApply} />
-          </GridItem>
-        ))}
-      </Grid>
+      {lessonContent}
     </Box>
   );
 };

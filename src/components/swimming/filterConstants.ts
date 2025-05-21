@@ -1,17 +1,39 @@
 export const statusOptions = [
   { label: "상태 전체선택", value: "all" },
-  { label: "접수대기", value: "waiting" },
-  { label: "접수중", value: "open" },
-  { label: "수강중", value: "ongoing" },
-  { label: "수강종료", value: "closed" },
+  { label: "접수대기", value: "WAITING" },
+  { label: "접수중", value: "OPEN" },
+  { label: "수강중", value: "ONGOING" },
+  { label: "수강종료", value: "CLOSED" },
 ];
 
-export const monthOptions = [
-  { label: "월별 전체선택", value: "all" },
-  { label: "2025년 04월", value: 4 },
-  { label: "2025년 05월", value: 5 },
-  { label: "2025년 06월", value: 6 },
-];
+export const monthOptions = (() => {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  const months = [];
+  months.push({ label: "월별 전체선택", value: "all" });
+
+  for (let i = -1; i <= 1; i++) {
+    let monthIndex = currentMonth + i;
+    let year = currentYear;
+
+    if (monthIndex < 0) {
+      monthIndex += 12;
+      year -= 1;
+    } else if (monthIndex > 11) {
+      monthIndex -= 12;
+      year += 1;
+    }
+
+    months.push({
+      label: `${year}년 ${String(monthIndex + 1).padStart(2, "0")}월`,
+      value: monthIndex + 1,
+    });
+  }
+
+  return months;
+})();
 
 export const timeTypeOptions = [
   { label: "시간 전체선택", value: "all" },
