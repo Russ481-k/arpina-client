@@ -11,7 +11,7 @@ import {
   RenewalRequestDto,
 } from "@/types/swimming";
 import { PaginationParams, PaginatedResponse } from "@/types/api";
-import { privateApiMethods } from "./client";
+import { privateApiMethods, publicApiMethods } from "./client";
 import {
   EnrollLessonRequestDto,
   EnrollInitiationResponseDto,
@@ -20,6 +20,7 @@ import {
   PaymentConfirmRequestDto,
   PaymentConfirmResponseDto,
   MypageRenewalRequestDto,
+  LessonDto,
 } from "@/types/api";
 import { withAuthRedirect } from "./withAuthRedirect";
 
@@ -212,14 +213,29 @@ export const processRenewal = async (
   await api.post("/swimming/renewal", renewalRequest);
 };
 
-const SWIMMING_BASE_PATH = "/swimming";
-const PAYMENT_BASE_PATH = "/payment";
-const MYPAGE_BASE_PATH = "/mypage";
+// Base paths from markdown documents
+const API_V1_BASE = "/api/v1";
+const SWIMMING_BASE_PATH = `${API_V1_BASE}/swimming`;
+const PAYMENT_BASE_PATH = `${API_V1_BASE}/payment`;
+const MYPAGE_BASE_PATH = `${API_V1_BASE}/mypage`; // For renewal
 
 /**
- * Service functions for swimming lesson enrollment and KISPG payment flow.
+ * Service functions for swimming lesson listing, enrollment, and KISPG payment flow.
  */
 export const swimmingPaymentService = {
+  /**
+   * Fetches publicly available swimming lessons.
+   * Corresponds to GET /api/v1/swimming/lessons
+   */
+  getPublicLessons: (
+    params?: PaginationParams
+  ): Promise<PaginatedResponse<LessonDto>> => {
+    return publicApiMethods.get<PaginatedResponse<LessonDto>>(
+      `${SWIMMING_BASE_PATH}/lessons`,
+      { params }
+    );
+  },
+
   /**
    * Initiates a lesson enrollment.
    * Corresponds to POST /api/v1/swimming/enroll
@@ -247,18 +263,22 @@ export const swimmingPaymentService = {
 
   /**
    * Fetches initialization parameters for KISPG payment.
-   * Corresponds to GET /api/v1/payment/kispg/init-params/{enrollId}
+   * Corresponds to GET /api/v1/payment/kispg-init-params/{enrollId}
+   * (Path from Docs/cms/kispg-payment-integration.md, though Docs/cms/payment-page-integration.md also references it)
    */
   getKISPGInitParams: withAuthRedirect(
     (enrollId: number): Promise<KISPGInitParamsDto> => {
+      // The path might be /api/v1/payment/kispg/init-params/{enrollId} or /api/v1/payment/kispg-init-params/{enrollId}
+      // Using the one from payment-page-integration.md which is /api/v1/payment/kispg-init-params/{enrollId}
+      // Docs/cms/swim-overview.md and Docs/cms/swim-user.md also point to similar /payment/kispg-init-params/{enrollId}
       return privateApiMethods.get<KISPGInitParamsDto>(
-        `${PAYMENT_BASE_PATH}/kispg/init-params/${enrollId}`
+        `${PAYMENT_BASE_PATH}/kispg-init-params/${enrollId}`
       );
     }
   ),
 
   /**
-   * Confirms a KISPG payment.
+   * Confirms payment after KISPG interaction.
    * Corresponds to POST /api/v1/payment/confirm/{enrollId}
    */
   confirmPayment: withAuthRedirect(
@@ -274,30 +294,40 @@ export const swimmingPaymentService = {
   ),
 
   /**
-   * Initiates a lesson renewal (re-enrollment from Mypage).
-   * Corresponds to POST /api/v1/mypage/renewal (or similar)
-   * This might need its own endpoint or reuse /swimming/enroll with specific flags.
-   * Assuming a dedicated renewal endpoint for now.
+   * Processes a lesson renewal request.
+   * Corresponds to POST /api/v1/mypage/renewal (as per swim-overview.md)
    */
   renewalLesson: withAuthRedirect(
     (data: MypageRenewalRequestDto): Promise<EnrollInitiationResponseDto> => {
-      // The endpoint for renewal might be different, e.g., /mypage/renewal
-      // For now, assuming it is under swimming or a generic payment/enroll path
-      // that can handle renewals.
-      // Adjust if your backend has a specific path like /mypage/renewal
       return privateApiMethods.post<
         EnrollInitiationResponseDto,
         MypageRenewalRequestDto
-      >(
-        // TODO: Verify actual renewal endpoint path with backend documentation
-        // Example: `${MYPAGE_BASE_PATH}/renewal` or `${SWIMMING_BASE_PATH}/renewal`
-        `${SWIMMING_BASE_PATH}/renewal`, // Placeholder, adjust if needed
+      >(`${MYPAGE_BASE_PATH}/renewal`, data);
+    }
+  ),
+
+  /**
+   * Cancels an enrollment.
+   * Corresponds to POST /api/v1/swimming/enroll/{enrollId}/cancel (from swim-user.md)
+   * Note: user.md shows PATCH /mypage/enroll/{id}/cancel. Sticking to swimming specific path for now.
+   * If this is purely a mypage function, it might belong in mypageApi.ts.
+   * For now, keeping a swimming related cancel here.
+   */
+  cancelUserEnrollment: withAuthRedirect(
+    (enrollId: number, data?: { reason?: string }): Promise<void> => {
+      // Assuming EnrollResponseDto might not be returned or needed for simple cancel
+      return privateApiMethods.post<void, { reason?: string }>(
+        `${SWIMMING_BASE_PATH}/enroll/${enrollId}/cancel`,
         data
       );
     }
   ),
 };
 
-// It might be useful to also update Mypage related API calls if they are in a separate file.
-// For example, fetching MypageEnrollDto and MypagePaymentDto.
-// For now, focusing on the new payment flow APIs.
+// Ensure client.ts exports publicApiMethods similar to privateApiMethods
+// e.g.,
+// export const publicApiMethods = {
+//   get: <R = unknown>(url: string, config?: AxiosRequestConfig): Promise<R> =>
+//     publicApi.get<DefaultResponse<R>>(url, config).then((res) => res.data.data).catch(handleApiError),
+//   // ... other methods if needed for public access
+// };

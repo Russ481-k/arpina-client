@@ -3,6 +3,7 @@ import {
   MypageEnrollDto,
   MypagePaymentDto,
   MypageRenewalRequestDto,
+  LockerAvailabilityDto,
 } from "@/types/api";
 import { withAuthRedirect } from "./withAuthRedirect";
 
@@ -17,12 +18,14 @@ import { withAuthRedirect } from "./withAuthRedirect";
 
 // 4.1 ProfileDto
 export interface ProfileDto {
+  id: number;
   name: string;
   userId: string;
   phone: string;
   address: string;
   email: string;
   carNo: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
 }
 
 // 4.2 PasswordChangeDto
@@ -63,6 +66,7 @@ interface ApiError extends Error {
 
 // --- API Base URL ---
 const MYPAGE_API_BASE_URL = "/mypage";
+const LOCKER_API_BASE_URL = "/api/v1/lockers"; // Base URL for locker specific APIs
 
 // --- API Object ---
 export const mypageApi = {
@@ -208,6 +212,26 @@ export const mypageApi = {
       `${MYPAGE_API_BASE_URL}/payment/${paymentId}/cancel`,
       payload
     );
+  },
+
+  // New function for locker availability status (as per swim-user.md)
+  getLockerAvailabilityStatus: async (
+    gender: "MALE" | "FEMALE"
+  ): Promise<LockerAvailabilityDto> => {
+    const response = await privateApi.get<LockerAvailabilityDto>(
+      `${LOCKER_API_BASE_URL}/availability/status`,
+      { params: { gender } }
+    );
+    // Basic validation for the response structure
+    if (
+      !response.data ||
+      typeof response.data.availableQuantity !== "number" ||
+      typeof response.data.totalQuantity !== "number" ||
+      typeof response.data.usedQuantity !== "number"
+    ) {
+      throw new Error("Invalid structure for locker availability data.");
+    }
+    return response.data;
   },
 };
 

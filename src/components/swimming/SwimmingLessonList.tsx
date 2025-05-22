@@ -90,26 +90,31 @@ export const SwimmingLessonList = () => {
     console.log("SwimmingLessonList: lessonsData changed", lessonsData);
   }, [lessonsData]);
 
-  const lessons = lessonsData?.data?.content || [
-    {
-      id: 1,
-      title: "수영 강습 프로그램",
-      name: "힐링수영반",
-      startDate: "25년05월01일",
-      endDate: "25년05월30일",
-      timeSlot: "06:00~06:50",
-      timePrefix: "오전",
-      days: "(월,화,수,목,금)",
-      capacity: 15,
-      remaining: 11,
-      price: 105000,
-      status: "접수중",
-      reservationId: "2025.04.17 13:00:00부터",
-      receiptId: "2025.04.20 18:00:00까지",
-      instructor: "성인(온라인)",
-      location: "아르피나 수영장",
-    },
-  ];
+  const fallbackLessons = useMemo(
+    () => [
+      {
+        id: 1,
+        title: "수영 강습 프로그램",
+        name: "힐링수영반",
+        startDate: "25년05월01일",
+        endDate: "25년05월30일",
+        timeSlot: "06:00~06:50",
+        timePrefix: "오전",
+        days: "(월,화,수,목,금)",
+        capacity: 15,
+        remaining: 11,
+        price: 105000,
+        status: "접수중",
+        reservationId: "2025.04.17 13:00:00부터",
+        receiptId: "2025.04.20 18:00:00까지",
+        instructor: "성인(온라인)",
+        location: "아르피나 수영장",
+      },
+    ],
+    []
+  );
+
+  const lessons = lessonsData?.data?.content || fallbackLessons;
 
   console.log("SwimmingLessonList: Raw lessons before filtering", lessons);
 

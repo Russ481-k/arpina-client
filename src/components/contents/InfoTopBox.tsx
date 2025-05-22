@@ -114,7 +114,7 @@ export default function InfoTopBox({
             fontWeight="semibold"
           >
             지금 바로 <Mark color="#2E3192">실시간</Mark> 예약하러 가기 !
-            <Image src="/images/contents/top_info_icon01.png" />
+            <Image src="/images/contents/top_info_icon01.png" alt="" />
           </Text>
           <Button
             size="lg"

@@ -62,6 +62,13 @@ export interface Colors {
       bg: string;
       hover: string;
     };
+    leafIcon: string;
+    timerYellow: string;
+    outlineButtonHoverBg: string;
+    errorNoticeBg: string;
+    errorNoticeBorder: string;
+    radioUnselectedBg: string;
+    radioUnselectedHoverBorder: string;
   };
   shadow: {
     sm: string;
@@ -399,6 +406,34 @@ export function useColors(): Colors {
           COLORS.dark.accent.delete.hover
         ),
       },
+      leafIcon: useColorModeValue(
+        COLORS.light.accent.leafIcon,
+        COLORS.dark.accent.leafIcon
+      ),
+      timerYellow: useColorModeValue(
+        COLORS.light.accent.timerYellow,
+        COLORS.dark.accent.timerYellow
+      ),
+      outlineButtonHoverBg: useColorModeValue(
+        COLORS.light.accent.outlineButtonHoverBg,
+        COLORS.dark.accent.outlineButtonHoverBg
+      ),
+      errorNoticeBg: useColorModeValue(
+        COLORS.light.accent.errorNoticeBg,
+        COLORS.dark.accent.errorNoticeBg
+      ),
+      errorNoticeBorder: useColorModeValue(
+        COLORS.light.accent.errorNoticeBorder,
+        COLORS.dark.accent.errorNoticeBorder
+      ),
+      radioUnselectedBg: useColorModeValue(
+        COLORS.light.accent.radioUnselectedBg,
+        COLORS.dark.accent.radioUnselectedBg
+      ),
+      radioUnselectedHoverBorder: useColorModeValue(
+        COLORS.light.accent.radioUnselectedHoverBorder,
+        COLORS.dark.accent.radioUnselectedHoverBorder
+      ),
     },
     shadow: {
       sm: useColorModeValue(COLORS.light.shadow.sm, COLORS.dark.shadow.sm),

@@ -172,3 +172,5 @@ export const StatusFilterGroup: React.FC<StatusFilterGroupProps> = React.memo(
     );
   }
 );
+
+StatusFilterGroup.displayName = "StatusFilterGroup";

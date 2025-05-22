@@ -4,8 +4,6 @@ import { LessonDTO } from "@/types/swimming";
 import { Box, Text, Button, Flex, Image } from "@chakra-ui/react";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { swimmingPaymentService } from "@/lib/api/swimming";
-import { EnrollLessonRequestDto } from "@/types/api";
 import { toaster } from "../ui/toaster";
 
 interface LessonCardProps {
@@ -195,3 +193,5 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
     );
   }
 );
+
+LessonCard.displayName = "LessonCard";

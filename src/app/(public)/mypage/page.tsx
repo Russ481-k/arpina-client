@@ -115,15 +115,22 @@ export default function MyPage() {
             try {
               localUserData = JSON.parse(authUserStr);
 
-              setProfile((prevProfile) => ({
-                ...(prevProfile || {}),
-                userId: localUserData.username || prevProfile?.userId || "",
-                name: localUserData.name || prevProfile?.name || "",
-                email: localUserData.email || prevProfile?.email || "",
-                phone: prevProfile?.phone || "",
-                address: prevProfile?.address || "",
-                carNo: prevProfile?.carNo || "",
-              }));
+              setProfile((prevProfile) => {
+                if (prevProfile) {
+                  return {
+                    ...prevProfile,
+                    userId: localUserData.username || prevProfile.userId,
+                    name: localUserData.name || prevProfile.name,
+                    email: localUserData.email || prevProfile.email,
+                    phone: localUserData.phone || prevProfile.phone || "",
+                    address: localUserData.address || prevProfile.address || "",
+                    carNo: localUserData.carNo || prevProfile.carNo || "",
+                    gender: prevProfile.gender,
+                  };
+                } else {
+                  return null;
+                }
+              });
             } catch (e) {
               console.error("Error parsing auth_user from localStorage:", e);
             }
@@ -138,7 +145,8 @@ export default function MyPage() {
           profileData.userId
         ) {
           setProfile((prevProfile) => ({
-            ...prevProfile,
+            ...(prevProfile || {}),
+            id: profileData.id,
             userId: profileData.userId,
             name: profileData.name,
             phone:
@@ -157,18 +165,29 @@ export default function MyPage() {
               profileData.carNo !== undefined
                 ? profileData.carNo
                 : prevProfile?.carNo ?? "",
+            gender:
+              profileData.gender !== undefined
+                ? profileData.gender
+                : prevProfile?.gender,
           }));
         } else {
           if (localUserData && (!profile || !profile.userId)) {
-            setProfile((prevProfile) => ({
-              ...(prevProfile || {}),
-              userId: localUserData.username || prevProfile?.userId || "",
-              name: localUserData.name || prevProfile?.name || "",
-              email: localUserData.email || prevProfile?.email || "",
-              phone: localUserData.phone || prevProfile?.phone || "",
-              address: localUserData.address || prevProfile?.address || "",
-              carNo: localUserData.carNo || prevProfile?.carNo || "",
-            }));
+            setProfile((prevProfile) => {
+              if (prevProfile) {
+                return {
+                  ...prevProfile,
+                  userId: localUserData.username || prevProfile.userId,
+                  name: localUserData.name || prevProfile.name,
+                  email: localUserData.email || prevProfile.email,
+                  phone: localUserData.phone || prevProfile.phone || "",
+                  address: localUserData.address || prevProfile.address || "",
+                  carNo: localUserData.carNo || prevProfile.carNo || "",
+                  gender: prevProfile.gender,
+                };
+              } else {
+                return null;
+              }
+            });
           }
         }
 
@@ -191,15 +210,22 @@ export default function MyPage() {
           setEnrollments([]);
           setPayments([]);
         } else if (localUserData && (!profile || !profile.userId)) {
-          setProfile((prevProfile) => ({
-            ...(prevProfile || {}),
-            userId: localUserData.username || prevProfile?.userId || "",
-            name: localUserData.name || prevProfile?.name || "",
-            email: localUserData.email || prevProfile?.email || "",
-            phone: localUserData.phone || prevProfile?.phone || "",
-            address: localUserData.address || prevProfile?.address || "",
-            carNo: localUserData.carNo || prevProfile?.carNo || "",
-          }));
+          setProfile((prevProfile) => {
+            if (prevProfile) {
+              return {
+                ...prevProfile,
+                userId: localUserData.username || prevProfile.userId,
+                name: localUserData.name || prevProfile.name,
+                email: localUserData.email || prevProfile.email,
+                phone: localUserData.phone || prevProfile.phone || "",
+                address: localUserData.address || prevProfile.address || "",
+                carNo: localUserData.carNo || prevProfile.carNo || "",
+                gender: prevProfile.gender,
+              };
+            } else {
+              return null;
+            }
+          });
           setEnrollments([]);
           setPayments([]);
         } else if (!profile || !profile.userId) {
@@ -221,7 +247,8 @@ export default function MyPage() {
     }
 
     fetchUserData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // profile is used in catch block, but effect is for initial load.
 
   const validateNewPasswordCriteria = (password: string) => {
     const criteria = {

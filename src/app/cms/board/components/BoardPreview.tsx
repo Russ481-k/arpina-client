@@ -567,7 +567,7 @@ const BoardPreview = React.memo(function BoardPreview({
       /* ... QNA logic ... */ return [];
     }
     return baseColDefs;
-  }, [board?.skinType, colors.text, textColor, agGridContext]);
+  }, [board?.skinType, colors.text, textColor]);
 
   const defaultColDef = useMemo(
     () => ({
@@ -617,7 +617,7 @@ const BoardPreview = React.memo(function BoardPreview({
       setIsWriteDrawerOpen(true);
       setDetailDrawerOpen(false); // Close detail drawer if it was open
     },
-    [bbsId, menuId, toaster]
+    [bbsId, menuId]
   ); // Add bbsId, menuId to dependencies
 
   const handleEditArticleInPreview = useCallback((article: Article) => {
@@ -656,7 +656,7 @@ const BoardPreview = React.memo(function BoardPreview({
         });
       }
     },
-    [bbsId, menuId, queryClient, toaster]
+    [bbsId, menuId, queryClient]
   ); // Add dependencies
 
   // ALL CONDITIONAL RENDERING / EARLY RETURNS MUST BE AFTER ALL HOOKS

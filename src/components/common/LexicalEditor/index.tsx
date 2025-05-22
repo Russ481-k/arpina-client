@@ -111,7 +111,7 @@ const Toolbar = memo(function Toolbar({
       const parent = node ? node.getParent() : null;
       setIsLink($isLinkNode(node) || $isLinkNode(parent));
     }
-  }, [editor]);
+  }, []);
 
   useEffect(() => {
     return mergeRegister(

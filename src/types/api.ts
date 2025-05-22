@@ -497,7 +497,13 @@ export interface MypageEnrollDto {
     time: string;
     price: number;
   };
-  status: "UNPAID" | "PAID" | "PAYMENT_TIMEOUT" | "CANCELED_UNPAID" | string;
+  status:
+    | "UNPAID"
+    | "PAID"
+    | "PAYMENT_TIMEOUT"
+    | "CANCELED_UNPAID"
+    | "PARTIALLY_REFUNDED"
+    | string;
   applicationDate: string;
   paymentExpireDt: string | null;
   usesLocker: boolean;
@@ -540,4 +546,126 @@ export interface MypagePaymentDto {
     | "REFUND_REQUESTED"
     | "FAILED"
     | string;
+}
+
+// --- Admin DTOs (swim-admin.md) ---
+
+// LockerInventoryDto for GET /admin/swimming/lockers/inventory
+export interface LockerInventoryDto {
+  gender: "MALE" | "FEMALE";
+  total_quantity: number;
+  used_quantity: number;
+  // created_at, updated_at etc. can be added if needed by admin UI
+}
+
+// LockerInventoryUpdateDto for PUT /admin/swimming/lockers/inventory/{gender}
+export interface LockerInventoryUpdateDto {
+  total_quantity: number;
+}
+
+// EnrollAdminResponseDto for GET /admin/swimming/enrolls
+export interface EnrollAdminResponseDto {
+  enrollId: number;
+  userId: string; // Assuming user's UUID or username
+  userName: string;
+  status: "APPLIED" | "CANCELED" | string; // Main enrollment status
+  // payStatus from enroll table: UNPAID, PAID, PARTIALLY_REFUNDED, PAYMENT_TIMEOUT, CANCELED_UNPAID
+  payStatus:
+    | "UNPAID"
+    | "PAID"
+    | "PARTIALLY_REFUNDED"
+    | "PAYMENT_TIMEOUT"
+    | "CANCELED_UNPAID"
+    | string;
+  usesLocker: boolean;
+  userGender?: "MALE" | "FEMALE" | "OTHER"; // From user profile
+  createdAt: string; // ISO DateTime
+  expireDt?: string | null; // Payment expiration from enroll.expire_dt
+  lessonTitle: string;
+  lessonId: number;
+  payment_tid?: string | null; // KISPG TID from payment table
+  paid_amt?: number | null; // Initial paid amount from payment table
+  refunded_amt?: number | null; // Total refunded amount from payment table
+  remain_days_at_cancel?: number | null; // Calculated for audit
+}
+
+// CancelRequestDto for GET /admin/swimming/enrolls/cancel-requests
+export interface CancelRequestDto {
+  requestId: number; // ID of the cancel_request record itself
+  enrollId: number;
+  userId: string;
+  userName: string;
+  lessonTitle: string;
+  paid_amt: number; // Initial KISPG payment amount for this enrollment
+  calculated_refund_amt: number; // System-calculated potential refund
+  requested_at: string; // ISO DateTime
+  reason: string;
+  kispg_tid?: string | null; // KISPG TID for reference
+}
+
+// PaymentAdminDto for GET /admin/payment
+export interface PaymentAdminDto {
+  paymentId: number;
+  enrollId: number;
+  tid: string; // KISPG TID
+  paid_amt: number;
+  refunded_amt: number;
+  // status maps to payment.status
+  status: "PAID" | "CANCELED" | "PARTIALLY_REFUNDED" | "FAILED" | string; // "PAID" here usually means original successful payment
+  paid_at: string | null; // ISO DateTime
+  last_refund_dt?: string | null; // ISO DateTime of the last refund transaction
+  pgProvider: "KISPG" | string;
+}
+
+// SummaryDto for GET /admin/stats/summary (example)
+export interface SummaryDto {
+  totalRevenue: number;
+  newEnrollmentsToday: number;
+  activeLockers: number;
+  pendingCancellations: number;
+  paymentTimeoutsToday: number;
+  // ... other relevant stats
+}
+
+// Generic API Response (if not already defined elsewhere)
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  errorCode?: string | null;
+  stackTrace?: string | null; // Should be disabled in production
+}
+
+// Matches LessonDto in swim-admin.md and general structure in swim-user.md
+export interface LessonDto {
+  lessonId: number;
+  title: string;
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string; // "YYYY-MM-DD"
+  capacity: number;
+  price: number;
+  status: "OPEN" | "CLOSED" | "ONGOING" | "COMPLETED"; // from swim-admin.md
+  // male_locker_cap and female_locker_cap are REMOVED as per swim-admin.md and swim-user.md
+  // Additional fields from user-facing LessonCard.tsx, if needed for display
+  timeSlot?: string; // e.g., "06:00~06:50"
+  timePrefix?: string; // e.g., "오전"
+  days?: string; // e.g., "(월,화,수,목,금)"
+  remaining?: number; // Calculated or from API
+  reservationId?: string; // e.g., "2025.04.17 13:00:00부터"
+  receiptId?: string; // e.g., "2025.04.20 18:00:00까지"
+  instructor?: string;
+  location?: string;
+  // For payment page access slot calculation (as per lesson-enrollment-capacity.md)
+  // These might be added if LessonDto is directly used, or calculated separately.
+  currentPaidCount?: number;
+  currentUnpaidActiveCount?: number;
+  availablePaymentSlots?: number; // Calculated: capacity - paidCount - unpaidActiveCount
+}
+
+// User-facing locker availability (swim-user.md)
+export interface LockerAvailabilityDto {
+  gender: "MALE" | "FEMALE";
+  totalQuantity: number;
+  usedQuantity: number;
+  availableQuantity: number;
 }

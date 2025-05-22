@@ -236,6 +236,7 @@ function NiceCallbackContent() {
     queryIsError,
     authResult,
     shouldFetchNiceData,
+    queryError,
   ]);
 
   // UI Feedback Logic - simplified as window closes quickly
