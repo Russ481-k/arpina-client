@@ -399,3 +399,145 @@ export interface PaginatedResponse<T> {
   message: string;
   success: boolean;
 }
+
+// --- Swimming & Payment Related DTOs ---
+
+/**
+ * DTO for POST /api/v1/swimming/enroll
+ * Request body when a user initiates a lesson enrollment.
+ */
+export interface EnrollLessonRequestDto {
+  lessonId: number;
+  wantsLocker: boolean;
+  membershipType: string;
+}
+
+/**
+ * DTO for POST /api/v1/swimming/enroll
+ * Response after successfully initiating a lesson enrollment.
+ * Provides information needed to proceed to the KISPG payment page.
+ */
+export interface EnrollInitiationResponseDto {
+  enrollId: number;
+  lessonId: number;
+  paymentPageUrl: string;
+  paymentExpiresAt: string;
+}
+
+/**
+ * DTO for GET /api/v1/payment/details/{enrollId}
+ * Contains details needed for the KISPG payment page.
+ */
+export interface PaymentPageDetailsDto {
+  enrollId: number;
+  lessonTitle: string;
+  lessonPrice: number;
+  userGender: "MALE" | "FEMALE" | "OTHER";
+  lockerOptions?: {
+    lockerAvailableForUserGender: boolean;
+    availableCountForUserGender: number;
+    lockerFee: number;
+  };
+  amountToPay: number;
+  paymentDeadline: string;
+}
+
+/**
+ * DTO for GET /api/v1/payment/kispg-init-params/{enrollId}
+ * Contains parameters required to initialize the KISPG payment gateway/widget.
+ */
+export interface KISPGInitParamsDto {
+  mid?: string;
+  moid?: string;
+  itemName?: string;
+  amount?: number;
+  buyerName?: string;
+  buyerTel?: string;
+  buyerEmail?: string;
+  returnUrl?: string;
+  notifyUrl?: string;
+  requestHash?: string;
+  [key: string]: any;
+}
+
+/**
+ * DTO for POST /api/v1/payment/confirm/{enrollId}
+ * Request body sent from the frontend after KISPG payment process returns to the client.
+ */
+export interface PaymentConfirmRequestDto {
+  pgToken: string;
+  wantsLocker: boolean;
+}
+
+/**
+ * DTO for POST /api/v1/payment/confirm/{enrollId}
+ * Response after frontend confirms payment post-KISPG interaction.
+ */
+export interface PaymentConfirmResponseDto {
+  status:
+    | "PAYMENT_SUCCESSFUL"
+    | "PAYMENT_PROCESSING"
+    | "PAYMENT_FAILED"
+    | string;
+  message?: string;
+  enrollId?: number;
+}
+
+// --- DTOs for Mypage (based on user.md) ---
+
+/**
+ * DTO for Mypage enrollments (GET /mypage/enroll)
+ * Based on user.md EnrollDto.
+ */
+export interface MypageEnrollDto {
+  enrollId: number;
+  lesson: {
+    title: string;
+    period: string;
+    time: string;
+    price: number;
+  };
+  status: "UNPAID" | "PAID" | "PAYMENT_TIMEOUT" | "CANCELED_UNPAID" | string;
+  applicationDate: string;
+  paymentExpireDt: string | null;
+  usesLocker: boolean;
+  isRenewal: boolean;
+  cancelStatus: "NONE" | "REQ" | "APPROVED" | "DENIED" | string;
+  cancelReason: string | null;
+  renewalWindow?: {
+    open: string;
+    close: string;
+  };
+  canAttemptPayment: boolean;
+  paymentPageUrl: string | null;
+}
+
+/**
+ * DTO for Mypage renewal request (POST /mypage/renewal)
+ * Based on user.md RenewalRequestDto.
+ */
+export interface MypageRenewalRequestDto {
+  lessonId: number;
+  carryLocker: boolean;
+}
+
+/**
+ * DTO for Mypage payment history (GET /mypage/payment)
+ * Based on user.md PaymentDto.
+ */
+export interface MypagePaymentDto {
+  paymentId: number;
+  enrollId: number;
+  tid: string | null;
+  paid_amt: number;
+  refunded_amt: number;
+  paidAt: string | null;
+  refund_dt: string | null;
+  status:
+    | "SUCCESS"
+    | "CANCELED"
+    | "PARTIAL_REFUNDED"
+    | "REFUND_REQUESTED"
+    | "FAILED"
+    | string;
+}

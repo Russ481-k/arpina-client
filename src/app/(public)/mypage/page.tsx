@@ -16,25 +16,21 @@ import {
   Grid,
   GridItem,
   Badge,
-  Field,
-  Fieldset,
   Table,
+  Fieldset,
+  Field,
 } from "@chakra-ui/react";
-import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
-import {
-  mypageApi,
-  ProfileDto,
-  EnrollDto,
-  PaymentDto,
-} from "@/lib/api/mypageApi";
+import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
+import { MypageEnrollDto, MypagePaymentDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 import {
   PasswordInput,
   PasswordStrengthMeter,
 } from "@/components/ui/password-input";
 import { Tooltip } from "@/components/ui/tooltip";
-import { CheckCircle2Icon, XCircleIcon } from "lucide-react";
+import { CheckCircle2Icon, XCircleIcon, ExternalLinkIcon } from "lucide-react";
+import Link from "next/link";
 
 const initialPasswordCriteria = {
   minLength: false,
@@ -44,7 +40,6 @@ const initialPasswordCriteria = {
   specialChar: false,
 };
 
-// Helper component for individual checklist item in tooltip
 const PasswordTooltipChecklistItem = ({
   label,
   isMet,
@@ -62,35 +57,30 @@ const PasswordTooltipChecklistItem = ({
   </HStack>
 );
 
-// Helper function to extract detailed error messages from API responses
 const getApiErrorMessage = (error: any, defaultMessage: string): string => {
-  // Check for Axios-like error structure (most common from API calls)
   if (error && error.response && error.response.data) {
     const data = error.response.data;
-    // Prioritize validationErrors if they exist and are not empty
     if (data.validationErrors) {
       if (
         Array.isArray(data.validationErrors) &&
         data.validationErrors.length > 0
       ) {
-        return data.validationErrors.join("\\n"); // Join if it's an array of messages
+        return data.validationErrors.join("\\n");
       } else if (
         typeof data.validationErrors === "object" &&
         Object.keys(data.validationErrors).length > 0
       ) {
-        return Object.values(data.validationErrors).join("\\n"); // Join values if it's an object of messages
+        return Object.values(data.validationErrors).join("\\n");
       }
     }
-    // Fallback to general message from API response
     if (data.message && typeof data.message === "string") {
       return data.message;
     }
   }
-  // Fallback for other types of errors (e.g., network error, or error.message is more direct)
   if (error && error.message && typeof error.message === "string") {
     return error.message;
   }
-  return defaultMessage; // Ultimate fallback to a provided default message
+  return defaultMessage;
 };
 
 export default function MyPage() {
@@ -100,11 +90,10 @@ export default function MyPage() {
   const [newPwConfirm, setNewPwConfirm] = useState("");
   const [currentPw, setCurrentPw] = useState("");
   const [profilePw, setProfilePw] = useState("");
-  const [enrollments, setEnrollments] = useState<EnrollDto[]>([]);
-  const [payments, setPayments] = useState<PaymentDto[]>([]);
+  const [enrollments, setEnrollments] = useState<MypageEnrollDto[]>([]);
+  const [payments, setPayments] = useState<MypagePaymentDto[]>([]);
   const router = useRouter();
 
-  // State for new password validation
   const [passwordCriteriaMet, setPasswordCriteriaMet] = useState(
     initialPasswordCriteria
   );
@@ -113,15 +102,13 @@ export default function MyPage() {
     useState(false);
   const [passwordsMatch, setPasswordsMatch] = useState(true);
 
-  // 사용자 프로필 정보 불러오기
   useEffect(() => {
-    let localUserData: any = null; // useEffect 스코프 최상단으로 이동
+    let localUserData: any = null;
 
     async function fetchUserData() {
       try {
         setIsLoading(true);
 
-        // localStorage에서 사용자 정보 가져오기
         if (typeof window !== "undefined") {
           const authUserStr = localStorage.getItem("auth_user");
           if (authUserStr) {
@@ -133,13 +120,10 @@ export default function MyPage() {
                 userId: localUserData.username || prevProfile?.userId || "",
                 name: localUserData.name || prevProfile?.name || "",
                 email: localUserData.email || prevProfile?.email || "",
-                // phone, address, carNo는 API 응답을 기다립니다.
-                // 만약 localStorage에도 있다면 여기서 채울 수 있습니다.
-                phone: prevProfile?.phone || "", // API 응답 전까지는 기존 값 또는 빈 문자열 유지
+                phone: prevProfile?.phone || "",
                 address: prevProfile?.address || "",
                 carNo: prevProfile?.carNo || "",
               }));
-              // setProfile의 비동기적 특성 때문에 바로 다음 줄에서 profile을 console.log하면 이전 값이 나올 수 있습니다.
             } catch (e) {
               console.error("Error parsing auth_user from localStorage:", e);
             }
@@ -153,7 +137,6 @@ export default function MyPage() {
           typeof profileData === "object" &&
           profileData.userId
         ) {
-          // API 응답으로 전체 프로필 업데이트 (이름 포함)
           setProfile((prevProfile) => ({
             ...prevProfile,
             userId: profileData.userId,
@@ -190,34 +173,28 @@ export default function MyPage() {
         }
 
         const enrollmentsData = await mypageApi.getEnrollments();
-        setEnrollments(enrollmentsData);
+        setEnrollments(enrollmentsData as MypageEnrollDto[]);
 
         const paymentsData = await mypageApi.getPayments();
-        setPayments(paymentsData);
+        setPayments(paymentsData as MypagePaymentDto[]);
       } catch (error) {
         console.error(
           "[Mypage] Failed to load user data (in catch block):",
           error
         );
 
-        // profile 상태가 이전에 getProfile API 호출로 성공적으로 설정되었다면 (즉, name이 '윤수빈'으로 이미 설정된 상태라면)
-        // enrollments나 payments 호출 실패 시 localStorage 값으로 name을 덮어쓰지 않도록 한다.
         if (
           profile &&
           profile.name &&
           profile.name !== (localUserData?.name || localUserData?.username)
         ) {
-          // 이 경우, enrollments, payments 로딩 실패에 대한 메시지만 표시하고
-          // profile.name 등 핵심 정보는 유지한다.
-          // 필요하다면 enrollments, payments를 빈 배열로 설정할 수 있다.
-          setEnrollments([]); // 에러 발생 시 빈 배열로 초기화
-          setPayments([]); // 에러 발생 시 빈 배열로 초기화
+          setEnrollments([]);
+          setPayments([]);
         } else if (localUserData && (!profile || !profile.userId)) {
-          // getProfile 자체가 실패했거나, profile이 초기화되지 않은 경우 localStorage 정보로 fallback
           setProfile((prevProfile) => ({
             ...(prevProfile || {}),
             userId: localUserData.username || prevProfile?.userId || "",
-            name: localUserData.name || prevProfile?.name || "", // 이 시점에서는 localUserData.name이 username일 수 있음
+            name: localUserData.name || prevProfile?.name || "",
             email: localUserData.email || prevProfile?.email || "",
             phone: localUserData.phone || prevProfile?.phone || "",
             address: localUserData.address || prevProfile?.address || "",
@@ -226,7 +203,6 @@ export default function MyPage() {
           setEnrollments([]);
           setPayments([]);
         } else if (!profile || !profile.userId) {
-          // localUserData도 없고 profile도 제대로 설정 안된 최악의 경우
           setEnrollments([]);
           setPayments([]);
         }
@@ -247,7 +223,6 @@ export default function MyPage() {
     fetchUserData();
   }, []);
 
-  // Password validation logic (adapted from Step3UserInfo)
   const validateNewPasswordCriteria = (password: string) => {
     const criteria = {
       minLength: password.length >= 8,
@@ -279,12 +254,10 @@ export default function MyPage() {
     setPasswordsMatch(newPw === newConfirmPasswordValue);
   };
 
-  // 회원정보 수정 핸들러
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
 
-    // 비밀번호가 입력되지 않은 경우
     if (!profilePw.trim()) {
       toaster.create({
         title: "비밀번호 필요",
@@ -295,7 +268,6 @@ export default function MyPage() {
     }
 
     try {
-      // 프로필 정보와 현재 비밀번호를 별도로 전송
       await mypageApi.updateProfile(profile, profilePw);
 
       setProfilePw("");
@@ -318,7 +290,6 @@ export default function MyPage() {
     }
   };
 
-  // 비밀번호 변경 핸들러
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -348,7 +319,7 @@ export default function MyPage() {
           "새 비밀번호가 모든 조건을 충족하지 않습니다. 다시 확인해주세요.",
         type: "error",
       });
-      setIsPasswordTooltipVisible(true); // Show tooltip if validation fails on submit
+      setIsPasswordTooltipVisible(true);
       return;
     }
 
@@ -358,7 +329,6 @@ export default function MyPage() {
         newPw,
       });
 
-      // 필드 초기화
       setCurrentPw("");
       setNewPw("");
       setNewPwConfirm("");
@@ -381,7 +351,6 @@ export default function MyPage() {
     }
   };
 
-  // Password tooltip content
   const passwordTooltipContent = useMemo(
     () => (
       <VStack align="start" gap={0.5}>
@@ -428,7 +397,6 @@ export default function MyPage() {
           <Tabs.Trigger value="수영장_결제정보">수영장 결제정보</Tabs.Trigger>
         </Tabs.List>
 
-        {/* 회원정보 수정 */}
         <Tabs.Content value="회원정보_수정">
           {isLoading ? (
             <Box textAlign="center" p={8}>
@@ -533,7 +501,6 @@ export default function MyPage() {
           )}
         </Tabs.Content>
 
-        {/* 비밀번호 변경 */}
         <Tabs.Content value="비밀번호_변경">
           <Box
             as="form"
@@ -634,7 +601,6 @@ export default function MyPage() {
           </Box>
         </Tabs.Content>
 
-        {/* 수영장 신청정보 */}
         <Tabs.Content value="수영장_신청정보">
           {isLoading ? (
             <Box textAlign="center" p={8}>
@@ -645,50 +611,141 @@ export default function MyPage() {
               templateColumns={{
                 base: "1fr",
                 md: "repeat(2, 1fr)",
-                lg: "repeat(4, 1fr)",
-              }}
+                lg: "repeat(3, 1fr)",
+              }} // Adjusted for more info
               gap={6}
               py={4}
             >
-              {enrollments.map((enrollment, index) => (
-                <GridItem key={index}>
-                  <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-                    <Box p={4}>
-                      <Flex direction="column" gap={2}>
+              {enrollments.map((enroll) => (
+                <GridItem key={enroll.enrollId}>
+                  <Box
+                    borderWidth="1px"
+                    borderRadius="lg"
+                    overflow="hidden"
+                    h="100%"
+                  >
+                    <Box
+                      p={4}
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="space-between"
+                      h="100%"
+                    >
+                      <VStack gap={2} align="stretch" mb={4}>
                         <Flex justify="space-between" align="center">
                           <Text fontWeight="bold" fontSize="md">
-                            {enrollment.lesson?.title || "수영장 강습 프로그램"}
+                            {enroll.lesson.title}
                           </Text>
                           <Badge
                             colorScheme={
-                              enrollment.status === "PAID" ? "green" : "red"
+                              enroll.status === "PAID"
+                                ? "green"
+                                : enroll.status === "UNPAID"
+                                ? "orange"
+                                : enroll.status === "PAYMENT_TIMEOUT"
+                                ? "red"
+                                : enroll.status === "CANCELED_UNPAID"
+                                ? "gray"
+                                : "gray"
                             }
                           >
-                            {enrollment.status === "PAID"
-                              ? "승인완료"
-                              : "승인취소"}
+                            {/* More descriptive status mapping */}
+                            {enroll.status === "PAID"
+                              ? "결제완료"
+                              : enroll.status === "UNPAID"
+                              ? "결제대기"
+                              : enroll.status === "PAYMENT_TIMEOUT"
+                              ? "결제시간초과"
+                              : enroll.status === "CANCELED_UNPAID"
+                              ? "미결제취소"
+                              : enroll.status.toUpperCase()}
                           </Badge>
                         </Flex>
-                        <Box borderBottomWidth="1px" my={2} />
+                        <Box borderBottomWidth="1px" my={1} />
                         <Text fontSize="sm">
-                          강습시간:{" "}
-                          {enrollment.lesson?.time || "오전 06:00 - 06:50"}
+                          신청일:{" "}
+                          {new Date(
+                            enroll.applicationDate
+                          ).toLocaleDateString()}
                         </Text>
                         <Text fontSize="sm">
-                          강습일정:{" "}
-                          {enrollment.lesson?.period ||
-                            "25년 05월 01일 ~ 25년 05월 30일"}
+                          강습 기간: {enroll.lesson.period}
                         </Text>
                         <Text fontSize="sm">
-                          결제금액:{" "}
-                          {enrollment.lesson?.price
-                            ? `${enrollment.lesson.price.toLocaleString()}원`
-                            : "65,000원"}
+                          강습 시간: {enroll.lesson.time}
                         </Text>
                         <Text fontSize="sm">
-                          결제/취소 시간: {new Date().toLocaleString()}
+                          금액: {enroll.lesson.price.toLocaleString()}원
                         </Text>
-                      </Flex>
+                        {enroll.usesLocker && (
+                          <Text fontSize="sm" color="teal.600">
+                            사물함 사용
+                          </Text>
+                        )}
+                        {enroll.isRenewal && (
+                          <Text fontSize="sm" color="purple.600">
+                            재등록 강습
+                          </Text>
+                        )}
+                        {enroll.status === "UNPAID" &&
+                          enroll.paymentExpireDt && (
+                            <Text fontSize="sm" color="red.500">
+                              결제 마감:{" "}
+                              {new Date(
+                                enroll.paymentExpireDt
+                              ).toLocaleString()}
+                            </Text>
+                          )}
+                        {enroll.cancelStatus &&
+                          enroll.cancelStatus !== "NONE" && (
+                            <Text fontSize="sm" color="gray.500">
+                              취소 상태: {enroll.cancelStatus}
+                              {enroll.cancelReason &&
+                                ` (${enroll.cancelReason})`}
+                            </Text>
+                          )}
+                      </VStack>
+
+                      <VStack gap={3} alignSelf="flex-end" w="100%" mt="auto">
+                        {enroll.canAttemptPayment && enroll.paymentPageUrl && (
+                          <Link href={enroll.paymentPageUrl} passHref>
+                            <Button
+                              as="a"
+                              colorScheme="green"
+                              size="sm"
+                              w="100%"
+                            >
+                              <ExternalLinkIcon />
+                              결제하기
+                            </Button>
+                          </Link>
+                        )}
+                        {/* Basic Renewal Button Placeholder - Logic needs refinement based on next lesson ID availability */}
+                        {/* This assumes renewalWindow and a mechanism to get the *next* lessonId are available */}
+                        {/* For now, let's check if renewalWindow is present and dates are valid for a simple demo */}
+                        {enroll.renewalWindow &&
+                          new Date(enroll.renewalWindow.open) <= new Date() &&
+                          new Date(enroll.renewalWindow.close) >= new Date() &&
+                          enroll.status === "PAID" && (
+                            /* Typically renew from a paid lesson */ <Button
+                              colorScheme="blue"
+                              size="sm"
+                              w="100%"
+                              // onClick={() => handleRenewal(enroll.SOME_NEXT_LESSON_ID_FIELD, enroll.usesLocker)} // handleRenewal would call swimmingPaymentService
+                              // disabled // For now, until next lesson ID logic is clear
+                              onClick={() =>
+                                toaster.create({
+                                  title: "재등록 준비중",
+                                  description:
+                                    "재등록 기능은 현재 준비 중입니다.",
+                                  type: "info",
+                                })
+                              }
+                            >
+                              재등록 신청 (준비중)
+                            </Button>
+                          )}
+                      </VStack>
                     </Box>
                   </Box>
                 </GridItem>
@@ -701,7 +758,6 @@ export default function MyPage() {
           )}
         </Tabs.Content>
 
-        {/* 수영장 결제정보 */}
         <Tabs.Content value="수영장_결제정보">
           {isLoading ? (
             <Box textAlign="center" p={8}>
@@ -712,45 +768,69 @@ export default function MyPage() {
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.ColumnHeader>번호</Table.ColumnHeader>
-                    <Table.ColumnHeader>강습일정</Table.ColumnHeader>
-                    <Table.ColumnHeader>강습시간</Table.ColumnHeader>
-                    <Table.ColumnHeader>결제/취소 시간</Table.ColumnHeader>
-                    <Table.ColumnHeader>결제금액</Table.ColumnHeader>
-                    <Table.ColumnHeader>결제상태</Table.ColumnHeader>
+                    <Table.ColumnHeader>결제 ID</Table.ColumnHeader>
+                    <Table.ColumnHeader>신청 ID</Table.ColumnHeader>
+                    <Table.ColumnHeader>결제일</Table.ColumnHeader>
+                    <Table.ColumnHeader>결제 금액</Table.ColumnHeader>
+                    <Table.ColumnHeader>환불 금액</Table.ColumnHeader>
+                    <Table.ColumnHeader>상태</Table.ColumnHeader>
+                    <Table.ColumnHeader>환불일</Table.ColumnHeader>
+                    <Table.ColumnHeader>거래 ID</Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                  {Array.isArray(payments) ? (
-                    payments.map((payment, index) => (
-                      <Table.Row key={index}>
-                        <Table.Cell>9999</Table.Cell>
-                        <Table.Cell>25년 05월 01일 ~ 25년 05월 30일</Table.Cell>
-                        <Table.Cell>
-                          (월,화,수,목,금) 오전 06:00 - 06:50
-                        </Table.Cell>
-                        <Table.Cell>2025.04.18 13:00:00</Table.Cell>
-                        <Table.Cell>65,000원</Table.Cell>
-                        <Table.Cell>
-                          <Badge
-                            colorScheme={
-                              payment.status === "SUCCESS" ? "green" : "red"
-                            }
-                          >
-                            {payment.status === "SUCCESS"
-                              ? "승인완료"
-                              : "승인취소"}
-                          </Badge>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  ) : (
-                    <Table.Row>
-                      <Table.Cell colSpan={6} textAlign="center">
-                        결제 내역이 없습니다.
+                  {payments.map((payment) => (
+                    <Table.Row key={payment.paymentId}>
+                      <Table.Cell>{payment.paymentId}</Table.Cell>
+                      <Table.Cell>{payment.enrollId}</Table.Cell>
+                      <Table.Cell>
+                        {payment.paidAt
+                          ? new Date(payment.paidAt).toLocaleDateString()
+                          : "-"}
                       </Table.Cell>
+                      <Table.Cell>
+                        {payment.paid_amt.toLocaleString()}원
+                      </Table.Cell>
+                      <Table.Cell>
+                        {payment.refunded_amt.toLocaleString()}원
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge
+                          colorScheme={
+                            payment.status === "SUCCESS"
+                              ? "green"
+                              : payment.status === "CANCELED"
+                              ? "red"
+                              : payment.status === "PARTIAL_REFUNDED"
+                              ? "orange"
+                              : payment.status === "REFUND_REQUESTED"
+                              ? "yellow"
+                              : payment.status === "FAILED"
+                              ? "purple" // Or another distinct color
+                              : "gray"
+                          }
+                        >
+                          {payment.status === "SUCCESS"
+                            ? "결제완료"
+                            : payment.status === "CANCELED"
+                            ? "취소됨"
+                            : payment.status === "PARTIAL_REFUNDED"
+                            ? "부분환불"
+                            : payment.status === "REFUND_REQUESTED"
+                            ? "환불요청"
+                            : payment.status === "FAILED"
+                            ? "결제실패"
+                            : payment.status}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {payment.refund_dt
+                          ? new Date(payment.refund_dt).toLocaleDateString()
+                          : "-"}
+                      </Table.Cell>
+                      <Table.Cell>{payment.tid || "-"}</Table.Cell>
                     </Table.Row>
-                  )}
+                  ))}
                 </Table.Body>
               </Table.Root>
             </Box>

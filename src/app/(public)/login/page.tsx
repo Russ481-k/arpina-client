@@ -62,7 +62,7 @@ export default function LoginPage() {
       // Login successful - toast will be shown during redirect
       toaster.create({
         title: "로그인 성공",
-        description: "메인 페이지로 이동합니다.",
+        description: "기존 페이지로 이동합니다.",
         type: "success",
         duration: 3000,
       });

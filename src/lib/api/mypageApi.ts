@@ -1,4 +1,10 @@
 import { privateApi } from "./client";
+import {
+  MypageEnrollDto,
+  MypagePaymentDto,
+  MypageRenewalRequestDto,
+} from "@/types/api";
+import { withAuthRedirect } from "./withAuthRedirect";
 
 // --- Common Query String Parameters (for reference, used in function signatures) ---
 // interface PageParams {
@@ -27,71 +33,20 @@ export interface PasswordChangeDto {
 
 // For POST /password/temp
 export interface TemporaryPasswordRequestDto {
-  userId: string; // Assuming this is the userId, spec says "...".
-}
-
-// 4.3 EnrollDto
-export interface EnrollDto {
-  enrollId: number;
-  lesson: {
-    title: string;
-    period: string;
-    time: string;
-    price: number;
-  };
-  status: "UNPAID" | "PAID" | "CANCELED" | "CANCELED_UNPAID"; // From DDL, spec is more brief
-  expireDt: string; // ISO DateTime string
-  locker: {
-    id: number;
-    zone: string;
-    carryOver: boolean;
-  } | null; // Locker can be null
-  renewalWindow: {
-    open: string; // ISO DateTime string
-    close: string; // ISO DateTime string
-  } | null; // Renewal window can be null
+  userId: string;
 }
 
 // For GET /enroll QS
 export interface GetEnrollmentsParams {
-  status?: "UNPAID" | "PAID" | "CANCELED" | "CANCELED_UNPAID" | string; // Allow string for flexibility if backend supports more
+  status?: "UNPAID" | "PAID" | "PAYMENT_TIMEOUT" | "CANCELED_UNPAID" | string;
   page?: number;
   size?: number;
   sort?: string;
 }
 
-// 4.4 CheckoutDto (Response from /enroll/{id}/checkout)
-export interface CheckoutDto {
-  merchantUid: string;
-  amount: number;
-  lessonTitle: string;
-  userName: string;
-  pgProvider: string;
-}
-
-// For POST /enroll/{id}/pay
-export interface PayRequestDto {
-  pgToken: string;
-}
-
 // For PATCH /enroll/{id}/cancel
 export interface CancelEnrollmentRequestDto {
   reason: string;
-}
-
-// 4.5 RenewalRequestDto
-export interface RenewalRequestDto {
-  lessonId: number;
-  carryLocker: boolean;
-}
-
-// 4.6 PaymentDto
-export interface PaymentDto {
-  paymentId: number;
-  enrollId: number;
-  amount: number;
-  paidAt: string; // ISO DateTime string
-  status: "SUCCESS" | "CANCELED" | "PARTIAL" | "REFUND_REQUESTED";
 }
 
 // For GET /payment QS
@@ -101,151 +56,157 @@ export interface GetPaymentsParams {
   sort?: string;
 }
 
+interface ApiError extends Error {
+  status?: number;
+  isNoDataAuthError?: boolean;
+}
+
 // --- API Base URL ---
 const MYPAGE_API_BASE_URL = "/mypage";
 
 // --- API Object ---
 export const mypageApi = {
   // 3.1 회원정보 (Profile)
-  getProfile: async (): Promise<ProfileDto> => {
-    // privateApi.get<T>는 AxiosResponse<T>["data"]를 반환하므로, T는 ProfileDto이거나
-    // ProfileDto를 포함하는 래퍼 객체일 수 있습니다.
-    const responseData: any = await privateApi.get<any>(
+  getProfile: withAuthRedirect(async (): Promise<ProfileDto> => {
+    const response = await privateApi.get<ProfileDto>(
       `${MYPAGE_API_BASE_URL}/profile`
     );
+    const profile = response.data;
 
-    if (responseData && typeof responseData === "object") {
-      // 경우 1: responseData 자체가 ProfileDto인 경우 (주요 필드 존재 여부로 확인)
-      if (
-        "userId" in responseData &&
-        "name" in responseData &&
-        "phone" in responseData
-      ) {
-        return responseData as ProfileDto;
-      }
-      // 경우 2: responseData가 { data: ProfileDto, ... } 형태의 래퍼 객체인 경우
-      if (
-        responseData.data &&
-        typeof responseData.data === "object" &&
-        responseData.data !== null &&
-        "userId" in responseData.data &&
-        "name" in responseData.data &&
-        "phone" in responseData.data
-      ) {
-        return responseData.data as ProfileDto;
-      }
+    if (!profile || !profile.userId || !profile.name) {
+      const noDataError = new Error(
+        "User profile data not available or essential fields are missing."
+      ) as ApiError;
+      noDataError.status = 401;
+      noDataError.isNoDataAuthError = true;
+      throw noDataError;
     }
 
-    // 위의 두 경우에 해당하지 않으면, 예상치 못한 구조이거나 필수 데이터가 누락된 것입니다.
-    console.error(
-      "Failed to parse profile data from API or missing essential fields. Received:",
-      responseData
-    );
-    // 이 경우, 사용자에게 오류를 알리거나, 안전한 기본값을 반환하거나, 에러를 throw해야 합니다.
-    // 개발 중에는 에러를 throw하여 문제를 빠르게 인지하는 것이 좋습니다.
-    throw new Error(
-      "Invalid or unexpected profile data structure received from API."
-    );
-    // 또는, 빈 ProfileDto 객체를 반환하여 UI가 깨지지 않도록 할 수도 있습니다.
-    // return { name: "", userId: "", phone: "", address: "", email: "", carNo: "" } as ProfileDto;
-  },
+    return profile;
+  }),
   updateProfile: async (
     data: Partial<ProfileDto>,
     currentPassword?: string
   ): Promise<ProfileDto> => {
-    // 비밀번호 인증이 필요한 경우
-    const payload = currentPassword
-      ? { ...data, currentPassword } // 백엔드에서 currentPassword로 인증 처리
-      : data;
-
-    // Assuming response is the updated ProfileDto
+    const payload = currentPassword ? { ...data, currentPassword } : data;
     const response = await privateApi.patch<ProfileDto>(
       `${MYPAGE_API_BASE_URL}/profile`,
       payload
     );
-    return response.data;
+    const updatedProfile = response.data;
+    if (!updatedProfile || !updatedProfile.userId) {
+      throw new Error("Invalid structure for updated profile data.");
+    }
+    return updatedProfile;
   },
 
   // 3.2 비밀번호 (Pass & Temp)
   changePassword: async (data: PasswordChangeDto): Promise<void> => {
-    // Spec says 200, implies void or a simple success message
     await privateApi.patch<void>(`${MYPAGE_API_BASE_URL}/password`, data);
   },
   requestTemporaryPassword: async (
     data: TemporaryPasswordRequestDto
   ): Promise<void> => {
-    // Spec says "Sent", implies void
     await privateApi.post<void>(`${MYPAGE_API_BASE_URL}/password/temp`, data);
   },
 
   // 3.3 수영장 신청 & 결제 (Enroll)
   getEnrollments: async (
     params?: GetEnrollmentsParams
-  ): Promise<EnrollDto[]> => {
-    // Spec: List<EnrollDto>
-    const response = await privateApi.get<EnrollDto[]>(
+  ): Promise<MypageEnrollDto[]> => {
+    const response = await privateApi.get<MypageEnrollDto[]>(
       `${MYPAGE_API_BASE_URL}/enroll`,
-      {
-        params,
-      }
+      { params }
     );
-    return response.data;
+    const enrollments = response.data;
+    if (!Array.isArray(enrollments)) {
+      throw new Error("Invalid structure for enrollments data.");
+    }
+    return enrollments;
   },
-  getEnrollmentById: async (id: number): Promise<EnrollDto> => {
-    const response = await privateApi.get<EnrollDto>(
+  getEnrollmentById: async (id: number): Promise<MypageEnrollDto> => {
+    const response = await privateApi.get<MypageEnrollDto>(
       `${MYPAGE_API_BASE_URL}/enroll/${id}`
     );
-    return response.data;
+    const enrollment = response.data;
+    if (!enrollment || typeof enrollment.enrollId !== "number") {
+      throw new Error("Invalid structure for enrollment data.");
+    }
+    return enrollment;
   },
-  checkoutEnrollment: async (id: number): Promise<CheckoutDto> => {
-    const response = await privateApi.post<CheckoutDto>(
-      `${MYPAGE_API_BASE_URL}/enroll/${id}/checkout`
+
+  /**
+   * @deprecated The checkout flow is now handled by the KISPG payment page.
+   * See swimmingPaymentService.enrollLesson and the /payment/process page.
+   */
+  checkoutEnrollment: async (): Promise<never> => {
+    console.warn("mypageApi.checkoutEnrollment is deprecated.");
+    return Promise.reject(
+      new Error(
+        "mypageApi.checkoutEnrollment is deprecated and should not be called."
+      )
     );
-    return response.data;
   },
-  payEnrollment: async (id: number, data: PayRequestDto): Promise<void> => {
-    // Spec says 200 / Error
-    await privateApi.post<void>(
-      `${MYPAGE_API_BASE_URL}/enroll/${id}/pay`,
-      data
+
+  /**
+   * @deprecated Payment is now handled by the KISPG payment page flow.
+   */
+  payEnrollment: async (): Promise<never> => {
+    console.warn("mypageApi.payEnrollment is deprecated.");
+    return Promise.reject(
+      new Error(
+        "mypageApi.payEnrollment is deprecated and should not be called."
+      )
     );
   },
+
   cancelEnrollment: async (
     id: number,
     data: CancelEnrollmentRequestDto
   ): Promise<void> => {
-    // Spec says "Requested"
     await privateApi.patch<void>(
       `${MYPAGE_API_BASE_URL}/enroll/${id}/cancel`,
       data
     );
   },
-  renewEnrollment: async (data: RenewalRequestDto): Promise<EnrollDto> => {
-    // Spec says "Created", assuming returns created/updated EnrollDto
-    const response = await privateApi.post<EnrollDto>(
-      `${MYPAGE_API_BASE_URL}/renewal`,
-      data
+
+  /**
+   * @deprecated Renewal is now handled by swimmingPaymentService.renewalLesson to align with KISPG flow.
+   * That service returns EnrollInitiationResponseDto.
+   */
+  renewEnrollment: async (data: MypageRenewalRequestDto): Promise<never> => {
+    console.warn(
+      "mypageApi.renewEnrollment is deprecated. Use swimmingPaymentService.renewalLesson instead."
     );
-    return response.data;
+    return Promise.reject(
+      new Error(
+        "mypageApi.renewEnrollment is deprecated and should not be called."
+      )
+    );
   },
 
   // 3.4 결제 내역 (Payment)
-  getPayments: async (params?: GetPaymentsParams): Promise<PaymentDto[]> => {
-    // Spec: List<PaymentDto>
-    const response = await privateApi.get<PaymentDto[]>(
+  getPayments: async (
+    params?: GetPaymentsParams
+  ): Promise<MypagePaymentDto[]> => {
+    const response = await privateApi.get<MypagePaymentDto[]>(
       `${MYPAGE_API_BASE_URL}/payment`,
-      {
-        params,
-      }
+      { params }
     );
-    return response.data;
+    const payments = response.data;
+    if (!Array.isArray(payments)) {
+      throw new Error("Invalid structure for payments data.");
+    }
+    return payments;
   },
-  requestPaymentCancel: async (paymentId: number): Promise<void> => {
-    // Spec says "Requested"
-    // The spec URL is /payment/{id}/cancel, which implies it's a POST, but often cancel can be PATCH or DELETE too.
-    // Sticking to POST as per example cURL and lack of other indicators.
+  requestPaymentCancel: async (
+    paymentId: number,
+    reason?: string
+  ): Promise<void> => {
+    const payload = reason ? { reason } : {};
     await privateApi.post<void>(
-      `${MYPAGE_API_BASE_URL}/payment/${paymentId}/cancel`
+      `${MYPAGE_API_BASE_URL}/payment/${paymentId}/cancel`,
+      payload
     );
   },
 };

@@ -3,14 +3,50 @@
 import { LessonDTO } from "@/types/swimming";
 import { Box, Text, Button, Flex, Image } from "@chakra-ui/react";
 import React from "react";
+import { useRouter } from "next/navigation";
+import { swimmingPaymentService } from "@/lib/api/swimming";
+import { EnrollLessonRequestDto } from "@/types/api";
+import { toaster } from "../ui/toaster";
 
 interface LessonCardProps {
   lesson: LessonDTO;
-  onApply: (lessonId: number) => void;
 }
 
 export const LessonCard: React.FC<LessonCardProps> = React.memo(
-  ({ lesson, onApply }) => {
+  ({ lesson }) => {
+    const router = useRouter();
+
+    const handleApplyClick = () => {
+      if (lesson.status !== "접수중" || !lesson.id) {
+        toaster.create({
+          title: "신청 불가",
+          description: "현재 이 강습은 신청할 수 없습니다.",
+          type: "warning",
+          duration: 3000,
+          closable: true,
+        });
+        return;
+      }
+
+      toaster.create({
+        title: "신청 페이지 이동",
+        description: "신청 정보 확인 페이지로 이동합니다.",
+        type: "info",
+        duration: 1500,
+      });
+
+      // Encode title and price to ensure they are URL-safe
+      const queryParams = new URLSearchParams({
+        lessonId: lesson.id.toString(),
+        lessonTitle: lesson.title,
+        lessonPrice: lesson.price.toString(), // Assuming lesson.price is a number
+        // Add lesson.lockerFee if available and needed, e.g.:
+        // ...(lesson.lockerFee !== undefined && { lessonLockerFee: lesson.lockerFee.toString() })
+      });
+
+      router.push(`/application/confirm?${queryParams.toString()}`);
+    };
+
     return (
       <Box className="swimming-card">
         {/* 접수 상태 배지 */}
@@ -144,7 +180,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
               bgColor: lesson.status === "접수중" ? "#1f2366" : "#888888",
             }}
             disabled={lesson.status !== "접수중"}
-            onClick={() => onApply(lesson.id)}
+            onClick={handleApplyClick}
           >
             {lesson.status === "접수중"
               ? "신청하기"
