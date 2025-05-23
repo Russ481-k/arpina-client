@@ -21,11 +21,12 @@ export interface ProfileDto {
   id: number;
   name: string;
   userId: string;
-  phone: string;
-  address: string;
+  phone?: string;
+  address?: string;
   email: string;
-  carNo: string;
-  gender?: "MALE" | "FEMALE" | "OTHER";
+  carNo?: string;
+  tempPwFlag?: boolean;
+  gender?: string;
 }
 
 // 4.2 PasswordChangeDto
@@ -65,79 +66,61 @@ interface ApiError extends Error {
 }
 
 // --- API Base URL ---
-const MYPAGE_API_BASE_URL = "/mypage";
-const LOCKER_API_BASE_URL = "/api/v1/lockers"; // Base URL for locker specific APIs
+const MYPAGE_API_BASE = "/mypage";
+const PUBLIC_API_BASE_LOCKERS = "/lockers";
 
 // --- API Object ---
 export const mypageApi = {
   // 3.1 회원정보 (Profile)
-  getProfile: withAuthRedirect(async (): Promise<ProfileDto> => {
+  getProfile: withAuthRedirect(async (): Promise<ProfileDto | null> => {
     const response = await privateApi.get<ProfileDto>(
-      `${MYPAGE_API_BASE_URL}/profile`
+      `${MYPAGE_API_BASE}/profile`
     );
-    const profile = response.data;
-
-    if (!profile || !profile.userId || !profile.name) {
-      const noDataError = new Error(
-        "User profile data not available or essential fields are missing."
-      ) as ApiError;
-      noDataError.status = 401;
-      noDataError.isNoDataAuthError = true;
-      throw noDataError;
+    if (!response.data || !response.data.name || !response.data.email) {
+      const error = new Error("필수 프로필 정보가 없습니다.") as any;
+      error.isNoDataAuthError = true;
+      error.status = 401;
+      throw error;
     }
-
-    return profile;
+    return response.data;
   }),
-  updateProfile: async (
-    data: Partial<ProfileDto>,
-    currentPassword?: string
-  ): Promise<ProfileDto> => {
-    const payload = currentPassword ? { ...data, currentPassword } : data;
-    const response = await privateApi.patch<ProfileDto>(
-      `${MYPAGE_API_BASE_URL}/profile`,
-      payload
-    );
-    const updatedProfile = response.data;
-    if (!updatedProfile || !updatedProfile.userId) {
-      throw new Error("Invalid structure for updated profile data.");
+  updateProfile: withAuthRedirect(
+    async (data: Partial<ProfileDto>): Promise<ProfileDto> => {
+      const response = await privateApi.patch<ProfileDto>(
+        `${MYPAGE_API_BASE}/profile`,
+        data
+      );
+      return response.data;
     }
-    return updatedProfile;
-  },
+  ),
 
   // 3.2 비밀번호 (Pass & Temp)
-  changePassword: async (data: PasswordChangeDto): Promise<void> => {
-    await privateApi.patch<void>(`${MYPAGE_API_BASE_URL}/password`, data);
-  },
-  requestTemporaryPassword: async (
-    data: TemporaryPasswordRequestDto
-  ): Promise<void> => {
-    await privateApi.post<void>(`${MYPAGE_API_BASE_URL}/password/temp`, data);
-  },
+  changePassword: withAuthRedirect(
+    async (data: PasswordChangeDto): Promise<void> => {
+      await privateApi.patch<void>(`${MYPAGE_API_BASE}/password`, data);
+    }
+  ),
+  requestTemporaryPassword: withAuthRedirect(
+    async (data: TemporaryPasswordRequestDto): Promise<void> => {
+      await privateApi.post<void>(`${MYPAGE_API_BASE}/password/temp`, data);
+    }
+  ),
 
   // 3.3 수영장 신청 & 결제 (Enroll)
-  getEnrollments: async (
-    params?: GetEnrollmentsParams
-  ): Promise<MypageEnrollDto[]> => {
+  getEnrollments: withAuthRedirect(async (): Promise<MypageEnrollDto[]> => {
     const response = await privateApi.get<MypageEnrollDto[]>(
-      `${MYPAGE_API_BASE_URL}/enroll`,
-      { params }
+      `${MYPAGE_API_BASE}/enroll`
     );
-    const enrollments = response.data;
-    if (!Array.isArray(enrollments)) {
-      throw new Error("Invalid structure for enrollments data.");
+    return response.data;
+  }),
+  getEnrollmentById: withAuthRedirect(
+    async (id: number): Promise<MypageEnrollDto> => {
+      const response = await privateApi.get<MypageEnrollDto>(
+        `${MYPAGE_API_BASE}/enroll/${id}`
+      );
+      return response.data;
     }
-    return enrollments;
-  },
-  getEnrollmentById: async (id: number): Promise<MypageEnrollDto> => {
-    const response = await privateApi.get<MypageEnrollDto>(
-      `${MYPAGE_API_BASE_URL}/enroll/${id}`
-    );
-    const enrollment = response.data;
-    if (!enrollment || typeof enrollment.enrollId !== "number") {
-      throw new Error("Invalid structure for enrollment data.");
-    }
-    return enrollment;
-  },
+  ),
 
   /**
    * @deprecated The checkout flow is now handled by the KISPG payment page.
@@ -164,15 +147,13 @@ export const mypageApi = {
     );
   },
 
-  cancelEnrollment: async (
-    id: number,
-    data: CancelEnrollmentRequestDto
-  ): Promise<void> => {
-    await privateApi.patch<void>(
-      `${MYPAGE_API_BASE_URL}/enroll/${id}/cancel`,
-      data
-    );
-  },
+  cancelEnrollment: withAuthRedirect(
+    async (id: number, reason?: string): Promise<void> => {
+      await privateApi.patch<void>(`${MYPAGE_API_BASE}/enroll/${id}/cancel`, {
+        reason,
+      });
+    }
+  ),
 
   /**
    * @deprecated Renewal is now handled by swimmingPaymentService.renewalLesson to align with KISPG flow.
@@ -190,26 +171,19 @@ export const mypageApi = {
   },
 
   // 3.4 결제 내역 (Payment)
-  getPayments: async (
-    params?: GetPaymentsParams
-  ): Promise<MypagePaymentDto[]> => {
+  getPayments: withAuthRedirect(async (): Promise<MypagePaymentDto[]> => {
     const response = await privateApi.get<MypagePaymentDto[]>(
-      `${MYPAGE_API_BASE_URL}/payment`,
-      { params }
+      `${MYPAGE_API_BASE}/payment`
     );
-    const payments = response.data;
-    if (!Array.isArray(payments)) {
-      throw new Error("Invalid structure for payments data.");
-    }
-    return payments;
-  },
+    return response.data;
+  }),
   requestPaymentCancel: async (
     paymentId: number,
     reason?: string
   ): Promise<void> => {
     const payload = reason ? { reason } : {};
     await privateApi.post<void>(
-      `${MYPAGE_API_BASE_URL}/payment/${paymentId}/cancel`,
+      `${MYPAGE_API_BASE}/payment/${paymentId}/cancel`,
       payload
     );
   },
@@ -218,19 +192,11 @@ export const mypageApi = {
   getLockerAvailabilityStatus: async (
     gender: "MALE" | "FEMALE"
   ): Promise<LockerAvailabilityDto> => {
+    // This specific API endpoint for public locker availability might not need `withAuthRedirect`
+    // as it can be used on public lesson listing pages before login.
     const response = await privateApi.get<LockerAvailabilityDto>(
-      `${LOCKER_API_BASE_URL}/availability/status`,
-      { params: { gender } }
+      `${PUBLIC_API_BASE_LOCKERS}/availability/status?gender=${gender}`
     );
-    // Basic validation for the response structure
-    if (
-      !response.data ||
-      typeof response.data.availableQuantity !== "number" ||
-      typeof response.data.totalQuantity !== "number" ||
-      typeof response.data.usedQuantity !== "number"
-    ) {
-      throw new Error("Invalid structure for locker availability data.");
-    }
     return response.data;
   },
 };

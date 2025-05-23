@@ -214,10 +214,9 @@ export const processRenewal = async (
 };
 
 // Base paths from markdown documents
-const API_V1_BASE = "/api/v1";
-const SWIMMING_BASE_PATH = `${API_V1_BASE}/swimming`;
-const PAYMENT_BASE_PATH = `${API_V1_BASE}/payment`;
-const MYPAGE_BASE_PATH = `${API_V1_BASE}/mypage`; // For renewal
+const SWIMMING_BASE_PATH = "/swimming";
+const PAYMENT_BASE_PATH = "/payment";
+const MYPAGE_BASE_PATH = "/mypage"; // For renewal
 
 /**
  * Service functions for swimming lesson listing, enrollment, and KISPG payment flow.

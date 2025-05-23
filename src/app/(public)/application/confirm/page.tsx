@@ -26,7 +26,7 @@ import {
 } from "react-icons/md";
 import { swimmingPaymentService } from "@/lib/api/swimming";
 import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
-import { EnrollLessonRequestDto } from "@/types/api";
+import { EnrollLessonRequestDto, LockerAvailabilityDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
@@ -72,8 +72,8 @@ const ApplicationConfirmPage = () => {
     "MALE" | "FEMALE" | "OTHER" | undefined
   >(undefined);
 
-  const [lockerDetails, setLockerDetails] =
-    useState<LockerLessonDetails | null>(null);
+  const [lockerAvailability, setLockerAvailability] =
+    useState<LockerAvailabilityDto | null>(null);
   const [isLockerDetailsLoading, setIsLockerDetailsLoading] = useState(false);
 
   const [selectedLocker, setSelectedLocker] = useState(true);
@@ -169,9 +169,36 @@ const ApplicationConfirmPage = () => {
         if (profileData) {
           setProfile(profileData);
           if (profileData.gender) {
-            setUserGender(profileData.gender as "MALE" | "FEMALE" | "OTHER");
+            let mappedGender: "MALE" | "FEMALE" | "OTHER" | undefined =
+              undefined;
+            if (profileData.gender === "1") {
+              mappedGender = "MALE";
+            } else if (profileData.gender === "2") {
+              mappedGender = "FEMALE";
+            } else if (
+              typeof profileData.gender === "string" &&
+              profileData.gender.toUpperCase() === "MALE"
+            ) {
+              mappedGender = "MALE";
+            } else if (
+              typeof profileData.gender === "string" &&
+              profileData.gender.toUpperCase() === "FEMALE"
+            ) {
+              mappedGender = "FEMALE";
+            } else if (
+              typeof profileData.gender === "string" &&
+              profileData.gender.toUpperCase() === "OTHER"
+            ) {
+              mappedGender = "OTHER";
+            } else {
+              console.warn(
+                `Unknown gender value from API: ${profileData.gender}`
+              );
+              mappedGender = "OTHER";
+            }
+            setUserGender(mappedGender);
           } else {
-            console.warn("Gender not found on profile DTO");
+            console.warn("Gender not found on profile DTO from API");
           }
         } else {
           console.warn("Profile data is null after fetch.");
@@ -190,22 +217,33 @@ const ApplicationConfirmPage = () => {
   }, [lessonId]);
 
   useEffect(() => {
-    if (lessonId && userGender) {
+    if (lessonId && userGender && userGender !== "OTHER") {
       setIsLockerDetailsLoading(true);
       setLockerError(null);
-      // Simulating API call for locker details as per previous logic
-      setTimeout(() => {
-        setLockerDetails({
-          lessonId: lessonId,
-          maleLockerCount: 30, // Example data
-          femaleLockerCount: 25, // Example data
+
+      mypageApi
+        .getLockerAvailabilityStatus(userGender) // Type assertion as a temporary measure
+        .then((data) => {
+          setLockerAvailability(data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch locker availability:", err);
+          setLockerError("사물함 정보를 불러오는데 실패했습니다.");
+          setLockerAvailability(null);
+        })
+        .finally(() => {
+          setIsLockerDetailsLoading(false);
         });
-        setIsLockerDetailsLoading(false);
-      }, 1000);
+    } else if (lessonId && userGender === "OTHER") {
+      setLockerError("해당 성별은 사물함 정보를 제공하지 않습니다.");
+      setLockerAvailability(null);
+      setIsLockerDetailsLoading(false);
     } else if (lessonId && !userGender && profile) {
+      console.log("profile", profile);
       setLockerError(
         "사용자 성별 정보가 없어 사물함 정보를 가져올 수 없습니다."
       );
+      setLockerAvailability(null);
       setIsLockerDetailsLoading(false);
     }
   }, [lessonId, userGender, profile]);
@@ -426,12 +464,10 @@ const ApplicationConfirmPage = () => {
     price * (1 - discount / 100);
 
   let currentLockerCount: number | string = "-";
-  if (lockerDetails && userGender) {
-    if (userGender === "MALE")
-      currentLockerCount = lockerDetails.maleLockerCount;
-    else if (userGender === "FEMALE")
-      currentLockerCount = lockerDetails.femaleLockerCount;
-    else currentLockerCount = "정보없음";
+  if (lockerAvailability && userGender && userGender !== "OTHER") {
+    currentLockerCount = lockerAvailability.availableQuantity;
+  } else if (userGender === "OTHER") {
+    currentLockerCount = "정보없음";
   }
 
   const radioItemSpinnerColor = primaryDefault;

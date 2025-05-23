@@ -16,14 +16,10 @@ import {
   Separator,
 } from "@chakra-ui/react";
 import { swimmingPaymentService } from "@/lib/api/swimming";
-import {
-  PaymentPageDetailsDto,
-  KISPGInitParamsDto,
-  PaymentConfirmRequestDto,
-} from "@/types/api";
+import { PaymentPageDetailsDto, KISPGInitParamsDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 
-const KISPG_DEMO_SUCCESS_TOKEN = "kispg_demo_success_token";
+const KISPG_PAYMENT_REQUEST_URL = "https://testpg.kispg.co.kr/payment/request"; // Placeholder URL
 
 const PaymentProcessPage = () => {
   const router = useRouter();
@@ -33,11 +29,8 @@ const PaymentProcessPage = () => {
     null
   );
   const [details, setDetails] = useState<PaymentPageDetailsDto | null>(null);
-  const [kispgParams, setKispgParams] = useState<KISPGInitParamsDto | null>(
-    null
-  );
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true); // For initial enrollId/lessonId processing
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false); // For fetching payment details
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string>("");
   const [selectedLocker, setSelectedLocker] = useState<string | undefined>(
@@ -80,6 +73,23 @@ const PaymentProcessPage = () => {
       );
       setDetails(detailsData);
       setFinalAmount(detailsData?.amountToPay || 0);
+      // Initialize selectedLocker only if lockerOptions are available
+      if (detailsData?.lockerOptions) {
+        // Default to 'no' if options are present but user hasn't chosen
+        // This ensures the payment button is enabled once a choice is made (or if no locker needed)
+        if (
+          detailsData.lockerOptions.lockerAvailableForUserGender &&
+          detailsData.lockerOptions.availableCountForUserGender > 0
+        ) {
+          // If available, do not pre-select 'yes'. User must explicitly choose.
+          // setSelectedLocker("yes"); // Or keep undefined to force choice.
+        } else {
+          setSelectedLocker("no"); // If not available, 'no' is the only valid choice if options were present.
+        }
+      } else {
+        // No locker options, so no selection needed.
+        setSelectedLocker("no"); // Treat as 'no' for logic, button can be enabled.
+      }
     } catch (err: any) {
       console.error("Failed to fetch payment details:", err);
       const errMsg =
@@ -108,14 +118,16 @@ const PaymentProcessPage = () => {
         if (distance < 0) {
           clearInterval(interval);
           setCountdown("결제 시간 만료");
-          toaster.create({
-            title: "시간 초과",
-            description: "결제 시간이 만료되었습니다. 다시 신청해주세요.",
-            type: "error",
-            duration: 7000,
-            closable: true,
-          });
-          router.push("/sports/swimming/lesson");
+          if (!isProcessingPayment) {
+            toaster.create({
+              title: "시간 초과",
+              description: "결제 시간이 만료되었습니다. 다시 신청해주세요.",
+              type: "error",
+              duration: 7000,
+              closable: true,
+            });
+            router.push("/sports/swimming/lesson");
+          }
           return;
         }
 
@@ -129,10 +141,10 @@ const PaymentProcessPage = () => {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [details, router]);
+  }, [details, router, isProcessingPayment]);
 
   useEffect(() => {
-    if (details && selectedLocker !== undefined) {
+    if (details) {
       let currentAmount = details.lessonPrice;
       if (selectedLocker === "yes" && details.lockerOptions?.lockerFee) {
         currentAmount += details.lockerOptions.lockerFee;
@@ -145,77 +157,74 @@ const PaymentProcessPage = () => {
     if (!effectiveEnrollId || !details) {
       toaster.create({
         title: "오류",
-        description: "결제 정보가 올바르지 않습니다.",
+        description: "결제 기본 정보가 올바르지 않습니다.",
         type: "error",
       });
       return;
     }
+    if (countdown === "결제 시간 만료") {
+      toaster.create({
+        title: "시간 초과",
+        description: "결제 시간이 만료되어 진행할 수 없습니다.",
+        type: "error",
+      });
+      return;
+    }
+    // If locker options are available, user must make a choice
+    if (details.lockerOptions && selectedLocker === undefined) {
+      toaster.create({
+        title: "확인 필요",
+        description: "사물함 사용 여부를 선택해주세요.",
+        type: "info",
+      });
+      return;
+    }
+
     setIsProcessingPayment(true);
     try {
-      // 1. Fetch KISPG Params right before payment (if not already fetched)
-      if (!kispgParams) {
-        const kispgData = await swimmingPaymentService.getKISPGInitParams(
-          effectiveEnrollId
-        );
-        setKispgParams(kispgData);
-        // TODO: Launch KISPG SDK/UI with kispgData
-        // For demo, we'll simulate KISPG interaction
-        console.log("KISPG Params:", kispgData);
-        toaster.create({
-          title: "KISPG 연동 (데모)",
-          description: "KISPG 결제창이 호출됩니다 (실제 연동 필요).",
-          type: "info",
-          duration: 3000,
-          closable: true,
-        });
+      const kispgData = await swimmingPaymentService.getKISPGInitParams(
+        effectiveEnrollId
+      );
+
+      if (!kispgData) {
+        throw new Error("KISPG 초기화 파라미터를 받아오지 못했습니다.");
       }
 
-      // 2. Simulate KISPG interaction (replace with actual KISPG SDK calls)
-      // This is a placeholder. Actual KISPG will likely involve a redirect or a modal provided by their SDK.
-      // After KISPG is done, it will provide a pgToken (or similar) via its return mechanism.
-      setTimeout(async () => {
-        const wantsLockerConfirmed =
-          selectedLocker === undefined ? false : selectedLocker === "yes";
-        // if locker choice wasn't applicable or user didn't choose, default to false
+      const amountForPg = kispgData.amt ?? finalAmount; // Use amt from KISPG if available, otherwise local finalAmount
 
-        const confirmData: PaymentConfirmRequestDto = {
-          pgToken: KISPG_DEMO_SUCCESS_TOKEN, // This would come from KISPG
-          wantsLocker: wantsLockerConfirmed,
-        };
+      const form = document.createElement("form");
+      form.setAttribute("method", "POST");
+      form.setAttribute("action", KISPG_PAYMENT_REQUEST_URL);
 
-        try {
-          const confirmResponse = await swimmingPaymentService.confirmPayment(
-            effectiveEnrollId,
-            confirmData
-          );
-          toaster.create({
-            title: "결제 확인 중",
-            description: `상태: ${confirmResponse?.status}`,
-            type: "success",
-            closable: true,
-          });
-          // Redirect to a success page or Mypage based on response
-          router.push("/mypage?tab=enrollments&status=paid"); // Example redirect with params
-        } catch (confirmError: any) {
-          console.error("Payment confirmation failed:", confirmError);
-          const errMsg =
-            confirmError.response?.data?.message ||
-            confirmError.message ||
-            "결제 최종 확인에 실패했습니다.";
-          toaster.create({
-            title: "결제 확인 실패",
-            description: errMsg,
-            type: "error",
-            closable: true,
-          });
+      const paramsToSubmit: { [key: string]: any } = {
+        ...kispgData,
+        amt: amountForPg,
+      };
+
+      for (const key in paramsToSubmit) {
+        if (
+          paramsToSubmit.hasOwnProperty(key) &&
+          paramsToSubmit[key] !== null &&
+          paramsToSubmit[key] !== undefined
+        ) {
+          const hiddenField = document.createElement("input");
+          hiddenField.setAttribute("type", "hidden");
+          hiddenField.setAttribute("name", key);
+          hiddenField.setAttribute("value", String(paramsToSubmit[key]));
+          form.appendChild(hiddenField);
         }
-        setIsProcessingPayment(false);
-      }, 2000); // Simulate KISPG processing time
+      }
+
+      document.body.appendChild(form);
+      form.submit();
     } catch (error: any) {
-      console.error("KISPG Init failed:", error);
+      console.error("KISPG Init or Form Submission failed:", error);
       toaster.create({
         title: "결제 준비 실패",
-        description: error.response?.data?.message || error.message,
+        description:
+          error.response?.data?.message ||
+          error.message ||
+          "KISPG 결제 연동 중 오류가 발생했습니다.",
         type: "error",
         closable: true,
       });
@@ -242,6 +251,9 @@ const PaymentProcessPage = () => {
         <Text color="red.500" fontSize="xl">
           {error}
         </Text>
+        <Button mt={4} onClick={() => router.push("/sports/swimming/lesson")}>
+          강습 목록으로 돌아가기
+        </Button>
       </Box>
     );
   }
@@ -250,17 +262,40 @@ const PaymentProcessPage = () => {
     return (
       <Box p={5} textAlign="center">
         <Text fontSize="xl">결제 정보를 불러올 수 없습니다.</Text>
+        <Button mt={4} onClick={() => router.push("/sports/swimming/lesson")}>
+          강습 목록으로 돌아가기
+        </Button>
       </Box>
     );
   }
 
+  const lockerRadioDisabled = !(
+    details.lockerOptions &&
+    details.lockerOptions.lockerAvailableForUserGender &&
+    details.lockerOptions.availableCountForUserGender > 0
+  );
+
   const lockerRadioItems = [
     {
       value: "yes",
-      label: `사용함 (+${details.lockerOptions?.lockerFee.toLocaleString()}원)`,
+      label: `사용함 (+${(
+        details.lockerOptions?.lockerFee || 0
+      ).toLocaleString()}원)`,
+      disabled: lockerRadioDisabled,
     },
-    { value: "no", label: "사용안함" },
+    { value: "no", label: "사용안함", disabled: false }, // 'no' is always an option if lockers are presented
   ];
+
+  // Set selectedLocker to 'no' if locker options exist but are disabled for the user
+  useEffect(() => {
+    if (
+      details?.lockerOptions &&
+      lockerRadioDisabled &&
+      selectedLocker === undefined
+    ) {
+      setSelectedLocker("no");
+    }
+  }, [details, lockerRadioDisabled, selectedLocker]);
 
   return (
     <Box
@@ -280,7 +315,7 @@ const PaymentProcessPage = () => {
         <Box
           textAlign="center"
           fontSize="2xl"
-          color="red.500"
+          color={countdown === "결제 시간 만료" ? "red.500" : "green.500"}
           fontWeight="bold"
         >
           남은 결제 시간: {countdown}
@@ -304,15 +339,15 @@ const PaymentProcessPage = () => {
             <Heading as="h3" size="md" mb={3}>
               사물함 신청
             </Heading>
-            {details.lockerOptions.lockerAvailableForUserGender ? (
+            {!lockerRadioDisabled || selectedLocker === "no" ? ( // Show radio if available or if 'no' is selected
               <VStack align="start">
                 <Text>
                   사물함 사용료:{" "}
-                  {details.lockerOptions.lockerFee.toLocaleString()}원
+                  {(details.lockerOptions?.lockerFee || 0).toLocaleString()}원
                 </Text>
                 <Text color="gray.600" fontSize="sm">
                   (사용 가능:{" "}
-                  {details.lockerOptions.availableCountForUserGender}개)
+                  {details.lockerOptions?.availableCountForUserGender || 0}개)
                 </Text>
                 <RadioGroup.Root
                   value={selectedLocker}
@@ -330,6 +365,7 @@ const PaymentProcessPage = () => {
                         display="flex"
                         alignItems="center"
                         gap={2}
+                        disabled={item.disabled}
                       >
                         <RadioGroup.ItemHiddenInput />
                         <RadioGroup.ItemControl />
@@ -359,9 +395,13 @@ const PaymentProcessPage = () => {
           size="lg"
           onClick={initiateKispgPayment}
           loading={isProcessingPayment}
-          disabled={isProcessingPayment || countdown === "결제 시간 만료"}
+          disabled={
+            isProcessingPayment ||
+            countdown === "결제 시간 만료" ||
+            (details.lockerOptions && selectedLocker === undefined)
+          }
         >
-          {isProcessingPayment ? "결제 처리 중..." : "KISPG로 결제하기"}
+          {isProcessingPayment ? "결제 준비 중..." : "KISPG로 결제하기"}
         </Button>
       </VStack>
     </Box>
