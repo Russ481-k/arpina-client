@@ -222,7 +222,7 @@ const ApplicationConfirmPage = () => {
       setLockerError(null);
 
       mypageApi
-        .getLockerAvailabilityStatus(userGender) // Type assertion as a temporary measure
+        .getLockerAvailabilityStatus(userGender)
         .then((data) => {
           setLockerAvailability(data);
         })

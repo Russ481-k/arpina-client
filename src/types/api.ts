@@ -669,3 +669,121 @@ export interface LockerAvailabilityDto {
   usedQuantity: number;
   availableQuantity: number;
 }
+
+export interface AdminLessonDto {
+  // <--- Make sure 'export' keyword is present
+  lessonId?: number;
+  title: string;
+  instructorName?: string;
+  lessonTime?: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  capacity: number;
+  price: number;
+  status: "OPEN" | "CLOSED" | "ONGOING" | "COMPLETED";
+}
+
+// Added based on adminApi.ts and linter errors
+export interface CloneLessonRequestDto {
+  newStartDate: string; // YYYY-MM-DD
+  newEndDate: string; // YYYY-MM-DD
+  // Any other fields that need to be different for the cloned lesson
+  // e.g., title, price, capacity, if they can be overridden during cloning
+  title?: string;
+  price?: number;
+  capacity?: number;
+  status?: "OPEN" | "CLOSED"; // Typically a new lesson would be OPEN or CLOSED
+}
+
+export interface LockerInventoryUpdateRequestDto {
+  total_quantity: number;
+}
+
+export interface AdminCancelEnrollmentRequestDto {
+  reason: string; // Reason for admin cancellation
+  // any other relevant fields, e.g., if it affects refund calculation differently
+}
+
+export interface UpdateDiscountStatusRequestDto {
+  status: "APPROVED" | "DENIED";
+  adminComment?: string;
+}
+
+export interface UserMemoDto {
+  memoId?: number; // Optional, present if updating/fetching existing
+  userId: string;
+  memoText: string;
+  createdAt?: string; // ISO DateTime string
+  updatedAt?: string; // ISO DateTime string
+  adminId?: string; // ID of admin who wrote/updated memo
+}
+
+// Renamed from CancelRequestDto to CancelRequestAdminDto to match adminApi.ts
+// and to distinguish if there's a user-facing CancelRequestDto
+export interface CancelRequestAdminDto {
+  requestId: number;
+  enrollId: number;
+  userId: string;
+  userName: string;
+  lessonTitle: string;
+  paid_amt: number;
+  calculated_refund_amt: number;
+  requested_at: string;
+  reason: string;
+  kispg_tid?: string | null;
+  status: "PENDING" | "APPROVED" | "DENIED"; // Added status from CancellationRefundTab
+  lessonStartDate: string; // Added from CancellationRefundTab
+  usesLocker: boolean; // Added from CancellationRefundTab
+  paidAmount: {
+    // Added from CancellationRefundTab (detail of paid_amt)
+    lesson: number;
+    locker?: number;
+    total: number;
+  };
+  calculatedRefund?: {
+    // Optional detailed breakdown, added from CancellationRefundTab
+    usedDays: number;
+    manualUsedDays?: number;
+    lessonUsageAmount: number;
+    lockerUsageAmount: number;
+    lessonPenalty: number;
+    lockerPenalty: number;
+    finalRefundAmount: number;
+  };
+}
+
+export interface ApproveCancelRequestDto {
+  manualUsedDays?: number; // Optional, if admin adjusts used days
+  adminComment?: string;
+  // KISPG refund parameters might be needed here if refund is triggered by this call
+}
+
+export interface DenyCancelRequestDto {
+  adminComment?: string;
+}
+
+export interface ManualRefundRequestDto {
+  refundAmount: number;
+  reason: string;
+  // Potentially other details required for KISPG manual refund logging
+}
+
+export interface CronLogDto {
+  logId: number;
+  jobName: string;
+  status: "SUCCESS" | "FAILED" | "RUNNING";
+  startTime: string; // ISO DateTime string
+  endTime?: string | null; // ISO DateTime string
+  duration?: number | null; // in seconds
+  message?: string | null;
+}
+
+export interface WebhookLogDto {
+  logId: number;
+  tid: string;
+  sourceIp: string;
+  requestBody: string; // Could be stringified JSON
+  responseStatus: number; // HTTP status code our server responded with
+  processedAt: string; // ISO DateTime string
+  errorMessage?: string | null;
+}

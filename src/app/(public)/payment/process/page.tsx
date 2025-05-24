@@ -40,6 +40,18 @@ const PaymentProcessPage = () => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
+    if (details?.lockerOptions) {
+      const isDisabled = !(
+        details.lockerOptions.lockerAvailableForUserGender &&
+        details.lockerOptions.availableCountForUserGender > 0
+      );
+      if (isDisabled && selectedLocker === undefined) {
+        setSelectedLocker("no");
+      }
+    }
+  }, [details, selectedLocker]);
+
+  useEffect(() => {
     const processInitialParams = async () => {
       setIsLoadingInitial(true);
       setError(null);
@@ -56,6 +68,8 @@ const PaymentProcessPage = () => {
           type: "error",
         });
         router.push("/sports/swimming/lesson");
+        setIsLoadingInitial(false);
+        return;
       }
       setIsLoadingInitial(false);
     };
@@ -73,22 +87,21 @@ const PaymentProcessPage = () => {
       );
       setDetails(detailsData);
       setFinalAmount(detailsData?.amountToPay || 0);
-      // Initialize selectedLocker only if lockerOptions are available
       if (detailsData?.lockerOptions) {
-        // Default to 'no' if options are present but user hasn't chosen
-        // This ensures the payment button is enabled once a choice is made (or if no locker needed)
-        if (
+        const lockerRadioDisabledCalc = !(
           detailsData.lockerOptions.lockerAvailableForUserGender &&
           detailsData.lockerOptions.availableCountForUserGender > 0
+        );
+        if (lockerRadioDisabledCalc && selectedLocker === undefined) {
+          setSelectedLocker("no");
+        } else if (
+          !detailsData.lockerOptions.lockerAvailableForUserGender ||
+          detailsData.lockerOptions.availableCountForUserGender === 0
         ) {
-          // If available, do not pre-select 'yes'. User must explicitly choose.
-          // setSelectedLocker("yes"); // Or keep undefined to force choice.
-        } else {
-          setSelectedLocker("no"); // If not available, 'no' is the only valid choice if options were present.
+          setSelectedLocker("no");
         }
       } else {
-        // No locker options, so no selection needed.
-        setSelectedLocker("no"); // Treat as 'no' for logic, button can be enabled.
+        setSelectedLocker("no");
       }
     } catch (err: any) {
       console.error("Failed to fetch payment details:", err);
@@ -100,7 +113,7 @@ const PaymentProcessPage = () => {
       toaster.create({ title: "오류", description: errMsg, type: "error" });
     }
     setIsLoadingDetails(false);
-  }, [effectiveEnrollId]);
+  }, [effectiveEnrollId, selectedLocker]);
 
   useEffect(() => {
     if (effectiveEnrollId) {
@@ -170,7 +183,6 @@ const PaymentProcessPage = () => {
       });
       return;
     }
-    // If locker options are available, user must make a choice
     if (details.lockerOptions && selectedLocker === undefined) {
       toaster.create({
         title: "확인 필요",
@@ -190,7 +202,7 @@ const PaymentProcessPage = () => {
         throw new Error("KISPG 초기화 파라미터를 받아오지 못했습니다.");
       }
 
-      const amountForPg = kispgData.amt ?? finalAmount; // Use amt from KISPG if available, otherwise local finalAmount
+      const amountForPg = kispgData.amt ?? finalAmount;
 
       const form = document.createElement("form");
       form.setAttribute("method", "POST");
@@ -283,19 +295,8 @@ const PaymentProcessPage = () => {
       ).toLocaleString()}원)`,
       disabled: lockerRadioDisabled,
     },
-    { value: "no", label: "사용안함", disabled: false }, // 'no' is always an option if lockers are presented
+    { value: "no", label: "사용안함", disabled: false },
   ];
-
-  // Set selectedLocker to 'no' if locker options exist but are disabled for the user
-  useEffect(() => {
-    if (
-      details?.lockerOptions &&
-      lockerRadioDisabled &&
-      selectedLocker === undefined
-    ) {
-      setSelectedLocker("no");
-    }
-  }, [details, lockerRadioDisabled, selectedLocker]);
 
   return (
     <Box
@@ -339,7 +340,7 @@ const PaymentProcessPage = () => {
             <Heading as="h3" size="md" mb={3}>
               사물함 신청
             </Heading>
-            {!lockerRadioDisabled || selectedLocker === "no" ? ( // Show radio if available or if 'no' is selected
+            {!lockerRadioDisabled || selectedLocker === "no" ? (
               <VStack align="start">
                 <Text>
                   사물함 사용료:{" "}

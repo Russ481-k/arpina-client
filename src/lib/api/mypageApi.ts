@@ -66,8 +66,8 @@ interface ApiError extends Error {
 }
 
 // --- API Base URL ---
-const MYPAGE_API_BASE = "/mypage";
-const PUBLIC_API_BASE_LOCKERS = "/lockers";
+const MYPAGE_API_BASE = "/api/v1/mypage";
+const PUBLIC_API_BASE_LOCKERS = "/api/v1/lockers";
 
 // --- API Object ---
 export const mypageApi = {
@@ -85,10 +85,14 @@ export const mypageApi = {
     return response.data;
   }),
   updateProfile: withAuthRedirect(
-    async (data: Partial<ProfileDto>): Promise<ProfileDto> => {
+    async (
+      data: Partial<ProfileDto>,
+      currentPassword?: string
+    ): Promise<ProfileDto> => {
+      const payload = currentPassword ? { ...data, currentPassword } : data;
       const response = await privateApi.patch<ProfileDto>(
         `${MYPAGE_API_BASE}/profile`,
-        data
+        payload
       );
       return response.data;
     }
@@ -190,7 +194,7 @@ export const mypageApi = {
 
   // New function for locker availability status (as per swim-user.md)
   getLockerAvailabilityStatus: async (
-    gender: "MALE" | "FEMALE"
+    gender: string
   ): Promise<LockerAvailabilityDto> => {
     // This specific API endpoint for public locker availability might not need `withAuthRedirect`
     // as it can be used on public lesson listing pages before login.

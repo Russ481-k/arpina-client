@@ -232,7 +232,7 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
         cellStyle: { textAlign: "center" },
       },
     ],
-    [agGridContext]
+    []
   );
 
   const defaultColDef = useMemo<ColDef<Post>>(() => {

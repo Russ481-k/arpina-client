@@ -292,34 +292,28 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     [displayedFiles, onChange]
   );
 
-  const validateFileInternal = (
-    file: File
-  ): { valid: boolean; error?: string } => {
-    // 외부에서 주입된 검증 함수가 있으면 우선 사용
-    if (validateFile) {
-      return validateFile(file);
-    }
-
-    // 기존 내부 검증 로직을 백업으로 사용
-    // Check file size
-    if (file.size > maxSizeInMB * 1024 * 1024) {
-      return {
-        valid: false,
-        error: `파일 크기는 ${maxSizeInMB}MB 이하여야 합니다.`,
-      };
-    }
-
-    // Check file type
-    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
-    if (!allowedFileTypes.includes(fileExtension)) {
-      return {
-        valid: false,
-        error: `지원되지 않는 파일 형식입니다.`,
-      };
-    }
-
-    return { valid: true };
-  };
+  const validateFileInternal = useCallback(
+    (file: File): { valid: boolean; error?: string } => {
+      if (validateFile) {
+        return validateFile(file);
+      }
+      if (file.size > maxSizeInMB * 1024 * 1024) {
+        return {
+          valid: false,
+          error: `파일 크기는 ${maxSizeInMB}MB 이하여야 합니다.`,
+        };
+      }
+      const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+      if (!allowedFileTypes.includes(fileExtension)) {
+        return {
+          valid: false,
+          error: `지원되지 않는 파일 형식입니다.`,
+        };
+      }
+      return { valid: true };
+    },
+    [validateFile, maxSizeInMB, allowedFileTypes]
+  );
 
   const handleFiles = useCallback(
     (fileList: FileList) => {
@@ -406,13 +400,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         }
       });
     },
-    [
-      displayedFiles,
-      maxFiles,
-      onChange,
-      validateFileInternal,
-      attachmentsToDelete,
-    ] // Added attachmentsToDelete to deps for currentValidFileCount
+    [displayedFiles, maxFiles, onChange, validateFileInternal]
   );
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {

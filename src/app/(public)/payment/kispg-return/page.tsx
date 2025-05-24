@@ -79,25 +79,26 @@ const KispgReturnContent = () => {
 
   useEffect(() => {
     if (!enrollId) {
-      if (!isLoading && error) {
-        // Only stop loading if an error already occurred related to moid/enrollId
-        setIsLoading(false);
+      // isLoading, error 상태에 따라 setIsLoading(false) 호출 여부 결정은 이미 아래 로직에 포함됨
+      // 이 조건문에서는 enrollId가 없을 때 더 이상 진행하지 않도록 return만 수행
+      if (!isLoading && !error) {
+        // 로딩이 끝났고, moid 관련 에러가 없다면, enrollId가 없다는것 자체가 문제일 수 있음.
+        // 이 경우는 이미 위의 useEffect에서 setError등으로 처리되었을 가능성이 높음.
       }
       return;
     }
 
-    // 2. Poll backend for final payment status
-    // This is a simplified polling mechanism. For production, consider SWR or React Query with refetchInterval.
-    const POLLING_INTERVAL = 3000; // 3 seconds
-    const MAX_POLLS = 10; // Poll for a maximum of 30 seconds
+    const POLLING_INTERVAL = 3000;
+    const MAX_POLLS = 10;
     let pollCount = 0;
+    let timeoutId: NodeJS.Timeout | null = null; // For cleanup
 
     const checkStatus = async () => {
+      if (paymentDisplayStatus !== "PENDING") return; // 이미 최종 상태이면 중지
       pollCount++;
       try {
         const enrollmentDetails = await mypageApi.getEnrollmentById(enrollId);
         if (enrollmentDetails?.status === "PAID") {
-          // Assuming 'PAID' is the success status from EnrollDto
           setPaymentDisplayStatus("SUCCESS");
           setFinalMessage("결제가 성공적으로 완료되었습니다.");
           setIsLoading(false);
@@ -106,15 +107,11 @@ const KispgReturnContent = () => {
             description: "수강 신청이 완료되었습니다.",
             type: "success",
           });
-          // Optionally, call swimmingPaymentService.confirmPayment here if still needed for any final UX steps
-          // await swimmingPaymentService.confirmPayment(enrollId, { pgToken: kispgData?.tid || '', wantsLocker: ??? });
-          // wantsLocker state needs to be persisted or fetched if confirm is called here.
         } else if (
           enrollmentDetails?.status === "PAYMENT_FAILED" ||
           enrollmentDetails?.status === "PAYMENT_TIMEOUT" ||
           enrollmentDetails?.status === "CANCELED_UNPAID"
         ) {
-          // Example failure statuses
           setPaymentDisplayStatus("FAILURE");
           setFinalMessage(
             `결제에 실패하였거나 시간이 초과되었습니다. (상태: ${enrollmentDetails.status})`
@@ -127,11 +124,11 @@ const KispgReturnContent = () => {
             type: "error",
           });
         } else if (pollCount >= MAX_POLLS) {
-          setPaymentDisplayStatus("PENDING"); // Or FAILURE if timeout is considered failure
+          setPaymentDisplayStatus("PENDING");
           setFinalMessage(
             "결제 결과를 확인하는데 시간이 오래 걸리고 있습니다. 잠시 후 마이페이지에서 확인해주세요."
           );
-          setError("결과 확인 시간 초과");
+          // setError('결과 확인 시간 초과'); //  이 경우는 에러라기보단 지연안내이므로 setError는 주석처리
           setIsLoading(false);
           toaster.create({
             title: "확인 지연",
@@ -139,33 +136,37 @@ const KispgReturnContent = () => {
             type: "warning",
           });
         } else {
-          // Still PENDING or UNPAID, continue polling
-          setTimeout(checkStatus, POLLING_INTERVAL);
+          timeoutId = setTimeout(checkStatus, POLLING_INTERVAL);
         }
       } catch (err: any) {
         console.error("Failed to fetch enrollment status:", err);
-        setError("신청 상태를 확인하는 중 오류가 발생했습니다.");
-        // Don't stop polling on transient network errors, but stop if it's a critical error or max polls reached.
+        // setError('신청 상태를 확인하는 중 오류가 발생했습니다.'); // 반복적인 에러 토스트 방지
         if (pollCount >= MAX_POLLS) {
           setPaymentDisplayStatus("FAILURE");
           setFinalMessage(
             "결제 상태 확인 중 오류 발생. 마이페이지에서 확인해주세요."
           );
+          setError("신청 상태 확인 중 오류가 여러 번 발생했습니다."); // 최종적으로 에러 설정
           setIsLoading(false);
+        } else {
+          timeoutId = setTimeout(checkStatus, POLLING_INTERVAL); // 에러 발생 시에도 일단 재시도
         }
       }
     };
 
-    if (paymentDisplayStatus === "PENDING") {
-      setTimeout(checkStatus, POLLING_INTERVAL); // Start initial check after a brief delay or immediately
+    if (paymentDisplayStatus === "PENDING" && enrollId && isLoading) {
+      // isLoading 조건 추가하여 초기 로딩시에만 checkStatus 시작
+      checkStatus();
     }
 
-    // Cleanup function for timeout
     return () => {
-      // Clear any running timers if component unmounts
-      // This is implicitly handled by setTimeout not repeating if condition (pollCount < MAX_POLLS) fails
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [enrollId, kispgData, paymentDisplayStatus]); // Add paymentDisplayStatus to dependencies to stop polling once status is final
+    // 의존성 배열에 error, isLoading, finalMessage 등을 추가하면 무한 루프 또는 예상치 못한 동작 발생 가능성이 높음.
+    // 폴링 로직의 제어는 enrollId, kispgData, paymentDisplayStatus(최종 상태 시 중단)로 관리.
+  }, [enrollId, kispgData, paymentDisplayStatus, isLoading, error]); // isLoading, error 추가
 
   const renderStatus = () => {
     if (isLoading) {
