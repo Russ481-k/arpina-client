@@ -587,6 +587,8 @@ export interface EnrollAdminResponseDto {
   paid_amt?: number | null; // Initial paid amount from payment table
   refunded_amt?: number | null; // Total refunded amount from payment table
   remain_days_at_cancel?: number | null; // Calculated for audit
+  userPhone: string | null; // User phone number from user table
+  userLoginId: string | null; // User login ID from user table
 }
 
 // CancelRequestDto for GET /admin/swimming/enrolls/cancel-requests

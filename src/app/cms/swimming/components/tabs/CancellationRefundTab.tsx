@@ -10,7 +10,6 @@ import {
   Fieldset,
   Input,
   Stack,
-  Table,
   Badge,
   Flex,
   DialogRoot,
@@ -28,9 +27,9 @@ import {
 import {
   CheckIcon,
   XIcon,
-  CalendarIcon,
-  DollarSignIcon,
   SearchIcon,
+  UserIcon,
+  DownloadIcon,
 } from "lucide-react";
 import { useColors } from "@/styles/theme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -46,6 +45,23 @@ import type {
   // ManualUsedDaysRequestDto, // For the preview API request
 } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
+import { AgGridReact } from "ag-grid-react";
+import {
+  type ColDef,
+  ModuleRegistry,
+  AllCommunityModule,
+  type ICellRendererParams,
+  type ValueFormatterParams,
+  // type RowClickedEvent, // Not used yet
+  // type CellClickedEvent, // Not used yet
+} from "ag-grid-community";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
+import "@/styles/ag-grid-custom.css"; // Assuming custom styles might be needed
+import { useColorMode } from "@/components/ui/color-mode"; // For dark/light theme
+import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar"; // Added import
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Remove local temporary DTOs if they are expected from @/types/api now
 // type RefundCalculationPreviewRequestDto = any;
@@ -78,7 +94,8 @@ interface CancelRequestData {
   lessonId?: number;
   enrollId: number;
   userName: string;
-  userId: string;
+  userLoginId?: string;
+  userPhone?: string;
   lessonTitle: string;
   requestedAt: string;
   reason: string;
@@ -102,12 +119,57 @@ const cancelTabQueryKeys = {
     ["refundPreview", enrollId, manualUsedDays] as const,
 };
 
+// NEW: Status Cell Renderer
+const StatusCellRenderer: React.FC<
+  ICellRendererParams<CancelRequestData, CancelRequestData["status"]>
+> = (params) => {
+  if (!params.value) return null;
+  // Assuming getStatusBadge is defined elsewhere or we define its logic here
+  const statusConfig = {
+    PENDING: { colorScheme: "yellow", label: "대기" },
+    APPROVED: { colorScheme: "green", label: "승인" },
+    DENIED: { colorScheme: "red", label: "거부" },
+  };
+  const config = statusConfig[params.value as keyof typeof statusConfig] || {
+    colorScheme: "gray",
+    label: params.value,
+  };
+  return (
+    <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+      {config.label}
+    </Badge>
+  );
+};
+
+// NEW: Action Cell Renderer
+const ActionCellRenderer: React.FC<ICellRendererParams<CancelRequestData>> = (
+  params
+) => {
+  const { data, context } = params;
+  if (!data || data.status !== "PENDING") return null;
+
+  const handleReviewClick = () => context.openReviewDialog(data);
+
+  return (
+    <Button
+      size="xs"
+      colorScheme="blue"
+      variant="outline"
+      onClick={handleReviewClick}
+    >
+      검토
+    </Button>
+  );
+};
+
 export const CancellationRefundTab = ({
   lessonIdFilter,
 }: CancellationRefundTabProps) => {
   const colors = useColors();
+  const { colorMode } = useColorMode(); // Get colorMode for theme switching
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({ searchTerm: "" });
+  const gridRef = React.useRef<AgGridReact<CancelRequestData>>(null); // Add gridRef
 
   const {
     data: enrollmentsForLessonResponse,
@@ -147,6 +209,12 @@ export const CancellationRefundTab = ({
     enabled: !!lessonIdFilter,
   });
   const lessonEnrollIds = enrollmentsForLessonResponse || [];
+  const bg = colorMode === "dark" ? "#1A202C" : "white";
+  const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
+  const borderColor = colorMode === "dark" ? "#2D3748" : "#E2E8F0";
+  const primaryColor = colors.primary?.default || "#2a7fc1";
+  const agGridTheme =
+    colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
   const { data: allCancelRequestsData, isLoading: isLoadingAllCancelRequests } =
     useQuery<
@@ -198,9 +266,10 @@ export const CancellationRefundTab = ({
               id: dto.requestId.toString(),
               enrollId: dto.enrollId,
               userName: dto.userName,
-              userId: dto.userId,
+              userLoginId: (dto as any).userLoginId || undefined,
+              userPhone: (dto as any).userPhone || undefined,
               lessonTitle: dto.lessonTitle,
-              requestedAt: dto.requested_at || new Date().toISOString(), // Rely on requested_at or fallback
+              requestedAt: dto.requested_at || new Date().toISOString(),
               reason: dto.reason,
               lessonStartDate: dto.lessonStartDate,
               usesLocker: dto.usesLocker,
@@ -398,11 +467,13 @@ export const CancellationRefundTab = ({
     if (filters.searchTerm) {
       return dataToFilter.filter((req) => {
         const searchTermLower = filters.searchTerm.toLowerCase();
-        return (
+        let matches =
           req.userName.toLowerCase().includes(searchTermLower) ||
-          req.userId.toLowerCase().includes(searchTermLower) ||
-          req.lessonTitle.toLowerCase().includes(searchTermLower)
-        );
+          (req.userLoginId &&
+            req.userLoginId.toLowerCase().includes(searchTermLower)) ||
+          (req.userPhone &&
+            req.userPhone.toLowerCase().includes(searchTermLower));
+        return matches;
       });
     }
     return dataToFilter;
@@ -451,31 +522,17 @@ export const CancellationRefundTab = ({
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      PENDING: { colorScheme: "yellow", label: "대기" },
-      APPROVED: { colorScheme: "green", label: "승인" },
-      DENIED: { colorScheme: "red", label: "거부" },
-    };
-    const config = statusConfig[status as keyof typeof statusConfig];
+  // AgGrid Context
+  const agGridContext = useMemo(
+    () => ({
+      openReviewDialog: handleOpenDialog,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [handleOpenDialog] // handleOpenDialog is stable due to useCallback or being defined outside render
+  );
 
-    return (
-      <Badge colorScheme={config.colorScheme} variant="solid">
-        {config.label}
-      </Badge>
-    );
-  };
-
-  const formatCurrency = (
-    amount: number | undefined,
-    showWon: boolean = true
-  ) => {
-    if (amount === undefined) return "-";
-    const formatted = new Intl.NumberFormat("ko-KR").format(Math.round(amount));
-    return showWon ? formatted + "원" : formatted;
-  };
-
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("ko-KR", {
       year: "numeric",
       month: "long",
@@ -485,8 +542,35 @@ export const CancellationRefundTab = ({
     });
   };
 
+  const formatCurrency = (
+    amount: number | undefined | null,
+    showWon: boolean = true
+  ) => {
+    if (amount === undefined || amount === null) return "-";
+    const formatted = new Intl.NumberFormat("ko-KR").format(Math.round(amount));
+    return showWon ? formatted + "원" : formatted;
+  };
+
   const displayRefundDetails =
     currentRefundDetails || selectedRequest?.calculatedRefund;
+
+  const defaultColDef = useMemo<ColDef>(
+    () => ({
+      sortable: true,
+      resizable: true,
+      filter: false,
+      cellStyle: {
+        fontSize: "13px",
+        display: "flex",
+        alignItems: "center",
+      },
+    }),
+    []
+  );
+
+  const handleExportGrid = () => {
+    gridRef.current?.api.exportDataAsCsv();
+  };
 
   if (lessonIdFilter && isLoadingEnrollmentsForLesson) {
     return (
@@ -550,47 +634,101 @@ export const CancellationRefundTab = ({
     );
   }
 
+  // ColDefs
+  const colDefs = useMemo<ColDef<CancelRequestData>[]>(
+    () => [
+      {
+        headerName: "이름",
+        field: "userName",
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        headerName: "핸드폰 번호",
+        field: "userPhone",
+        flex: 1,
+        minWidth: 130,
+      },
+      {
+        headerName: "요청일시",
+        field: "requestedAt",
+        valueFormatter: (
+          params: ValueFormatterParams<CancelRequestData, string | null>
+        ) => formatDate(params.value),
+        width: 180,
+      },
+      {
+        headerName: "사용일수",
+        valueGetter: (params) => {
+          const data = params.data;
+          if (!data) return "";
+          const days =
+            data.calculatedRefund.manualUsedDays ??
+            data.calculatedRefund.usedDays;
+          return `${days}일`;
+        },
+        width: 100,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+      },
+      {
+        headerName: "환불예정액",
+        field: "calculatedRefund.finalRefundAmount",
+        valueFormatter: (
+          params: ValueFormatterParams<CancelRequestData, number | null>
+        ) => formatCurrency(params.value),
+        width: 130,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        },
+      },
+      {
+        headerName: "상태",
+        field: "status",
+        cellRenderer: StatusCellRenderer,
+        width: 100,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+      },
+      {
+        headerName: "관리",
+        cellRenderer: ActionCellRenderer,
+        width: 100,
+        pinned: "right",
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formatDate, formatCurrency] // Add dependencies if they are not stable
+  );
+
   return (
     <Box h="full" display="flex" flexDirection="column">
-      <Heading size="md" mb={4}>
-        취소/환불 관리
-      </Heading>
-
-      <Box
-        mb={4}
-        p={3}
-        borderWidth="1px"
-        borderRadius="md"
-        borderColor="gray.200"
-      >
-        <Flex gap={4} align="flex-end">
-          <Field.Root flex={1}>
-            <Field.Label htmlFor="cancelSearch">
-              검색 (이름/ID/강습명)
-            </Field.Label>
-            <Flex>
-              <Input
-                id="cancelSearch"
-                placeholder="검색어를 입력하세요"
-                value={filters.searchTerm}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    searchTerm: e.target.value,
-                  }))
-                }
-              />
-              <IconButton
-                aria-label="Search a refund request"
-                variant="outline"
-                ml={2}
-              >
-                <SearchIcon size={16} />
-              </IconButton>
-            </Flex>
-          </Field.Root>
-        </Flex>
-      </Box>
+      <CommonGridFilterBar
+        searchTerm={filters.searchTerm}
+        onSearchTermChange={(e) =>
+          setFilters((prev) => ({ ...prev, searchTerm: e.target.value }))
+        }
+        searchTermPlaceholder="검색 (이름/ID)"
+        onExport={handleExportGrid}
+        onSearchButtonClick={() => {
+          // Placeholder: Trigger data refetch or client-side filter update if needed
+          console.log("Search button clicked with filters:", filters);
+        }}
+        showSearchButton={true}
+      />
 
       <Card.Root mb={6} p={4}>
         <Card.Body>
@@ -629,78 +767,32 @@ export const CancellationRefundTab = ({
         </Card.Body>
       </Card.Root>
 
-      <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-        <Table.Root>
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeader>신청자</Table.ColumnHeader>
-              <Table.ColumnHeader>요청일시</Table.ColumnHeader>
-              <Table.ColumnHeader>사용일수</Table.ColumnHeader>
-              <Table.ColumnHeader>환불예정액</Table.ColumnHeader>
-              <Table.ColumnHeader>상태</Table.ColumnHeader>
-              <Table.ColumnHeader>관리</Table.ColumnHeader>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {finalFilteredRequests.map((request) => (
-              <Table.Row key={request.id}>
-                <Table.Cell>
-                  <Stack gap={1}>
-                    <Text fontWeight="medium">{request.userName}</Text>
-                    <Text fontSize="xs" color={colors.text.secondary}>
-                      {request.userId}
-                    </Text>
-                  </Stack>
-                </Table.Cell>
-                <Table.Cell>
-                  <Flex align="center" gap={1}>
-                    <CalendarIcon size={14} />
-                    <Text fontSize="sm">{formatDate(request.requestedAt)}</Text>
-                  </Flex>
-                </Table.Cell>
-                <Table.Cell>
-                  <Text>
-                    {request.calculatedRefund.manualUsedDays ??
-                      request.calculatedRefund.usedDays}
-                    일
-                  </Text>
-                  <Text fontSize="xs" color={colors.text.secondary}>
-                    시작:{" "}
-                    {new Date(request.lessonStartDate).toLocaleDateString(
-                      "ko-KR"
-                    )}
-                  </Text>
-                </Table.Cell>
-                <Table.Cell>
-                  <Flex align="center" gap={1}>
-                    <DollarSignIcon size={14} />
-                    <Text fontWeight="semibold">
-                      {formatCurrency(
-                        request.calculatedRefund.finalRefundAmount
-                      )}
-                    </Text>
-                  </Flex>
-                  <Text fontSize="xs" color={colors.text.secondary}>
-                    / {formatCurrency(request.paidAmount.total)}
-                  </Text>
-                </Table.Cell>
-                <Table.Cell>{getStatusBadge(request.status)}</Table.Cell>
-                <Table.Cell>
-                  {request.status === "PENDING" && (
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      variant="outline"
-                      onClick={() => handleOpenDialog(request)}
-                    >
-                      검토
-                    </Button>
-                  )}
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
+      {/* AG Grid Table */}
+      <Box
+        className={agGridTheme}
+        h="calc(100vh - 400px)" // Adjusted height to match EnrollmentManagementTab
+        w="full"
+        p={2} // Added padding to match EnrollmentManagementTab
+      >
+        <AgGridReact<CancelRequestData>
+          ref={gridRef}
+          rowData={finalFilteredRequests}
+          columnDefs={colDefs}
+          defaultColDef={defaultColDef}
+          context={agGridContext}
+          domLayout="autoHeight"
+          headerHeight={36}
+          rowHeight={40}
+          suppressCellFocus
+          getRowStyle={() => ({
+            color: textColor,
+            background: bg,
+            borderBottom: `1px solid ${borderColor}`,
+            display: "flex",
+            alignItems: "center",
+          })}
+          animateRows={true}
+        />
       </Box>
 
       <DialogRoot

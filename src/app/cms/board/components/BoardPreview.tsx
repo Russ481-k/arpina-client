@@ -24,7 +24,6 @@ import {
   type ICellRendererParams,
   type ValueFormatterParams,
   type RowClickedEvent,
-  type CellValueChangedEvent,
   type CellStyle,
 } from "ag-grid-community";
 import {
@@ -35,11 +34,8 @@ import {
   LuRefreshCw,
   LuImage,
   LuPaperclip,
-  LuImageOff,
   LuExternalLink,
-  LuPlus,
 } from "react-icons/lu";
-import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "@/styles/ag-grid-custom.css";
 import Layout from "@/components/layout/view/Layout";
@@ -57,10 +53,8 @@ import { ArticleDetailDrawer } from "./ArticleDetailDrawer";
 import { ArticleWriteDrawer } from "./ArticleWriteDrawer";
 import { useAuth } from "@/lib/AuthContext";
 import { LucideEdit } from "lucide-react";
-import { getPublicFileDownloadUrl } from "@/lib/utils";
 import CustomPagination from "@/components/common/CustomPagination";
 import { toaster } from "@/components/ui/toaster";
-import NextLink from "next/link";
 
 // Import GenericArticleCard and the mapping function
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";

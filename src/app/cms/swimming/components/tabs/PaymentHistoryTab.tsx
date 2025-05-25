@@ -24,8 +24,24 @@ import {
   SearchIcon,
   CreditCardIcon,
   RefreshCwIcon,
+  UserIcon,
 } from "lucide-react";
 import { useColors } from "@/styles/theme";
+import { AgGridReact } from "ag-grid-react";
+import {
+  type ColDef,
+  ModuleRegistry,
+  AllCommunityModule,
+  type ICellRendererParams,
+  type ValueFormatterParams,
+} from "ag-grid-community";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
+import "@/styles/ag-grid-custom.css";
+import { useColorMode } from "@/components/ui/color-mode";
+import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface PaymentData {
   paymentId: number;
@@ -33,7 +49,7 @@ interface PaymentData {
   lessonId: number;
   tid: string;
   userName: string;
-  userId: string;
+  userPhone?: string;
   lessonTitle: string;
   paidAmount: number;
   refundedAmount: number;
@@ -50,7 +66,7 @@ interface RefundData {
   lessonId: number;
   tid: string;
   userName: string;
-  userId: string;
+  userPhone?: string;
   lessonTitle: string;
   refundAmount: number;
   refundType: string;
@@ -68,9 +84,12 @@ export const PaymentHistoryTab = ({
   lessonIdFilter,
 }: PaymentHistoryTabProps) => {
   const colors = useColors();
+  const { colorMode } = useColorMode();
   const [activeTab, setActiveTab] = useState<"payments" | "refunds">(
     "payments"
   );
+  const paymentGridRef = React.useRef<AgGridReact<PaymentData>>(null);
+  const refundGridRef = React.useRef<AgGridReact<RefundData>>(null);
 
   // Mock data
   const mockPayments: PaymentData[] = [
@@ -80,7 +99,7 @@ export const PaymentHistoryTab = ({
       lessonId: 1,
       tid: "T1234567890",
       userName: "김결제",
-      userId: "paymentKim",
+      userPhone: "010-1111-2222",
       lessonTitle: "초급반 A (월수금 09:00)",
       paidAmount: 70000,
       refundedAmount: 0,
@@ -94,7 +113,7 @@ export const PaymentHistoryTab = ({
       lessonId: 2,
       tid: "T0987654321",
       userName: "이납부",
-      userId: "paymentLee",
+      userPhone: "010-3333-4444",
       lessonTitle: "중급반 B (화목 10:00)",
       paidAmount: 85000,
       refundedAmount: 20000,
@@ -108,7 +127,7 @@ export const PaymentHistoryTab = ({
       lessonId: 1,
       tid: "T1122334455",
       userName: "박송금",
-      userId: "paymentPark",
+      userPhone: undefined,
       lessonTitle: "초급반 A (월수금 09:00)",
       paidAmount: 65000,
       refundedAmount: 65000,
@@ -127,7 +146,7 @@ export const PaymentHistoryTab = ({
       lessonId: 2,
       tid: "T0987654321",
       userName: "이납부",
-      userId: "paymentLee",
+      userPhone: "010-3333-4444",
       lessonTitle: "중급반 B (화목 10:00)",
       refundAmount: 20000,
       refundType: "PARTIAL",
@@ -143,7 +162,7 @@ export const PaymentHistoryTab = ({
       lessonId: 1,
       tid: "T1122334455",
       userName: "박송금",
-      userId: "paymentPark",
+      userPhone: undefined,
       lessonTitle: "초급반 A (월수금 09:00)",
       refundAmount: 65000,
       refundType: "FULL",
@@ -194,40 +213,6 @@ export const PaymentHistoryTab = ({
     { value: "custom", label: "기간 선택" },
   ];
 
-  const getPaymentStatusBadge = (status: string) => {
-    const statusConfig = {
-      PAID: { colorScheme: "green", label: "결제완료" },
-      PARTIALLY_REFUNDED: { colorScheme: "yellow", label: "부분환불" },
-      FULLY_REFUNDED: { colorScheme: "red", label: "전액환불" },
-      CANCELED: { colorScheme: "gray", label: "취소" },
-    };
-    const config = statusConfig[status as keyof typeof statusConfig] || {
-      colorScheme: "gray",
-      label: status,
-    };
-
-    return (
-      <Badge colorScheme={config.colorScheme} variant="solid">
-        {config.label}
-      </Badge>
-    );
-  };
-
-  const getRefundStatusBadge = (status: string) => {
-    const statusConfig = {
-      COMPLETED: { colorScheme: "green", label: "완료" },
-      PENDING: { colorScheme: "yellow", label: "처리중" },
-      FAILED: { colorScheme: "red", label: "실패" },
-    };
-    const config = statusConfig[status as keyof typeof statusConfig];
-
-    return (
-      <Badge colorScheme={config.colorScheme} variant="solid">
-        {config.label}
-      </Badge>
-    );
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("ko-KR").format(amount) + "원";
   };
@@ -244,13 +229,13 @@ export const PaymentHistoryTab = ({
   };
 
   const handleExportPayments = () => {
-    // TODO: 엑셀 다운로드 구현
-    console.log("결제 내역 엑셀 다운로드");
+    paymentGridRef.current?.api.exportDataAsCsv();
+    console.log("결제 내역 CSV 다운로드 (AG Grid)");
   };
 
   const handleExportRefunds = () => {
-    // TODO: 엑셀 다운로드 구현
-    console.log("환불 내역 엑셀 다운로드");
+    refundGridRef.current?.api.exportDataAsCsv();
+    console.log("환불 내역 CSV 다운로드 (AG Grid)");
   };
 
   const filteredPayments = useMemo(() => {
@@ -262,7 +247,7 @@ export const PaymentHistoryTab = ({
       const searchTermLower = paymentFilters.searchTerm.toLowerCase();
       const matchesSearch =
         payment.userName.toLowerCase().includes(searchTermLower) ||
-        payment.userId.toLowerCase().includes(searchTermLower) ||
+        (payment.userPhone && payment.userPhone.includes(searchTermLower)) ||
         payment.tid.toLowerCase().includes(searchTermLower);
 
       const matchesStatus =
@@ -281,7 +266,7 @@ export const PaymentHistoryTab = ({
       const searchTermLower = refundFilters.searchTerm.toLowerCase();
       const matchesSearch =
         refund.userName.toLowerCase().includes(searchTermLower) ||
-        refund.userId.toLowerCase().includes(searchTermLower) ||
+        (refund.userPhone && refund.userPhone.includes(searchTermLower)) ||
         refund.tid.toLowerCase().includes(searchTermLower);
 
       const matchesStatus =
@@ -290,6 +275,13 @@ export const PaymentHistoryTab = ({
       return matchesSearch && matchesStatus;
     });
   }, [refunds, refundFilters, lessonIdFilter]);
+
+  const bg = colorMode === "dark" ? "#1A202C" : "white";
+  const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
+  const borderColor = colorMode === "dark" ? "#2D3748" : "#E2E8F0";
+  const primaryColor = colors.primary?.default || "#2a7fc1";
+  const agGridTheme =
+    colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
   // 통계 계산
   const paymentStats = useMemo(() => {
@@ -304,380 +296,418 @@ export const PaymentHistoryTab = ({
     };
   }, [payments, refunds, lessonIdFilter]);
 
-  return (
-    <Box>
-      <Heading as="h2" size="md" mb={4} color={colors.text.primary}>
-        결제 내역 관리
-      </Heading>
-
-      <Text mb={4} fontSize="sm" color={colors.text.secondary}>
-        모든 결제 및 환불 내역을 조회하고 관리합니다.
-      </Text>
-
-      {/* 통계 요약 */}
-      <Flex gap={4} mb={6} wrap="wrap">
-        <Card.Root flex="1" minW="200px" p={4}>
-          <Card.Body>
-            <Flex align="center" gap={3}>
-              <CreditCardIcon size={24} color={colors.primary.default} />
-              <Box>
-                <Text fontSize="sm" color={colors.text.secondary}>
-                  총 결제 금액
-                </Text>
-                <Text
-                  fontSize="xl"
-                  fontWeight="bold"
-                  color={colors.primary.default}
-                >
-                  {formatCurrency(paymentStats.totalAmount)}
-                </Text>
-              </Box>
-            </Flex>
-          </Card.Body>
-        </Card.Root>
-
-        <Card.Root flex="1" minW="200px" p={4}>
-          <Card.Body>
-            <Flex align="center" gap={3}>
-              <RefreshCwIcon size={24} color="red.500" />
-              <Box>
-                <Text fontSize="sm" color={colors.text.secondary}>
-                  총 환불 금액
-                </Text>
-                <Text fontSize="xl" fontWeight="bold" color="red.500">
-                  {formatCurrency(paymentStats.totalRefunded)}
-                </Text>
-              </Box>
-            </Flex>
-          </Card.Body>
-        </Card.Root>
-
-        <Card.Root flex="1" minW="200px" p={4}>
-          <Card.Body>
-            <Box>
-              <Text fontSize="sm" color={colors.text.secondary}>
-                결제 건수
-              </Text>
-              <Text fontSize="xl" fontWeight="bold">
-                {paymentStats.totalCount}건
-              </Text>
-              <Text fontSize="sm" color={colors.text.secondary}>
-                환불 {paymentStats.refundCount}건
-              </Text>
-            </Box>
-          </Card.Body>
-        </Card.Root>
+  // PaymentMethodCellRenderer
+  const PaymentMethodCellRenderer: React.FC<
+    ICellRendererParams<PaymentData, string>
+  > = (params) => {
+    if (!params.value) return null;
+    // Simple text display for now, can be enhanced with icons
+    let paymentMethodText = params.value;
+    if (params.value.toUpperCase() === "CARD") {
+      paymentMethodText = "카드결제";
+    } else if (params.value.toUpperCase() === "TRANSFER") {
+      paymentMethodText = "계좌이체";
+    }
+    // Could add a <CreditCardIcon /> or similar based on value
+    return (
+      <Flex align="center" h="100%">
+        {params.value.toUpperCase() === "CARD" && (
+          <CreditCardIcon size={16} style={{ marginRight: "4px" }} />
+        )}
+        <Text fontSize="sm">{paymentMethodText}</Text>
       </Flex>
+    );
+  };
 
-      {/* 탭 인터페이스 */}
-      <Tabs.Root defaultValue="payments">
-        <Tabs.List mb={6}>
+  // NEW: PaymentStatusCellRenderer
+  const PaymentStatusCellRenderer: React.FC<
+    ICellRendererParams<PaymentData, PaymentData["status"]>
+  > = (params) => {
+    if (!params.value) return null;
+    const statusConfig = {
+      PAID: { colorScheme: "green", label: "결제완료" },
+      PARTIALLY_REFUNDED: { colorScheme: "yellow", label: "부분환불" },
+      FULLY_REFUNDED: { colorScheme: "red", label: "전액환불" },
+      CANCELED: { colorScheme: "gray", label: "취소" },
+    };
+    const config = statusConfig[params.value as keyof typeof statusConfig] || {
+      colorScheme: "gray",
+      label: params.value,
+    };
+    return (
+      <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+        {config.label}
+      </Badge>
+    );
+  };
+
+  // NEW: RefundStatusCellRenderer
+  const RefundStatusCellRenderer: React.FC<
+    ICellRendererParams<RefundData, RefundData["status"]>
+  > = (params) => {
+    if (!params.value) return null;
+    const statusConfig = {
+      COMPLETED: { colorScheme: "green", label: "완료" },
+      PENDING: { colorScheme: "yellow", label: "처리중" },
+      FAILED: { colorScheme: "red", label: "실패" },
+    };
+    const config = statusConfig[params.value as keyof typeof statusConfig] || {
+      colorScheme: "gray",
+      label: params.value,
+    };
+    return (
+      <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+        {config.label}
+      </Badge>
+    );
+  };
+
+  // ColDefs for Payments Table
+  const paymentColDefs = useMemo<ColDef<PaymentData>[]>(
+    () => [
+      { headerName: "주문ID", field: "tid", width: 180, sortable: true },
+      {
+        headerName: "이름",
+        field: "userName",
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        headerName: "핸드폰 번호",
+        field: "userPhone",
+        flex: 1,
+        minWidth: 130,
+      },
+      {
+        headerName: "강습명",
+        field: "lessonTitle",
+        flex: 1.5,
+        minWidth: 250,
+      },
+      {
+        headerName: "결제금액",
+        field: "paidAmount",
+        valueFormatter: (params) => formatCurrency(params.value),
+        width: 120,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        },
+      },
+      {
+        headerName: "환불금액",
+        field: "refundedAmount",
+        valueFormatter: (params) => formatCurrency(params.value),
+        width: 120,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        },
+      },
+      {
+        headerName: "결제수단",
+        field: "paymentMethod",
+        cellRenderer: PaymentMethodCellRenderer,
+        width: 120,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+      },
+      {
+        headerName: "결제일시",
+        field: "paidAt",
+        valueFormatter: (params) => formatDateTime(params.value),
+        width: 180,
+      },
+      {
+        headerName: "상태",
+        field: "status",
+        cellRenderer: PaymentStatusCellRenderer,
+        width: 100,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formatCurrency, formatDateTime] // Add stable dependencies
+  );
+
+  const paymentDefaultColDef = useMemo<ColDef>(
+    () => ({
+      resizable: true,
+      filter: false,
+      sortable: true,
+      cellStyle: {
+        fontSize: "13px",
+        display: "flex",
+        alignItems: "center",
+      },
+    }),
+    []
+  );
+
+  // ColDefs for Refunds Table
+  const refundColDefs = useMemo<ColDef<RefundData>[]>(
+    () => [
+      { headerName: "주문ID", field: "tid", width: 180, sortable: true },
+      {
+        headerName: "이름",
+        field: "userName",
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        headerName: "핸드폰 번호",
+        field: "userPhone",
+        flex: 1,
+        minWidth: 130,
+      },
+      {
+        headerName: "강습명",
+        field: "lessonTitle",
+        flex: 1.5,
+        minWidth: 250,
+      },
+      {
+        headerName: "환불금액",
+        field: "refundAmount",
+        valueFormatter: (params) => formatCurrency(params.value),
+        width: 120,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        },
+      },
+      {
+        headerName: "환불유형",
+        field: "refundType", // Assuming refundType exists (e.g. PARTIAL, FULL)
+        width: 100,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+      },
+      {
+        headerName: "환불사유",
+        field: "refundReason",
+        flex: 1,
+        minWidth: 150,
+      },
+      {
+        headerName: "처리일시",
+        field: "refundedAt",
+        valueFormatter: (params) => formatDateTime(params.value),
+        width: 180,
+      },
+      {
+        headerName: "처리자",
+        field: "adminName",
+        width: 100,
+      },
+      {
+        headerName: "상태",
+        field: "status",
+        cellRenderer: RefundStatusCellRenderer,
+        width: 100,
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formatCurrency, formatDateTime] // Add stable dependencies
+  );
+
+  const refundDefaultColDef = useMemo<ColDef>(
+    () => ({
+      resizable: true,
+      filter: false,
+      sortable: true,
+      cellStyle: {
+        fontSize: "13px",
+        display: "flex",
+        alignItems: "center",
+      },
+    }),
+    []
+  );
+
+  return (
+    <Box h="full" display="flex" flexDirection="column">
+      <Tabs.Root
+        value={activeTab}
+        onValueChange={(e) => setActiveTab(e.value as any)}
+        mb={4}
+      >
+        <Tabs.List>
           <Tabs.Trigger value="payments">결제 내역</Tabs.Trigger>
           <Tabs.Trigger value="refunds">환불 내역</Tabs.Trigger>
         </Tabs.List>
 
-        {/* 결제 내역 탭 */}
-        <Tabs.Content value="payments">
-          {/* 필터 섹션 */}
-          <Fieldset.Root size="md" mb={6}>
-            <Fieldset.Legend>검색 및 필터</Fieldset.Legend>
+        <Tabs.Content value="payments" pt={4}>
+          <Stack gap={4}>
+            <CommonGridFilterBar
+              searchTerm={paymentFilters.searchTerm}
+              onSearchTermChange={(e) =>
+                setPaymentFilters((prev) => ({
+                  ...prev,
+                  searchTerm: e.target.value,
+                }))
+              }
+              searchTermPlaceholder="검색 (이름/번호/주문ID)"
+              onExport={handleExportPayments}
+              selectFilters={[
+                {
+                  id: "paymentStatusFilter",
+                  label: "결제상태",
+                  value: paymentFilters.status,
+                  onChange: (e) =>
+                    setPaymentFilters((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    })),
+                  options: statusOptions,
+                  placeholder: "전체",
+                },
+                {
+                  id: "paymentPeriodFilter",
+                  label: "기간",
+                  value: paymentFilters.period,
+                  onChange: (e) =>
+                    setPaymentFilters((prev) => ({
+                      ...prev,
+                      period: e.target.value,
+                    })),
+                  options: periodOptions,
+                },
+              ]}
+              dateFilters={{
+                show: paymentFilters.period === "custom",
+                startDate: paymentFilters.startDate,
+                onStartDateChange: (e) =>
+                  setPaymentFilters((prev) => ({
+                    ...prev,
+                    startDate: e.target.value,
+                  })),
+                endDate: paymentFilters.endDate,
+                onEndDateChange: (e) =>
+                  setPaymentFilters((prev) => ({
+                    ...prev,
+                    endDate: e.target.value,
+                  })),
+              }}
+              onSearchButtonClick={() => {
+                // Placeholder for actual search trigger
+                console.log("Search payments with filters:", paymentFilters);
+              }}
+              showSearchButton={true}
+            />
 
-            <Fieldset.Content>
-              <Flex gap={4} wrap="wrap" align="end">
-                <Field.Root flex="1" minW="200px">
-                  <Field.Label>검색 (이름/아이디/TID)</Field.Label>
-                  <Flex gap={2}>
-                    <Input
-                      placeholder="검색어를 입력하세요"
-                      value={paymentFilters.searchTerm}
-                      onChange={(e) =>
-                        setPaymentFilters((prev) => ({
-                          ...prev,
-                          searchTerm: e.target.value,
-                        }))
-                      }
-                    />
-                    <IconButton variant="outline">
-                      <SearchIcon size={16} />
-                    </IconButton>
-                  </Flex>
-                </Field.Root>
+            <Box className={agGridTheme} h="calc(100vh - 400px)" w="full" p={2}>
+              <AgGridReact<PaymentData>
+                ref={paymentGridRef}
+                rowData={filteredPayments}
+                columnDefs={paymentColDefs}
+                defaultColDef={paymentDefaultColDef}
+                domLayout="autoHeight"
+                headerHeight={36}
+                rowHeight={40}
+                suppressCellFocus={true}
+                getRowStyle={() => ({
+                  color: textColor,
+                  background: bg,
+                  borderBottom: `1px solid ${borderColor}`,
+                  display: "flex",
+                  alignItems: "center",
+                })}
+                animateRows={true}
+              />
+            </Box>
+          </Stack>
+        </Tabs.Content>
 
-                <Field.Root>
-                  <Field.Label>결제상태</Field.Label>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      value={paymentFilters.status}
-                      onChange={(e) =>
-                        setPaymentFilters((prev) => ({
+        <Tabs.Content value="refunds" pt={4}>
+          <Stack gap={4}>
+            <Card.Root>
+              <Card.Body>
+                <CommonGridFilterBar
+                  searchTerm={refundFilters.searchTerm}
+                  onSearchTermChange={(e) =>
+                    setRefundFilters((prev) => ({
+                      ...prev,
+                      searchTerm: e.target.value,
+                    }))
+                  }
+                  searchTermPlaceholder="검색 (이름/번호/주문ID)"
+                  onExport={handleExportRefunds}
+                  selectFilters={[
+                    {
+                      id: "refundStatusFilter",
+                      label: "환불상태",
+                      value: refundFilters.status,
+                      onChange: (e) =>
+                        setRefundFilters((prev) => ({
                           ...prev,
                           status: e.target.value,
-                        }))
-                      }
-                    >
-                      <For each={statusOptions}>
-                        {(option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        )}
-                      </For>
-                    </NativeSelect.Field>
-                  </NativeSelect.Root>
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>기간</Field.Label>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      value={paymentFilters.period}
-                      onChange={(e) =>
-                        setPaymentFilters((prev) => ({
+                        })),
+                      options: refundStatusOptions,
+                      placeholder: "전체",
+                    },
+                    {
+                      id: "refundPeriodFilter",
+                      label: "기간",
+                      value: refundFilters.period,
+                      onChange: (e) =>
+                        setRefundFilters((prev) => ({
                           ...prev,
                           period: e.target.value,
-                        }))
-                      }
-                    >
-                      <For each={periodOptions}>
-                        {(option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        )}
-                      </For>
-                    </NativeSelect.Field>
-                  </NativeSelect.Root>
-                </Field.Root>
+                        })),
+                      options: periodOptions,
+                    },
+                  ]}
+                  onSearchButtonClick={() => {
+                    // Placeholder for actual search trigger
+                    console.log("Search refunds with filters:", refundFilters);
+                  }}
+                  showSearchButton={true}
+                />
+              </Card.Body>
+            </Card.Root>
 
-                <Button
-                  colorScheme="green"
-                  variant="outline"
-                  onClick={handleExportPayments}
-                >
-                  <DownloadIcon size={16} />
-                  엑셀 다운로드
-                </Button>
-              </Flex>
-
-              {paymentFilters.period === "custom" && (
-                <Flex gap={4} mt={4}>
-                  <Field.Root>
-                    <Field.Label>시작일</Field.Label>
-                    <Input
-                      type="date"
-                      value={paymentFilters.startDate}
-                      onChange={(e) =>
-                        setPaymentFilters((prev) => ({
-                          ...prev,
-                          startDate: e.target.value,
-                        }))
-                      }
-                    />
-                  </Field.Root>
-                  <Field.Root>
-                    <Field.Label>종료일</Field.Label>
-                    <Input
-                      type="date"
-                      value={paymentFilters.endDate}
-                      onChange={(e) =>
-                        setPaymentFilters((prev) => ({
-                          ...prev,
-                          endDate: e.target.value,
-                        }))
-                      }
-                    />
-                  </Field.Root>
-                </Flex>
-              )}
-            </Fieldset.Content>
-          </Fieldset.Root>
-
-          {/* 결제 내역 테이블 */}
-          <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-            <Table.Root size="sm">
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeader>TID</Table.ColumnHeader>
-                  <Table.ColumnHeader>신청자</Table.ColumnHeader>
-                  <Table.ColumnHeader>결제액</Table.ColumnHeader>
-                  <Table.ColumnHeader>환불액</Table.ColumnHeader>
-                  <Table.ColumnHeader>결제일시</Table.ColumnHeader>
-                  <Table.ColumnHeader>상태</Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {filteredPayments.map((payment) => (
-                  <Table.Row key={payment.paymentId}>
-                    <Table.Cell>
-                      <Text
-                        fontSize="sm"
-                        fontFamily="mono"
-                        color={colors.primary.default}
-                      >
-                        {payment.tid}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Stack gap={1}>
-                        <Text fontWeight="medium">{payment.userName}</Text>
-                        <Text fontSize="xs" color={colors.text.secondary}>
-                          {payment.userId}
-                        </Text>
-                      </Stack>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text
-                        fontWeight="semibold"
-                        color={colors.primary.default}
-                      >
-                        {formatCurrency(payment.paidAmount)}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {payment.refundedAmount > 0 ? (
-                        <Text fontWeight="semibold" color="red.500">
-                          {formatCurrency(payment.refundedAmount)}
-                        </Text>
-                      ) : (
-                        <Text color={colors.text.secondary}>-</Text>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>{formatDateTime(payment.paidAt)}</Table.Cell>
-                    <Table.Cell>
-                      {getPaymentStatusBadge(payment.status)}
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </Box>
-        </Tabs.Content>
-
-        {/* 환불 내역 탭 */}
-        <Tabs.Content value="refunds">
-          {/* 필터 섹션 */}
-          <Fieldset.Root size="md" mb={6}>
-            <Fieldset.Legend>검색 및 필터</Fieldset.Legend>
-
-            <Fieldset.Content>
-              <Flex gap={4} wrap="wrap" align="end">
-                <Field.Root flex="1" minW="200px">
-                  <Field.Label>검색 (이름/아이디/TID)</Field.Label>
-                  <Flex gap={2}>
-                    <Input
-                      placeholder="검색어를 입력하세요"
-                      value={refundFilters.searchTerm}
-                      onChange={(e) =>
-                        setRefundFilters((prev) => ({
-                          ...prev,
-                          searchTerm: e.target.value,
-                        }))
-                      }
-                    />
-                    <IconButton variant="outline">
-                      <SearchIcon size={16} />
-                    </IconButton>
-                  </Flex>
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>처리상태</Field.Label>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      value={refundFilters.status}
-                      onChange={(e) =>
-                        setRefundFilters((prev) => ({
-                          ...prev,
-                          status: e.target.value,
-                        }))
-                      }
-                    >
-                      <For each={refundStatusOptions}>
-                        {(option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        )}
-                      </For>
-                    </NativeSelect.Field>
-                  </NativeSelect.Root>
-                </Field.Root>
-
-                <Button
-                  colorScheme="green"
-                  variant="outline"
-                  onClick={handleExportRefunds}
-                >
-                  <DownloadIcon size={16} />
-                  엑셀 다운로드
-                </Button>
-              </Flex>
-            </Fieldset.Content>
-          </Fieldset.Root>
-
-          {/* 환불 내역 테이블 */}
-          <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-            <Table.Root>
-              <Table.Header>
-                <Table.Row>
-                  <Table.ColumnHeader>TID</Table.ColumnHeader>
-                  <Table.ColumnHeader>신청자</Table.ColumnHeader>
-                  <Table.ColumnHeader>환불액</Table.ColumnHeader>
-                  <Table.ColumnHeader>환불유형</Table.ColumnHeader>
-                  <Table.ColumnHeader>환불사유</Table.ColumnHeader>
-                  <Table.ColumnHeader>처리일시</Table.ColumnHeader>
-                  <Table.ColumnHeader>상태</Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {filteredRefunds.map((refund) => (
-                  <Table.Row key={refund.refundId}>
-                    <Table.Cell>
-                      <Text
-                        fontSize="sm"
-                        fontFamily="mono"
-                        color={colors.primary.default}
-                      >
-                        {refund.tid}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Stack gap={1}>
-                        <Text fontWeight="medium">{refund.userName}</Text>
-                        <Text fontSize="xs" color={colors.text.secondary}>
-                          {refund.userId}
-                        </Text>
-                      </Stack>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text fontWeight="semibold" color="red.500">
-                        {formatCurrency(refund.refundAmount)}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text fontSize="sm">{refund.refundType}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text fontSize="sm">{refund.refundReason}</Text>
-                    </Table.Cell>
-                    <Table.Cell>{formatDateTime(refund.refundedAt)}</Table.Cell>
-                    <Table.Cell>
-                      {getRefundStatusBadge(refund.status)}
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </Box>
+            <Box className={agGridTheme} h="calc(100vh - 400px)" w="full" p={2}>
+              <AgGridReact<RefundData>
+                ref={refundGridRef}
+                rowData={filteredRefunds}
+                columnDefs={refundColDefs}
+                defaultColDef={refundDefaultColDef}
+                domLayout="autoHeight"
+                headerHeight={36}
+                rowHeight={40}
+                suppressCellFocus={true}
+                getRowStyle={() => ({
+                  color: textColor,
+                  background: bg,
+                  borderBottom: `1px solid ${borderColor}`,
+                  display: "flex",
+                  alignItems: "center",
+                })}
+                animateRows={true}
+              />
+            </Box>
+          </Stack>
         </Tabs.Content>
       </Tabs.Root>
-
-      <Box mt={6}>
-        <Text fontSize="sm" color={colors.text.secondary}>
-          결제 내역: {filteredPayments.length}건 | 환불 내역:{" "}
-          {filteredRefunds.length}건
-        </Text>
-      </Box>
     </Box>
   );
 };
