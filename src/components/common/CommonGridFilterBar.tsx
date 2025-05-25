@@ -68,7 +68,7 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
   children,
 }) => {
   return (
-    <Box mb={4}>
+    <Box>
       <Flex gap={1.5} wrap="nowrap" align="center">
         {children}
         {selectFilters.map((filter) => (

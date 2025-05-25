@@ -24,6 +24,7 @@ import {
   Spinner,
   HStack,
   Portal,
+  Checkbox,
 } from "@chakra-ui/react";
 import {
   SearchIcon,
@@ -32,11 +33,17 @@ import {
   MessageSquareIcon,
   Edit2Icon,
   DownloadIcon,
+  PlusCircleIcon,
+  PlusIcon,
 } from "lucide-react";
 import { useColors } from "@/styles/theme";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
-import type { EnrollAdminResponseDto, PaginatedResponse } from "@/types/api";
+import type {
+  EnrollAdminResponseDto,
+  PaginatedResponse,
+  TemporaryEnrollmentRequestDto,
+} from "@/types/api";
 import { AgGridReact } from "ag-grid-react";
 import {
   type ColDef,
@@ -89,6 +96,7 @@ const enrollmentQueryKeys = {
   all: ["adminEnrollments"] as const,
   list: (lessonId?: number | null, params?: any) =>
     [...enrollmentQueryKeys.all, lessonId, params] as const,
+  temporaryCreate: () => [...enrollmentQueryKeys.all, "temporaryCreate"],
 };
 
 const PayStatusCellRenderer: React.FC<
@@ -260,6 +268,16 @@ export const EnrollmentManagementTab = ({
   const [selectedUserForMemo, setSelectedUserForMemo] =
     useState<EnrollmentData | null>(null);
   const [userMemoText, setUserMemoText] = useState("");
+
+  const [isTempEnrollDialogOpen, setIsTempEnrollDialogOpen] = useState(false);
+  const [tempEnrollForm, setTempEnrollForm] = useState<
+    Omit<TemporaryEnrollmentRequestDto, "lessonId">
+  >({
+    userName: "",
+    userPhone: "",
+    usesLocker: false,
+    memo: "",
+  });
 
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
@@ -478,6 +496,65 @@ export const EnrollmentManagementTab = ({
     return data;
   }, [rowData, filters.searchTerm]);
 
+  const temporaryEnrollmentMutation = useMutation<
+    EnrollAdminResponseDto,
+    Error,
+    TemporaryEnrollmentRequestDto
+  >({
+    mutationFn: (data: TemporaryEnrollmentRequestDto) =>
+      adminApi.createTemporaryEnrollment(data),
+    onSuccess: (_response) => {
+      queryClient.invalidateQueries({
+        queryKey: enrollmentQueryKeys.list(lessonIdFilter),
+      });
+      setIsTempEnrollDialogOpen(false);
+      setTempEnrollForm({
+        userName: "",
+        userPhone: "",
+        usesLocker: false,
+        memo: "",
+      });
+      console.log("임시 등록 성공:", _response);
+    },
+    onError: (error) => {
+      console.error("임시 등록 실패:", error.message);
+    },
+  });
+
+  const handleOpenTempEnrollDialog = () => {
+    if (!lessonIdFilter) {
+      console.warn("임시 등록하려면 강습 선택 필요");
+      return;
+    }
+    setIsTempEnrollDialogOpen(true);
+  };
+
+  const handleTempEnrollFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setTempEnrollForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTempEnrollLockerChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setTempEnrollForm((prev) => ({ ...prev, usesLocker: e.target.checked }));
+  };
+
+  const handleTempEnrollSubmit = () => {
+    if (!lessonIdFilter) return;
+    if (!tempEnrollForm.userName.trim()) {
+      console.error("이름 입력 필요");
+      return;
+    }
+
+    temporaryEnrollmentMutation.mutate({
+      lessonId: lessonIdFilter,
+      ...tempEnrollForm,
+    });
+  };
+
   if (isLoadingEnrollments && lessonIdFilter) {
     return (
       <Flex justify="center" align="center" h="200px">
@@ -583,8 +660,21 @@ export const EnrollmentManagementTab = ({
           </NativeSelect.Root>
         </Field.Root>
       </CommonGridFilterBar>
-
-      <Box className={agGridTheme} h="calc(100vh - 400px)" w="full" p={2}>
+      <Flex my={2} justifyContent="space-between" alignItems="center">
+        <Text fontSize="sm" color={colors.text.secondary}>
+          총 {filteredEnrollmentsForGrid.length}건의 신청 내역이 표시됩니다.
+        </Text>
+        <Button
+          size="xs"
+          colorScheme="teal"
+          variant="outline"
+          onClick={handleOpenTempEnrollDialog}
+          ml={2}
+        >
+          <PlusIcon size={12} /> 임시 등록
+        </Button>
+      </Flex>
+      <Box className={agGridTheme} h="calc(100vh - 400px)" w="full">
         <AgGridReact<EnrollmentData>
           ref={gridRef}
           rowData={filteredEnrollmentsForGrid}
@@ -647,12 +737,76 @@ export const EnrollmentManagementTab = ({
         </Portal>
       </DialogRoot>
 
-      <Box mt={2} px={2}>
-        <Text fontSize="sm" color={colors.text.secondary}>
-          총 {filteredEnrollmentsForGrid.length}건의 신청 내역이 표시됩니다.
-          (클라이언트 필터링)
-        </Text>
-      </Box>
+      <DialogRoot
+        open={isTempEnrollDialogOpen}
+        onOpenChange={() => setIsTempEnrollDialogOpen(false)}
+      >
+        <Portal>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>신규 임시 등록</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <Stack gap={4}>
+                <Field.Root required>
+                  <Field.Label>이름</Field.Label>
+                  <Input
+                    name="userName"
+                    value={tempEnrollForm.userName}
+                    onChange={handleTempEnrollFormChange}
+                    placeholder="홍길동"
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>핸드폰 번호</Field.Label>
+                  <Input
+                    name="userPhone"
+                    value={tempEnrollForm.userPhone || ""}
+                    onChange={handleTempEnrollFormChange}
+                    placeholder="010-1234-5678"
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Checkbox.Root
+                    name="usesLocker"
+                    checked={tempEnrollForm.usesLocker}
+                  >
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control onChange={handleTempEnrollLockerChange} />
+                    <Checkbox.Label>사물함 사용</Checkbox.Label>
+                  </Checkbox.Root>
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>메모</Field.Label>
+                  <Textarea
+                    name="memo"
+                    value={tempEnrollForm.memo || ""}
+                    onChange={handleTempEnrollFormChange}
+                    placeholder="오프라인 접수 등 특이사항 입력"
+                    rows={3}
+                  />
+                </Field.Root>
+              </Stack>
+            </DialogBody>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsTempEnrollDialogOpen(false)}
+              >
+                취소
+              </Button>
+              <Button
+                colorScheme="teal"
+                onClick={handleTempEnrollSubmit}
+                loading={temporaryEnrollmentMutation.isPending}
+              >
+                등록하기
+              </Button>
+            </DialogFooter>
+            <DialogCloseTrigger />
+          </DialogContent>
+        </Portal>
+      </DialogRoot>
     </Box>
   );
 };

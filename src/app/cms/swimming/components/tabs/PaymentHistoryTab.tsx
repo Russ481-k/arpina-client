@@ -1,31 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import {
-  Box,
-  Heading,
-  Text,
-  Button,
-  Field,
-  Fieldset,
-  Input,
-  NativeSelect,
-  Stack,
-  Table,
-  Badge,
-  Flex,
-  Tabs,
-  For,
-  Card,
-  IconButton,
-} from "@chakra-ui/react";
-import {
-  DownloadIcon,
-  SearchIcon,
-  CreditCardIcon,
-  RefreshCwIcon,
-  UserIcon,
-} from "lucide-react";
+import { Box, Text, Stack, Badge, Flex, Tabs } from "@chakra-ui/react";
+import { CreditCardIcon } from "lucide-react";
 import { useColors } from "@/styles/theme";
 import { AgGridReact } from "ag-grid-react";
 import {
@@ -33,7 +10,6 @@ import {
   ModuleRegistry,
   AllCommunityModule,
   type ICellRendererParams,
-  type ValueFormatterParams,
 } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -548,14 +524,13 @@ export const PaymentHistoryTab = ({
       <Tabs.Root
         value={activeTab}
         onValueChange={(e) => setActiveTab(e.value as any)}
-        mb={4}
       >
         <Tabs.List>
           <Tabs.Trigger value="payments">결제 내역</Tabs.Trigger>
           <Tabs.Trigger value="refunds">환불 내역</Tabs.Trigger>
         </Tabs.List>
 
-        <Tabs.Content value="payments" pt={4}>
+        <Tabs.Content value="payments">
           <Stack gap={4}>
             <CommonGridFilterBar
               searchTerm={paymentFilters.searchTerm}
@@ -614,7 +589,7 @@ export const PaymentHistoryTab = ({
               showSearchButton={true}
             />
 
-            <Box className={agGridTheme} h="calc(100vh - 400px)" w="full" p={2}>
+            <Box className={agGridTheme} h="calc(100vh - 400px)" w="full">
               <AgGridReact<PaymentData>
                 ref={paymentGridRef}
                 rowData={filteredPayments}
@@ -637,55 +612,50 @@ export const PaymentHistoryTab = ({
           </Stack>
         </Tabs.Content>
 
-        <Tabs.Content value="refunds" pt={4}>
+        <Tabs.Content value="refunds">
           <Stack gap={4}>
-            <Card.Root>
-              <Card.Body>
-                <CommonGridFilterBar
-                  searchTerm={refundFilters.searchTerm}
-                  onSearchTermChange={(e) =>
+            <CommonGridFilterBar
+              searchTerm={refundFilters.searchTerm}
+              onSearchTermChange={(e) =>
+                setRefundFilters((prev) => ({
+                  ...prev,
+                  searchTerm: e.target.value,
+                }))
+              }
+              searchTermPlaceholder="검색 (이름/번호/주문ID)"
+              onExport={handleExportRefunds}
+              selectFilters={[
+                {
+                  id: "refundStatusFilter",
+                  label: "환불상태",
+                  value: refundFilters.status,
+                  onChange: (e) =>
                     setRefundFilters((prev) => ({
                       ...prev,
-                      searchTerm: e.target.value,
-                    }))
-                  }
-                  searchTermPlaceholder="검색 (이름/번호/주문ID)"
-                  onExport={handleExportRefunds}
-                  selectFilters={[
-                    {
-                      id: "refundStatusFilter",
-                      label: "환불상태",
-                      value: refundFilters.status,
-                      onChange: (e) =>
-                        setRefundFilters((prev) => ({
-                          ...prev,
-                          status: e.target.value,
-                        })),
-                      options: refundStatusOptions,
-                      placeholder: "전체",
-                    },
-                    {
-                      id: "refundPeriodFilter",
-                      label: "기간",
-                      value: refundFilters.period,
-                      onChange: (e) =>
-                        setRefundFilters((prev) => ({
-                          ...prev,
-                          period: e.target.value,
-                        })),
-                      options: periodOptions,
-                    },
-                  ]}
-                  onSearchButtonClick={() => {
-                    // Placeholder for actual search trigger
-                    console.log("Search refunds with filters:", refundFilters);
-                  }}
-                  showSearchButton={true}
-                />
-              </Card.Body>
-            </Card.Root>
-
-            <Box className={agGridTheme} h="calc(100vh - 400px)" w="full" p={2}>
+                      status: e.target.value,
+                    })),
+                  options: refundStatusOptions,
+                  placeholder: "전체",
+                },
+                {
+                  id: "refundPeriodFilter",
+                  label: "기간",
+                  value: refundFilters.period,
+                  onChange: (e) =>
+                    setRefundFilters((prev) => ({
+                      ...prev,
+                      period: e.target.value,
+                    })),
+                  options: periodOptions,
+                },
+              ]}
+              onSearchButtonClick={() => {
+                // Placeholder for actual search trigger
+                console.log("Search refunds with filters:", refundFilters);
+              }}
+              showSearchButton={true}
+            />
+            <Box className={agGridTheme} h="calc(100vh - 400px)" w="full">
               <AgGridReact<RefundData>
                 ref={refundGridRef}
                 rowData={filteredRefunds}

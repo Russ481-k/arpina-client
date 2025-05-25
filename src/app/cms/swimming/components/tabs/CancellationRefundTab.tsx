@@ -772,7 +772,6 @@ export const CancellationRefundTab = ({
         className={agGridTheme}
         h="calc(100vh - 400px)" // Adjusted height to match EnrollmentManagementTab
         w="full"
-        p={2} // Added padding to match EnrollmentManagementTab
       >
         <AgGridReact<CancelRequestData>
           ref={gridRef}

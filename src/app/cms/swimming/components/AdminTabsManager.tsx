@@ -36,7 +36,7 @@ export function AdminTabsManager({ activeLessonId }: AdminTabsManagerProps) {
           </Tabs.List>
         </Box>
 
-        <Box flex="1" overflow="auto" pt={4}>
+        <Box flex="1" overflow="auto">
           <Tabs.Content value="enrollments">
             <EnrollmentManagementTab lessonIdFilter={activeLessonId} />
           </Tabs.Content>

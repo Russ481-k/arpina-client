@@ -18,6 +18,7 @@ import type {
   // Assuming these are defined in @/types/api or a common place
   PaginationParams,
   PaginatedResponse,
+  TemporaryEnrollmentRequestDto,
 } from "@/types/api";
 
 const CMS_API_BASE = "/cms";
@@ -131,6 +132,17 @@ export const adminApi = {
   ): Promise<EnrollAdminResponseDto> => {
     const response = await privateApi.put<EnrollAdminResponseDto>(
       `${CMS_API_BASE}/enrollments/${enrollId}/discount-status`,
+      data
+    );
+    return response.data;
+  },
+
+  // Temporary Enrollment (New Function)
+  createTemporaryEnrollment: async (
+    data: TemporaryEnrollmentRequestDto
+  ): Promise<EnrollAdminResponseDto> => {
+    const response = await privateApi.post<EnrollAdminResponseDto>(
+      `${CMS_API_BASE}/enrollments/temporary`, // Path: /cms/enrollments/temporary
       data
     );
     return response.data;

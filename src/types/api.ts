@@ -706,6 +706,14 @@ export interface AdminCancelEnrollmentRequestDto {
   // any other relevant fields, e.g., if it affects refund calculation differently
 }
 
+export interface TemporaryEnrollmentRequestDto {
+  lessonId: number;
+  userName: string;
+  userPhone?: string; // Optional if backend allows
+  usesLocker: boolean;
+  memo?: string; // Optional
+}
+
 export interface UpdateDiscountStatusRequestDto {
   status: "APPROVED" | "DENIED";
   adminComment?: string;
