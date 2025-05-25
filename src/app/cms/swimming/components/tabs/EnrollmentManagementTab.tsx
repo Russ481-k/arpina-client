@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
-  Heading,
   Text,
   Button,
   Field,
-  Fieldset,
   Input,
   NativeSelect,
   Stack,
@@ -25,12 +23,17 @@ import {
   DialogCloseTrigger,
   For,
   Textarea,
+  Spinner,
 } from "@chakra-ui/react";
 import { SearchIcon, UserIcon, XIcon, MessageSquareIcon } from "lucide-react";
 import { useColors } from "@/styles/theme";
+import { useQuery } from "@tanstack/react-query";
+import { adminApi } from "@/lib/api/adminApi";
+import type { EnrollAdminResponseDto, PaginatedResponse } from "@/types/api";
 
 interface EnrollmentData {
   enrollId: number;
+  lessonId: number;
   lessonTitle: string;
   payStatus:
     | "PAID"
@@ -41,46 +44,33 @@ interface EnrollmentData {
   usesLocker: boolean;
   userName: string;
   userId: string;
-  userPhone: string;
-  isRenewal: boolean;
+  userPhone?: string;
+  isRenewal?: boolean;
   discountInfo?: {
     type: string;
     status: "APPROVED" | "DENIED" | "PENDING";
     approvedAt?: string;
     adminComment?: string;
   };
+  userMemo?: string;
+  enrollStatus?: string;
+  createdAt?: string;
 }
 
-export const EnrollmentManagementTab: React.FC = () => {
-  const colors = useColors();
+interface EnrollmentManagementTabProps {
+  lessonIdFilter?: number | null;
+}
 
-  // Mock data
-  const [enrollments, setEnrollments] = useState<EnrollmentData[]>([
-    {
-      enrollId: 1,
-      lessonTitle: "초급반 (오전)",
-      payStatus: "PAID",
-      usesLocker: true,
-      userName: "김수영",
-      userId: "swimKim",
-      userPhone: "010-1234-5678",
-      isRenewal: false,
-      discountInfo: {
-        type: "장애인할인",
-        status: "PENDING",
-      },
-    },
-    {
-      enrollId: 2,
-      lessonTitle: "중급반 (저녁)",
-      payStatus: "PAID",
-      usesLocker: false,
-      userName: "박헤엄",
-      userId: "parkSwim",
-      userPhone: "010-9876-5432",
-      isRenewal: true,
-    },
-  ]);
+const enrollmentQueryKeys = {
+  all: ["adminEnrollments"] as const,
+  list: (lessonId?: number | null, params?: any) =>
+    [...enrollmentQueryKeys.all, lessonId, params] as const,
+};
+
+export const EnrollmentManagementTab = ({
+  lessonIdFilter,
+}: EnrollmentManagementTabProps) => {
+  const colors = useColors();
 
   const [filters, setFilters] = useState({
     year: new Date().getFullYear().toString(),
@@ -88,6 +78,74 @@ export const EnrollmentManagementTab: React.FC = () => {
     searchTerm: "",
     payStatus: "",
   });
+
+  const {
+    data: enrollmentsData,
+    isLoading: isLoadingEnrollments,
+    isError: isErrorEnrollments,
+    error: enrollmentsError,
+  } = useQuery<
+    PaginatedResponse<EnrollAdminResponseDto>,
+    Error,
+    EnrollmentData[]
+  >({
+    queryKey: enrollmentQueryKeys.list(lessonIdFilter, {
+      payStatus: filters.payStatus || undefined,
+    }),
+    queryFn: async (): Promise<PaginatedResponse<EnrollAdminResponseDto>> => {
+      if (!lessonIdFilter) {
+        return {
+          code: 0,
+          message: "No lesson selected.",
+          success: true,
+          data: {
+            content: [],
+            pageable: {
+              pageNumber: 0,
+              pageSize: 0,
+              sort: { empty: true, sorted: false, unsorted: true },
+            },
+            totalElements: 0,
+            totalPages: 0,
+            last: true,
+            size: 0,
+            number: 0,
+            first: true,
+            numberOfElements: 0,
+            empty: true,
+          },
+        };
+      }
+      return adminApi.getAdminEnrollments({
+        lessonId: lessonIdFilter,
+        payStatus: filters.payStatus || undefined,
+        size: 1000,
+        page: 0,
+      });
+    },
+    select: (
+      apiResponse: PaginatedResponse<EnrollAdminResponseDto>
+    ): EnrollmentData[] => {
+      return apiResponse.data.content.map(
+        (dto: EnrollAdminResponseDto): EnrollmentData => ({
+          enrollId: dto.enrollId,
+          lessonId: dto.lessonId,
+          lessonTitle: dto.lessonTitle,
+          payStatus: dto.payStatus as EnrollmentData["payStatus"],
+          usesLocker: dto.usesLocker,
+          userName: dto.userName,
+          userId: dto.userId,
+          userPhone: "(미제공)",
+          isRenewal: false,
+          enrollStatus: dto.status,
+          createdAt: dto.createdAt,
+        })
+      );
+    },
+    enabled: !!lessonIdFilter,
+  });
+
+  const enrollments = enrollmentsData || [];
 
   const [selectedUser, setSelectedUser] = useState<EnrollmentData | null>(null);
   const [userMemo, setUserMemo] = useState("");
@@ -161,7 +219,6 @@ export const EnrollmentManagementTab: React.FC = () => {
   };
 
   const handleAdminCancel = (enrollId: number) => {
-    // TODO: API 호출하여 관리자 취소 처리
     console.log("관리자 취소:", enrollId);
   };
 
@@ -169,45 +226,65 @@ export const EnrollmentManagementTab: React.FC = () => {
     enrollId: number,
     status: "APPROVED" | "DENIED"
   ) => {
-    setEnrollments((prev) =>
-      prev.map((item) =>
-        item.enrollId === enrollId
-          ? {
-              ...item,
-              discountInfo: {
-                ...item.discountInfo!,
-                status,
-                approvedAt: new Date().toISOString(),
-              },
-            }
-          : item
-      )
-    );
-    // TODO: API 호출
+    console.log("할인 승인/거절:", enrollId, status);
   };
 
   const handleUserMemoSave = () => {
-    // TODO: API 호출하여 메모 저장
     console.log("메모 저장:", selectedUser?.userId, userMemo);
     setSelectedUser(null);
     setUserMemo("");
   };
 
-  const filteredEnrollments = enrollments.filter((enrollment) => {
-    const matchesSearch =
-      enrollment.userName
-        .toLowerCase()
-        .includes(filters.searchTerm.toLowerCase()) ||
-      enrollment.userId
-        .toLowerCase()
-        .includes(filters.searchTerm.toLowerCase()) ||
-      enrollment.userPhone.includes(filters.searchTerm);
+  const filteredEnrollments = useMemo(() => {
+    let data = enrollments;
+    return data.filter((enrollment) => {
+      const searchTermLower = filters.searchTerm.toLowerCase();
+      const matchesSearch =
+        enrollment.userName.toLowerCase().includes(searchTermLower) ||
+        enrollment.userId.toLowerCase().includes(searchTermLower) ||
+        (enrollment.userPhone &&
+          enrollment.userPhone.includes(searchTermLower));
 
-    const matchesPayStatus =
-      !filters.payStatus || enrollment.payStatus === filters.payStatus;
+      return matchesSearch;
+    });
+  }, [enrollments, filters.searchTerm]);
 
-    return matchesSearch && matchesPayStatus;
-  });
+  if (isLoadingEnrollments && lessonIdFilter) {
+    return (
+      <Flex justify="center" align="center" h="200px">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
+
+  if (isErrorEnrollments && lessonIdFilter) {
+    return (
+      <Box p={4} color="red.500">
+        <Text>데이터를 불러오는 중 오류가 발생했습니다.</Text>
+        <Text fontSize="sm">{enrollmentsError?.message}</Text>
+      </Box>
+    );
+  }
+
+  if (!lessonIdFilter) {
+    return (
+      <Box p={4} textAlign="center">
+        <Text color={colors.text.secondary}>
+          강습을 선택하면 신청자 목록이 표시됩니다.
+        </Text>
+      </Box>
+    );
+  }
+
+  if (enrollments.length === 0 && lessonIdFilter) {
+    return (
+      <Box p={4} textAlign="center">
+        <Text color={colors.text.secondary}>
+          선택된 강습에 대한 신청 내역이 없습니다.
+        </Text>
+      </Box>
+    );
+  }
 
   return (
     <Box h="full" display="flex" flexDirection="column">
@@ -296,11 +373,11 @@ export const EnrollmentManagementTab: React.FC = () => {
         <Table.Root size="sm">
           <Table.Header>
             <Table.Row>
-              <Table.ColumnHeader>회원정보</Table.ColumnHeader>
-              <Table.ColumnHeader>강습명</Table.ColumnHeader>
+              <Table.ColumnHeader>신청자</Table.ColumnHeader>
+              <Table.ColumnHeader>연락처</Table.ColumnHeader>
               <Table.ColumnHeader>결제상태</Table.ColumnHeader>
               <Table.ColumnHeader>사물함</Table.ColumnHeader>
-              <Table.ColumnHeader>할인정보</Table.ColumnHeader>
+              <Table.ColumnHeader>할인</Table.ColumnHeader>
               <Table.ColumnHeader>구분</Table.ColumnHeader>
               <Table.ColumnHeader>관리</Table.ColumnHeader>
             </Table.Row>
@@ -329,7 +406,7 @@ export const EnrollmentManagementTab: React.FC = () => {
                     </Text>
                   </Stack>
                 </Table.Cell>
-                <Table.Cell>{enrollment.lessonTitle}</Table.Cell>
+                <Table.Cell>{enrollment.userPhone || "-"}</Table.Cell>
                 <Table.Cell>
                   {getPayStatusBadge(enrollment.payStatus)}
                 </Table.Cell>
@@ -386,13 +463,13 @@ export const EnrollmentManagementTab: React.FC = () => {
                 </Table.Cell>
                 <Table.Cell>
                   <Button
-                    size="sm"
+                    size="xs"
                     colorScheme="red"
                     variant="outline"
                     onClick={() => handleAdminCancel(enrollment.enrollId)}
                   >
-                    <XIcon size={14} />
-                    관리자취소
+                    <XIcon size={12} />
+                    결제 취소
                   </Button>
                 </Table.Cell>
               </Table.Row>

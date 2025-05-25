@@ -255,7 +255,7 @@ export const LessonManager: React.FC = () => {
                 color={colors.text.primary}
                 letterSpacing="tight"
               >
-                수영장 통합 관리 시스템
+                수영장 관리
               </Heading>
               <Badge
                 bg={colors.secondary.light}
@@ -305,7 +305,7 @@ export const LessonManager: React.FC = () => {
 
           {/* Admin Tabs Manager */}
           <Box id="adminTabs" position="relative">
-            <AdminTabsManager />
+            <AdminTabsManager activeLessonId={selectedAdminLesson?.lessonId} />
           </Box>
 
           {/* Locker Manager */}

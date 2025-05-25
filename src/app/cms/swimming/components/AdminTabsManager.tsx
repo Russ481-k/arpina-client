@@ -6,7 +6,11 @@ import { EnrollmentManagementTab } from "./tabs/EnrollmentManagementTab";
 import { CancellationRefundTab } from "./tabs/CancellationRefundTab";
 import { PaymentHistoryTab } from "./tabs/PaymentHistoryTab";
 
-export const AdminTabsManager: React.FC = () => {
+interface AdminTabsManagerProps {
+  activeLessonId?: number | null;
+}
+
+export function AdminTabsManager({ activeLessonId }: AdminTabsManagerProps) {
   return (
     <Box position="relative" h="full" display="flex" flexDirection="column">
       <Tabs.Root defaultValue="enrollments" h="full">
@@ -17,6 +21,7 @@ export const AdminTabsManager: React.FC = () => {
           zIndex="sticky"
           borderBottom="1px"
           borderColor="gray.200"
+          _dark={{ borderColor: "gray.700" }}
         >
           <Tabs.List>
             <Tabs.Trigger value="enrollments">
@@ -31,20 +36,18 @@ export const AdminTabsManager: React.FC = () => {
           </Tabs.List>
         </Box>
 
-        <Box flex="1" overflow="auto">
+        <Box flex="1" overflow="auto" pt={4}>
           <Tabs.Content value="enrollments">
-            <EnrollmentManagementTab />
+            <EnrollmentManagementTab lessonIdFilter={activeLessonId} />
           </Tabs.Content>
-
           <Tabs.Content value="cancellations">
-            <CancellationRefundTab />
+            <CancellationRefundTab lessonIdFilter={activeLessonId} />
           </Tabs.Content>
-
           <Tabs.Content value="payments">
-            <PaymentHistoryTab />
+            <PaymentHistoryTab lessonIdFilter={activeLessonId} />
           </Tabs.Content>
         </Box>
       </Tabs.Root>
     </Box>
   );
-};
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Heading,
@@ -30,6 +30,7 @@ import { useColors } from "@/styles/theme";
 interface PaymentData {
   paymentId: number;
   enrollId: number;
+  lessonId: number;
   tid: string;
   userName: string;
   userId: string;
@@ -46,65 +47,115 @@ interface RefundData {
   refundId: number;
   paymentId: number;
   enrollId: number;
+  lessonId: number;
   tid: string;
   userName: string;
   userId: string;
   lessonTitle: string;
   refundAmount: number;
-  reason: string;
-  processedAt: string;
+  refundType: string;
+  refundedAt: string;
+  adminName: string;
+  refundReason?: string;
   status: "COMPLETED" | "PENDING" | "FAILED";
 }
 
-export const PaymentHistoryTab: React.FC = () => {
+interface PaymentHistoryTabProps {
+  lessonIdFilter?: number | null;
+}
+
+export const PaymentHistoryTab = ({
+  lessonIdFilter,
+}: PaymentHistoryTabProps) => {
   const colors = useColors();
+  const [activeTab, setActiveTab] = useState<"payments" | "refunds">(
+    "payments"
+  );
 
   // Mock data
-  const [payments, setPayments] = useState<PaymentData[]>([
+  const mockPayments: PaymentData[] = [
     {
       paymentId: 1,
       enrollId: 101,
-      tid: "kistest_20250115001",
-      userName: "김수영",
-      userId: "swimKim",
-      lessonTitle: "초급반 (오전)",
+      lessonId: 1,
+      tid: "T1234567890",
+      userName: "김결제",
+      userId: "paymentKim",
+      lessonTitle: "초급반 A (월수금 09:00)",
       paidAmount: 70000,
       refundedAmount: 0,
-      paymentMethod: "신용카드",
-      paidAt: "2025-01-15T09:30:00Z",
+      paymentMethod: "CARD",
+      paidAt: "2023-11-10 09:30:15",
       status: "PAID",
     },
     {
       paymentId: 2,
       enrollId: 102,
-      tid: "kistest_20250114001",
-      userName: "박헤엄",
-      userId: "parkSwim",
-      lessonTitle: "중급반 (저녁)",
-      paidAmount: 65000,
-      refundedAmount: 25000,
-      paymentMethod: "계좌이체",
-      paidAt: "2025-01-14T14:20:00Z",
-      refundAt: "2025-01-20T10:15:00Z",
+      lessonId: 2,
+      tid: "T0987654321",
+      userName: "이납부",
+      userId: "paymentLee",
+      lessonTitle: "중급반 B (화목 10:00)",
+      paidAmount: 85000,
+      refundedAmount: 20000,
+      paymentMethod: "CARD",
+      paidAt: "2023-11-12 14:05:40",
       status: "PARTIALLY_REFUNDED",
     },
-  ]);
+    {
+      paymentId: 3,
+      enrollId: 103,
+      lessonId: 1,
+      tid: "T1122334455",
+      userName: "박송금",
+      userId: "paymentPark",
+      lessonTitle: "초급반 A (월수금 09:00)",
+      paidAmount: 65000,
+      refundedAmount: 65000,
+      paymentMethod: "CARD",
+      paidAt: "2023-10-20 11:15:00",
+      refundAt: "2023-10-25 10:00:00",
+      status: "FULLY_REFUNDED",
+    },
+  ];
 
-  const [refunds, setRefunds] = useState<RefundData[]>([
+  const mockRefunds: RefundData[] = [
     {
       refundId: 1,
       paymentId: 2,
       enrollId: 102,
-      tid: "kistest_20250114001",
-      userName: "박헤엄",
-      userId: "parkSwim",
-      lessonTitle: "중급반 (저녁)",
-      refundAmount: 25000,
-      reason: "수강 시작 후 취소",
-      processedAt: "2025-01-20T10:15:00Z",
+      lessonId: 2,
+      tid: "T0987654321",
+      userName: "이납부",
+      userId: "paymentLee",
+      lessonTitle: "중급반 B (화목 10:00)",
+      refundAmount: 20000,
+      refundType: "PARTIAL",
+      refundedAt: "2023-11-18 10:00:00",
+      adminName: "관리자A",
+      refundReason: "일부 강습 취소",
       status: "COMPLETED",
     },
-  ]);
+    {
+      refundId: 2,
+      paymentId: 3,
+      enrollId: 103,
+      lessonId: 1,
+      tid: "T1122334455",
+      userName: "박송금",
+      userId: "paymentPark",
+      lessonTitle: "초급반 A (월수금 09:00)",
+      refundAmount: 65000,
+      refundType: "FULL",
+      refundedAt: "2023-10-25 10:00:00",
+      adminName: "관리자B",
+      refundReason: "전체 강습 취소",
+      status: "COMPLETED",
+    },
+  ];
+
+  const [payments, setPayments] = useState<PaymentData[]>(mockPayments);
+  const [refunds, setRefunds] = useState<RefundData[]>(mockRefunds);
 
   const [paymentFilters, setPaymentFilters] = useState({
     searchTerm: "",
@@ -202,47 +253,56 @@ export const PaymentHistoryTab: React.FC = () => {
     console.log("환불 내역 엑셀 다운로드");
   };
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesSearch =
-      payment.userName
-        .toLowerCase()
-        .includes(paymentFilters.searchTerm.toLowerCase()) ||
-      payment.userId
-        .toLowerCase()
-        .includes(paymentFilters.searchTerm.toLowerCase()) ||
-      payment.tid
-        .toLowerCase()
-        .includes(paymentFilters.searchTerm.toLowerCase());
+  const filteredPayments = useMemo(() => {
+    let data = payments;
+    if (lessonIdFilter) {
+      data = data.filter((p) => p.lessonId === lessonIdFilter);
+    }
+    return data.filter((payment) => {
+      const searchTermLower = paymentFilters.searchTerm.toLowerCase();
+      const matchesSearch =
+        payment.userName.toLowerCase().includes(searchTermLower) ||
+        payment.userId.toLowerCase().includes(searchTermLower) ||
+        payment.tid.toLowerCase().includes(searchTermLower);
 
-    const matchesStatus =
-      !paymentFilters.status || payment.status === paymentFilters.status;
+      const matchesStatus =
+        !paymentFilters.status || payment.status === paymentFilters.status;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [payments, paymentFilters, lessonIdFilter]);
 
-  const filteredRefunds = refunds.filter((refund) => {
-    const matchesSearch =
-      refund.userName
-        .toLowerCase()
-        .includes(refundFilters.searchTerm.toLowerCase()) ||
-      refund.userId
-        .toLowerCase()
-        .includes(refundFilters.searchTerm.toLowerCase()) ||
-      refund.tid.toLowerCase().includes(refundFilters.searchTerm.toLowerCase());
+  const filteredRefunds = useMemo(() => {
+    let data = refunds;
+    if (lessonIdFilter) {
+      data = data.filter((r) => r.lessonId === lessonIdFilter);
+    }
+    return data.filter((refund) => {
+      const searchTermLower = refundFilters.searchTerm.toLowerCase();
+      const matchesSearch =
+        refund.userName.toLowerCase().includes(searchTermLower) ||
+        refund.userId.toLowerCase().includes(searchTermLower) ||
+        refund.tid.toLowerCase().includes(searchTermLower);
 
-    const matchesStatus =
-      !refundFilters.status || refund.status === refundFilters.status;
+      const matchesStatus =
+        !refundFilters.status || refund.status === refundFilters.status;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [refunds, refundFilters, lessonIdFilter]);
 
   // 통계 계산
-  const paymentStats = {
-    totalAmount: payments.reduce((sum, p) => sum + p.paidAmount, 0),
-    totalRefunded: payments.reduce((sum, p) => sum + p.refundedAmount, 0),
-    totalCount: payments.length,
-    refundCount: refunds.length,
-  };
+  const paymentStats = useMemo(() => {
+    const currentData = lessonIdFilter
+      ? payments.filter((p) => p.lessonId === lessonIdFilter)
+      : payments;
+    return {
+      totalAmount: currentData.reduce((sum, p) => sum + p.paidAmount, 0),
+      totalRefunded: currentData.reduce((sum, p) => sum + p.refundedAmount, 0),
+      totalCount: currentData.length,
+      refundCount: refunds.length,
+    };
+  }, [payments, refunds, lessonIdFilter]);
 
   return (
     <Box>
@@ -438,10 +498,9 @@ export const PaymentHistoryTab: React.FC = () => {
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeader>TID</Table.ColumnHeader>
-                  <Table.ColumnHeader>회원정보</Table.ColumnHeader>
-                  <Table.ColumnHeader>강습명</Table.ColumnHeader>
-                  <Table.ColumnHeader>결제금액</Table.ColumnHeader>
-                  <Table.ColumnHeader>환불금액</Table.ColumnHeader>
+                  <Table.ColumnHeader>신청자</Table.ColumnHeader>
+                  <Table.ColumnHeader>결제액</Table.ColumnHeader>
+                  <Table.ColumnHeader>환불액</Table.ColumnHeader>
                   <Table.ColumnHeader>결제일시</Table.ColumnHeader>
                   <Table.ColumnHeader>상태</Table.ColumnHeader>
                 </Table.Row>
@@ -466,7 +525,6 @@ export const PaymentHistoryTab: React.FC = () => {
                         </Text>
                       </Stack>
                     </Table.Cell>
-                    <Table.Cell>{payment.lessonTitle}</Table.Cell>
                     <Table.Cell>
                       <Text
                         fontWeight="semibold"
@@ -563,9 +621,9 @@ export const PaymentHistoryTab: React.FC = () => {
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeader>TID</Table.ColumnHeader>
-                  <Table.ColumnHeader>회원정보</Table.ColumnHeader>
-                  <Table.ColumnHeader>강습명</Table.ColumnHeader>
-                  <Table.ColumnHeader>환불금액</Table.ColumnHeader>
+                  <Table.ColumnHeader>신청자</Table.ColumnHeader>
+                  <Table.ColumnHeader>환불액</Table.ColumnHeader>
+                  <Table.ColumnHeader>환불유형</Table.ColumnHeader>
                   <Table.ColumnHeader>환불사유</Table.ColumnHeader>
                   <Table.ColumnHeader>처리일시</Table.ColumnHeader>
                   <Table.ColumnHeader>상태</Table.ColumnHeader>
@@ -591,18 +649,18 @@ export const PaymentHistoryTab: React.FC = () => {
                         </Text>
                       </Stack>
                     </Table.Cell>
-                    <Table.Cell>{refund.lessonTitle}</Table.Cell>
                     <Table.Cell>
                       <Text fontWeight="semibold" color="red.500">
                         {formatCurrency(refund.refundAmount)}
                       </Text>
                     </Table.Cell>
                     <Table.Cell>
-                      <Text fontSize="sm">{refund.reason}</Text>
+                      <Text fontSize="sm">{refund.refundType}</Text>
                     </Table.Cell>
                     <Table.Cell>
-                      {formatDateTime(refund.processedAt)}
+                      <Text fontSize="sm">{refund.refundReason}</Text>
                     </Table.Cell>
+                    <Table.Cell>{formatDateTime(refund.refundedAt)}</Table.Cell>
                     <Table.Cell>
                       {getRefundStatusBadge(refund.status)}
                     </Table.Cell>
