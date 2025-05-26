@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Flex, Heading, Badge } from "@chakra-ui/react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
@@ -36,10 +36,6 @@ export const LessonManager: React.FC = () => {
     useState<AdminLessonDto | null>(null);
 
   // Lesson data query
-  const [lessonParams, setLessonParams] = useState<PaginationParams>({
-    page: 0,
-    size: 10,
-  });
 
   const {
     data: adminLessonsResponse,
@@ -52,12 +48,37 @@ export const LessonManager: React.FC = () => {
     PaginatedResponse<AdminLessonDto>,
     any
   >({
-    queryKey: adminLessonKeys.list(lessonParams),
-    queryFn: () => adminApi.getAdminLessons(lessonParams),
+    queryKey: adminLessonKeys.list({
+      page: 0,
+      size: 50,
+    }),
+    queryFn: () =>
+      adminApi.getAdminLessons({
+        page: 0,
+        size: 50,
+      }),
   });
 
   const adminLessons = adminLessonsResponse?.data?.content || [];
-  console.log(adminLessons);
+
+  // Effect to handle selection changes based on list updates
+  useEffect(() => {
+    const lessonsList = adminLessonsResponse?.data?.content || [];
+
+    if (selectedAdminLesson) {
+      const selectedStillExists = lessonsList.some(
+        (l) => l.lessonId === selectedAdminLesson.lessonId
+      );
+      if (!selectedStillExists) {
+        setSelectedAdminLesson(lessonsList.length > 0 ? lessonsList[0] : null);
+      }
+    } else {
+      if (lessonsList.length > 0) {
+        setSelectedAdminLesson(lessonsList[0]);
+      }
+    }
+  }, [adminLessonsResponse, selectedAdminLesson, setSelectedAdminLesson]);
+
   // Mutations
   const createAdminLessonMutation = useMutation<
     AdminLessonDto,
@@ -66,7 +87,7 @@ export const LessonManager: React.FC = () => {
   >({
     mutationFn: (newData: AdminLessonDto) =>
       adminApi.createAdminLesson(newData),
-    onSuccess: () => {
+    onSuccess: (createdLesson) => {
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
       toaster.create({
         title: "성공",
@@ -92,10 +113,12 @@ export const LessonManager: React.FC = () => {
       adminApi.updateAdminLesson(lessonId, data),
     onSuccess: (updatedLesson) => {
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
-      queryClient.setQueryData(
-        adminLessonKeys.detail(updatedLesson.lessonId!),
-        updatedLesson
-      );
+      if (updatedLesson.lessonId) {
+        queryClient.setQueryData(
+          adminLessonKeys.detail(updatedLesson.lessonId),
+          updatedLesson
+        );
+      }
       toaster.create({
         title: "성공",
         description: "강습이 수정되었습니다.",
@@ -113,13 +136,16 @@ export const LessonManager: React.FC = () => {
 
   const deleteAdminLessonMutation = useMutation<void, Error, number>({
     mutationFn: (lessonId: number) => adminApi.deleteAdminLesson(lessonId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
+    onSuccess: (data, deletedLessonId) => {
       toaster.create({
         title: "성공",
         description: "강습이 삭제되었습니다.",
         type: "success",
       });
+      queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
+      if (selectedAdminLesson?.lessonId === deletedLessonId) {
+        setSelectedAdminLesson(null);
+      }
     },
     onError: (error) => {
       toaster.create({
@@ -145,19 +171,24 @@ export const LessonManager: React.FC = () => {
 
   const handleSaveLesson = async (data: AdminLessonDto) => {
     if (selectedAdminLesson && selectedAdminLesson.lessonId) {
-      await updateAdminLessonMutation.mutateAsync({
+      const updatedLesson = await updateAdminLessonMutation.mutateAsync({
         lessonId: selectedAdminLesson.lessonId,
         data,
       });
+      if (updatedLesson) {
+        setSelectedAdminLesson(updatedLesson);
+      }
     } else {
-      await createAdminLessonMutation.mutateAsync(data);
+      const createdLesson = await createAdminLessonMutation.mutateAsync(data);
+      if (createdLesson) {
+        setSelectedAdminLesson(createdLesson);
+      }
     }
   };
 
   const handleRemoveLesson = async () => {
     if (selectedAdminLesson?.lessonId) {
       await deleteAdminLessonMutation.mutateAsync(selectedAdminLesson.lessonId);
-      setSelectedAdminLesson(null);
     }
   };
 

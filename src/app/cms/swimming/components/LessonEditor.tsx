@@ -19,6 +19,15 @@ import { useColors } from "@/styles/theme";
 import type { AdminLessonDto } from "@/types/api";
 import { CheckIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
+// Helper function to format date to YYYY-MM-DD
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+// RESTORED INTERFACE DEFINITION
 interface LessonEditorProps {
   lesson: AdminLessonDto | null;
   onSubmit: (lessonData: AdminLessonDto) => Promise<void>;
@@ -51,6 +60,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     lessonTime: "",
     startDate: "",
     endDate: "",
+    registrationEndDate: "",
     capacity: 0,
     price: 0,
     status: "OPEN",
@@ -78,18 +88,37 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         lessonTime: lesson.lessonTime || "",
         startDate: lesson.startDate,
         endDate: lesson.endDate,
+        registrationEndDate: lesson.registrationEndDate || "",
         capacity: lesson.capacity,
         price: lesson.price,
         status: lesson.status,
       });
     } else {
-      // Reset form for new lesson
+      // Reset form for new lesson with dynamic date defaults and specific time
+      const today = new Date();
+      const firstDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+      const lastDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      );
+      const lastDayOflastMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        0
+      );
+
       setFormData({
         title: "",
         instructorName: "",
-        lessonTime: "",
-        startDate: "",
-        endDate: "",
+        lessonTime: "09:00~10:00",
+        startDate: formatDate(firstDayOfMonth),
+        endDate: formatDate(lastDayOfMonth),
+        registrationEndDate: formatDate(lastDayOflastMonth),
         capacity: 0,
         price: 0,
         status: "OPEN",
@@ -133,6 +162,20 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
 
       if (!formData.endDate) {
         setError("종료일은 필수 입력 항목입니다.");
+        return;
+      }
+
+      if (!formData.registrationEndDate) {
+        setError("등록 마감일은 필수 입력 항목입니다.");
+        return;
+      }
+
+      if (
+        formData.registrationEndDate &&
+        formData.startDate &&
+        formData.registrationEndDate > formData.startDate
+      ) {
+        setError("등록 마감일은 시작일보다 이전이거나 같아야 합니다.");
         return;
       }
 
@@ -302,6 +345,24 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
               />
             </Box>
           </Flex>
+
+          <Box>
+            <Text mb={1} fontWeight="medium" color={textColor}>
+              등록 마감일
+            </Text>
+            <Input
+              size="xs"
+              type="date"
+              name="registrationEndDate"
+              value={formData.registrationEndDate}
+              onChange={handleInputChange}
+              borderColor={borderColor}
+              _focus={{
+                borderColor: colors.primary.default,
+                boxShadow: `0 0 0 1px ${colors.primary.default}`,
+              }}
+            />
+          </Box>
 
           <Flex gap={3}>
             <Box flex="1">

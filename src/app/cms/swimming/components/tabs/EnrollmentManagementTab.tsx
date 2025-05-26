@@ -63,6 +63,10 @@ import "@/styles/ag-grid-custom.css";
 import { useColorMode } from "@/components/ui/color-mode";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 
+// Import the new dialog components
+import { UserMemoDialog } from "./enrollmentManagement/UserMemoDialog";
+import { TemporaryEnrollmentDialog } from "./enrollmentManagement/TemporaryEnrollmentDialog";
+
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface EnrollmentData {
@@ -196,8 +200,6 @@ export const EnrollmentManagementTab = ({
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear().toString(),
-    month: (new Date().getMonth() + 1).toString(),
     searchTerm: "",
     payStatus: "",
   });
@@ -262,6 +264,7 @@ export const EnrollmentManagementTab = ({
           isRenewal: false,
           enrollStatus: dto.status,
           createdAt: dto.createdAt,
+          userMemo: (dto as any).userMemo || undefined,
         })
       );
     },
@@ -272,17 +275,7 @@ export const EnrollmentManagementTab = ({
 
   const [selectedUserForMemo, setSelectedUserForMemo] =
     useState<EnrollmentData | null>(null);
-  const [userMemoText, setUserMemoText] = useState("");
-
   const [isTempEnrollDialogOpen, setIsTempEnrollDialogOpen] = useState(false);
-  const [tempEnrollForm, setTempEnrollForm] = useState<
-    Omit<TemporaryEnrollmentRequestDto, "lessonId">
-  >({
-    userName: "",
-    userPhone: "",
-    usesLocker: false,
-    memo: "",
-  });
 
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
@@ -425,14 +418,6 @@ export const EnrollmentManagementTab = ({
     []
   );
 
-  const years = Array.from({ length: 5 }, (_, i) =>
-    (new Date().getFullYear() - 2 + i).toString()
-  );
-
-  const months = Array.from({ length: 12 }, (_, i) =>
-    (i + 1).toString().padStart(2, "0")
-  );
-
   const payStatusOptions = [
     { value: "", label: "전체" },
     { value: "PAID", label: "결제완료" },
@@ -455,19 +440,10 @@ export const EnrollmentManagementTab = ({
 
   const openMemoDialog = (data: EnrollmentData) => {
     setSelectedUserForMemo(data);
-    setUserMemoText(data.userMemo || "");
   };
 
-  const handleUserMemoSave = () => {
-    if (!selectedUserForMemo) return;
-    console.log(
-      "메모 저장:",
-      selectedUserForMemo.userLoginId,
-      selectedUserForMemo.userName,
-      userMemoText
-    );
+  const closeMemoDialog = () => {
     setSelectedUserForMemo(null);
-    setUserMemoText("");
   };
 
   const handleExportEnrollments = () => {
@@ -500,31 +476,6 @@ export const EnrollmentManagementTab = ({
     return data;
   }, [rowData, filters.searchTerm]);
 
-  const temporaryEnrollmentMutation = useMutation<
-    EnrollAdminResponseDto,
-    Error,
-    TemporaryEnrollmentRequestDto
-  >({
-    mutationFn: (data: TemporaryEnrollmentRequestDto) =>
-      adminApi.createTemporaryEnrollment(data),
-    onSuccess: (_response) => {
-      queryClient.invalidateQueries({
-        queryKey: enrollmentQueryKeys.list(lessonIdFilter),
-      });
-      setIsTempEnrollDialogOpen(false);
-      setTempEnrollForm({
-        userName: "",
-        userPhone: "",
-        usesLocker: false,
-        memo: "",
-      });
-      console.log("임시 등록 성공:", _response);
-    },
-    onError: (error) => {
-      console.error("임시 등록 실패:", error.message);
-    },
-  });
-
   const handleOpenTempEnrollDialog = () => {
     if (!lessonIdFilter) {
       console.warn("임시 등록하려면 강습 선택 필요");
@@ -533,30 +484,8 @@ export const EnrollmentManagementTab = ({
     setIsTempEnrollDialogOpen(true);
   };
 
-  const handleTempEnrollFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setTempEnrollForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTempEnrollLockerChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setTempEnrollForm((prev) => ({ ...prev, usesLocker: e.target.checked }));
-  };
-
-  const handleTempEnrollSubmit = () => {
-    if (!lessonIdFilter) return;
-    if (!tempEnrollForm.userName.trim()) {
-      console.error("이름 입력 필요");
-      return;
-    }
-
-    temporaryEnrollmentMutation.mutate({
-      lessonId: lessonIdFilter,
-      ...tempEnrollForm,
-    });
+  const closeTempEnrollDialog = () => {
+    setIsTempEnrollDialogOpen(false);
   };
 
   if (isLoadingEnrollments && lessonIdFilter) {
@@ -629,46 +558,22 @@ export const EnrollmentManagementTab = ({
         }}
         showSearchButton={true}
       >
+        {/* Year/Month filters removed from here as they were also removed from state/query 
+           Re-add if needed: 
         <Field.Root w="220px">
           <NativeSelect.Root size="sm">
-            <NativeSelect.Field
-              id="yearFilter"
-              value={filters.year}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, year: e.target.value }))
-              }
-              fontSize="xs"
-            >
-              <For each={years}>
-                {(year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                )}
-              </For>
+            <NativeSelect.Field id="yearFilter" value={filters.year} onChange={(e) => setFilters((prev) => ({ ...prev, year: e.target.value }))} fontSize="xs">
+              <For each={years}>{(year) => <option key={year} value={year}>{year}</option>}</For>
             </NativeSelect.Field>
           </NativeSelect.Root>
         </Field.Root>
         <Field.Root w="220px">
           <NativeSelect.Root size="sm">
-            <NativeSelect.Field
-              id="monthFilter"
-              value={filters.month}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, month: e.target.value }))
-              }
-              fontSize="xs"
-            >
-              <For each={months}>
-                {(month) => (
-                  <option key={month} value={month}>
-                    {month}월
-                  </option>
-                )}
-              </For>
+            <NativeSelect.Field id="monthFilter" value={filters.month} onChange={(e) => setFilters((prev) => ({ ...prev, month: e.target.value }))} fontSize="xs">
+              <For each={months}>{(month) => <option key={month} value={month}>{month}월</option>}</For>
             </NativeSelect.Field>
-          </NativeSelect.Root>
-        </Field.Root>
+          </NativeSelect.Root> 
+        */}
       </CommonGridFilterBar>
       <Flex my={2} justifyContent="space-between" alignItems="center">
         <Text fontSize="sm" color={colors.text.secondary}>
@@ -714,125 +619,22 @@ export const EnrollmentManagementTab = ({
         />
       </Box>
 
-      <DialogRoot
-        open={!!selectedUserForMemo}
-        onOpenChange={() => setSelectedUserForMemo(null)}
-      >
-        <Portal>
-          <DialogBackdrop />
-          <DialogPositioner>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  회원 메모 - {selectedUserForMemo?.userName}
-                </DialogTitle>
-              </DialogHeader>
-              <DialogBody>
-                <Field.Root>
-                  <Field.Label>메모 내용</Field.Label>
-                  <Textarea
-                    value={userMemoText}
-                    onChange={(e) => setUserMemoText(e.target.value)}
-                    placeholder="회원에 대한 메모를 입력하세요"
-                    rows={6}
-                  />
-                  <Field.HelperText>
-                    회원과 관련된 중요한 정보나 상담 내용을 기록하세요.
-                  </Field.HelperText>
-                </Field.Root>
-              </DialogBody>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedUserForMemo(null)}
-                >
-                  취소
-                </Button>
-                <Button colorScheme="blue" onClick={handleUserMemoSave}>
-                  저장
-                </Button>
-              </DialogFooter>
-              <DialogCloseTrigger />
-            </DialogContent>
-          </DialogPositioner>
-        </Portal>
-      </DialogRoot>
+      <UserMemoDialog
+        isOpen={!!selectedUserForMemo}
+        onClose={closeMemoDialog}
+        selectedUser={selectedUserForMemo}
+        agGridTheme={agGridTheme}
+        bg={bg}
+        textColor={textColor}
+        borderColor={borderColor}
+        colors={colors}
+      />
 
-      <DialogRoot
-        open={isTempEnrollDialogOpen}
-        onOpenChange={() => setIsTempEnrollDialogOpen(false)}
-      >
-        <Portal>
-          <DialogBackdrop />
-          <DialogPositioner>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>신규 임시 등록</DialogTitle>
-              </DialogHeader>
-              <DialogBody>
-                <Stack gap={4}>
-                  <Field.Root required>
-                    <Field.Label>이름</Field.Label>
-                    <Input
-                      name="userName"
-                      value={tempEnrollForm.userName}
-                      onChange={handleTempEnrollFormChange}
-                      placeholder="홍길동"
-                    />
-                  </Field.Root>
-                  <Field.Root>
-                    <Field.Label>핸드폰 번호</Field.Label>
-                    <Input
-                      name="userPhone"
-                      value={tempEnrollForm.userPhone || ""}
-                      onChange={handleTempEnrollFormChange}
-                      placeholder="010-1234-5678"
-                    />
-                  </Field.Root>
-                  <Field.Root>
-                    <Checkbox.Root
-                      name="usesLocker"
-                      checked={tempEnrollForm.usesLocker}
-                    >
-                      <Checkbox.HiddenInput />
-                      <Checkbox.Control
-                        onChange={handleTempEnrollLockerChange}
-                      />
-                      <Checkbox.Label>사물함 사용</Checkbox.Label>
-                    </Checkbox.Root>
-                  </Field.Root>
-                  <Field.Root>
-                    <Field.Label>메모</Field.Label>
-                    <Textarea
-                      name="memo"
-                      value={tempEnrollForm.memo || ""}
-                      onChange={handleTempEnrollFormChange}
-                      placeholder="오프라인 접수 등 특이사항 입력"
-                      rows={3}
-                    />
-                  </Field.Root>
-                </Stack>
-              </DialogBody>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsTempEnrollDialogOpen(false)}
-                >
-                  취소
-                </Button>
-                <Button
-                  colorScheme="teal"
-                  onClick={handleTempEnrollSubmit}
-                  loading={temporaryEnrollmentMutation.isPending}
-                >
-                  등록하기
-                </Button>
-              </DialogFooter>
-              <DialogCloseTrigger />
-            </DialogContent>
-          </DialogPositioner>
-        </Portal>
-      </DialogRoot>
+      <TemporaryEnrollmentDialog
+        isOpen={isTempEnrollDialogOpen}
+        onClose={closeTempEnrollDialog}
+        lessonIdFilter={lessonIdFilter}
+      />
     </Box>
   );
 };
