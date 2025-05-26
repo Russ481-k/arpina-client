@@ -79,7 +79,7 @@ export function TemplateLayoutEditor({
         </Text>
         <Box position="relative">
           <Button
-            colorScheme="blue"
+            colorPalette="blue"
             size="sm"
             onClick={() => setIsOpen(!isOpen)}
           >

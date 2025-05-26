@@ -92,7 +92,7 @@ export function PostDetail({
                 aria-label="Delete post"
                 size="sm"
                 variant="ghost"
-                colorScheme="red"
+                colorPalette="red"
                 onClick={onDelete}
               >
                 <LuTrash2 />
@@ -113,7 +113,7 @@ export function PostDetail({
           {post.categories && post.categories.length > 0 && (
             <HStack mt={2} gap={2}>
               {post.categories.map((category) => (
-                <Badge key={category} colorScheme="blue">
+                <Badge key={category} colorPalette="blue">
                   {category}
                 </Badge>
               ))}

@@ -553,7 +553,7 @@ export default function MenuManagementPage() {
                     모듈: {MODULE_MAP[selectedMenu.type]})
                   </Text>
                   <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     onClick={() => setIsUploadDialogOpen(true)}
                   >
                     <Icon as={FiUpload} />

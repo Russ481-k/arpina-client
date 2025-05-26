@@ -189,7 +189,7 @@ export const TemporaryEnrollmentDialog: React.FC<
                 취소
               </Button>
               <Button
-                colorScheme="teal"
+                colorPalette="teal"
                 onClick={handleTempEnrollSubmit}
                 loading={temporaryEnrollmentMutation.isPending}
               >

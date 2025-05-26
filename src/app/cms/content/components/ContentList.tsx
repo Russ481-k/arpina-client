@@ -95,7 +95,7 @@ export function ContentList({
         <Badge
           as="button"
           onClick={fetchMenus}
-          colorScheme="blue"
+          colorPalette="blue"
           cursor="pointer"
           _hover={{ opacity: 0.8 }}
         >

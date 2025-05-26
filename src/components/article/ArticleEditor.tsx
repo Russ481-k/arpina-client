@@ -344,7 +344,7 @@ export function ArticleEditor({
         >
           {cancelLabel}
         </Button>
-        <Button onClick={handleFormSubmit} colorScheme="blue">
+        <Button onClick={handleFormSubmit} colorPalette="blue">
           {submitLabel}
         </Button>
       </Flex>

@@ -515,7 +515,7 @@ export default function MyPage() {
                 </Fieldset.Content>
 
                 <Box textAlign="center" mt={4}>
-                  <Button type="submit" colorScheme="orange" size="md" px={8}>
+                  <Button type="submit" colorPalette="orange" size="md" px={8}>
                     정보변경
                   </Button>
                 </Box>
@@ -620,7 +620,7 @@ export default function MyPage() {
               </Fieldset.Content>
 
               <Box textAlign="center" mt={4}>
-                <Button type="submit" colorScheme="orange" size="md" px={8}>
+                <Button type="submit" colorPalette="orange" size="md" px={8}>
                   정보변경
                 </Button>
               </Box>
@@ -664,7 +664,7 @@ export default function MyPage() {
                             {enroll.lesson.title}
                           </Text>
                           <Badge
-                            colorScheme={
+                            colorPalette={
                               enroll.status === "PAID"
                                 ? "green"
                                 : enroll.status === "UNPAID"
@@ -738,7 +738,7 @@ export default function MyPage() {
                           <Link href={enroll.paymentPageUrl} passHref>
                             <Button
                               as="a"
-                              colorScheme="green"
+                              colorPalette="green"
                               size="sm"
                               w="100%"
                             >
@@ -755,7 +755,7 @@ export default function MyPage() {
                           new Date(enroll.renewalWindow.close) >= new Date() &&
                           enroll.status === "PAID" && (
                             /* Typically renew from a paid lesson */ <Button
-                              colorScheme="blue"
+                              colorPalette="blue"
                               size="sm"
                               w="100%"
                               // onClick={() => handleRenewal(enroll.SOME_NEXT_LESSON_ID_FIELD, enroll.usesLocker)} // handleRenewal would call swimmingPaymentService
@@ -823,7 +823,7 @@ export default function MyPage() {
                       </Table.Cell>
                       <Table.Cell>
                         <Badge
-                          colorScheme={
+                          colorPalette={
                             payment.status === "SUCCESS"
                               ? "green"
                               : payment.status === "CANCELED"

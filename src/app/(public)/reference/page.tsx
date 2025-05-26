@@ -57,7 +57,7 @@ export default function CommunityPage() {
                 <Card.Body>
                   <VStack align="start" gap={4}>
                     <Box w="100%">
-                      <Badge colorScheme="blue" mb={2}>
+                      <Badge colorPalette="blue" mb={2}>
                         일반
                       </Badge>
                       <Heading

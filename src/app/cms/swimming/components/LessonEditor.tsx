@@ -231,7 +231,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
             <Button
               size="xs"
               onClick={handleNewLesson}
-              colorScheme="blue"
+              colorPalette="blue"
               variant="outline"
             >
               새 강습
@@ -460,7 +460,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
             flex="1"
             onClick={handleSubmit}
             loading={isSubmitting || isLoading}
-            colorScheme="blue"
+            colorPalette="blue"
           >
             <CheckIcon size={16} style={{ marginRight: "8px" }} />
             {isEditing ? "수정" : "생성"}
@@ -470,7 +470,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
             <Button
               onClick={handleDelete}
               loading={isLoading}
-              colorScheme="red"
+              colorPalette="red"
               variant="outline"
             >
               <Trash2Icon size={16} style={{ marginRight: "8px" }} />

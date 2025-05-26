@@ -61,10 +61,13 @@ import {
 import { useColorMode } from "@/components/ui/color-mode";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import { toaster } from "@/components/ui/toaster";
+import { AdminCancelReasonDialog } from "./enrollmentManagement/AdminCancelReasonDialog";
+import { payStatusOptions } from "@/lib/utils/statusUtils";
 
 // Import the new dialog components
 import { UserMemoDialog } from "./enrollmentManagement/UserMemoDialog";
 import { TemporaryEnrollmentDialog } from "./enrollmentManagement/TemporaryEnrollmentDialog";
+import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -77,7 +80,9 @@ interface EnrollmentData {
     | "UNPAID"
     | "PAYMENT_TIMEOUT"
     | "REFUNDED"
-    | "CANCELED_UNPAID";
+    | "CANCELED_UNPAID"
+    | "PARTIALLY_REFUNDED"
+    | "REFUND_PENDING_ADMIN_CANCEL";
   usesLocker: boolean;
   userName: string;
   userLoginId: string;
@@ -108,34 +113,12 @@ const enrollmentQueryKeys = {
   cancelRequests: ["adminCancelRequests"] as const,
 };
 
-const PayStatusCellRenderer: React.FC<
-  ICellRendererParams<EnrollmentData, EnrollmentData["payStatus"]>
-> = (params) => {
-  if (!params.value) return null;
-  const statusConfig = {
-    PAID: { colorPalette: "green", label: "결제완료" },
-    UNPAID: { colorPalette: "yellow", label: "미결제" },
-    PAYMENT_TIMEOUT: { colorPalette: "gray", label: "결제만료" },
-    REFUNDED: { colorPalette: "red", label: "환불" },
-    CANCELED_UNPAID: { colorPalette: "gray", label: "취소" },
-  };
-  const config = statusConfig[params.value as keyof typeof statusConfig] || {
-    colorPalette: "gray",
-    label: params.value,
-  };
-  return (
-    <Tag.Root colorPalette={config.colorPalette} size="sm">
-      <Tag.Label>{config.label}</Tag.Label>
-    </Tag.Root>
-  );
-};
-
 const UsesLockerCellRenderer: React.FC<
   ICellRendererParams<EnrollmentData, boolean>
 > = (params) => {
   return (
     <Badge
-      colorScheme={params.value ? "blue" : "gray"}
+      colorPalette={params.value ? "blue" : "gray"}
       variant="outline"
       size="sm"
     >
@@ -149,7 +132,7 @@ const RenewalCellRenderer: React.FC<
 > = (params) => {
   return (
     <Badge
-      colorScheme={params.value ? "purple" : "blue"}
+      colorPalette={params.value ? "purple" : "blue"}
       variant="outline"
       size="sm"
     >
@@ -181,7 +164,7 @@ const ActionCellRenderer: React.FC<ICellRendererParams<EnrollmentData>> = (
       <IconButton
         size="xs"
         variant="ghost"
-        colorScheme="red"
+        colorPalette="red"
         aria-label="Admin Cancel"
         onClick={handleAdminCancelClick}
       >
@@ -276,6 +259,11 @@ export const EnrollmentManagementTab = ({
   const [selectedUserForMemo, setSelectedUserForMemo] =
     useState<EnrollmentData | null>(null);
   const [isTempEnrollDialogOpen, setIsTempEnrollDialogOpen] = useState(false);
+  const [isCancelReasonDialogOpen, setIsCancelReasonDialogOpen] =
+    useState(false);
+  const [enrollmentIdToCancel, setEnrollmentIdToCancel] = useState<
+    number | null
+  >(null);
 
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
@@ -289,8 +277,13 @@ export const EnrollmentManagementTab = ({
       {
         headerName: "이름",
         field: "userName",
-        flex: 1,
+
         minWidth: 80,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
       },
       {
         headerName: "핸드폰 번호",
@@ -301,8 +294,19 @@ export const EnrollmentManagementTab = ({
       {
         headerName: "결제상태",
         field: "payStatus",
-        cellRenderer: PayStatusCellRenderer,
-        width: 90,
+        flex: 1,
+        minWidth: 130,
+        cellRenderer: (
+          params: ICellRendererParams<
+            EnrollmentData,
+            EnrollmentData["payStatus"]
+          >
+        ) => (
+          <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
+            <CommonPayStatusBadge status={params.value} />
+          </Flex>
+        ),
+        width: 100,
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -328,15 +332,15 @@ export const EnrollmentManagementTab = ({
           const { data, context } = params;
           if (!data || !data.discountInfo)
             return (
-              <Badge colorScheme="gray" variant="outline" size="sm">
+              <Badge colorPalette="gray" variant="outline" size="sm">
                 없음
               </Badge>
             );
 
           const statusConfig = {
-            APPROVED: { colorScheme: "green", label: "승인" },
-            DENIED: { colorScheme: "red", label: "거절" },
-            PENDING: { colorScheme: "yellow", label: "대기" },
+            APPROVED: { colorPalette: "green", label: "승인" },
+            DENIED: { colorPalette: "red", label: "거절" },
+            PENDING: { colorPalette: "yellow", label: "대기" },
           };
           const config = statusConfig[data.discountInfo.status];
 
@@ -345,14 +349,18 @@ export const EnrollmentManagementTab = ({
               <Text fontSize="xs" color={colors.text.secondary}>
                 {data.discountInfo.type}
               </Text>
-              <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+              <Badge
+                colorPalette={config.colorPalette}
+                variant="solid"
+                size="sm"
+              >
                 {config.label}
               </Badge>
               {data.discountInfo.status === "PENDING" && context && (
                 <HStack mt={1} gap={1}>
                   <Button
                     size="xs"
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={() =>
                       context.handleDiscountApproval(data.enrollId, "APPROVED")
                     }
@@ -361,7 +369,7 @@ export const EnrollmentManagementTab = ({
                   </Button>
                   <Button
                     size="xs"
-                    colorScheme="red"
+                    colorPalette="red"
                     onClick={() =>
                       context.handleDiscountApproval(data.enrollId, "DENIED")
                     }
@@ -418,15 +426,6 @@ export const EnrollmentManagementTab = ({
     []
   );
 
-  const payStatusOptions = [
-    { value: "", label: "전체" },
-    { value: "PAID", label: "결제완료" },
-    { value: "UNPAID", label: "미결제" },
-    { value: "PAYMENT_TIMEOUT", label: "결제만료" },
-    { value: "REFUNDED", label: "환불" },
-    { value: "CANCELED_UNPAID", label: "취소" },
-  ];
-
   const adminCancelEnrollmentMutation = useMutation<
     EnrollAdminResponseDto,
     Error,
@@ -447,6 +446,8 @@ export const EnrollmentManagementTab = ({
       queryClient.invalidateQueries({
         queryKey: enrollmentQueryKeys.cancelRequests,
       });
+      setIsCancelReasonDialogOpen(false);
+      setEnrollmentIdToCancel(null);
     },
     onError: (error, variables) => {
       toaster.error({
@@ -454,18 +455,26 @@ export const EnrollmentManagementTab = ({
         description:
           error.message || `신청 ID ${variables.enrollId} 취소 중 오류 발생`,
       });
+      setIsCancelReasonDialogOpen(false);
+      setEnrollmentIdToCancel(null);
     },
   });
 
-  const handleAdminCancel = useCallback(
-    (enrollId: number) => {
-      const reason = window.prompt("취소 사유를 입력해주세요 (선택 사항):");
-      adminCancelEnrollmentMutation.mutate({
-        enrollId,
-        reason: reason || "관리자 직접 취소",
-      });
+  const handleAdminCancelRequest = useCallback((enrollId: number) => {
+    setEnrollmentIdToCancel(enrollId);
+    setIsCancelReasonDialogOpen(true);
+  }, []);
+
+  const handleSubmitAdminCancel = useCallback(
+    (reason: string) => {
+      if (enrollmentIdToCancel) {
+        adminCancelEnrollmentMutation.mutate({
+          enrollId: enrollmentIdToCancel,
+          reason,
+        });
+      }
     },
-    [adminCancelEnrollmentMutation]
+    [enrollmentIdToCancel, adminCancelEnrollmentMutation]
   );
 
   const handleDiscountApproval = useCallback(
@@ -491,10 +500,10 @@ export const EnrollmentManagementTab = ({
   const agGridContext = useMemo(
     () => ({
       openMemoDialog,
-      adminCancelEnrollment: handleAdminCancel,
+      adminCancelEnrollment: handleAdminCancelRequest,
       handleDiscountApproval,
     }),
-    [handleAdminCancel, handleDiscountApproval]
+    [handleAdminCancelRequest, handleDiscountApproval]
   );
 
   const filteredEnrollmentsForGrid = useMemo(() => {
@@ -586,7 +595,7 @@ export const EnrollmentManagementTab = ({
             onChange: (e) =>
               setFilters((prev) => ({ ...prev, payStatus: e.target.value })),
             options: payStatusOptions,
-            maxWidth: "100px",
+            maxWidth: "120px",
             placeholder: "전체",
           },
         ]}
@@ -618,7 +627,7 @@ export const EnrollmentManagementTab = ({
         </Text>
         <Button
           size="xs"
-          colorScheme="teal"
+          colorPalette="teal"
           variant="outline"
           onClick={handleOpenTempEnrollDialog}
           ml={2}
@@ -670,6 +679,16 @@ export const EnrollmentManagementTab = ({
         isOpen={isTempEnrollDialogOpen}
         onClose={closeTempEnrollDialog}
         lessonIdFilter={lessonIdFilter}
+      />
+
+      <AdminCancelReasonDialog
+        isOpen={isCancelReasonDialogOpen}
+        onClose={() => {
+          setIsCancelReasonDialogOpen(false);
+          setEnrollmentIdToCancel(null);
+        }}
+        onSubmit={handleSubmitAdminCancel}
+        enrollId={enrollmentIdToCancel}
       />
     </Box>
   );

@@ -33,36 +33,37 @@ import type {
 } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 
-// Assuming these interfaces are defined or imported from a shared location
-// If not, they need to be defined here or passed as generics more robustly.
-interface BackendCalculatedRefundDetails {
+// Mirroring the updated structures from CancellationRefundTab.tsx
+interface UICalculatedRefundDetails {
   usedDays: number;
   manualUsedDays?: number;
-  lessonUsageAmount: number;
-  lockerUsageAmount: number;
-  lessonPenalty: number;
-  lockerPenalty: number;
+  lessonUsageAmount?: number;
+  lockerUsageAmount?: number;
+  lessonPenalty?: number;
+  lockerPenalty?: number;
   finalRefundAmount: number;
 }
 
-interface BackendPaymentDetails {
+interface UIPaymentDetails {
   lesson: number;
   locker?: number;
   total: number;
 }
 
 interface CancelRequestData {
+  // Should match CancelRequestData in CancellationRefundTab.tsx
   id: string;
   enrollId: number;
   userName: string;
   lessonTitle: string;
-  lessonStartDate: string;
-  usesLocker: boolean;
-  paidAmount: BackendPaymentDetails;
-  calculatedRefund: BackendCalculatedRefundDetails;
+  lessonStartDate?: string; // Made optional to match parent
+  usesLocker?: boolean; // Made optional to match parent
+  paidAmount: UIPaymentDetails; // Updated to UIPaymentDetails
+  calculatedRefund: UICalculatedRefundDetails; // Updated to UICalculatedRefundDetails
   reason: string;
   adminMemo?: string;
-  status?: "PENDING" | "APPROVED" | "DENIED"; // Add status if needed inside dialog for conditional logic
+  status?: "PENDING" | "APPROVED" | "DENIED";
+  // payStatus is removed to match parent
 }
 
 // Define query keys if specific invalidations are needed from this dialog
@@ -97,7 +98,7 @@ export const ReviewCancelRequestDialog: React.FC<
   const [manualUsedDaysInput, setManualUsedDaysInput] = useState<number>(0);
   const [adminComment, setAdminComment] = useState("");
   const [currentRefundDetails, setCurrentRefundDetails] =
-    useState<BackendCalculatedRefundDetails | null>(null);
+    useState<UICalculatedRefundDetails | null>(null);
 
   // Placeholder Mutation for Refund Preview
   const previewRefundMutation = useMutation<
@@ -111,7 +112,7 @@ export const ReviewCancelRequestDialog: React.FC<
         `Mocking API call to calculateRefundPreview for enrollId: ${enrollId} with manualUsedDays: ${manualUsedDays}`
       );
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const mockPreviewResponse: BackendCalculatedRefundDetails = {
+      const mockPreviewResponse: UICalculatedRefundDetails = {
         usedDays:
           manualUsedDays || selectedRequest?.calculatedRefund.usedDays || 0,
         manualUsedDays: manualUsedDays,
@@ -151,7 +152,7 @@ export const ReviewCancelRequestDialog: React.FC<
         typeof refundDetailsPreview.finalRefundAmount === "number"
       ) {
         setCurrentRefundDetails(
-          refundDetailsPreview as BackendCalculatedRefundDetails
+          refundDetailsPreview as UICalculatedRefundDetails
         );
         toaster.info({ title: "환불액 미리보기 업데이트됨", duration: 2000 });
       } else {
@@ -301,9 +302,13 @@ export const ReviewCancelRequestDialog: React.FC<
                       <Field.Root minW="150px" flexGrow={1}>
                         <Field.Label>강습 시작일</Field.Label>
                         <Input
-                          value={new Date(
+                          value={
                             selectedRequest.lessonStartDate
-                          ).toLocaleDateString()}
+                              ? new Date(
+                                  selectedRequest.lessonStartDate
+                                ).toLocaleDateString()
+                              : "-"
+                          }
                           readOnly
                         />
                       </Field.Root>
@@ -485,14 +490,14 @@ export const ReviewCancelRequestDialog: React.FC<
                   취소
                 </Button>
                 <Button
-                  colorScheme="red"
+                  colorPalette="red"
                   onClick={handleDeny}
                   loading={denyMutation.isPending}
                 >
                   <XIcon size={16} style={{ marginRight: "4px" }} /> 거부
                 </Button>
                 <Button
-                  colorScheme="green"
+                  colorPalette="green"
                   onClick={handleApprove}
                   loading={
                     approveMutation.isPending || previewRefundMutation.isPending

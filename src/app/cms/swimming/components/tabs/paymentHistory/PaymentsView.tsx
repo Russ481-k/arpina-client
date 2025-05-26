@@ -80,17 +80,17 @@ const PaymentStatusCellRenderer: React.FC<
 > = (params) => {
   if (!params.value) return null;
   const statusConfig = {
-    PAID: { colorScheme: "green", label: "결제완료" },
-    PARTIALLY_REFUNDED: { colorScheme: "yellow", label: "부분환불" },
-    FULLY_REFUNDED: { colorScheme: "red", label: "전액환불" },
-    CANCELED: { colorScheme: "gray", label: "취소" }, // Assuming CANCELED is a valid status
+    PAID: { colorPalette: "green", label: "결제완료" },
+    PARTIALLY_REFUNDED: { colorPalette: "yellow", label: "부분환불" },
+    FULLY_REFUNDED: { colorPalette: "red", label: "전액환불" },
+    CANCELED: { colorPalette: "gray", label: "취소" }, // Assuming CANCELED is a valid status
   };
   const config = statusConfig[params.value as keyof typeof statusConfig] || {
-    colorScheme: "gray",
+    colorPalette: "gray",
     label: params.value,
   };
   return (
-    <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+    <Badge colorPalette={config.colorPalette} variant="solid" size="sm">
       {config.label}
     </Badge>
   );

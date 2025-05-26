@@ -57,16 +57,16 @@ const RefundStatusCellRenderer: React.FC<
 > = (params) => {
   if (!params.value) return null;
   const statusConfig = {
-    COMPLETED: { colorScheme: "green", label: "완료" },
-    PENDING: { colorScheme: "yellow", label: "처리중" },
-    FAILED: { colorScheme: "red", label: "실패" },
+    COMPLETED: { colorPalette: "green", label: "완료" },
+    PENDING: { colorPalette: "yellow", label: "처리중" },
+    FAILED: { colorPalette: "red", label: "실패" },
   };
   const config = statusConfig[params.value as keyof typeof statusConfig] || {
-    colorScheme: "gray",
+    colorPalette: "gray",
     label: params.value,
   };
   return (
-    <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+    <Badge colorPalette={config.colorPalette} variant="solid" size="sm">
       {config.label}
     </Badge>
   );

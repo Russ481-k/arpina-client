@@ -464,7 +464,7 @@ export function ContentEditor({
           <Flex justify="flex-end" gap={2}>
             {content && onDelete && (
               <Button
-                colorScheme="red"
+                colorPalette="red"
                 variant="outline"
                 onClick={() => onDelete(content.id)}
               >
@@ -474,7 +474,7 @@ export function ContentEditor({
             <Button type="button" variant="outline" onClick={onClose}>
               취소
             </Button>
-            <Button type="submit" colorScheme="blue">
+            <Button type="submit" colorPalette="blue">
               저장
             </Button>
           </Flex>

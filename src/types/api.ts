@@ -729,38 +729,45 @@ export interface UserMemoDto {
   adminId?: string; // ID of admin who wrote/updated memo
 }
 
-// Renamed from CancelRequestDto to CancelRequestAdminDto to match adminApi.ts
-// and to distinguish if there's a user-facing CancelRequestDto
+// Represents the structure of an object within the 'paymentInfo' field of the API response
+interface CancelRequestPaymentInfo {
+  tid: string | null; // Was kispg_tid
+  paidAmt: number; // Was paid_amt in CancelRequestAdminDto, now part of paymentInfo
+  lessonPaidAmt: number;
+  lockerPaidAmt: number;
+}
+
+// Represents the structure of an object within the 'calculatedRefundDetails' field of the API response
+interface CancelRequestCalculatedRefundDetails {
+  systemCalculatedUsedDays: number;
+  manualUsedDays: number | null;
+  effectiveUsedDays: number; // Assuming this is part of the details
+  lessonUsageAmount?: number;
+  lockerUsageAmount?: number;
+  lessonPenalty?: number;
+  lockerPenalty?: number;
+  finalRefundAmount?: number;
+}
+
 export interface CancelRequestAdminDto {
-  requestId: number;
+  // Reflects an item from API: /api/v1/cms/enrollments/cancel-requests
+  requestId: number; // Assumed based on frontend usage for 'id'
   enrollId: number;
-  userId: string;
   userName: string;
+  userLoginId?: string; // Kept as optional, ensure backend provides if used
+  userPhone?: string; // Kept as optional, ensure backend provides if used
   lessonTitle: string;
-  paid_amt: number;
-  calculated_refund_amt: number;
-  requested_at: string;
-  reason: string;
-  kispg_tid?: string | null;
-  status: "PENDING" | "APPROVED" | "DENIED"; // Added status from CancellationRefundTab
-  lessonStartDate: string; // Added from CancellationRefundTab
-  usesLocker: boolean; // Added from CancellationRefundTab
-  paidAmount: {
-    // Added from CancellationRefundTab (detail of paid_amt)
-    lesson: number;
-    locker?: number;
-    total: number;
-  };
-  calculatedRefund?: {
-    // Optional detailed breakdown, added from CancellationRefundTab
-    usedDays: number;
-    manualUsedDays?: number;
-    lessonUsageAmount: number;
-    lockerUsageAmount: number;
-    lessonPenalty: number;
-    lockerPenalty: number;
-    finalRefundAmount: number;
-  };
+  // payStatus is NOT included by this API endpoint
+  paymentInfo: CancelRequestPaymentInfo;
+  calculatedRefundAmtByNewPolicy?: number; // The top-level refund amount from snippet
+  calculatedRefundDetails: CancelRequestCalculatedRefundDetails;
+  requestedAt: string; // API uses 'requestedAt'
+  userReason: string; // API uses 'userReason' for the reason provided by the user
+  adminComment?: string; // API uses 'adminComment'
+  status: "PENDING" | "APPROVED" | "DENIED"; // Assumed based on frontend usage & API query params
+  lessonStartDate?: string; // Kept as optional, ensure backend provides if used for display/logic
+  usesLocker?: boolean; // Kept as optional, ensure backend provides if used
+  // Fields like paid_amt, calculated_refund_amt, kispg_tid, reason are now mapped from nested objects or renamed.
 }
 
 export interface ApproveCancelRequestDto {

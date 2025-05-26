@@ -67,7 +67,7 @@ export const LockerCard: React.FC<LockerCardProps> = ({ data, onSave }) => {
               {data.gender === "MALE" ? "남성" : "여성"}
             </Text>
             <Badge
-              colorScheme={data.availableQuantity > 10 ? "green" : "red"}
+              colorPalette={data.availableQuantity > 10 ? "green" : "red"}
               variant="solid"
               size="sm"
             >
@@ -105,7 +105,7 @@ export const LockerCard: React.FC<LockerCardProps> = ({ data, onSave }) => {
                   <IconButton
                     size="2xs"
                     variant="solid"
-                    colorScheme="blue"
+                    colorPalette="blue"
                     onClick={handleSave}
                   >
                     <SaveIcon size={12} />

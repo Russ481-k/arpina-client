@@ -39,17 +39,17 @@ import { ReviewCancelRequestDialog } from "./cancellationRefund/ReviewCancelRequ
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-interface BackendCalculatedRefundDetails {
+interface UICalculatedRefundDetails {
   usedDays: number;
   manualUsedDays?: number;
-  lessonUsageAmount: number;
-  lockerUsageAmount: number;
-  lessonPenalty: number;
-  lockerPenalty: number;
+  lessonUsageAmount?: number;
+  lockerUsageAmount?: number;
+  lessonPenalty?: number;
+  lockerPenalty?: number;
   finalRefundAmount: number;
 }
 
-interface BackendPaymentDetails {
+interface UIPaymentDetails {
   lesson: number;
   locker?: number;
   total: number;
@@ -57,7 +57,6 @@ interface BackendPaymentDetails {
 
 interface CancelRequestData {
   id: string;
-  lessonId?: number;
   enrollId: number;
   userName: string;
   userLoginId?: string;
@@ -65,10 +64,10 @@ interface CancelRequestData {
   lessonTitle: string;
   requestedAt: string;
   reason: string;
-  lessonStartDate: string;
-  usesLocker: boolean;
-  paidAmount: BackendPaymentDetails;
-  calculatedRefund: BackendCalculatedRefundDetails;
+  lessonStartDate?: string;
+  usesLocker?: boolean;
+  paidAmount: UIPaymentDetails;
+  calculatedRefund: UICalculatedRefundDetails;
   status: "PENDING" | "APPROVED" | "DENIED";
   adminMemo?: string;
 }
@@ -88,16 +87,16 @@ const StatusCellRenderer: React.FC<
 > = (params) => {
   if (!params.value) return null;
   const statusConfig = {
-    PENDING: { colorScheme: "yellow", label: "대기" },
-    APPROVED: { colorScheme: "green", label: "승인" },
-    DENIED: { colorScheme: "red", label: "거부" },
+    PENDING: { colorPalette: "yellow", label: "대기" },
+    APPROVED: { colorPalette: "green", label: "승인" },
+    DENIED: { colorPalette: "red", label: "거부" },
   };
   const config = statusConfig[params.value as keyof typeof statusConfig] || {
-    colorScheme: "gray",
+    colorPalette: "gray",
     label: params.value,
   };
   return (
-    <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+    <Badge colorPalette={config.colorPalette} variant="solid" size="sm">
       {config.label}
     </Badge>
   );
@@ -112,7 +111,7 @@ const ActionCellRenderer: React.FC<ICellRendererParams<CancelRequestData>> = (
   return (
     <Button
       size="xs"
-      colorScheme="blue"
+      colorPalette="blue"
       variant="outline"
       onClick={handleReviewClick}
     >
@@ -129,146 +128,40 @@ export const CancellationRefundTab = ({
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({ searchTerm: "" });
   const gridRef = React.useRef<AgGridReact<CancelRequestData>>(null);
-
   const [selectedRequest, setSelectedRequest] =
     useState<CancelRequestData | null>(null);
 
-  const {
-    data: enrollmentsForLessonResponse,
-    isLoading: isLoadingEnrollmentsForLesson,
-  } = useQuery<PaginatedResponse<EnrollAdminResponseDto>, Error, number[]>({
-    queryKey: cancelTabQueryKeys.enrollmentsByLesson(lessonIdFilter),
-    queryFn: async () => {
-      if (!lessonIdFilter)
-        return {
-          code: 0,
-          message: "",
-          success: true,
-          data: {
-            content: [],
-            pageable: {
-              pageNumber: 0,
-              pageSize: 0,
-              sort: { empty: true, sorted: false, unsorted: true },
-            },
-            totalElements: 0,
-            totalPages: 0,
-            last: true,
-            size: 0,
-            number: 0,
-            first: true,
-            numberOfElements: 0,
-            empty: true,
-          },
-        };
-      return adminApi.getAdminEnrollments({
-        lessonId: lessonIdFilter,
-        size: 10000,
-        page: 0,
-      });
-    },
-    select: (data) => data.data.content.map((e) => e.enrollId),
-    enabled: !!lessonIdFilter,
-  });
-  const lessonEnrollIds = enrollmentsForLessonResponse || [];
-
-  const bg = colorMode === "dark" ? "#1A202C" : "white";
-  const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
-  const borderColor = colorMode === "dark" ? "#2D3748" : "#E2E8F0";
-  const agGridTheme =
-    colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
-
-  const { data: allCancelRequestsData, isLoading: isLoadingAllCancelRequests } =
-    useQuery<
-      PaginatedResponse<CancelRequestAdminDto>,
-      Error,
-      CancelRequestData[]
-    >({
-      queryKey: cancelTabQueryKeys.cancelRequests("PENDING"),
-      queryFn: async () => {
-        return adminApi.getAdminCancelRequests({
-          size: 10000,
-          page: 0,
-          status: "PENDING",
-        });
-      },
-      select: (apiResponse): CancelRequestData[] => {
-        return apiResponse.data.content.map(
-          (dto: CancelRequestAdminDto): CancelRequestData => {
-            const paidAmountData = dto.paidAmount || {
-              lesson: dto.paid_amt || 0,
-              locker: (dto.paidAmount as any)?.lockerAmount || 0,
-              total: dto.paid_amt || 0,
-            };
-            const calculatedRefundData = dto.calculatedRefund || {
-              usedDays:
-                (dto.calculatedRefund as any)?.systemCalculatedUsedDays || 0,
-              manualUsedDays: (dto.calculatedRefund as any)?.manualUsedDays,
-              lessonUsageAmount:
-                (dto.calculatedRefund as any)?.lessonUsageAmount || 0,
-              lockerUsageAmount:
-                (dto.calculatedRefund as any)?.lockerUsageAmount || 0,
-              lessonPenalty: (dto.calculatedRefund as any)?.lessonPenalty || 0,
-              lockerPenalty: (dto.calculatedRefund as any)?.lockerPenalty || 0,
-              finalRefundAmount:
-                dto.calculated_refund_amt ||
-                (dto.calculatedRefund as any)?.finalRefundAmount ||
-                0,
-            };
-            return {
-              id: dto.requestId.toString(),
-              enrollId: dto.enrollId,
-              userName: dto.userName,
-              userLoginId: (dto as any).userLoginId || undefined,
-              userPhone: (dto as any).userPhone || undefined,
-              lessonTitle: dto.lessonTitle,
-              requestedAt: dto.requested_at || new Date().toISOString(),
-              reason: dto.reason,
-              lessonStartDate: dto.lessonStartDate,
-              usesLocker: dto.usesLocker,
-              paidAmount: paidAmountData as BackendPaymentDetails,
-              calculatedRefund:
-                calculatedRefundData as BackendCalculatedRefundDetails,
-              status: dto.status,
-              adminMemo: (dto as any).adminMemo || undefined,
-            };
-          }
-        );
-      },
+  const formatDate = useCallback((dateString: string | undefined | null) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
+  }, []);
 
-  const finalFilteredRequests = useMemo(() => {
-    if (!allCancelRequestsData) return [];
-    let dataToFilter = allCancelRequestsData;
-    if (lessonIdFilter) {
-      if (isLoadingEnrollmentsForLesson) return [];
-      if (!enrollmentsForLessonResponse || lessonEnrollIds.length === 0)
-        return [];
-      dataToFilter = dataToFilter.filter((req) =>
-        lessonEnrollIds.includes(req.enrollId)
+  const formatCurrency = useCallback(
+    (amount: number | undefined | null, showWon: boolean = true) => {
+      if (amount === undefined || amount === null) return "-";
+      const formatted = new Intl.NumberFormat("ko-KR").format(
+        Math.round(amount)
       );
-    }
-    if (filters.searchTerm) {
-      return dataToFilter.filter((req) => {
-        const searchTermLower = filters.searchTerm.toLowerCase();
-        return (
-          req.userName.toLowerCase().includes(searchTermLower) ||
-          (req.userLoginId &&
-            req.userLoginId.toLowerCase().includes(searchTermLower)) ||
-          (req.userPhone &&
-            req.userPhone.toLowerCase().includes(searchTermLower))
-        );
-      });
-    }
-    return dataToFilter;
-  }, [
-    allCancelRequestsData,
-    lessonIdFilter,
-    lessonEnrollIds,
-    filters.searchTerm,
-    isLoadingEnrollmentsForLesson,
-    enrollmentsForLessonResponse,
-  ]);
+      return showWon ? formatted + "원" : formatted;
+    },
+    []
+  );
+
+  const defaultColDef = useMemo<ColDef>(
+    () => ({
+      sortable: true,
+      resizable: true,
+      filter: false,
+      cellStyle: { fontSize: "13px", display: "flex", alignItems: "center" },
+    }),
+    []
+  );
 
   const handleOpenDialog = useCallback((request: CancelRequestData) => {
     setSelectedRequest(request);
@@ -283,47 +176,240 @@ export const CancellationRefundTab = ({
     [handleOpenDialog]
   );
 
-  const formatDate = (dateString: string | undefined | null) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatCurrency = (
-    amount: number | undefined | null,
-    showWon: boolean = true
-  ) => {
-    if (amount === undefined || amount === null) return "-";
-    const formatted = new Intl.NumberFormat("ko-KR").format(Math.round(amount));
-    return showWon ? formatted + "원" : formatted;
-  };
-
-  const defaultColDef = useMemo<ColDef>(
-    () => ({
-      sortable: true,
-      resizable: true,
-      filter: false,
-      cellStyle: { fontSize: "13px", display: "flex", alignItems: "center" },
-    }),
-    []
+  const colDefs = useMemo<ColDef<CancelRequestData>[]>(
+    () => [
+      {
+        headerName: "이름 (ID)",
+        valueGetter: (params) => {
+          if (!params.data) return "";
+          return `${params.data.userName}${
+            params.data.userLoginId ? ` (${params.data.userLoginId})` : ""
+          }`;
+        },
+        flex: 1,
+        minWidth: 120,
+        tooltipField: "userName",
+      },
+      { headerName: "강습명", field: "lessonTitle", flex: 1.5, minWidth: 180 },
+      {
+        headerName: "요청일시",
+        field: "requestedAt",
+        valueFormatter: (params) => formatDate(params.value),
+        width: 150,
+        minWidth: 130,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        },
+      },
+      {
+        headerName: "환불사유",
+        field: "reason",
+        flex: 2,
+        minWidth: 200,
+        tooltipField: "reason",
+        cellRenderer: (
+          params: ICellRendererParams<CancelRequestData, string>
+        ) => {
+          if (!params.value) return "-";
+          return params.value.length > 50
+            ? `${params.value.substring(0, 47)}...`
+            : params.value;
+        },
+      },
+      {
+        headerName: "상태",
+        field: "status",
+        cellRenderer: StatusCellRenderer,
+        width: 80,
+        minWidth: 80,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+      },
+      {
+        headerName: "검토",
+        cellRenderer: ActionCellRenderer,
+        width: 80,
+        minWidth: 70,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        pinned: "right",
+      },
+    ],
+    [formatDate]
   );
+
+  const {
+    data: allCancelRequestsData,
+    isLoading: isLoadingAllCancelRequests,
+    isError: isErrorAllCancelRequests,
+    error: errorAllCancelRequests,
+  } = useQuery<
+    PaginatedResponse<CancelRequestAdminDto>,
+    Error,
+    CancelRequestData[]
+  >({
+    queryKey: cancelTabQueryKeys.cancelRequests(
+      lessonIdFilter ? lessonIdFilter.toString() : "all"
+    ),
+    queryFn: async () => {
+      console.log(
+        "[QueryFn] Calling adminApi.getAdminCancelRequests with lessonId:",
+        lessonIdFilter
+      );
+      const params: { size: number; page: number; lessonId?: number } = {
+        size: 10000,
+        page: 0,
+      };
+      if (lessonIdFilter) {
+        params.lessonId = lessonIdFilter;
+      }
+      try {
+        const response = await adminApi.getAdminCancelRequests(params);
+        console.log(
+          "[QueryFn] Response from adminApi.getAdminCancelRequests:",
+          response
+        );
+        return response;
+      } catch (e) {
+        console.error(
+          "[QueryFn] Error calling adminApi.getAdminCancelRequests:",
+          e
+        );
+        throw e;
+      }
+    },
+    select: (apiResponse): CancelRequestData[] => {
+      console.log("[SelectFn] Received apiResponse:", apiResponse);
+      if (!apiResponse || !apiResponse.data || !apiResponse.data.content) {
+        console.error("[SelectFn] Invalid apiResponse structure", apiResponse);
+        return [];
+      }
+      try {
+        const mappedData = apiResponse.data.content.map(
+          (dto: CancelRequestAdminDto): CancelRequestData => {
+            const paidAmountData: UIPaymentDetails = {
+              lesson: dto.paymentInfo?.lessonPaidAmt ?? 0,
+              locker: dto.paymentInfo?.lockerPaidAmt ?? 0,
+              total: dto.paymentInfo?.paidAmt ?? 0,
+            };
+            const calculatedRefundData: UICalculatedRefundDetails = {
+              usedDays:
+                dto.calculatedRefundDetails?.effectiveUsedDays ??
+                dto.calculatedRefundDetails?.systemCalculatedUsedDays ??
+                0,
+              manualUsedDays:
+                dto.calculatedRefundDetails?.manualUsedDays === null
+                  ? undefined
+                  : dto.calculatedRefundDetails?.manualUsedDays,
+              lessonUsageAmount: dto.calculatedRefundDetails?.lessonUsageAmount,
+              lockerUsageAmount: dto.calculatedRefundDetails?.lockerUsageAmount,
+              lessonPenalty: dto.calculatedRefundDetails?.lessonPenalty,
+              lockerPenalty: dto.calculatedRefundDetails?.lockerPenalty,
+              finalRefundAmount:
+                dto.calculatedRefundAmtByNewPolicy ??
+                dto.calculatedRefundDetails?.finalRefundAmount ??
+                0,
+            };
+            return {
+              id:
+                dto.requestId !== undefined && dto.requestId !== null
+                  ? dto.requestId.toString()
+                  : `fallback_id_${dto.enrollId || Math.random()}`,
+              enrollId: dto.enrollId,
+              userName: dto.userName,
+              userLoginId: dto.userLoginId,
+              userPhone: dto.userPhone,
+              lessonTitle: dto.lessonTitle,
+              requestedAt: dto.requestedAt,
+              reason: dto.userReason,
+              lessonStartDate: dto.lessonStartDate,
+              usesLocker: dto.usesLocker,
+              paidAmount: paidAmountData,
+              calculatedRefund: calculatedRefundData,
+              status: dto.status,
+              adminMemo: dto.adminComment,
+            };
+          }
+        );
+        console.log("[SelectFn] Mapped data:", mappedData);
+        return mappedData;
+      } catch (e) {
+        console.error("[SelectFn] Error during mapping:", e);
+        throw e;
+      }
+    },
+  });
+
+  console.log(
+    "Query State for Cancel Requests: isLoading:",
+    isLoadingAllCancelRequests,
+    "isError:",
+    isErrorAllCancelRequests,
+    "error:",
+    errorAllCancelRequests,
+    "data:",
+    allCancelRequestsData
+  );
+
+  const finalFilteredRequests = useMemo(() => {
+    console.log(
+      "[finalFilteredRequests] Start. allCancelRequestsData:",
+      allCancelRequestsData
+    );
+    console.log(
+      "[finalFilteredRequests] filters.searchTerm:",
+      filters.searchTerm
+    );
+
+    if (!allCancelRequestsData || allCancelRequestsData.length === 0) {
+      console.log(
+        "[finalFilteredRequests] No allCancelRequestsData, returning []."
+      );
+      return [];
+    }
+    let dataToFilter = [...allCancelRequestsData];
+
+    if (filters.searchTerm) {
+      const searchTermLower = filters.searchTerm.toLowerCase();
+      dataToFilter = dataToFilter.filter((req) => {
+        return (
+          req.userName.toLowerCase().includes(searchTermLower) ||
+          (req.userLoginId &&
+            req.userLoginId.toLowerCase().includes(searchTermLower)) ||
+          (req.userPhone &&
+            req.userPhone.toLowerCase().includes(searchTermLower))
+        );
+      });
+      console.log(
+        "[finalFilteredRequests] After search filter, dataToFilter:",
+        dataToFilter
+      );
+    }
+    console.log(
+      "[finalFilteredRequests] End, returning dataToFilter:",
+      dataToFilter
+    );
+    return dataToFilter;
+  }, [allCancelRequestsData, filters.searchTerm]);
+
+  const bg = colorMode === "dark" ? "#1A202C" : "white";
+  const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
+  const borderColor = colorMode === "dark" ? "#2D3748" : "#E2E8F0";
+  const agGridTheme =
+    colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
   const handleExportGrid = () => {
     gridRef.current?.api.exportDataAsCsv();
   };
 
-  if (lessonIdFilter && isLoadingEnrollmentsForLesson) {
-    return (
-      <Flex justify="center" align="center" h="200px">
-        <Spinner size="xl" />
-      </Flex>
-    );
-  }
   if (isLoadingAllCancelRequests && !allCancelRequestsData) {
     return (
       <Flex justify="center" align="center" h="200px">
@@ -331,99 +417,43 @@ export const CancellationRefundTab = ({
       </Flex>
     );
   }
-  if (!lessonIdFilter && !filters.searchTerm) {
-    return (
-      <Box p={4} textAlign="center">
-        <Text>
-          강습을 선택하거나 검색어를 입력하면 취소/환불 목록이 표시됩니다.
-        </Text>
-      </Box>
-    );
-  }
+
   if (
-    lessonIdFilter &&
-    !isLoadingEnrollmentsForLesson &&
-    (!enrollmentsForLessonResponse || lessonEnrollIds.length === 0)
+    !lessonIdFilter &&
+    !filters.searchTerm &&
+    (!allCancelRequestsData || allCancelRequestsData.length === 0)
   ) {
     return (
       <Box p={4} textAlign="center">
         <Text>
-          선택된 강습에 대한 수강정보가 없습니다. 따라서 취소/환불 요청도
-          없습니다.
+          표시할 취소/환불 요청이 없습니다. (강습을 선택하거나 검색어를
+          입력하세요)
         </Text>
       </Box>
     );
   }
+
   if (finalFilteredRequests.length === 0) {
-    if (lessonIdFilter)
+    if (lessonIdFilter) {
       return (
         <Box p={4} textAlign="center">
           <Text>선택된 강습에 대한 취소/환불 요청이 없습니다.</Text>
         </Box>
       );
-    if (filters.searchTerm)
+    }
+    if (filters.searchTerm) {
       return (
         <Box p={4} textAlign="center">
           <Text>검색 결과에 해당하는 취소/환불 요청이 없습니다.</Text>
         </Box>
       );
+    }
     return (
       <Box p={4} textAlign="center">
         <Text>표시할 취소/환불 요청이 없습니다.</Text>
       </Box>
     );
   }
-
-  const colDefs = useMemo<ColDef<CancelRequestData>[]>(
-    () => [
-      { headerName: "이름", field: "userName", flex: 1, minWidth: 120 },
-      { headerName: "핸드폰 번호", field: "userPhone", flex: 1, minWidth: 130 },
-      {
-        headerName: "요청일시",
-        field: "requestedAt",
-        valueFormatter: (
-          params: ValueFormatterParams<CancelRequestData, string | null>
-        ) => formatDate(params.value),
-        width: 180,
-      },
-      {
-        headerName: "사용일수",
-        valueGetter: (params) => {
-          const d = params.data;
-          if (!d) return "";
-          return `${
-            d.calculatedRefund.manualUsedDays ?? d.calculatedRefund.usedDays
-          }일`;
-        },
-        width: 100,
-        cellStyle: { justifyContent: "center" },
-      },
-      {
-        headerName: "환불예정액",
-        field: "calculatedRefund.finalRefundAmount",
-        valueFormatter: (
-          params: ValueFormatterParams<CancelRequestData, number | null>
-        ) => formatCurrency(params.value),
-        width: 130,
-        cellStyle: { justifyContent: "flex-end" },
-      },
-      {
-        headerName: "상태",
-        field: "status",
-        cellRenderer: StatusCellRenderer,
-        width: 100,
-        cellStyle: { justifyContent: "center" },
-      },
-      {
-        headerName: "관리",
-        cellRenderer: ActionCellRenderer,
-        width: 100,
-        pinned: "right",
-        cellStyle: { justifyContent: "center" },
-      },
-    ],
-    [formatDate, formatCurrency]
-  );
 
   return (
     <Box h="full" display="flex" flexDirection="column">
@@ -436,29 +466,31 @@ export const CancellationRefundTab = ({
         onExport={handleExportGrid}
         onSearchButtonClick={() =>
           queryClient.invalidateQueries({
-            queryKey: cancelTabQueryKeys.cancelRequests(),
+            queryKey: cancelTabQueryKeys.cancelRequests(
+              lessonIdFilter ? lessonIdFilter.toString() : "all"
+            ),
           })
         }
         showSearchButton={true}
       />
 
-      <Card.Root mb={6} p={4}>
-        <Card.Body>
-          <Flex align="center" gap={4}>
-            <Box>
+      <Card.Root my={2}>
+        <Card.Body p={3}>
+          <Flex justify="space-around" align="center" gap={4}>
+            <Box textAlign="center">
               <Text fontSize="sm" color={colors.text.secondary}>
                 {lessonIdFilter ? "선택 강습의 " : ""}
-                {filters.searchTerm ? "검색된 " : ""}대기 중인 취소 요청
+                {filters.searchTerm ? "검색된 " : ""}취소/환불 요청
               </Text>
               <Text
-                fontSize="2xl"
+                fontSize="xl"
                 fontWeight="bold"
                 color={colors.primary.default}
               >
                 {finalFilteredRequests.length}건
               </Text>
             </Box>
-            <Box>
+            <Box textAlign="center">
               <Text fontSize="sm" color={colors.text.secondary}>
                 {lessonIdFilter ? "선택 강습의 " : ""}
                 {filters.searchTerm ? "검색된 " : ""}예상 환불 총액

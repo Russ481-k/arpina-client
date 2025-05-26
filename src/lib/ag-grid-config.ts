@@ -8,8 +8,8 @@ import {
   NumberEditorModule,
   ValidationModule,
   themeQuartz,
-  colorSchemeLightWarm,
-  colorSchemeDarkBlue,
+  colorPaletteLightWarm,
+  colorPaletteDarkBlue,
   CellStyleModule,
 } from "ag-grid-community";
 
@@ -25,9 +25,9 @@ ModuleRegistry.registerModules([
 ]);
 
 // Create custom themes with additional styling
-export const themeLightMode = themeQuartz.withPart(colorSchemeLightWarm);
+export const themeLightMode = themeQuartz.withPart(colorPaletteLightWarm);
 
-export const themeDarkMode = themeQuartz.withPart(colorSchemeDarkBlue);
+export const themeDarkMode = themeQuartz.withPart(colorPaletteDarkBlue);
 
 // 기본 Grid 옵션
 export const defaultGridOptions: GridOptions = {

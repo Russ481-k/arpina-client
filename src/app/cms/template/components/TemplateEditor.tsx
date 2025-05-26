@@ -265,7 +265,7 @@ export function TemplateEditor({
 
           <Button
             type="submit"
-            colorScheme="blue"
+            colorPalette="blue"
             loading={isSubmitting || isLoading}
             width="100%"
           >

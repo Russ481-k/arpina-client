@@ -30,7 +30,8 @@ import {
 } from "ag-grid-community";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { Tag } from "@chakra-ui/react"; // For PayStatusCellRenderer
+import { PayStatus } from "@/lib/utils/statusUtils"; // Import the centralized PayStatus
+import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge"; // Import the common badge
 
 // Re-define or import EnrollmentData if it's not too complex, or pass as generic
 // For simplicity, let's redefine a minimal version here or expect it from props.
@@ -39,12 +40,7 @@ interface EnrollmentData {
   enrollId: number;
   lessonId: number;
   lessonTitle: string;
-  payStatus:
-    | "PAID"
-    | "UNPAID"
-    | "PAYMENT_TIMEOUT"
-    | "REFUNDED"
-    | "CANCELED_UNPAID";
+  payStatus: PayStatus; // Use the imported PayStatus type
   usesLocker: boolean;
   userName: string;
   userLoginId: string;
@@ -62,35 +58,16 @@ const enrollmentQueryKeys = {
 };
 
 // PayStatusCellRenderer (copied from EnrollmentManagementTab, consider moving to a shared file)
-const PayStatusCellRenderer: React.FC<
-  ICellRendererParams<EnrollmentData, EnrollmentData["payStatus"]>
-> = (params) => {
-  if (!params.value) return null;
-  const statusConfig = {
-    PAID: { colorPalette: "green", label: "결제완료" },
-    UNPAID: { colorPalette: "yellow", label: "미결제" },
-    PAYMENT_TIMEOUT: { colorPalette: "gray", label: "결제만료" },
-    REFUNDED: { colorPalette: "red", label: "환불" },
-    CANCELED_UNPAID: { colorPalette: "gray", label: "취소" },
-  };
-  const config = statusConfig[params.value as keyof typeof statusConfig] || {
-    colorPalette: "gray",
-    label: params.value,
-  };
-  return (
-    <Tag.Root colorPalette={config.colorPalette} size="sm">
-      <Tag.Label>{config.label}</Tag.Label>
-    </Tag.Root>
-  );
-};
+// REMOVE the local PayStatusCellRenderer as we will use CommonPayStatusBadge
 
 // UsesLockerCellRenderer (copied, consider moving to shared)
 const UsesLockerCellRenderer: React.FC<
-  ICellRendererParams<EnrollmentData, boolean>
+  ICellRendererParams<EnrollmentData, boolean> // Reverted to boolean type for usesLocker
 > = (params) => {
+  // Reverted to original Badge logic for usesLocker
   return (
     <Badge
-      colorScheme={params.value ? "blue" : "gray"}
+      colorPalette={params.value ? "blue" : "gray"}
       variant="outline"
       size="sm"
     >
@@ -169,8 +146,15 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
       {
         headerName: "결제상태",
         field: "payStatus",
-        cellRenderer: PayStatusCellRenderer,
-        width: 90,
+        // cellRenderer: PayStatusCellRenderer, // Remove this
+        cellRenderer: (
+          params: ICellRendererParams<EnrollmentData, PayStatus>
+        ) => (
+          <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
+            <CommonPayStatusBadge status={params.value} />
+          </Flex>
+        ), // Use CommonPayStatusBadge
+        width: 100, // Adjusted width
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -283,7 +267,7 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
               <Button variant="outline" onClick={onClose}>
                 취소
               </Button>
-              <Button colorScheme="blue" onClick={handleUserMemoSave}>
+              <Button colorPalette="blue" onClick={handleUserMemoSave}>
                 저장
               </Button>
             </DialogFooter>

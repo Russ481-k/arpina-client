@@ -36,7 +36,7 @@ export function FloatingButton() {
       bottom={8}
       right={8}
       size="lg"
-      colorScheme="blue"
+      colorPalette="blue"
       bg={colors.bg}
       color={colors.text.primary}
       borderRadius="full"

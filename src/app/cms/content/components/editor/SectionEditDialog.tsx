@@ -172,7 +172,7 @@ export function SectionEditDialog({
                   취소
                 </Button>
               </Dialog.ActionTrigger>
-              <Button colorScheme="blue" onClick={handleSave}>
+              <Button colorPalette="blue" onClick={handleSave}>
                 저장
               </Button>
             </Dialog.Footer>

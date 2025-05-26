@@ -333,7 +333,7 @@ function LoginForm() {
                 </Checkbox.Root>
                 <Button
                   type="submit"
-                  colorScheme="blue"
+                  colorPalette="blue"
                   size="lg"
                   fontSize="md"
                   fontWeight="semibold"

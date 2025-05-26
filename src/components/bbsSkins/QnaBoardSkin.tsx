@@ -44,7 +44,7 @@ const AVAILABLE_PAGE_SIZES_QNA = [10, 20, 50];
 const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
   const content =
     params.data && params.data.no === 0 ? (
-      <Badge colorScheme="orange" variant="subtle">
+      <Badge colorPalette="orange" variant="subtle">
         공지
       </Badge>
     ) : (
@@ -114,16 +114,16 @@ const dateFormatter = (params: ValueFormatterParams<Post>) => {
 // New StatusRenderer for Q&A
 const StatusRenderer = (params: ICellRendererParams<Post>) => {
   const status = params.data?.status;
-  let badgeColorScheme = "gray";
+  let badgecolorPalette = "gray";
   let statusText = status || "정보 없음";
 
   if (status === "답변완료" || status?.toUpperCase() === "ANSWERED") {
     // Handle variations
-    badgeColorScheme = "green";
+    badgecolorPalette = "green";
     statusText = "답변완료";
   } else if (status === "답변대기" || status?.toUpperCase() === "PENDING") {
     // Handle variations
-    badgeColorScheme = "orange";
+    badgecolorPalette = "orange";
     statusText = "답변대기";
   }
   // Add more specific status checks if needed, e.g., based on post.parentNttId for replies
@@ -131,7 +131,7 @@ const StatusRenderer = (params: ICellRendererParams<Post>) => {
   return (
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
       <Badge
-        colorScheme={badgeColorScheme}
+        colorPalette={badgecolorPalette}
         variant="subtle"
         px={2}
         py={0.5}

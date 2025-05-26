@@ -674,7 +674,7 @@ const ApplicationConfirmPage = () => {
                 if (typeof d.checked === "boolean")
                   setSelectedLocker(d.checked);
               }}
-              colorScheme={primaryDefault}
+              colorPalette={primaryDefault}
             >
               <Checkbox.HiddenInput />
               <Checkbox.Control

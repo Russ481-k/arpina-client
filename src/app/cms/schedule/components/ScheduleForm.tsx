@@ -270,7 +270,7 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
                 <Button
                   onClick={onCreateNew}
                   variant="outline"
-                  colorScheme="blue"
+                  colorPalette="blue"
                   _hover={{
                     transform: "translateY(-1px)",
                   }}

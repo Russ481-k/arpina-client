@@ -161,7 +161,7 @@ export default function ArticleDetailPage() {
         </Heading>
         <Text color="red.500">{error}</Text>
         <NextLink href={`/bbs/${id || ""}`} passHref>
-          <Button mt={6} colorScheme="gray" size="xs">
+          <Button mt={6} colorPalette="gray" size="xs">
             Back to List
           </Button>
         </NextLink>
@@ -177,7 +177,7 @@ export default function ArticleDetailPage() {
         </Heading>
         <Text>The requested article could not be found.</Text>
         <NextLink href={`/bbs/${id || ""}`} passHref>
-          <Button mt={6} colorScheme="gray" size="xs">
+          <Button mt={6} colorPalette="gray" size="xs">
             Back to List
           </Button>
         </NextLink>
@@ -287,12 +287,12 @@ export default function ArticleDetailPage() {
 
       <Flex justify="flex-end" gap={3} mt={4}>
         {canEdit && (
-          <Button colorScheme="blue" variant="outline" size="xs">
+          <Button colorPalette="blue" variant="outline" size="xs">
             수정
           </Button>
         )}
         {canDelete && (
-          <Button colorScheme="red" size="xs">
+          <Button colorPalette="red" size="xs">
             삭제
           </Button>
         )}

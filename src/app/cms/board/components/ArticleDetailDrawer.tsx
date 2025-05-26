@@ -205,7 +205,7 @@ export const ArticleDetailDrawer = ({
               {article && (
                 <Flex justify="flex-end" gap={2} mt={6}>
                   <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     variant="solid"
                     size="xs"
                     onClick={handleWriteClick}
@@ -214,7 +214,7 @@ export const ArticleDetailDrawer = ({
                     글쓰기
                   </Button>
                   <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     variant="outline"
                     size="xs"
                     onClick={handleEditClick}
@@ -223,7 +223,7 @@ export const ArticleDetailDrawer = ({
                     수정
                   </Button>
                   <Button
-                    colorScheme="red"
+                    colorPalette="red"
                     variant="solid"
                     size="xs"
                     onClick={handleDeleteClick}
