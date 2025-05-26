@@ -4,11 +4,7 @@ import React, { useState, useMemo, useRef } from "react";
 import { Box, Text, Stack, Badge, Flex } from "@chakra-ui/react";
 import { CreditCardIcon } from "lucide-react"; // Keep if used by a renderer
 import { AgGridReact } from "ag-grid-react";
-import type {
-  ColDef,
-  ICellRendererParams,
-  ValueFormatterParams, // Added for consistency, though not used in this snippet directly
-} from "ag-grid-community";
+import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 // import type { PaymentData } from "@/types/models"; // Assuming PaymentData is moved to a shared model type definition
 
@@ -288,8 +284,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             setPaymentFilters((prev) => ({ ...prev, endDate: e.target.value })),
         }}
         onSearchButtonClick={() => {
-          // Data is filtered client-side in this example via useMemo.
-          // If data were fetched server-side, this would trigger a refetch.
           console.log("Search payments with filters:", paymentFilters);
         }}
         showSearchButton={true}

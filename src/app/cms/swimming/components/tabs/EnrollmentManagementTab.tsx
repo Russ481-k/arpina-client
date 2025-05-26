@@ -57,11 +57,10 @@ import {
   type RowClickedEvent,
   type CellClickedEvent,
 } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
-import "@/styles/ag-grid-custom.css";
+
 import { useColorMode } from "@/components/ui/color-mode";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
+import { toaster } from "@/components/ui/toaster";
 
 // Import the new dialog components
 import { UserMemoDialog } from "./enrollmentManagement/UserMemoDialog";
@@ -106,6 +105,7 @@ const enrollmentQueryKeys = {
   temporaryCreate: () => [...enrollmentQueryKeys.all, "temporaryCreate"],
   userHistory: (userLoginId?: string) =>
     [...enrollmentQueryKeys.all, "userHistory", userLoginId] as const,
+  cancelRequests: ["adminCancelRequests"] as const,
 };
 
 const PayStatusCellRenderer: React.FC<
@@ -290,7 +290,7 @@ export const EnrollmentManagementTab = ({
         headerName: "이름",
         field: "userName",
         flex: 1,
-        minWidth: 100,
+        minWidth: 80,
       },
       {
         headerName: "핸드폰 번호",
@@ -313,7 +313,7 @@ export const EnrollmentManagementTab = ({
         headerName: "사물함",
         field: "usesLocker",
         cellRenderer: UsesLockerCellRenderer,
-        width: 70,
+        width: 90,
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -427,20 +427,57 @@ export const EnrollmentManagementTab = ({
     { value: "CANCELED_UNPAID", label: "취소" },
   ];
 
-  const handleAdminCancel = (enrollId: number) => {
-    console.log("관리자 취소:", enrollId);
-  };
+  const adminCancelEnrollmentMutation = useMutation<
+    EnrollAdminResponseDto,
+    Error,
+    { enrollId: number; reason: string }
+  >({
+    mutationFn: ({ enrollId, reason }) =>
+      adminApi.adminCancelEnrollment(enrollId, { reason }),
+    onSuccess: (data) => {
+      toaster.success({
+        title: "신청 취소 성공",
+        description: `신청 ID ${data.enrollId}이(가) 취소되었습니다.`,
+      });
+      queryClient.invalidateQueries({
+        queryKey: enrollmentQueryKeys.list(lessonIdFilter, {
+          payStatus: filters.payStatus || undefined,
+        }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: enrollmentQueryKeys.cancelRequests,
+      });
+    },
+    onError: (error, variables) => {
+      toaster.error({
+        title: "신청 취소 실패",
+        description:
+          error.message || `신청 ID ${variables.enrollId} 취소 중 오류 발생`,
+      });
+    },
+  });
 
-  const handleDiscountApproval = (
-    enrollId: number,
-    status: "APPROVED" | "DENIED"
-  ) => {
-    console.log("할인 승인/거절:", enrollId, status);
-  };
+  const handleAdminCancel = useCallback(
+    (enrollId: number) => {
+      const reason = window.prompt("취소 사유를 입력해주세요 (선택 사항):");
+      adminCancelEnrollmentMutation.mutate({
+        enrollId,
+        reason: reason || "관리자 직접 취소",
+      });
+    },
+    [adminCancelEnrollmentMutation]
+  );
 
-  const openMemoDialog = (data: EnrollmentData) => {
+  const handleDiscountApproval = useCallback(
+    (enrollId: number, status: "APPROVED" | "DENIED") => {
+      console.log("할인 승인/거절:", enrollId, status);
+    },
+    []
+  );
+
+  const openMemoDialog = useCallback((data: EnrollmentData) => {
     setSelectedUserForMemo(data);
-  };
+  }, []);
 
   const closeMemoDialog = () => {
     setSelectedUserForMemo(null);
@@ -605,7 +642,6 @@ export const EnrollmentManagementTab = ({
           headerHeight={36}
           rowHeight={40}
           context={agGridContext}
-          cellSelection={true}
           getRowStyle={() => ({
             color: textColor,
             background: bg,

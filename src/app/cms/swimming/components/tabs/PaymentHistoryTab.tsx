@@ -10,8 +10,7 @@ import {
 import { useColors } from "@/styles/theme";
 // import { AgGridReact } from "ag-grid-react"; // Moved to sub-components
 // import type { ColDef, ModuleRegistry, AllCommunityModule, ICellRendererParams } from "ag-grid-community"; // Moved
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
+
 import "@/styles/ag-grid-custom.css";
 import { useColorMode } from "@/components/ui/color-mode";
 // import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar"; // Moved to sub-components

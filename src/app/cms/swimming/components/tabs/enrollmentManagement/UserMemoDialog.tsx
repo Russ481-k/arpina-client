@@ -29,8 +29,7 @@ import {
   type ValueFormatterParams,
 } from "ag-grid-community";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminApi } from "@/lib/api/adminApi"; // Assuming adminApi is correctly structured for this
-import type { EnrollAdminResponseDto, PaginatedResponse } from "@/types/api"; // Assuming types
+
 import { Tag } from "@chakra-ui/react"; // For PayStatusCellRenderer
 
 // Re-define or import EnrollmentData if it's not too complex, or pass as generic
