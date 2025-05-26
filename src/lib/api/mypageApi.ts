@@ -66,8 +66,8 @@ interface ApiError extends Error {
 }
 
 // --- API Base URL ---
-const MYPAGE_API_BASE = "/api/v1/mypage";
-const PUBLIC_API_BASE_LOCKERS = "/api/v1/lockers";
+const MYPAGE_API_BASE = "/mypage";
+const PUBLIC_API_BASE_LOCKERS = "/lockers";
 
 // --- API Object ---
 export const mypageApi = {
@@ -111,12 +111,14 @@ export const mypageApi = {
   ),
 
   // 3.3 수영장 신청 & 결제 (Enroll)
-  getEnrollments: withAuthRedirect(async (): Promise<MypageEnrollDto[]> => {
-    const response = await privateApi.get<MypageEnrollDto[]>(
-      `${MYPAGE_API_BASE}/enroll`
-    );
-    return response.data;
-  }),
+  getEnrollments: withAuthRedirect(
+    async (): Promise<{ content: MypageEnrollDto[] }> => {
+      const response = await privateApi.get<{ content: MypageEnrollDto[] }>(
+        `${MYPAGE_API_BASE}/enroll`
+      );
+      return response.data;
+    }
+  ),
   getEnrollmentById: withAuthRedirect(
     async (id: number): Promise<MypageEnrollDto> => {
       const response = await privateApi.get<MypageEnrollDto>(

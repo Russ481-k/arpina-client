@@ -492,10 +492,24 @@ export interface PaymentConfirmResponseDto {
 export interface MypageEnrollDto {
   enrollId: number;
   lesson: {
+    lessonId: number;
     title: string;
+    name: string;
     period: string;
-    time: string;
+    startDate: string;
+    endDate: string;
+    time: string | null;
+    days: string;
+    timePrefix: string;
+    timeSlot: string;
+    capacity: number;
+    remaining: number;
     price: number;
+    status: string;
+    instructor: string;
+    location: string;
+    reservationId: string;
+    receiptId: string;
   };
   status:
     | "UNPAID"

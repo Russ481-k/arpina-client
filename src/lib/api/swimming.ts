@@ -46,42 +46,66 @@ export const swimmingKeys = {
 interface BackendLessonDTO {
   lessonId: number;
   title: string;
+  displayName: string;
   startDate: string;
   endDate: string;
+  days: string;
+  timePrefix: string;
+  timeSlot: string;
   capacity: number;
-  maleLockerCap: number;
-  femaleLockerCap: number;
+  remaining: number;
   price: number;
-  status: string; // 'OPEN', 'CLOSED', 'ONGOING', 'COMPLETED' 등
+  status: string; // Assumed to be frontend-friendly like "접수중"
+  instructorName: string;
+  locationName: string;
+  registrationStartDateTime: string;
+  registrationEndDateTime: string;
 }
+
+// Helper to format datetime strings "YYYY-MM-DD HH:mm:ss" to "YYYY.MM.DD HH:mm"
+const formatDisplayDateTime = (dateTimeString: string): string => {
+  if (!dateTimeString) return "정보 없음";
+  try {
+    const [date, time] = dateTimeString.split(" ");
+    if (!date || !time) return dateTimeString;
+    const dateParts = date.split("-");
+    const timeParts = time.split(":");
+    if (dateParts.length !== 3 || timeParts.length < 2) return dateTimeString;
+
+    return `${dateParts.join(".")} ${timeParts[0]}:${timeParts[1]}`;
+  } catch (error) {
+    console.error("Error formatting dateTimeString:", dateTimeString, error);
+    return dateTimeString; // Fallback to original string on error
+  }
+};
 
 // 백엔드 응답을 프론트엔드 형식으로 변환하는 함수
 const mapLessonData = (backendLesson: BackendLessonDTO): LessonDTO => {
-  // 상태 매핑
-  const statusMap: Record<string, string> = {
-    OPEN: "접수중",
-    CLOSED: "접수마감",
-    ONGOING: "수강중",
-    COMPLETED: "수강종료",
-  };
+  // The backend 'status' field (e.g., "접수중") is now assumed to be directly usable by LessonCard.
+  // The old statusMap can be removed if backend statuses are always frontend-friendly.
+  // For now, we map directly. If specific transformations are needed, statusMap can be reintroduced.
 
   return {
     id: backendLesson.lessonId,
     title: backendLesson.title,
-    name: "힐링수영반", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
-    startDate: formatDate(backendLesson.startDate),
-    endDate: formatDate(backendLesson.endDate),
-    timeSlot: "06:00~06:50", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
-    timePrefix: "오전", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
-    days: "(월,화,수,목,금)", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
+    name: backendLesson.displayName, // Using displayName from backend
+    startDate: formatDate(backendLesson.startDate), // Uses existing YY년MM월DD일 format
+    endDate: formatDate(backendLesson.endDate), // Uses existing YY년MM월DD일 format
+    timeSlot: backendLesson.timeSlot,
+    timePrefix: backendLesson.timePrefix,
+    days: backendLesson.days,
     capacity: backendLesson.capacity,
-    remaining: 10, // 기본값 설정 또는 백엔드에서 제공되면 업데이트
+    remaining: backendLesson.remaining, // Directly use 'remaining' from API (available spots)
     price: backendLesson.price,
-    status: statusMap[backendLesson.status] || backendLesson.status,
-    reservationId: "2025.04.17 13:00:00부터", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
-    receiptId: "2025.04.20 18:00:00까지", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
-    instructor: "성인(온라인)", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
-    location: "아르피나 수영장", // 기본값 설정 또는 백엔드에서 제공되면 업데이트
+    status: backendLesson.status, // Directly using backend status
+    reservationId: `${formatDisplayDateTime(
+      backendLesson.registrationStartDateTime
+    )}부터`,
+    receiptId: `${formatDisplayDateTime(
+      backendLesson.registrationEndDateTime
+    )}까지`,
+    instructor: backendLesson.instructorName,
+    location: backendLesson.locationName,
   };
 };
 

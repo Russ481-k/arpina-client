@@ -58,7 +58,6 @@ export interface Step3UserInfoRef {
 
 const initialPasswordCriteria = {
   minLength: false,
-  uppercase: false,
   lowercase: false,
   number: false,
   specialChar: false,
@@ -242,7 +241,6 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
 
       const criteria = {
         minLength: password.length >= 8,
-        uppercase: /[A-Z]/.test(password),
         lowercase: /[a-z]/.test(password),
         number: /[0-9]/.test(password),
         specialChar: /[^A-Za-z0-9]/.test(password),
@@ -594,17 +592,13 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
             isMet={passwordCriteriaMet.minLength}
           />
           <PasswordTooltipChecklistItem
-            label="영문 대문자 포함"
-            isMet={passwordCriteriaMet.uppercase}
-          />{" "}
-          <PasswordTooltipChecklistItem
             label="영문 소문자 포함"
             isMet={passwordCriteriaMet.lowercase}
-          />{" "}
+          />
           <PasswordTooltipChecklistItem
             label="숫자 포함"
             isMet={passwordCriteriaMet.number}
-          />{" "}
+          />
           <PasswordTooltipChecklistItem
             label="특수문자 포함"
             isMet={passwordCriteriaMet.specialChar}
@@ -734,6 +728,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                       <PasswordStrengthMeter
                         value={passwordStrength}
                         flex={1}
+                        max={4}
                       />
                     )}
                   </Stack>
