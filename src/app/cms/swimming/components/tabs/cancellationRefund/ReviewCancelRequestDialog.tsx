@@ -38,9 +38,6 @@ interface UICalculatedRefundDetails {
   usedDays: number;
   manualUsedDays?: number;
   lessonUsageAmount?: number;
-  lockerUsageAmount?: number;
-  lessonPenalty?: number;
-  lockerPenalty?: number;
   finalRefundAmount: number;
 }
 
@@ -112,28 +109,23 @@ export const ReviewCancelRequestDialog: React.FC<
         `Mocking API call to calculateRefundPreview for enrollId: ${enrollId} with manualUsedDays: ${manualUsedDays}`
       );
       await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const lessonPaidAmount = selectedRequest?.paidAmount.lesson || 0;
+      const effectiveUsedDays =
+        manualUsedDays ?? selectedRequest?.calculatedRefund.usedDays ?? 0;
+
+      const calculatedLessonUsageAmount = effectiveUsedDays * 3500;
+
+      const calculatedFinalRefundAmount = Math.max(
+        0,
+        lessonPaidAmount - calculatedLessonUsageAmount
+      );
+
       const mockPreviewResponse: UICalculatedRefundDetails = {
-        usedDays:
-          manualUsedDays || selectedRequest?.calculatedRefund.usedDays || 0,
+        usedDays: selectedRequest?.calculatedRefund.usedDays || 0,
         manualUsedDays: manualUsedDays,
-        lessonUsageAmount:
-          ((manualUsedDays || 0) * (selectedRequest?.paidAmount.lesson || 0)) /
-          30, // Example
-        lockerUsageAmount:
-          ((manualUsedDays || 0) * (selectedRequest?.paidAmount.locker || 0)) /
-          30, // Example
-        lessonPenalty: (selectedRequest?.paidAmount.lesson || 0) * 0.1, // Example
-        lockerPenalty: (selectedRequest?.paidAmount.locker || 0) * 0.1, // Example
-        finalRefundAmount: Math.max(
-          0,
-          (selectedRequest?.paidAmount.total || 0) -
-            (manualUsedDays || 0) *
-              ((selectedRequest?.paidAmount.lesson || 0) / 30) -
-            (manualUsedDays || 0) *
-              ((selectedRequest?.paidAmount.locker || 0) / 30) -
-            (selectedRequest?.paidAmount.lesson || 0) * 0.1 -
-            (selectedRequest?.paidAmount.locker || 0) * 0.1
-        ),
+        lessonUsageAmount: calculatedLessonUsageAmount,
+        finalRefundAmount: calculatedFinalRefundAmount,
       };
       return {
         success: true,
@@ -410,37 +402,6 @@ export const ReviewCancelRequestDialog: React.FC<
                                 )}
                               </Text>
                             </Flex>
-                            {selectedRequest.usesLocker && (
-                              <Flex justify="space-between">
-                                <Text>사물함료 사용액</Text>
-                                <Text>
-                                  -
-                                  {formatCurrency(
-                                    displayRefundDetails.lockerUsageAmount
-                                  )}
-                                </Text>
-                              </Flex>
-                            )}
-                            <Flex justify="space-between">
-                              <Text>강습료 위약금</Text>
-                              <Text>
-                                -
-                                {formatCurrency(
-                                  displayRefundDetails.lessonPenalty
-                                )}
-                              </Text>
-                            </Flex>
-                            {selectedRequest.usesLocker && (
-                              <Flex justify="space-between">
-                                <Text>사물함료 위약금</Text>
-                                <Text>
-                                  -
-                                  {formatCurrency(
-                                    displayRefundDetails.lockerPenalty
-                                  )}
-                                </Text>
-                              </Flex>
-                            )}
                             <Box
                               borderTop="1px"
                               borderColor="gray.300"

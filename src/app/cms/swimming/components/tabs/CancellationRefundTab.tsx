@@ -43,9 +43,6 @@ interface UICalculatedRefundDetails {
   usedDays: number;
   manualUsedDays?: number;
   lessonUsageAmount?: number;
-  lockerUsageAmount?: number;
-  lessonPenalty?: number;
-  lockerPenalty?: number;
   finalRefundAmount: number;
 }
 
@@ -310,9 +307,6 @@ export const CancellationRefundTab = ({
                   ? undefined
                   : dto.calculatedRefundDetails?.manualUsedDays,
               lessonUsageAmount: dto.calculatedRefundDetails?.lessonUsageAmount,
-              lockerUsageAmount: dto.calculatedRefundDetails?.lockerUsageAmount,
-              lessonPenalty: dto.calculatedRefundDetails?.lessonPenalty,
-              lockerPenalty: dto.calculatedRefundDetails?.lockerPenalty,
               finalRefundAmount:
                 dto.calculatedRefundAmtByNewPolicy ??
                 dto.calculatedRefundDetails?.finalRefundAmount ??

@@ -740,9 +740,7 @@ interface CancelRequestCalculatedRefundDetails {
   manualUsedDays: number | null;
   effectiveUsedDays: number; // Assuming this is part of the details
   lessonUsageAmount?: number;
-  lockerUsageAmount?: number;
-  lessonPenalty?: number;
-  lockerPenalty?: number;
+  // lockerUsageAmount?: number; // Removed as locker fee is non-refundable and not part of refund calculation display
   finalRefundAmount?: number;
 }
 
