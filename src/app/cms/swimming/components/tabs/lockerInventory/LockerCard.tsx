@@ -10,6 +10,7 @@ import {
   Badge,
   Flex,
   IconButton,
+  Spinner,
 } from "@chakra-ui/react";
 import { EditIcon, SaveIcon, XIcon } from "lucide-react";
 import { useColors } from "@/styles/theme"; // Assuming useColors is accessible
@@ -25,13 +26,18 @@ export interface LockerData {
 interface LockerCardProps {
   data: LockerData;
   onSave: (gender: "MALE" | "FEMALE", newTotalQuantity: number) => void;
+  isLoading: boolean;
   // Add any other necessary props like colors if not using useColors hook inside
 }
 
-export const LockerCard: React.FC<LockerCardProps> = ({ data, onSave }) => {
+export const LockerCard: React.FC<LockerCardProps> = ({
+  data,
+  onSave,
+  isLoading,
+}) => {
   const colors = useColors(); // Or receive colors as a prop
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState<number>(data.totalQuantity);
+  const [editValue, setEditValue] = useState<number>(data.totalQuantity ?? 0);
 
   const handleEdit = () => {
     setEditValue(data.totalQuantity);
@@ -59,20 +65,24 @@ export const LockerCard: React.FC<LockerCardProps> = ({ data, onSave }) => {
     data.totalQuantity > 0 ? (data.usedQuantity / data.totalQuantity) * 100 : 0;
   console.log(data);
   return (
-    <Card.Root p={3} size="sm">
+    <Card.Root p={2} size="sm">
       <Card.Body p={0}>
         <Stack gap={1}>
           <Flex justify="space-between" align="center">
             <Text fontSize="sm" fontWeight="bold" color={colors.text.primary}>
               {data.gender === "MALE" ? "남성" : "여성"}
             </Text>
-            <Badge
-              colorPalette={data.availableQuantity > 10 ? "green" : "red"}
-              variant="solid"
-              size="sm"
-            >
-              {data.availableQuantity > 10 ? "여유" : "부족"}
-            </Badge>
+            {isLoading ? (
+              <Spinner size="sm" />
+            ) : (
+              <Badge
+                colorPalette={data.availableQuantity > 10 ? "green" : "red"}
+                variant="solid"
+                size="sm"
+              >
+                {data.availableQuantity > 10 ? "여유" : "부족"}
+              </Badge>
+            )}
           </Flex>
 
           <Flex align="center" justify="space-between">

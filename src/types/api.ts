@@ -553,14 +553,15 @@ export interface MypagePaymentDto {
 // LockerInventoryDto for GET /admin/swimming/lockers/inventory
 export interface LockerInventoryDto {
   gender: "MALE" | "FEMALE";
-  total_quantity: number;
-  used_quantity: number;
+  totalQuantity: number;
+  usedQuantity: number;
+  availableQuantity: number;
   // created_at, updated_at etc. can be added if needed by admin UI
 }
 
 // LockerInventoryUpdateDto for PUT /admin/swimming/lockers/inventory/{gender}
-export interface LockerInventoryUpdateDto {
-  total_quantity: number;
+export interface LockerInventoryUpdateRequestDto {
+  totalQuantity: number;
 }
 
 // EnrollAdminResponseDto for GET /admin/swimming/enrolls
@@ -696,10 +697,6 @@ export interface CloneLessonRequestDto {
   price?: number;
   capacity?: number;
   status?: "OPEN" | "CLOSED"; // Typically a new lesson would be OPEN or CLOSED
-}
-
-export interface LockerInventoryUpdateRequestDto {
-  total_quantity: number;
 }
 
 export interface AdminCancelEnrollmentRequestDto {
