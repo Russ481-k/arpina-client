@@ -67,7 +67,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 const NoticeNumberRenderer = (params: ICellRendererParams<Article>) => {
   if (params.data && params.data.no === 0) {
     return (
-      <Badge colorScheme="orange" variant="subtle">
+      <Badge colorPalette="orange" variant="subtle">
         공지
       </Badge>
     );

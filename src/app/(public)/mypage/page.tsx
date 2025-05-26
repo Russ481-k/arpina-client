@@ -31,10 +31,26 @@ import {
 import { Tooltip } from "@/components/ui/tooltip";
 import { CheckCircle2Icon, XCircleIcon, ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
+import { LessonDTO } from "@/types/swimming";
+import { LessonCard } from "@/components/swimming/LessonCard";
+
+// Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
+const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) return "날짜 정보 없음";
+  try {
+    const parts = dateString.split("-");
+    if (parts.length !== 3) return dateString;
+    const year = parts[0].substring(2); // 2025 -> 25
+    const month = parts[1];
+    const day = parts[2];
+    return `${year}년${month}월${day}일`;
+  } catch (error) {
+    return dateString;
+  }
+};
 
 const initialPasswordCriteria = {
   minLength: false,
-  uppercase: false,
   lowercase: false,
   number: false,
   specialChar: false,
@@ -191,8 +207,19 @@ export default function MyPage() {
           }
         }
 
-        const enrollmentsData = await mypageApi.getEnrollments();
-        setEnrollments(enrollmentsData as MypageEnrollDto[]);
+        const enrollmentsApiResponse = await mypageApi.getEnrollments();
+        if (
+          enrollmentsApiResponse &&
+          Array.isArray(enrollmentsApiResponse.content)
+        ) {
+          setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
+        } else {
+          console.warn(
+            "Enrollments API response is not in the expected format or content is missing/not an array:",
+            enrollmentsApiResponse
+          );
+          setEnrollments([]);
+        }
 
         const paymentsData = await mypageApi.getPayments();
         setPayments(paymentsData as MypagePaymentDto[]);
@@ -253,7 +280,6 @@ export default function MyPage() {
   const validateNewPasswordCriteria = (password: string) => {
     const criteria = {
       minLength: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),
       specialChar: /[^A-Za-z0-9]/.test(password),
@@ -386,10 +412,6 @@ export default function MyPage() {
           isMet={passwordCriteriaMet.minLength}
         />
         <PasswordTooltipChecklistItem
-          label="영문 대문자 포함"
-          isMet={passwordCriteriaMet.uppercase}
-        />
-        <PasswordTooltipChecklistItem
           label="영문 소문자 포함"
           isMet={passwordCriteriaMet.lowercase}
         />
@@ -515,7 +537,7 @@ export default function MyPage() {
                 </Fieldset.Content>
 
                 <Box textAlign="center" mt={4}>
-                  <Button type="submit" colorScheme="orange" size="md" px={8}>
+                  <Button type="submit" colorPalette="orange" size="md" px={8}>
                     정보변경
                   </Button>
                 </Box>
@@ -596,7 +618,7 @@ export default function MyPage() {
                     {newPw.length > 0 && (
                       <PasswordStrengthMeter
                         value={newPasswordStrength}
-                        max={5}
+                        max={4}
                       />
                     )}
                   </Stack>
@@ -620,7 +642,7 @@ export default function MyPage() {
               </Fieldset.Content>
 
               <Box textAlign="center" mt={4}>
-                <Button type="submit" colorScheme="orange" size="md" px={8}>
+                <Button type="submit" colorPalette="orange" size="md" px={8}>
                   정보변경
                 </Button>
               </Box>
@@ -643,140 +665,39 @@ export default function MyPage() {
               gap={6}
               py={4}
             >
-              {enrollments.map((enroll) => (
-                <GridItem key={enroll.enrollId}>
-                  <Box
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    overflow="hidden"
+              {enrollments.map((enroll) => {
+                // Prepare data for LessonCard from enroll.lesson
+                const lessonDataForCard: LessonDTO = {
+                  id: enroll.lesson.lessonId,
+                  title: enroll.lesson.title,
+                  name: enroll.lesson.name, // from new API response
+                  startDate: formatDate(enroll.lesson.startDate),
+                  endDate: formatDate(enroll.lesson.endDate),
+                  timeSlot: enroll.lesson.timeSlot,
+                  timePrefix: enroll.lesson.timePrefix,
+                  days: enroll.lesson.days,
+                  capacity: enroll.lesson.capacity,
+                  remaining: enroll.lesson.remaining, // Actual available spots
+                  price: enroll.lesson.price,
+                  status: enroll.lesson.status, // Lesson's operational status for the card
+                  reservationId: enroll.lesson.reservationId, // Already formatted string
+                  receiptId: enroll.lesson.receiptId, // Already formatted string
+                  instructor: enroll.lesson.instructor,
+                  location: enroll.lesson.location,
+                };
+
+                return (
+                  <GridItem
+                    key={enroll.enrollId}
+                    display="flex"
+                    flexDirection="column"
                     h="100%"
                   >
-                    <Box
-                      p={4}
-                      display="flex"
-                      flexDirection="column"
-                      justifyContent="space-between"
-                      h="100%"
-                    >
-                      <VStack gap={2} align="stretch" mb={4}>
-                        <Flex justify="space-between" align="center">
-                          <Text fontWeight="bold" fontSize="md">
-                            {enroll.lesson.title}
-                          </Text>
-                          <Badge
-                            colorScheme={
-                              enroll.status === "PAID"
-                                ? "green"
-                                : enroll.status === "UNPAID"
-                                ? "orange"
-                                : enroll.status === "PAYMENT_TIMEOUT"
-                                ? "red"
-                                : enroll.status === "CANCELED_UNPAID"
-                                ? "gray"
-                                : "gray"
-                            }
-                          >
-                            {/* More descriptive status mapping */}
-                            {enroll.status === "PAID"
-                              ? "결제완료"
-                              : enroll.status === "UNPAID"
-                              ? "결제대기"
-                              : enroll.status === "PAYMENT_TIMEOUT"
-                              ? "결제시간초과"
-                              : enroll.status === "CANCELED_UNPAID"
-                              ? "미결제취소"
-                              : enroll.status.toUpperCase()}
-                          </Badge>
-                        </Flex>
-                        <Box borderBottomWidth="1px" my={1} />
-                        <Text fontSize="sm">
-                          신청일:{" "}
-                          {new Date(
-                            enroll.applicationDate
-                          ).toLocaleDateString()}
-                        </Text>
-                        <Text fontSize="sm">
-                          강습 기간: {enroll.lesson.period}
-                        </Text>
-                        <Text fontSize="sm">
-                          강습 시간: {enroll.lesson.time}
-                        </Text>
-                        <Text fontSize="sm">
-                          금액: {enroll.lesson.price.toLocaleString()}원
-                        </Text>
-                        {enroll.usesLocker && (
-                          <Text fontSize="sm" color="teal.600">
-                            사물함 사용
-                          </Text>
-                        )}
-                        {enroll.isRenewal && (
-                          <Text fontSize="sm" color="purple.600">
-                            재등록 강습
-                          </Text>
-                        )}
-                        {enroll.status === "UNPAID" &&
-                          enroll.paymentExpireDt && (
-                            <Text fontSize="sm" color="red.500">
-                              결제 마감:{" "}
-                              {new Date(
-                                enroll.paymentExpireDt
-                              ).toLocaleString()}
-                            </Text>
-                          )}
-                        {enroll.cancelStatus &&
-                          enroll.cancelStatus !== "NONE" && (
-                            <Text fontSize="sm" color="gray.500">
-                              취소 상태: {enroll.cancelStatus}
-                              {enroll.cancelReason &&
-                                ` (${enroll.cancelReason})`}
-                            </Text>
-                          )}
-                      </VStack>
-
-                      <VStack gap={3} alignSelf="flex-end" w="100%" mt="auto">
-                        {enroll.canAttemptPayment && enroll.paymentPageUrl && (
-                          <Link href={enroll.paymentPageUrl} passHref>
-                            <Button
-                              as="a"
-                              colorScheme="green"
-                              size="sm"
-                              w="100%"
-                            >
-                              <ExternalLinkIcon />
-                              결제하기
-                            </Button>
-                          </Link>
-                        )}
-                        {/* Basic Renewal Button Placeholder - Logic needs refinement based on next lesson ID availability */}
-                        {/* This assumes renewalWindow and a mechanism to get the *next* lessonId are available */}
-                        {/* For now, let's check if renewalWindow is present and dates are valid for a simple demo */}
-                        {enroll.renewalWindow &&
-                          new Date(enroll.renewalWindow.open) <= new Date() &&
-                          new Date(enroll.renewalWindow.close) >= new Date() &&
-                          enroll.status === "PAID" && (
-                            /* Typically renew from a paid lesson */ <Button
-                              colorScheme="blue"
-                              size="sm"
-                              w="100%"
-                              // onClick={() => handleRenewal(enroll.SOME_NEXT_LESSON_ID_FIELD, enroll.usesLocker)} // handleRenewal would call swimmingPaymentService
-                              // disabled // For now, until next lesson ID logic is clear
-                              onClick={() =>
-                                toaster.create({
-                                  title: "재등록 준비중",
-                                  description:
-                                    "재등록 기능은 현재 준비 중입니다.",
-                                  type: "info",
-                                })
-                              }
-                            >
-                              재등록 신청 (준비중)
-                            </Button>
-                          )}
-                      </VStack>
-                    </Box>
-                  </Box>
-                </GridItem>
-              ))}
+                    <LessonCard lesson={lessonDataForCard} />
+                    {/* User-specific enrollment details below the card */}
+                  </GridItem>
+                );
+              })}
             </Grid>
           ) : (
             <Box textAlign="center" p={8}>
@@ -823,7 +744,7 @@ export default function MyPage() {
                       </Table.Cell>
                       <Table.Cell>
                         <Badge
-                          colorScheme={
+                          colorPalette={
                             payment.status === "SUCCESS"
                               ? "green"
                               : payment.status === "CANCELED"

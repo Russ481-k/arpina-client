@@ -73,7 +73,7 @@ export const AdminLessonListTable: React.FC<AdminLessonListTableProps> = ({
               </Table.Cell>
               <Table.Cell>
                 <Badge
-                  colorScheme={
+                  colorPalette={
                     lesson.status === "OPEN"
                       ? "green"
                       : lesson.status === "CLOSED"
@@ -121,7 +121,7 @@ export const AdminLessonListTable: React.FC<AdminLessonListTableProps> = ({
                   <Button
                     aria-label="강습 삭제"
                     size="sm"
-                    colorScheme="red"
+                    colorPalette="red"
                     variant="outline"
                     onClick={() => onDelete(lesson.lessonId!)}
                   >

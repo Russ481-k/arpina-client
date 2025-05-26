@@ -136,7 +136,7 @@ const BoardList = React.memo(function BoardList({
                 </Flex>
 
                 {boardType && (
-                  <Badge colorScheme="blue" fontSize="xs" ml={1}>
+                  <Badge colorPalette="blue" fontSize="xs" ml={1}>
                     {boardType}
                   </Badge>
                 )}

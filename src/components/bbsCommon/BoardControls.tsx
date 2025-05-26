@@ -166,7 +166,7 @@ const BoardControls: React.FC<BoardControlsProps> = ({
               <IconButton
                 aria-label="List view"
                 variant={viewMode === "list" ? "solid" : "outline"}
-                colorScheme={viewMode === "list" ? "blue" : "gray"}
+                colorPalette={viewMode === "list" ? "blue" : "gray"}
                 size="lg"
                 backgroundColor="transparent"
                 border="0"
@@ -209,7 +209,7 @@ const BoardControls: React.FC<BoardControlsProps> = ({
               <IconButton
                 aria-label="Card view"
                 variant={viewMode === "card" ? "solid" : "outline"}
-                colorScheme={viewMode === "card" ? "blue" : "gray"}
+                colorPalette={viewMode === "card" ? "blue" : "gray"}
                 size="lg"
                 backgroundColor="transparent"
                 border="0"

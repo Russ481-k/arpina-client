@@ -111,8 +111,10 @@ const PostListItem: React.FC<PostListItemProps> = ({
                 aria-label="Has attachments"
               />
             )}
-            {post.noticeState === "Y" && <Badge colorScheme="blue">공지</Badge>}
-            {post.parentNttId && <Badge colorScheme="purple">답변</Badge>}
+            {post.noticeState === "Y" && (
+              <Badge colorPalette="blue">공지</Badge>
+            )}
+            {post.parentNttId && <Badge colorPalette="purple">답변</Badge>}
           </HStack>
           <HStack>
             <IconButton
@@ -141,7 +143,7 @@ const PostListItem: React.FC<PostListItemProps> = ({
               aria-label="Delete post"
               size="sm"
               variant="ghost"
-              colorScheme="red"
+              colorPalette="red"
               onClick={(e) => {
                 e.stopPropagation();
                 onDeletePost(post.nttId);
@@ -180,7 +182,7 @@ const PostListItem: React.FC<PostListItemProps> = ({
           {post.categories && post.categories.length > 0 && (
             <HStack>
               {post.categories.map((category) => (
-                <Badge key={category} colorScheme="teal">
+                <Badge key={category} colorPalette="teal">
                   {category}
                 </Badge>
               ))}
@@ -237,7 +239,7 @@ export function PostList({
         <Text fontSize="xl" fontWeight="bold" color={colors.text.primary}>
           게시글 목록
         </Text>
-        <Button onClick={onAddPost} colorScheme="blue" size="sm">
+        <Button onClick={onAddPost} colorPalette="blue" size="sm">
           새 게시글 작성
         </Button>
       </Stack>

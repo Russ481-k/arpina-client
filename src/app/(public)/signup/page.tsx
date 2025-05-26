@@ -429,7 +429,7 @@ export default function SignupPage() {
                   disabled={isNextButtonDisabled() || isSubmitting}
                   loading={isSubmitting}
                   loadingText="처리중..."
-                  colorScheme="blue"
+                  colorPalette="blue"
                   bg="#2E3192"
                   color="white"
                   _hover={{ bg: "#1A365D" }}

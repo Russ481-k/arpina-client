@@ -199,7 +199,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
                 </Button>
               </Dialog.ActionTrigger>
               <Button
-                colorScheme="blue"
+                colorPalette="blue"
                 onClick={handleUpload}
                 loading={isUploading}
                 disabled={files.length === 0}

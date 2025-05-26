@@ -46,7 +46,7 @@ interface BasicBoardSkinProps {
 const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
   const content =
     params.data && params.data.no === 0 ? (
-      <Badge colorScheme="orange" variant="subtle">
+      <Badge colorPalette="orange" variant="subtle">
         공지
       </Badge>
     ) : (

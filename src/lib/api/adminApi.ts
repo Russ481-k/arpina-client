@@ -15,6 +15,7 @@ import type {
   ManualRefundRequestDto,
   CronLogDto,
   WebhookLogDto,
+  ApiResponse,
   // Assuming these are defined in @/types/api or a common place
   PaginationParams,
   PaginatedResponse,
@@ -76,8 +77,8 @@ export const adminApi = {
   },
 
   // Locker Inventory Management
-  getLockerInventory: async (): Promise<LockerInventoryDto[]> => {
-    const response = await privateApi.get<LockerInventoryDto[]>(
+  getLockerInventory: async (): Promise<ApiResponse<LockerInventoryDto[]>> => {
+    const response = await privateApi.get<ApiResponse<LockerInventoryDto[]>>(
       `${CMS_API_BASE}/lockers/inventory`
     );
     return response.data;
@@ -85,8 +86,8 @@ export const adminApi = {
   updateLockerInventory: async (
     gender: "MALE" | "FEMALE",
     data: LockerInventoryUpdateRequestDto
-  ): Promise<LockerInventoryDto> => {
-    const response = await privateApi.put<LockerInventoryDto>(
+  ): Promise<ApiResponse<LockerInventoryDto>> => {
+    const response = await privateApi.put<ApiResponse<LockerInventoryDto>>(
       `${CMS_API_BASE}/lockers/inventory/${gender}`,
       data
     );

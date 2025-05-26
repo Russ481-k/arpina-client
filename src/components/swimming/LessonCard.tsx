@@ -14,6 +14,9 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
   ({ lesson }) => {
     const router = useRouter();
 
+    // Calculate occupied spots. lesson.remaining is now actual available spots.
+    const occupiedSpots = Math.max(0, lesson.capacity - lesson.remaining);
+
     const handleApplyClick = () => {
       if (lesson.status !== "접수중" || !lesson.id) {
         toaster.create({
@@ -78,26 +81,24 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             fontSize="32px"
             fontWeight="700"
             color={
-              lesson.remaining > 0 && lesson.status === "접수중"
-                ? "#76B947"
-                : lesson.remaining === 0
-                ? "#FF5A5A"
-                : lesson.status === "수강중"
-                ? "#FF5A5A"
-                : "#888888"
+              lesson.remaining > 0 && lesson.status === "접수중" // Color based on actual available spots and status
+                ? "#76B947" // Green if spots available and open for registration
+                : lesson.status === "접수중" && lesson.remaining === 0 // If open but full
+                ? "#FF5A5A" // Red
+                : lesson.status === "수강중" // If ongoing
+                ? "#FF5A5A" // Red (assuming this means no longer available for new registration)
+                : "#888888" // Gray for other states like 마감, 대기
             }
             lineHeight="1"
           >
-            {lesson.remaining}
+            {occupiedSpots} {/* Display occupied spots */}
             <Text as="span" fontSize="18px" color="#666" fontWeight="400">
               /{lesson.capacity}
             </Text>
           </Text>
           <Text fontSize="12px" color="#666" fontWeight="400" mt="2px">
             잔여:
-            {lesson.status === "접수중" && lesson.remaining > 0
-              ? lesson.remaining
-              : 0}
+            {lesson.remaining} {/* Display actual available spots */}
           </Text>
         </Box>
 
@@ -150,7 +151,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
                 강습대상
               </Text>
               <Text fontWeight="400" color="#666">
-                {lesson.instructor}
+                성인(온라인)
               </Text>
             </Flex>
             <Flex>

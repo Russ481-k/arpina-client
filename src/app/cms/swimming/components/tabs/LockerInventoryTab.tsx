@@ -1,206 +1,189 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Box,
   Heading,
   Text,
-  Button,
-  Field,
-  Fieldset,
-  Input,
-  Stack,
-  SimpleGrid,
-  Card,
-  Badge,
+  Spinner,
   Flex,
-  IconButton,
+  Button,
+  SimpleGrid,
 } from "@chakra-ui/react";
-import { EditIcon, SaveIcon, XIcon } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { adminApi } from "@/lib/api/adminApi";
+import type {
+  LockerInventoryDto,
+  ApiResponse,
+  LockerInventoryUpdateRequestDto,
+} from "@/types/api";
+import { LockerCard, type LockerData } from "./lockerInventory/LockerCard";
 import { useColors } from "@/styles/theme";
+import { toaster } from "@/components/ui/toaster";
 
-interface LockerInventoryData {
-  gender: "MALE" | "FEMALE";
-  totalQuantity: number;
-  usedQuantity: number;
-  availableQuantity: number;
-}
+const lockerInventoryQueryKey = ["lockerInventory"];
 
-export const LockerInventoryTab: React.FC = () => {
+const transformDtoToCardData = (dto: LockerInventoryDto): LockerData => ({
+  gender: dto.gender,
+  totalQuantity: dto.totalQuantity,
+  usedQuantity: dto.usedQuantity,
+  availableQuantity: dto.availableQuantity,
+});
+
+export const LockerInventoryTab = () => {
   const colors = useColors();
+  const queryClient = useQueryClient();
 
-  // Mock data - 실제로는 API에서 가져와야 함
-  const [lockerData, setLockerData] = useState<LockerInventoryData[]>([
-    {
-      gender: "MALE",
-      totalQuantity: 100,
-      usedQuantity: 65,
-      availableQuantity: 35,
+  const {
+    data: inventoryDtoArray,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<ApiResponse<LockerInventoryDto[]>, Error, LockerInventoryDto[]>({
+    queryKey: lockerInventoryQueryKey,
+    queryFn: () => adminApi.getLockerInventory(),
+    select: (response) => {
+      if (!response.success || !response.data) {
+        console.error("Failed to fetch locker inventory:", response.message);
+        throw new Error(response.message || "Failed to fetch locker inventory");
+      }
+      return response.data;
     },
-    {
-      gender: "FEMALE",
-      totalQuantity: 80,
-      usedQuantity: 45,
-      availableQuantity: 35,
+  });
+
+  const updateMutation = useMutation<
+    ApiResponse<LockerInventoryDto>,
+    Error,
+    { gender: "MALE" | "FEMALE"; newTotalQuantity: number }
+  >({
+    mutationFn: ({ gender, newTotalQuantity }) => {
+      const updateDto: LockerInventoryUpdateRequestDto = {
+        totalQuantity: newTotalQuantity,
+      };
+      return adminApi.updateLockerInventory(gender, updateDto);
     },
-  ]);
+    onSuccess: (response, variables) => {
+      if (response.success && response.data) {
+        toaster.create({
+          title: "수량 업데이트 성공",
+          description: `${variables.gender} 사물함 총 수량이 ${response.data.totalQuantity}(으)로 업데이트되었습니다.`,
+          type: "success",
+          duration: 3000,
+          closable: true,
+        });
+        queryClient.invalidateQueries({ queryKey: lockerInventoryQueryKey });
+      } else {
+        toaster.create({
+          title: "업데이트 실패",
+          description:
+            response.message || "사물함 수량 업데이트 중 오류가 발생했습니다.",
+          type: "error",
+          duration: 5000,
+          closable: true,
+        });
+      }
+    },
+    onError: (error, variables) => {
+      toaster.create({
+        title: "업데이트 오류",
+        description:
+          error.message ||
+          `${variables.gender} 사물함 수량 업데이트 중 심각한 오류가 발생했습니다.`,
+        type: "error",
+        duration: 5000,
+        closable: true,
+      });
+    },
+  });
 
-  const [editingGender, setEditingGender] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState<number>(0);
+  const handleUpdateQuantity = useCallback(
+    (gender: "MALE" | "FEMALE", newTotalQuantity: number) => {
+      if (newTotalQuantity < 0) {
+        toaster.create({
+          title: "유효하지 않은 수량",
+          description: "총 수량은 0 이상이어야 합니다.",
+          type: "warning",
+          duration: 3000,
+          closable: true,
+        });
+        return;
+      }
 
-  const handleEdit = (gender: string, currentTotal: number) => {
-    setEditingGender(gender);
-    setEditValue(currentTotal);
-  };
+      const currentInventoryItem = inventoryDtoArray?.find(
+        (item) => item.gender === gender
+      );
+      if (
+        currentInventoryItem &&
+        newTotalQuantity < currentInventoryItem.usedQuantity
+      ) {
+        toaster.create({
+          title: "수량 설정 오류",
+          description: `총 수량(${newTotalQuantity})은 사용 중인 수량(${currentInventoryItem.usedQuantity})보다 적을 수 없습니다.`,
+          type: "error",
+          duration: 5000,
+          closable: true,
+        });
+        return;
+      }
 
-  const handleSave = (gender: string) => {
-    setLockerData((prev) =>
-      prev.map((item) =>
-        item.gender === gender
-          ? {
-              ...item,
-              totalQuantity: editValue,
-              availableQuantity: editValue - item.usedQuantity,
-            }
-          : item
-      )
+      updateMutation.mutate({ gender, newTotalQuantity });
+    },
+    [updateMutation, toaster, inventoryDtoArray]
+  );
+
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" h="200px">
+        <Spinner size="xl" />
+      </Flex>
     );
-    setEditingGender(null);
-    // TODO: API 호출하여 서버에 저장
-  };
+  }
 
-  const handleCancel = () => {
-    setEditingGender(null);
-    setEditValue(0);
-  };
+  if (isError || !inventoryDtoArray) {
+    return (
+      <Box p={5} shadow="md" borderWidth="1px" borderRadius="md">
+        <Heading size="md" color="red.500">
+          오류 발생
+        </Heading>
+        <Text mt={2}>
+          사물함 재고 정보를 가져오는 중 오류가 발생했습니다:{" "}
+          {error?.message || "데이터를 불러오지 못했습니다."}
+        </Text>
+      </Box>
+    );
+  }
+
+  const lockerDataForCards: LockerData[] = inventoryDtoArray
+    ? inventoryDtoArray.map(transformDtoToCardData)
+    : [];
+
+  const genders: ("MALE" | "FEMALE")[] = ["MALE", "FEMALE"];
+  const finalLockerCardsData = genders.map((gender) => {
+    const existingData = lockerDataForCards.find((d) => d.gender === gender);
+    if (existingData) return existingData;
+    return {
+      gender,
+      totalQuantity: 0,
+      usedQuantity: 0,
+      availableQuantity: 0,
+    } as LockerData;
+  });
 
   return (
-    <Box h="full" overflow="auto">
-      <Stack gap={2}>
-        {lockerData.map((data) => (
-          <Card.Root key={data.gender} p={3} size="sm">
-            <Card.Body p={0}>
-              <Stack gap={1}>
-                {/* 헤더 */}
-                <Flex justify="space-between" align="center">
-                  <Text
-                    fontSize="sm"
-                    fontWeight="bold"
-                    color={colors.text.primary}
-                  >
-                    {data.gender === "MALE" ? "남성" : "여성"}
-                  </Text>
-                  <Badge
-                    colorScheme={data.availableQuantity > 10 ? "green" : "red"}
-                    variant="solid"
-                    size="sm"
-                  >
-                    {data.availableQuantity > 10 ? "여유" : "부족"}
-                  </Badge>
-                </Flex>
-
-                {/* 수량 정보 */}
-                <Flex align="center" justify="space-between">
-                  {/* 사용량/가능량 */}
-                  <Flex gap={2} fontSize="xs">
-                    <Flex gap={1}>
-                      <Text color={colors.text.secondary}>사용:</Text>
-                      <Text fontWeight="medium">{data.usedQuantity}</Text>
-                    </Flex>
-                    <Flex gap={1}>
-                      <Text color={colors.text.secondary}>가능:</Text>
-                      <Text fontWeight="medium">{data.availableQuantity}</Text>
-                    </Flex>
-                  </Flex>
-                  <Flex gap={2} align="center" h="36px">
-                    <Text
-                      fontSize="xs"
-                      color={colors.text.secondary}
-                      minW="40px"
-                    >
-                      총수량
-                    </Text>
-                    {editingGender === data.gender ? (
-                      <Flex gap={1} align="center">
-                        <Input
-                          size="2xs"
-                          w="60px"
-                          type="number"
-                          value={editValue}
-                          onChange={(e) => setEditValue(Number(e.target.value))}
-                          min={data.usedQuantity}
-                        />
-                        <IconButton
-                          size="2xs"
-                          variant="solid"
-                          colorScheme="blue"
-                          onClick={() => handleSave(data.gender)}
-                        >
-                          <SaveIcon size={12} />
-                        </IconButton>
-                        <IconButton
-                          size="2xs"
-                          variant="ghost"
-                          onClick={handleCancel}
-                        >
-                          <XIcon size={12} />
-                        </IconButton>
-                      </Flex>
-                    ) : (
-                      <Flex gap={1} align="center" flex="1">
-                        <Text fontSize="xs" fontWeight="medium" flex="1">
-                          {data.totalQuantity}
-                        </Text>
-                        <IconButton
-                          size="xs"
-                          variant="ghost"
-                          onClick={() =>
-                            handleEdit(data.gender, data.totalQuantity)
-                          }
-                        >
-                          <EditIcon size={12} />
-                        </IconButton>
-                      </Flex>
-                    )}
-                  </Flex>
-                </Flex>
-                {/* 사용률 바 */}
-                <Box>
-                  <Flex justify="space-between" align="center" mb={1}>
-                    <Text fontSize="xs" color={colors.text.secondary}>
-                      사용률
-                    </Text>
-                    <Text fontSize="xs" fontWeight="medium">
-                      {((data.usedQuantity / data.totalQuantity) * 100).toFixed(
-                        1
-                      )}
-                      %
-                    </Text>
-                  </Flex>
-                  <Box
-                    w="full"
-                    h="4px"
-                    bg="gray.200"
-                    borderRadius="full"
-                    overflow="hidden"
-                  >
-                    <Box
-                      w={`${(data.usedQuantity / data.totalQuantity) * 100}%`}
-                      h="full"
-                      bg={
-                        data.usedQuantity / data.totalQuantity > 0.8
-                          ? "red.500"
-                          : "blue.500"
-                      }
-                      transition="width 0.3s"
-                    />
-                  </Box>
-                </Box>
-              </Stack>
-            </Card.Body>
-          </Card.Root>
+    <Box>
+      <SimpleGrid columns={{ base: 1 }} gap={2}>
+        {finalLockerCardsData.map((locker) => (
+          <LockerCard
+            key={locker.gender}
+            data={locker}
+            onSave={handleUpdateQuantity}
+            isLoading={
+              updateMutation.isPending &&
+              updateMutation.variables?.gender === locker.gender
+            }
+          />
         ))}
-      </Stack>
+      </SimpleGrid>
     </Box>
   );
 };

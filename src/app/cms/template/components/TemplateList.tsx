@@ -89,7 +89,7 @@ export function TemplateList({
             renderBadges={() => (
               <HStack gap={1}>
                 {!template.published && (
-                  <Badge colorScheme="gray" variant="subtle">
+                  <Badge colorPalette="gray" variant="subtle">
                     비공개
                   </Badge>
                 )}

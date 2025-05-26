@@ -155,7 +155,7 @@ export default function VisionPage() {
       <VStack gap={12} align="stretch">
         <Box textAlign="center">
           <Badge
-            colorScheme="blue"
+            colorPalette="blue"
             fontSize="sm"
             px={3}
             py={1}

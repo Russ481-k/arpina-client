@@ -347,7 +347,7 @@ BoardPageProps) {
         </Text>
         <Text>주소가 올바른지 확인하거나 잠시 후 다시 시도해 주세요.</Text>
         <NextLink href="/" passHref>
-          <Button mt={6} colorScheme="teal" size="xs">
+          <Button mt={6} colorPalette="teal" size="xs">
             홈으로 가기
           </Button>
         </NextLink>
@@ -362,7 +362,7 @@ BoardPageProps) {
       <IconButton
         aria-label="List view"
         variant={viewMode === "list" ? "solid" : "outline"}
-        colorScheme={viewMode === "list" ? "blue" : "gray"}
+        colorPalette={viewMode === "list" ? "blue" : "gray"}
         size="xs"
         onClick={() => setViewMode("list")}
       >
@@ -371,7 +371,7 @@ BoardPageProps) {
       <IconButton
         aria-label="Card view"
         variant={viewMode === "card" ? "solid" : "outline"}
-        colorScheme={viewMode === "card" ? "blue" : "gray"}
+        colorPalette={viewMode === "card" ? "blue" : "gray"}
         size="xs"
         onClick={() => setViewMode("card")}
       >
@@ -427,7 +427,7 @@ BoardPageProps) {
           />
           <Button
             onClick={handleSearch}
-            colorScheme="blue"
+            colorPalette="blue"
             size="xs"
             mb={{ base: 2, sm: 0 }}
           >

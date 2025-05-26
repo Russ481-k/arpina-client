@@ -197,7 +197,7 @@ const KispgReturnContent = () => {
               </Text>
             )}
             <Link href="/mypage?tab=enrollments" passHref legacyBehavior>
-              <Button as="a" colorScheme="green" size="lg">
+              <Button as="a" colorPalette="green" size="lg">
                 마이페이지로 이동
               </Button>
             </Link>
@@ -224,7 +224,7 @@ const KispgReturnContent = () => {
               </Text>
             )}
             <Link href="/sports/swimming/lesson" passHref legacyBehavior>
-              <Button as="a" colorScheme="orange" size="lg">
+              <Button as="a" colorPalette="orange" size="lg">
                 강습 목록으로 돌아가기
               </Button>
             </Link>
@@ -242,7 +242,7 @@ const KispgReturnContent = () => {
               {finalMessage}
             </Text>
             <Link href="/mypage?tab=enrollments" passHref legacyBehavior>
-              <Button as="a" colorScheme="gray" variant="outline" size="lg">
+              <Button as="a" colorPalette="gray" variant="outline" size="lg">
                 마이페이지에서 확인
               </Button>
             </Link>

@@ -184,8 +184,8 @@ const LessonList = React.memo(function LessonList({
                   </Text>
                   <Badge
                     ml={2}
-                    colorScheme={getStatusBadgeColor(lesson.status)}
-                    fontSize="2xs" // Smaller badge
+                    colorPalette={getStatusBadgeColor(lesson.status)}
+                    fontSize="xs" // Smaller badge
                     px={1.5} // Adjust padding for smaller badge
                     py={0.5}
                   >

@@ -392,7 +392,7 @@ const PaymentProcessPage = () => {
         </HStack>
 
         <Button
-          colorScheme="blue"
+          colorPalette="blue"
           size="lg"
           onClick={initiateKispgPayment}
           loading={isProcessingPayment}

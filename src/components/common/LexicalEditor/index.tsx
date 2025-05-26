@@ -250,7 +250,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={isBold ? "solid" : "ghost"}
-        colorScheme={isBold ? "blue" : "gray"}
+        colorPalette={isBold ? "blue" : "gray"}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
       >
         <Bold size={16} />
@@ -258,7 +258,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={isItalic ? "solid" : "ghost"}
-        colorScheme={isItalic ? "blue" : "gray"}
+        colorPalette={isItalic ? "blue" : "gray"}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
       >
         <Italic size={16} />
@@ -266,7 +266,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={isUnderline ? "solid" : "ghost"}
-        colorScheme={isUnderline ? "blue" : "gray"}
+        colorPalette={isUnderline ? "blue" : "gray"}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
       >
         <Underline size={16} />
@@ -274,7 +274,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={blockType === "h1" ? "solid" : "ghost"}
-        colorScheme={blockType === "h1" ? "blue" : "gray"}
+        colorPalette={blockType === "h1" ? "blue" : "gray"}
         onClick={() => formatHeading(1)}
       >
         <Heading1 size={16} />
@@ -282,7 +282,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={blockType === "h2" ? "solid" : "ghost"}
-        colorScheme={blockType === "h2" ? "blue" : "gray"}
+        colorPalette={blockType === "h2" ? "blue" : "gray"}
         onClick={() => formatHeading(2)}
       >
         <Heading2 size={16} />
@@ -290,7 +290,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={blockType === "bullet" ? "solid" : "ghost"}
-        colorScheme={blockType === "bullet" ? "blue" : "gray"}
+        colorPalette={blockType === "bullet" ? "blue" : "gray"}
         onClick={() => formatList("ul")}
       >
         <List size={16} />
@@ -298,7 +298,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={blockType === "number" ? "solid" : "ghost"}
-        colorScheme={blockType === "number" ? "blue" : "gray"}
+        colorPalette={blockType === "number" ? "blue" : "gray"}
         onClick={() => formatList("ol")}
       >
         <ListOrdered size={16} />
@@ -306,7 +306,7 @@ const Toolbar = memo(function Toolbar({
       <Button
         size="xs"
         variant={isLink ? "solid" : "ghost"}
-        colorScheme={isLink ? "blue" : "gray"}
+        colorPalette={isLink ? "blue" : "gray"}
         onClick={formatLink}
       >
         <LinkIcon size={16} />

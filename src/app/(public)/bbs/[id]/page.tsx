@@ -337,7 +337,7 @@ export default function BoardPage({
         </Text>
         <Text>주소가 올바른지 확인하거나 잠시 후 다시 시도해 주세요.</Text>
         <NextLink href="/" passHref>
-          <Button mt={6} colorScheme="teal" size="xs">
+          <Button mt={6} colorPalette="teal" size="xs">
             홈으로 가기
           </Button>
         </NextLink>

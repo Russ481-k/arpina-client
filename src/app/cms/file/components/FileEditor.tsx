@@ -532,7 +532,7 @@ export function FileEditor({
                   <Button
                     onClick={onAddMenu}
                     variant="outline"
-                    colorScheme="blue"
+                    colorPalette="blue"
                   >
                     <PlusIcon /> 메뉴
                   </Button>

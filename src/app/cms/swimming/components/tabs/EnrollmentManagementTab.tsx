@@ -19,12 +19,15 @@ import {
   DialogBody,
   DialogFooter,
   DialogCloseTrigger,
+  DialogBackdrop,
+  DialogPositioner,
   For,
   Textarea,
   Spinner,
   HStack,
   Portal,
   Checkbox,
+  Tag,
 } from "@chakra-ui/react";
 import {
   SearchIcon,
@@ -54,11 +57,17 @@ import {
   type RowClickedEvent,
   type CellClickedEvent,
 } from "ag-grid-community";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
-import "@/styles/ag-grid-custom.css";
+
 import { useColorMode } from "@/components/ui/color-mode";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
+import { toaster } from "@/components/ui/toaster";
+import { AdminCancelReasonDialog } from "./enrollmentManagement/AdminCancelReasonDialog";
+import { payStatusOptions } from "@/lib/utils/statusUtils";
+
+// Import the new dialog components
+import { UserMemoDialog } from "./enrollmentManagement/UserMemoDialog";
+import { TemporaryEnrollmentDialog } from "./enrollmentManagement/TemporaryEnrollmentDialog";
+import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -71,7 +80,9 @@ interface EnrollmentData {
     | "UNPAID"
     | "PAYMENT_TIMEOUT"
     | "REFUNDED"
-    | "CANCELED_UNPAID";
+    | "CANCELED_UNPAID"
+    | "PARTIALLY_REFUNDED"
+    | "REFUND_PENDING_ADMIN_CANCEL";
   usesLocker: boolean;
   userName: string;
   userLoginId: string;
@@ -97,28 +108,9 @@ const enrollmentQueryKeys = {
   list: (lessonId?: number | null, params?: any) =>
     [...enrollmentQueryKeys.all, lessonId, params] as const,
   temporaryCreate: () => [...enrollmentQueryKeys.all, "temporaryCreate"],
-};
-
-const PayStatusCellRenderer: React.FC<
-  ICellRendererParams<EnrollmentData, EnrollmentData["payStatus"]>
-> = (params) => {
-  if (!params.value) return null;
-  const statusConfig = {
-    PAID: { colorScheme: "green", label: "결제완료" },
-    UNPAID: { colorScheme: "yellow", label: "미결제" },
-    PAYMENT_TIMEOUT: { colorScheme: "gray", label: "결제만료" },
-    REFUNDED: { colorScheme: "red", label: "환불" },
-    CANCELED_UNPAID: { colorScheme: "gray", label: "취소" },
-  };
-  const config = statusConfig[params.value as keyof typeof statusConfig] || {
-    colorScheme: "gray",
-    label: params.value,
-  };
-  return (
-    <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
-      {config.label}
-    </Badge>
-  );
+  userHistory: (userLoginId?: string) =>
+    [...enrollmentQueryKeys.all, "userHistory", userLoginId] as const,
+  cancelRequests: ["adminCancelRequests"] as const,
 };
 
 const UsesLockerCellRenderer: React.FC<
@@ -126,7 +118,7 @@ const UsesLockerCellRenderer: React.FC<
 > = (params) => {
   return (
     <Badge
-      colorScheme={params.value ? "blue" : "gray"}
+      colorPalette={params.value ? "blue" : "gray"}
       variant="outline"
       size="sm"
     >
@@ -140,7 +132,7 @@ const RenewalCellRenderer: React.FC<
 > = (params) => {
   return (
     <Badge
-      colorScheme={params.value ? "purple" : "blue"}
+      colorPalette={params.value ? "purple" : "blue"}
       variant="outline"
       size="sm"
     >
@@ -172,7 +164,7 @@ const ActionCellRenderer: React.FC<ICellRendererParams<EnrollmentData>> = (
       <IconButton
         size="xs"
         variant="ghost"
-        colorScheme="red"
+        colorPalette="red"
         aria-label="Admin Cancel"
         onClick={handleAdminCancelClick}
       >
@@ -191,8 +183,6 @@ export const EnrollmentManagementTab = ({
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear().toString(),
-    month: (new Date().getMonth() + 1).toString(),
     searchTerm: "",
     payStatus: "",
   });
@@ -257,6 +247,7 @@ export const EnrollmentManagementTab = ({
           isRenewal: false,
           enrollStatus: dto.status,
           createdAt: dto.createdAt,
+          userMemo: (dto as any).userMemo || undefined,
         })
       );
     },
@@ -267,17 +258,12 @@ export const EnrollmentManagementTab = ({
 
   const [selectedUserForMemo, setSelectedUserForMemo] =
     useState<EnrollmentData | null>(null);
-  const [userMemoText, setUserMemoText] = useState("");
-
   const [isTempEnrollDialogOpen, setIsTempEnrollDialogOpen] = useState(false);
-  const [tempEnrollForm, setTempEnrollForm] = useState<
-    Omit<TemporaryEnrollmentRequestDto, "lessonId">
-  >({
-    userName: "",
-    userPhone: "",
-    usesLocker: false,
-    memo: "",
-  });
+  const [isCancelReasonDialogOpen, setIsCancelReasonDialogOpen] =
+    useState(false);
+  const [enrollmentIdToCancel, setEnrollmentIdToCancel] = useState<
+    number | null
+  >(null);
 
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
@@ -291,8 +277,13 @@ export const EnrollmentManagementTab = ({
       {
         headerName: "이름",
         field: "userName",
-        flex: 1,
-        minWidth: 100,
+
+        minWidth: 80,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
       },
       {
         headerName: "핸드폰 번호",
@@ -303,7 +294,18 @@ export const EnrollmentManagementTab = ({
       {
         headerName: "결제상태",
         field: "payStatus",
-        cellRenderer: PayStatusCellRenderer,
+        flex: 1,
+        minWidth: 130,
+        cellRenderer: (
+          params: ICellRendererParams<
+            EnrollmentData,
+            EnrollmentData["payStatus"]
+          >
+        ) => (
+          <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
+            <CommonPayStatusBadge status={params.value} />
+          </Flex>
+        ),
         width: 100,
         cellStyle: {
           display: "flex",
@@ -315,7 +317,7 @@ export const EnrollmentManagementTab = ({
         headerName: "사물함",
         field: "usesLocker",
         cellRenderer: UsesLockerCellRenderer,
-        width: 80,
+        width: 90,
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -330,15 +332,15 @@ export const EnrollmentManagementTab = ({
           const { data, context } = params;
           if (!data || !data.discountInfo)
             return (
-              <Badge colorScheme="gray" variant="outline" size="sm">
+              <Badge colorPalette="gray" variant="outline" size="sm">
                 없음
               </Badge>
             );
 
           const statusConfig = {
-            APPROVED: { colorScheme: "green", label: "승인" },
-            DENIED: { colorScheme: "red", label: "거절" },
-            PENDING: { colorScheme: "yellow", label: "대기" },
+            APPROVED: { colorPalette: "green", label: "승인" },
+            DENIED: { colorPalette: "red", label: "거절" },
+            PENDING: { colorPalette: "yellow", label: "대기" },
           };
           const config = statusConfig[data.discountInfo.status];
 
@@ -347,14 +349,18 @@ export const EnrollmentManagementTab = ({
               <Text fontSize="xs" color={colors.text.secondary}>
                 {data.discountInfo.type}
               </Text>
-              <Badge colorScheme={config.colorScheme} variant="solid" size="sm">
+              <Badge
+                colorPalette={config.colorPalette}
+                variant="solid"
+                size="sm"
+              >
                 {config.label}
               </Badge>
               {data.discountInfo.status === "PENDING" && context && (
                 <HStack mt={1} gap={1}>
                   <Button
                     size="xs"
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={() =>
                       context.handleDiscountApproval(data.enrollId, "APPROVED")
                     }
@@ -363,7 +369,7 @@ export const EnrollmentManagementTab = ({
                   </Button>
                   <Button
                     size="xs"
-                    colorScheme="red"
+                    colorPalette="red"
                     onClick={() =>
                       context.handleDiscountApproval(data.enrollId, "DENIED")
                     }
@@ -396,7 +402,6 @@ export const EnrollmentManagementTab = ({
         headerName: "관리",
         cellRenderer: ActionCellRenderer,
         width: 100,
-        pinned: "right",
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -421,49 +426,70 @@ export const EnrollmentManagementTab = ({
     []
   );
 
-  const years = Array.from({ length: 5 }, (_, i) =>
-    (new Date().getFullYear() - 2 + i).toString()
+  const adminCancelEnrollmentMutation = useMutation<
+    EnrollAdminResponseDto,
+    Error,
+    { enrollId: number; reason: string }
+  >({
+    mutationFn: ({ enrollId, reason }) =>
+      adminApi.adminCancelEnrollment(enrollId, { reason }),
+    onSuccess: (data) => {
+      toaster.success({
+        title: "신청 취소 성공",
+        description: `신청 ID ${data.enrollId}이(가) 취소되었습니다.`,
+      });
+      queryClient.invalidateQueries({
+        queryKey: enrollmentQueryKeys.list(lessonIdFilter, {
+          payStatus: filters.payStatus || undefined,
+        }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: enrollmentQueryKeys.cancelRequests,
+      });
+      setIsCancelReasonDialogOpen(false);
+      setEnrollmentIdToCancel(null);
+    },
+    onError: (error, variables) => {
+      toaster.error({
+        title: "신청 취소 실패",
+        description:
+          error.message || `신청 ID ${variables.enrollId} 취소 중 오류 발생`,
+      });
+      setIsCancelReasonDialogOpen(false);
+      setEnrollmentIdToCancel(null);
+    },
+  });
+
+  const handleAdminCancelRequest = useCallback((enrollId: number) => {
+    setEnrollmentIdToCancel(enrollId);
+    setIsCancelReasonDialogOpen(true);
+  }, []);
+
+  const handleSubmitAdminCancel = useCallback(
+    (reason: string) => {
+      if (enrollmentIdToCancel) {
+        adminCancelEnrollmentMutation.mutate({
+          enrollId: enrollmentIdToCancel,
+          reason,
+        });
+      }
+    },
+    [enrollmentIdToCancel, adminCancelEnrollmentMutation]
   );
 
-  const months = Array.from({ length: 12 }, (_, i) =>
-    (i + 1).toString().padStart(2, "0")
+  const handleDiscountApproval = useCallback(
+    (enrollId: number, status: "APPROVED" | "DENIED") => {
+      console.log("할인 승인/거절:", enrollId, status);
+    },
+    []
   );
 
-  const payStatusOptions = [
-    { value: "", label: "전체" },
-    { value: "PAID", label: "결제완료" },
-    { value: "UNPAID", label: "미결제" },
-    { value: "PAYMENT_TIMEOUT", label: "결제만료" },
-    { value: "REFUNDED", label: "환불" },
-    { value: "CANCELED_UNPAID", label: "취소" },
-  ];
-
-  const handleAdminCancel = (enrollId: number) => {
-    console.log("관리자 취소:", enrollId);
-  };
-
-  const handleDiscountApproval = (
-    enrollId: number,
-    status: "APPROVED" | "DENIED"
-  ) => {
-    console.log("할인 승인/거절:", enrollId, status);
-  };
-
-  const openMemoDialog = (data: EnrollmentData) => {
+  const openMemoDialog = useCallback((data: EnrollmentData) => {
     setSelectedUserForMemo(data);
-    setUserMemoText(data.userMemo || "");
-  };
+  }, []);
 
-  const handleUserMemoSave = () => {
-    if (!selectedUserForMemo) return;
-    console.log(
-      "메모 저장:",
-      selectedUserForMemo.userLoginId,
-      selectedUserForMemo.userName,
-      userMemoText
-    );
+  const closeMemoDialog = () => {
     setSelectedUserForMemo(null);
-    setUserMemoText("");
   };
 
   const handleExportEnrollments = () => {
@@ -474,10 +500,10 @@ export const EnrollmentManagementTab = ({
   const agGridContext = useMemo(
     () => ({
       openMemoDialog,
-      adminCancelEnrollment: handleAdminCancel,
+      adminCancelEnrollment: handleAdminCancelRequest,
       handleDiscountApproval,
     }),
-    [openMemoDialog, handleAdminCancel, handleDiscountApproval]
+    [handleAdminCancelRequest, handleDiscountApproval]
   );
 
   const filteredEnrollmentsForGrid = useMemo(() => {
@@ -496,31 +522,6 @@ export const EnrollmentManagementTab = ({
     return data;
   }, [rowData, filters.searchTerm]);
 
-  const temporaryEnrollmentMutation = useMutation<
-    EnrollAdminResponseDto,
-    Error,
-    TemporaryEnrollmentRequestDto
-  >({
-    mutationFn: (data: TemporaryEnrollmentRequestDto) =>
-      adminApi.createTemporaryEnrollment(data),
-    onSuccess: (_response) => {
-      queryClient.invalidateQueries({
-        queryKey: enrollmentQueryKeys.list(lessonIdFilter),
-      });
-      setIsTempEnrollDialogOpen(false);
-      setTempEnrollForm({
-        userName: "",
-        userPhone: "",
-        usesLocker: false,
-        memo: "",
-      });
-      console.log("임시 등록 성공:", _response);
-    },
-    onError: (error) => {
-      console.error("임시 등록 실패:", error.message);
-    },
-  });
-
   const handleOpenTempEnrollDialog = () => {
     if (!lessonIdFilter) {
       console.warn("임시 등록하려면 강습 선택 필요");
@@ -529,30 +530,8 @@ export const EnrollmentManagementTab = ({
     setIsTempEnrollDialogOpen(true);
   };
 
-  const handleTempEnrollFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setTempEnrollForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTempEnrollLockerChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setTempEnrollForm((prev) => ({ ...prev, usesLocker: e.target.checked }));
-  };
-
-  const handleTempEnrollSubmit = () => {
-    if (!lessonIdFilter) return;
-    if (!tempEnrollForm.userName.trim()) {
-      console.error("이름 입력 필요");
-      return;
-    }
-
-    temporaryEnrollmentMutation.mutate({
-      lessonId: lessonIdFilter,
-      ...tempEnrollForm,
-    });
+  const closeTempEnrollDialog = () => {
+    setIsTempEnrollDialogOpen(false);
   };
 
   if (isLoadingEnrollments && lessonIdFilter) {
@@ -593,7 +572,13 @@ export const EnrollmentManagementTab = ({
   }
 
   return (
-    <Box h="full" display="flex" flexDirection="column">
+    <Box
+      h="full"
+      display="flex"
+      flexDirection="column"
+      transform="none"
+      willChange="auto"
+    >
       <CommonGridFilterBar
         searchTerm={filters.searchTerm}
         onSearchTermChange={(e) =>
@@ -610,7 +595,7 @@ export const EnrollmentManagementTab = ({
             onChange: (e) =>
               setFilters((prev) => ({ ...prev, payStatus: e.target.value })),
             options: payStatusOptions,
-            maxWidth: "100px",
+            maxWidth: "120px",
             placeholder: "전체",
           },
         ]}
@@ -619,46 +604,22 @@ export const EnrollmentManagementTab = ({
         }}
         showSearchButton={true}
       >
+        {/* Year/Month filters removed from here as they were also removed from state/query 
+           Re-add if needed: 
         <Field.Root w="220px">
           <NativeSelect.Root size="sm">
-            <NativeSelect.Field
-              id="yearFilter"
-              value={filters.year}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, year: e.target.value }))
-              }
-              fontSize="xs"
-            >
-              <For each={years}>
-                {(year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                )}
-              </For>
+            <NativeSelect.Field id="yearFilter" value={filters.year} onChange={(e) => setFilters((prev) => ({ ...prev, year: e.target.value }))} fontSize="xs">
+              <For each={years}>{(year) => <option key={year} value={year}>{year}</option>}</For>
             </NativeSelect.Field>
           </NativeSelect.Root>
         </Field.Root>
         <Field.Root w="220px">
           <NativeSelect.Root size="sm">
-            <NativeSelect.Field
-              id="monthFilter"
-              value={filters.month}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, month: e.target.value }))
-              }
-              fontSize="xs"
-            >
-              <For each={months}>
-                {(month) => (
-                  <option key={month} value={month}>
-                    {month}월
-                  </option>
-                )}
-              </For>
+            <NativeSelect.Field id="monthFilter" value={filters.month} onChange={(e) => setFilters((prev) => ({ ...prev, month: e.target.value }))} fontSize="xs">
+              <For each={months}>{(month) => <option key={month} value={month}>{month}월</option>}</For>
             </NativeSelect.Field>
-          </NativeSelect.Root>
-        </Field.Root>
+          </NativeSelect.Root> 
+        */}
       </CommonGridFilterBar>
       <Flex my={2} justifyContent="space-between" alignItems="center">
         <Text fontSize="sm" color={colors.text.secondary}>
@@ -666,7 +627,7 @@ export const EnrollmentManagementTab = ({
         </Text>
         <Button
           size="xs"
-          colorScheme="teal"
+          colorPalette="teal"
           variant="outline"
           onClick={handleOpenTempEnrollDialog}
           ml={2}
@@ -674,7 +635,13 @@ export const EnrollmentManagementTab = ({
           <PlusIcon size={12} /> 임시 등록
         </Button>
       </Flex>
-      <Box className={agGridTheme} h="calc(100vh - 400px)" w="full">
+      <Box
+        className={agGridTheme}
+        h="calc(100vh - 400px)"
+        w="full"
+        transform="none"
+        willChange="auto"
+      >
         <AgGridReact<EnrollmentData>
           ref={gridRef}
           rowData={filteredEnrollmentsForGrid}
@@ -684,7 +651,6 @@ export const EnrollmentManagementTab = ({
           headerHeight={36}
           rowHeight={40}
           context={agGridContext}
-          suppressCellFocus
           getRowStyle={() => ({
             color: textColor,
             background: bg,
@@ -693,120 +659,37 @@ export const EnrollmentManagementTab = ({
             alignItems: "center",
           })}
           animateRows={true}
+          enableCellTextSelection={true}
+          ensureDomOrder={true}
         />
       </Box>
 
-      <DialogRoot
-        open={!!selectedUserForMemo}
-        onOpenChange={() => setSelectedUserForMemo(null)}
-      >
-        <Portal>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                회원 메모 - {selectedUserForMemo?.userName}
-              </DialogTitle>
-            </DialogHeader>
-            <DialogBody>
-              <Field.Root>
-                <Field.Label>메모 내용</Field.Label>
-                <Textarea
-                  value={userMemoText}
-                  onChange={(e) => setUserMemoText(e.target.value)}
-                  placeholder="회원에 대한 메모를 입력하세요"
-                  rows={6}
-                />
-                <Field.HelperText>
-                  회원과 관련된 중요한 정보나 상담 내용을 기록하세요.
-                </Field.HelperText>
-              </Field.Root>
-            </DialogBody>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setSelectedUserForMemo(null)}
-              >
-                취소
-              </Button>
-              <Button colorScheme="blue" onClick={handleUserMemoSave}>
-                저장
-              </Button>
-            </DialogFooter>
-            <DialogCloseTrigger />
-          </DialogContent>
-        </Portal>
-      </DialogRoot>
+      <UserMemoDialog
+        isOpen={!!selectedUserForMemo}
+        onClose={closeMemoDialog}
+        selectedUser={selectedUserForMemo}
+        agGridTheme={agGridTheme}
+        bg={bg}
+        textColor={textColor}
+        borderColor={borderColor}
+        colors={colors}
+      />
 
-      <DialogRoot
-        open={isTempEnrollDialogOpen}
-        onOpenChange={() => setIsTempEnrollDialogOpen(false)}
-      >
-        <Portal>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>신규 임시 등록</DialogTitle>
-            </DialogHeader>
-            <DialogBody>
-              <Stack gap={4}>
-                <Field.Root required>
-                  <Field.Label>이름</Field.Label>
-                  <Input
-                    name="userName"
-                    value={tempEnrollForm.userName}
-                    onChange={handleTempEnrollFormChange}
-                    placeholder="홍길동"
-                  />
-                </Field.Root>
-                <Field.Root>
-                  <Field.Label>핸드폰 번호</Field.Label>
-                  <Input
-                    name="userPhone"
-                    value={tempEnrollForm.userPhone || ""}
-                    onChange={handleTempEnrollFormChange}
-                    placeholder="010-1234-5678"
-                  />
-                </Field.Root>
-                <Field.Root>
-                  <Checkbox.Root
-                    name="usesLocker"
-                    checked={tempEnrollForm.usesLocker}
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control onChange={handleTempEnrollLockerChange} />
-                    <Checkbox.Label>사물함 사용</Checkbox.Label>
-                  </Checkbox.Root>
-                </Field.Root>
-                <Field.Root>
-                  <Field.Label>메모</Field.Label>
-                  <Textarea
-                    name="memo"
-                    value={tempEnrollForm.memo || ""}
-                    onChange={handleTempEnrollFormChange}
-                    placeholder="오프라인 접수 등 특이사항 입력"
-                    rows={3}
-                  />
-                </Field.Root>
-              </Stack>
-            </DialogBody>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsTempEnrollDialogOpen(false)}
-              >
-                취소
-              </Button>
-              <Button
-                colorScheme="teal"
-                onClick={handleTempEnrollSubmit}
-                loading={temporaryEnrollmentMutation.isPending}
-              >
-                등록하기
-              </Button>
-            </DialogFooter>
-            <DialogCloseTrigger />
-          </DialogContent>
-        </Portal>
-      </DialogRoot>
+      <TemporaryEnrollmentDialog
+        isOpen={isTempEnrollDialogOpen}
+        onClose={closeTempEnrollDialog}
+        lessonIdFilter={lessonIdFilter}
+      />
+
+      <AdminCancelReasonDialog
+        isOpen={isCancelReasonDialogOpen}
+        onClose={() => {
+          setIsCancelReasonDialogOpen(false);
+          setEnrollmentIdToCancel(null);
+        }}
+        onSubmit={handleSubmitAdminCancel}
+        enrollId={enrollmentIdToCancel}
+      />
     </Box>
   );
 };

@@ -1,173 +1,237 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Heading,
   Text,
   Button,
-  Field,
-  Fieldset,
   NativeSelect,
   Stack,
   Flex,
   For,
-  Card,
   SimpleGrid,
-  Badge,
+  Spinner,
 } from "@chakra-ui/react";
 import {
   DownloadIcon,
-  TrendingUpIcon,
   UsersIcon,
   DollarSignIcon,
   BarChart3Icon,
-  LockIcon,
+  TrendingUpIcon,
+  ListChecksIcon,
+  BriefcaseIcon,
+  CreditCardIcon,
+  UserPlusIcon,
 } from "lucide-react";
 import { useColors } from "@/styles/theme";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { adminApi } from "@/lib/api/adminApi";
+import { toaster } from "@/components/ui/toaster";
+import { StatisticDisplayCard } from "./statistics/StatisticDisplayCard";
 
-interface MonthlyStats {
-  month: string;
+interface MonthlyStatsDto {
+  year: number;
+  month: number;
   revenue: number;
   enrollments: number;
-  lockerUsage: number;
-  refunds: number;
-  newUsers: number;
-  renewalUsers: number;
+  lockerUsageCount: number;
+  totalLockers?: number;
+  refundAmount: number;
+  newUserCount: number;
+  renewalUserCount: number;
 }
+
+interface AggregatedStats {
+  totalRevenue: number;
+  totalEnrollments: number;
+  averageLockerUsagePercentage?: number;
+  totalRefundAmount: number;
+  totalNewUsers: number;
+  totalRenewalUsers: number;
+  renewalRate?: number;
+  periodLabel: string;
+}
+
+const statisticsQueryKeys = {
+  all: (year: string, month: string) =>
+    ["adminStatistics", year, month] as const,
+};
+
+const formatCurrency = (amount: number | undefined) => {
+  if (amount === undefined) return "-";
+  return (
+    new Intl.NumberFormat("ko-KR", {
+      notation: "compact",
+      compactDisplay: "short",
+    }).format(amount) + "원"
+  );
+};
+
+const formatNumber = (num: number | undefined) => {
+  if (num === undefined) return "-";
+  return new Intl.NumberFormat("ko-KR").format(num);
+};
 
 export const StatisticsTab: React.FC = () => {
   const colors = useColors();
+  const queryClient = useQueryClient();
 
-  // Mock data - 실제로는 API에서 가져와야 함
-  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedYear, setSelectedYear] = useState(
+    new Date().getFullYear().toString()
+  );
   const [selectedMonth, setSelectedMonth] = useState("all");
 
-  const monthlyStats: MonthlyStats[] = [
-    {
-      month: "2025-01",
-      revenue: 15400000,
-      enrollments: 240,
-      lockerUsage: 85,
-      refunds: 1200000,
-      newUsers: 150,
-      renewalUsers: 90,
-    },
-    {
-      month: "2024-12",
-      revenue: 14800000,
-      enrollments: 230,
-      lockerUsage: 82,
-      refunds: 800000,
-      newUsers: 140,
-      renewalUsers: 90,
-    },
-    {
-      month: "2024-11",
-      revenue: 16200000,
-      enrollments: 260,
-      lockerUsage: 88,
-      refunds: 1500000,
-      newUsers: 165,
-      renewalUsers: 95,
-    },
-  ];
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return [
+      currentYear.toString(),
+      (currentYear - 1).toString(),
+      (currentYear - 2).toString(),
+    ];
+  }, []);
 
-  const years = ["2025", "2024", "2023"];
   const months = [
     { value: "all", label: "전체" },
-    { value: "01", label: "1월" },
-    { value: "02", label: "2월" },
-    { value: "03", label: "3월" },
-    { value: "04", label: "4월" },
-    { value: "05", label: "5월" },
-    { value: "06", label: "6월" },
-    { value: "07", label: "7월" },
-    { value: "08", label: "8월" },
-    { value: "09", label: "9월" },
-    { value: "10", label: "10월" },
-    { value: "11", label: "11월" },
-    { value: "12", label: "12월" },
+    ...Array.from({ length: 12 }, (_, i) => ({
+      value: (i + 1).toString().padStart(2, "0"),
+      label: `${i + 1}월`,
+    })),
   ];
 
-  const handleExportData = () => {
-    // TODO: 엑셀 다운로드 구현
-    console.log("통계 데이터 엑셀 다운로드", { selectedYear, selectedMonth });
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("ko-KR").format(amount) + "원";
-  };
-
-  const formatPercent = (value: number) => {
-    return value.toFixed(1) + "%";
-  };
-
-  // 현재 선택된 기간의 통계 계산
-  const filteredStats =
-    selectedMonth === "all"
-      ? monthlyStats.filter((stat) => stat.month.startsWith(selectedYear))
-      : monthlyStats.filter(
-          (stat) => stat.month === `${selectedYear}-${selectedMonth}`
+  const {
+    data: apiStats,
+    isLoading,
+    error,
+  } = useQuery<MonthlyStatsDto[], Error, AggregatedStats>({
+    queryKey: statisticsQueryKeys.all(selectedYear, selectedMonth),
+    queryFn: async () => {
+      const params: any = { year: parseInt(selectedYear) };
+      if (selectedMonth !== "all") {
+        params.month = parseInt(selectedMonth);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const mockData: MonthlyStatsDto[] = [
+        {
+          year: 2024,
+          month: 1,
+          revenue: 15400000,
+          enrollments: 240,
+          lockerUsageCount: 85,
+          totalLockers: 150,
+          refundAmount: 1200000,
+          newUserCount: 150,
+          renewalUserCount: 90,
+        },
+        {
+          year: 2024,
+          month: 2,
+          revenue: 14800000,
+          enrollments: 230,
+          lockerUsageCount: 82,
+          totalLockers: 150,
+          refundAmount: 800000,
+          newUserCount: 140,
+          renewalUserCount: 90,
+        },
+        {
+          year: 2023,
+          month: 12,
+          revenue: 16200000,
+          enrollments: 260,
+          lockerUsageCount: 88,
+          totalLockers: 160,
+          refundAmount: 1500000,
+          newUserCount: 165,
+          renewalUserCount: 95,
+        },
+      ];
+      let filteredMock = mockData.filter(
+        (d) => d.year.toString() === selectedYear
+      );
+      if (selectedMonth !== "all") {
+        filteredMock = filteredMock.filter(
+          (d) => d.month.toString().padStart(2, "0") === selectedMonth
         );
+      }
+      return filteredMock;
+    },
+    select: (data: MonthlyStatsDto[]): AggregatedStats => {
+      const totals = data.reduce(
+        (acc, stat) => ({
+          revenue: acc.revenue + stat.revenue,
+          enrollments: acc.enrollments + stat.enrollments,
+          lockerUsageCount: acc.lockerUsageCount + (stat.lockerUsageCount || 0),
+          totalLockers: acc.totalLockers + (stat.totalLockers || 0),
+          refundAmount: acc.refundAmount + stat.refundAmount,
+          newUserCount: acc.newUserCount + stat.newUserCount,
+          renewalUserCount: acc.renewalUserCount + stat.renewalUserCount,
+        }),
+        {
+          revenue: 0,
+          enrollments: 0,
+          lockerUsageCount: 0,
+          totalLockers: 0,
+          refundAmount: 0,
+          newUserCount: 0,
+          renewalUserCount: 0,
+        }
+      );
 
-  const totalStats = filteredStats.reduce(
-    (acc, stat) => ({
-      revenue: acc.revenue + stat.revenue,
-      enrollments: acc.enrollments + stat.enrollments,
-      lockerUsage: acc.lockerUsage + stat.lockerUsage,
-      refunds: acc.refunds + stat.refunds,
-      newUsers: acc.newUsers + stat.newUsers,
-      renewalUsers: acc.renewalUsers + stat.renewalUsers,
-    }),
-    {
-      revenue: 0,
-      enrollments: 0,
-      lockerUsage: 0,
-      refunds: 0,
-      newUsers: 0,
-      renewalUsers: 0,
-    }
-  );
+      const periodLabel =
+        selectedMonth === "all"
+          ? `${selectedYear}년 전체`
+          : `${selectedYear}년 ${selectedMonth}월`;
+      const avgLockerUsagePercentage =
+        totals.totalLockers > 0 && totals.lockerUsageCount > 0
+          ? (totals.lockerUsageCount / totals.totalLockers) * 100
+          : undefined;
+      const renewalRate =
+        totals.newUserCount + totals.renewalUserCount > 0
+          ? (totals.renewalUserCount /
+              (totals.newUserCount + totals.renewalUserCount)) *
+            100
+          : undefined;
 
-  const avgLockerUsage =
-    filteredStats.length > 0
-      ? filteredStats.reduce((sum, stat) => sum + stat.lockerUsage, 0) /
-        filteredStats.length
-      : 0;
+      return {
+        totalRevenue: totals.revenue,
+        totalEnrollments: totals.enrollments,
+        averageLockerUsagePercentage: avgLockerUsagePercentage,
+        totalRefundAmount: totals.refundAmount,
+        totalNewUsers: totals.newUserCount,
+        totalRenewalUsers: totals.renewalUserCount,
+        renewalRate: renewalRate,
+        periodLabel: periodLabel,
+      };
+    },
+  });
 
-  const renewalRate =
-    totalStats.newUsers + totalStats.renewalUsers > 0
-      ? (totalStats.renewalUsers /
-          (totalStats.newUsers + totalStats.renewalUsers)) *
-        100
-      : 0;
+  const handleExportData = () => {
+    toaster.info({ title: "엑셀 다운로드 준비 중... (구현 필요)" });
+    console.log("Exporting data for:", selectedYear, selectedMonth, apiStats);
+  };
 
   return (
-    <Box h="full" overflow="auto">
-      {/* 간소화된 필터 */}
-      <Flex gap={2} mb={3} wrap="wrap" align="center">
-        <NativeSelect.Root size="sm" maxW="80px">
+    <Box h="full" display="flex" flexDirection="column">
+      <Flex gap={3} mb={4} align="center" wrap="wrap">
+        <NativeSelect.Root size="sm" maxW="100px">
           <NativeSelect.Field
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            fontSize="xs"
           >
             <For each={years}>
               {(year) => (
                 <option key={year} value={year}>
-                  {year}
+                  {year}년
                 </option>
               )}
             </For>
           </NativeSelect.Field>
         </NativeSelect.Root>
-
-        <NativeSelect.Root size="sm" maxW="80px">
+        <NativeSelect.Root size="sm" maxW="100px">
           <NativeSelect.Field
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            fontSize="xs"
           >
             <For each={months}>
               {(month) => (
@@ -178,151 +242,113 @@ export const StatisticsTab: React.FC = () => {
             </For>
           </NativeSelect.Field>
         </NativeSelect.Root>
-
-        <Button
-          size="xs"
-          colorScheme="green"
-          variant="outline"
-          onClick={handleExportData}
-        >
+        <Button size="xs" variant="outline" onClick={handleExportData}>
           <DownloadIcon size={12} />
+          엑셀 다운로드
         </Button>
       </Flex>
 
-      {/* 주요 지표 카드 */}
-      <Stack gap={2} mb={4}>
-        <Card.Root p={2} size="sm">
-          <Card.Body p={0}>
-            <Flex align="center" gap={2}>
-              <Box p={1} borderRadius="md" bg={colors.primary.light}>
-                <DollarSignIcon size={14} color={colors.primary.default} />
-              </Box>
-              <Box flex="1">
-                <Text fontSize="xs" color={colors.text.secondary}>
-                  총 매출
-                </Text>
-                <Text
-                  fontSize="sm"
-                  fontWeight="bold"
-                  color={colors.primary.default}
-                >
-                  {new Intl.NumberFormat("ko-KR", {
-                    notation: "compact",
-                    compactDisplay: "short",
-                  }).format(totalStats.revenue)}
-                  원
-                </Text>
-              </Box>
-            </Flex>
-          </Card.Body>
-        </Card.Root>
+      {isLoading && (
+        <Flex justify="center" align="center" flex={1}>
+          <Spinner size="xl" />
+        </Flex>
+      )}
 
-        <Card.Root p={2} size="sm">
-          <Card.Body p={0}>
-            <Flex align="center" gap={2}>
-              <Box p={1} borderRadius="md" bg="blue.100">
-                <UsersIcon size={14} color="blue.600" />
-              </Box>
-              <Box flex="1">
-                <Text fontSize="xs" color={colors.text.secondary}>
-                  신청자
-                </Text>
-                <Text fontSize="sm" fontWeight="bold" color="blue.600">
-                  {totalStats.enrollments}명
-                </Text>
-              </Box>
-            </Flex>
-          </Card.Body>
-        </Card.Root>
-
-        <Card.Root p={2} size="sm">
-          <Card.Body p={0}>
-            <Flex align="center" gap={2}>
-              <Box p={1} borderRadius="md" bg="purple.100">
-                <LockIcon size={14} color="purple.600" />
-              </Box>
-              <Box flex="1">
-                <Text fontSize="xs" color={colors.text.secondary}>
-                  사물함
-                </Text>
-                <Text fontSize="sm" fontWeight="bold" color="purple.600">
-                  {formatPercent(avgLockerUsage)}
-                </Text>
-              </Box>
-            </Flex>
-          </Card.Body>
-        </Card.Root>
-      </Stack>
-
-      {/* 차트 영역 */}
-      <Card.Root p={2} mb={3}>
-        <Card.Header pb={1}>
-          <Heading size="xs" mb={1}>
-            <BarChart3Icon
-              size={12}
-              style={{ display: "inline", marginRight: "4px" }}
-            />
-            매출 추이
-          </Heading>
-        </Card.Header>
-        <Card.Body pt={0}>
-          <Box
-            h="60px"
-            bg="gray.100"
-            borderRadius="md"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
+      {error && (
+        <Flex direction="column" justify="center" align="center" flex={1}>
+          <Text color="red.500" mb={2}>
+            통계 데이터 로딩 실패: {error.message}
+          </Text>
+          <Button
+            onClick={() =>
+              queryClient.invalidateQueries({
+                queryKey: statisticsQueryKeys.all(selectedYear, selectedMonth),
+              })
+            }
           >
-            <Text fontSize="xs" color={colors.text.secondary}>
-              📊 차트
-            </Text>
-          </Box>
-        </Card.Body>
-      </Card.Root>
+            재시도
+          </Button>
+        </Flex>
+      )}
 
-      {/* 간소화된 통계 */}
-      <Card.Root p={2}>
-        <Card.Header pb={1}>
-          <Heading size="xs" mb={1}>
-            상세 통계
+      {apiStats && !isLoading && !error && (
+        <Box flex={1} overflowY="auto">
+          <Heading size="md" mb={2}>
+            {apiStats.periodLabel} 주요 지표
           </Heading>
-        </Card.Header>
-        <Card.Body pt={0}>
-          <Stack gap={2} fontSize="xs">
-            <Flex justify="space-between">
-              <Text color={colors.text.secondary}>순 매출</Text>
-              <Text fontWeight="medium" color={colors.primary.default}>
-                {new Intl.NumberFormat("ko-KR", {
-                  notation: "compact",
-                  compactDisplay: "short",
-                }).format(totalStats.revenue - totalStats.refunds)}
-                원
-              </Text>
-            </Flex>
-            <Flex justify="space-between">
-              <Text color={colors.text.secondary}>환불</Text>
-              <Text fontWeight="medium" color="red.500">
-                {new Intl.NumberFormat("ko-KR", {
-                  notation: "compact",
-                  compactDisplay: "short",
-                }).format(totalStats.refunds)}
-                원
-              </Text>
-            </Flex>
-            <Flex justify="space-between">
-              <Text color={colors.text.secondary}>재수강율</Text>
-              <Text fontWeight="medium">{formatPercent(renewalRate)}</Text>
-            </Flex>
-            <Flex justify="space-between">
-              <Text color={colors.text.secondary}>신규 회원</Text>
-              <Text fontWeight="medium" color="green.600">
-                {totalStats.newUsers}명
-              </Text>
-            </Flex>
-          </Stack>
-        </Card.Body>
-      </Card.Root>
+          <SimpleGrid columns={{ base: 1, md: 2 }} gap={2} mb={6}>
+            <StatisticDisplayCard
+              label="총 매출"
+              value={formatCurrency(apiStats.totalRevenue)}
+              icon={DollarSignIcon}
+              iconContainerBgColor="blue.50"
+              iconProps={{ color: colors.primary.default, size: 20 }}
+              valueColor={colors.primary.default}
+            />
+            <StatisticDisplayCard
+              label="총 신청자 수"
+              value={formatNumber(apiStats.totalEnrollments)}
+              unit="명"
+              icon={ListChecksIcon}
+              iconContainerBgColor="blue.50"
+              iconProps={{ color: "blue.800", size: 20 }}
+              valueColor="blue.600"
+            />
+            <StatisticDisplayCard
+              label="신규 회원"
+              value={formatNumber(apiStats.totalNewUsers)}
+              unit="명"
+              icon={UserPlusIcon}
+              iconContainerBgColor="green.50"
+              iconProps={{ color: "green.600", size: 20 }}
+              valueColor="green.600"
+            />
+            <StatisticDisplayCard
+              label="재등록 회원"
+              value={formatNumber(apiStats.totalRenewalUsers)}
+              unit="명"
+              icon={UsersIcon}
+              iconContainerBgColor="teal.50"
+              iconProps={{ color: "teal.600", size: 20 }}
+              valueColor="teal.600"
+            />
+            <StatisticDisplayCard
+              label="재등록율"
+              value={
+                apiStats.renewalRate !== undefined
+                  ? apiStats.renewalRate.toFixed(1)
+                  : "-"
+              }
+              unit="%"
+              icon={TrendingUpIcon}
+              iconContainerBgColor="orange.50"
+              iconProps={{ color: "orange.600", size: 20 }}
+              valueColor="orange.600"
+            />
+            <StatisticDisplayCard
+              label="사물함 사용률"
+              value={
+                apiStats.averageLockerUsagePercentage !== undefined
+                  ? apiStats.averageLockerUsagePercentage.toFixed(1)
+                  : "-"
+              }
+              unit="%"
+              icon={BriefcaseIcon}
+              iconContainerBgColor="purple.50"
+              iconProps={{ color: "purple.600", size: 20 }}
+              valueColor="purple.600"
+            />
+            <StatisticDisplayCard
+              label="총 환불액"
+              value={formatCurrency(apiStats.totalRefundAmount)}
+              icon={CreditCardIcon}
+              iconContainerBgColor="red.50"
+              iconProps={{ color: "red.600", size: 20 }}
+              valueColor="red.600"
+            />
+          </SimpleGrid>
+        </Box>
+      )}
     </Box>
   );
 };

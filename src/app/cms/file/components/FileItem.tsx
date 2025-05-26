@@ -248,7 +248,7 @@ export const MenuItem = ({
             aria-label="Folder Plus"
             variant="ghost"
             size="2xs"
-            colorScheme="gray"
+            colorPalette="gray"
             borderRadius="full"
             _hover={{ bg: "whiteAlpha.200" }}
           >
@@ -259,7 +259,7 @@ export const MenuItem = ({
             aria-label="Folder"
             variant="ghost"
             size="2xs"
-            colorScheme="gray"
+            colorPalette="gray"
             borderRadius="full"
             _hover={{ bg: "whiteAlpha.200" }}
           >
