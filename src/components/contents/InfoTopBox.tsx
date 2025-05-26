@@ -26,6 +26,7 @@ interface InfoTopBoxProps {
   description: string;
   images: string[];
   buttonOnClick?: () => void;
+  showReservation?: boolean; // 실시간 예약 섹션 표시 유무
 }
 
 export default function InfoTopBox({
@@ -34,6 +35,7 @@ export default function InfoTopBox({
   description,
   images,
   buttonOnClick,
+  showReservation = true, // 기본값은 true로 설정
 }: InfoTopBoxProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
 
@@ -103,33 +105,37 @@ export default function InfoTopBox({
           >
             {description}
           </Text>
-          <Text
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            mt="60px"
-            mb="15px"
-            color="#393939"
-            fontSize="3xl"
-            fontWeight="semibold"
-          >
-            지금 바로 <Mark color="#2E3192">실시간</Mark> 예약하러 가기 !
-            <Image src="/images/contents/top_info_icon01.png" alt="" />
-          </Text>
-          <Button
-            size="lg"
-            rounded="2xl"
-            colorPalette="gray"
-            variant="subtle"
-            w="100%"
-            py={5}
-            fontSize="3xl"
-            fontWeight="bold"
-            lineHeight="1"
-            onClick={buttonOnClick}
-          >
-            {buttonText}
-          </Button>
+          {showReservation && (
+            <Box className="info-res-box">
+              <Text
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                mt="60px"
+                mb="15px"
+                color="#393939"
+                fontSize="3xl"
+                fontWeight="semibold"
+              >
+                지금 바로 <Mark color="#2E3192">실시간</Mark> 예약하러 가기 !
+                <Image src="/images/contents/top_info_icon01.png" alt="" />
+              </Text>
+              <Button
+                size="lg"
+                rounded="2xl"
+                colorPalette="gray"
+                variant="subtle"
+                w="100%"
+                py={5}
+                fontSize="3xl"
+                fontWeight="bold"
+                lineHeight="1"
+                onClick={buttonOnClick}
+              >
+                {buttonText}
+              </Button>
+            </Box>
+          )}
         </Box>
         <Box width="42.8125%">
           {/* 메인 슬라이더 */}
