@@ -2,9 +2,11 @@
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import InfoTopBox from "@/components/contents/InfoTopBox";
-import MeetingRoomInfo from "@/components/contents/MeetingRoomInfo";
 import MeetingSeatInfo from "@/components/contents/MeetingSeatInfo";
 import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
+import HeadingH4 from "@/components/contents/HeadingH4";
+import ApTable02 from "@/components/contents/ApTable02";
+import { Box, Text } from "@chakra-ui/react";
 
 export default function ParticipantsPage() {
   const images = [
@@ -13,13 +15,17 @@ export default function ParticipantsPage() {
     "/images/contents/grand_img03.jpg",
   ];
 
-  const meetingRoomData = {
-    size: "543.15㎡",
-    dimensions: "가로 20.715m * 세로 26.22.m * 높이 4m",
-    screen: "200Inch",
-    capacity: "250명",
-    price: "1,980,000원",
-  };
+  const meetingRoomRows = [
+    {
+      columns: [
+        { header: "규모", content: "543.15㎡" },
+        { header: "사이즈", content: "가로 20.715m * 세로 26.22.m * 높이 4m" },
+        { header: "스크린", content: "200Inch" },
+        { header: "정원", content: "250명" },
+        { header: "표준요금", content: "1,980,000원" },
+      ],
+    },
+  ];
 
   const floorImage = {
     src: "/images/contents/grand_floor_img.jpg",
@@ -28,19 +34,19 @@ export default function ParticipantsPage() {
 
   const floorInfoItems = [
     {
-      label: "위치",
+      header: "위치",
       value: "그랜드볼륨(2층-국제회의실)",
     },
     {
-      label: "면적",
+      header: "면적",
       value: "543.15㎡",
     },
     {
-      label: "사이즈",
+      header: "사이즈",
       value: "가로 20.715m * 세로 26.22.m * 높이 4m",
     },
     {
-      label: "문의",
+      header: "문의",
       value: "051-731-9800",
     },
   ];
@@ -54,11 +60,19 @@ export default function ParticipantsPage() {
         images={images}
         showReservation={false}
       />
-      <MeetingRoomInfo
-        title="회의실안내 (2층 그랜드 볼룸)"
-        subtitle="출장뷔페 및 외부 음식물 반입금지"
-        data={meetingRoomData}
-      />
+      <Box mt="100px">
+        <HeadingH4>회의실안내 (2층 그랜드 볼룸)</HeadingH4>
+        <Text
+          mt="10px"
+          mb="60px"
+          color="#FAB20B"
+          fontSize="3xl"
+          fontWeight="medium"
+        >
+          출장뷔페 및 외부 음식물 반입금지
+        </Text>
+        <ApTable02 rows={meetingRoomRows} />
+      </Box>
       <MeetingSeatInfo />
       <MeetingFloorInfo floorImage={floorImage} infoItems={floorInfoItems} />
     </PageContainer>
