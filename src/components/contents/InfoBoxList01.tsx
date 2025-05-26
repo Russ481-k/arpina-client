@@ -26,7 +26,6 @@ export default function InfoBoxList01({ items }: InfoBoxList01Props) {
             fontSize="lg"
             style={{
               display: "flex",
-              flexFlow: "row wrap",
               alignItems: "center",
               marginTop: "10px",
             }}
