@@ -9,7 +9,6 @@ const parseKSTDateString = (
   kstDateStringWithSuffix: string | undefined
 ): Date | null => {
   if (!kstDateStringWithSuffix) {
-    // console.warn("[LessonCardActions] parseKSTDateString: input string is null or empty.");
     return null;
   }
 
@@ -113,9 +112,12 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   );
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout | undefined = undefined;
+
     if (enrollment || !lesson.reservationId || lesson.status !== "접수대기") {
       setIsCountingDown(false);
       setTimeRemaining(null);
+      if (intervalId) clearInterval(intervalId); // Clear interval if conditions no longer met
       return;
     }
 
@@ -140,21 +142,25 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       return; // No interval needed if time is already up
     }
 
-    const intervalId = setInterval(() => {
+    intervalId = setInterval(() => {
       const remaining = calculateTimeDifference(targetApplicationStartDate);
       setTimeRemaining(remaining); // This will trigger re-render
 
       if (remaining) {
-        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Remaining - ${remaining.days}d ${remaining.hours}h ${remaining.minutes}m ${remaining.seconds}s`);
+        console.log(
+          `Lesson ID ${lesson.id} (${lesson.title}): Remaining - ${remaining.days}d ${remaining.hours}h ${remaining.minutes}m ${remaining.seconds}s`
+        );
       } else {
-        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Countdown finished.`);
+        console.log(
+          `Lesson ID ${lesson.id} (${lesson.title}): Countdown finished.`
+        );
         setIsCountingDown(false); // Ensure countdown state is false
         clearInterval(intervalId); // Stop the interval
       }
     }, 1000);
 
     return () => {
-      clearInterval(intervalId); // Cleanup on unmount or when dependencies change
+      if (intervalId) clearInterval(intervalId); // Cleanup on unmount or when dependencies change
     };
   }, [
     lesson.id,
@@ -162,6 +168,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     lesson.reservationId,
     lesson.status,
     enrollment,
+    isCountingDown,
   ]); // Removed isCountingDown
 
   if (enrollment) {
