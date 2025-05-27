@@ -3,49 +3,69 @@ import { Button, Text, Box, Flex } from "@chakra-ui/react";
 import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
 
-// Helper function to calculate time remaining
-const calculateTimeRemaining = (targetKSTDateString: string) => {
-  if (!targetKSTDateString) {
-    // console.warn("[LessonCardActions] calculateTimeRemaining: targetKSTDateString is null or empty.");
+// Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
+// and return a Date object.
+const parseKSTDateString = (
+  kstDateStringWithSuffix: string | undefined
+): Date | null => {
+  if (!kstDateStringWithSuffix) {
+    // console.warn("[LessonCardActions] parseKSTDateString: input string is null or empty.");
     return null;
   }
 
-  let kstCompliantString = targetKSTDateString.replace(" ", "T");
+  let parsableDateStr = kstDateStringWithSuffix
+    .replace(/부터|까지/g, "")
+    .trim();
+  parsableDateStr = parsableDateStr.replace(/\./g, "-"); // e.g., "YYYY-MM-DD HH:MM" or "YYYY-MM-DD"
 
-  // Check if the string already has a timezone offset (Z, +HH:MM, or -HH:MM at the end)
-  const hasTimezoneRegex = /Z|[+-]\d{2}:\d{2}$/;
-
-  if (!hasTimezoneRegex.test(kstCompliantString)) {
-    // If no timezone offset is present, assume KST and append +09:00.
-    if (kstCompliantString.includes("T")) {
-      // Likely "YYYY-MM-DDTHH:MM:SS" or "YYYY-MM-DDTHH:MM"
-      // Ensure seconds are present if only HH:MM
-      if (/T\d{2}:\d{2}$/.test(kstCompliantString)) {
-        // Ends with T HH:MM
-        kstCompliantString += ":00+09:00";
-      } else {
-        // Assumed to be T HH:MM:SS or other, just add offset
-        kstCompliantString += "+09:00";
-      }
-    } else if (/^\d{4}-\d{2}-\d{2}$/.test(kstCompliantString)) {
-      // Date-only string "YYYY-MM-DD", interpret as start of day KST.
-      kstCompliantString += "T00:00:00+09:00";
-    }
-    // If it's some other format without 'T' and not date-only, it might be problematic.
-    // For now, this covers common ISO-like date and datetime strings.
+  // Ensure it's in a format that new Date() can parse reliably with timezone
+  // YYYY-MM-DD HH:MM:SS or YYYY-MM-DDTHH:MM:SS
+  if (parsableDateStr.includes(" ")) {
+    parsableDateStr = parsableDateStr.replace(" ", "T");
   }
-  // If it already has a timezone, kstCompliantString is used as is (after T replacement).
 
-  const targetTime = new Date(kstCompliantString).getTime();
-
-  if (isNaN(targetTime)) {
+  // Add seconds if missing and time is present (e.g., "YYYY-MM-DDTHH:MM")
+  if (parsableDateStr.length === 16 && parsableDateStr.includes("T")) {
+    parsableDateStr += ":00"; // "YYYY-MM-DDTHH:MM:SS"
+  } else if (
+    parsableDateStr.length === 10 &&
+    parsableDateStr.match(/^\d{4}-\d{2}-\d{2}$/)
+  ) {
+    // Date-only "YYYY-MM-DD"
+    parsableDateStr += "T00:00:00"; // Assume start of the day
+  } else if (
+    !(parsableDateStr.length === 19 && parsableDateStr.includes("T"))
+  ) {
+    // If not a full YYYY-MM-DDTHH:MM:SS or recognized date-only, log and return null
     console.warn(
-      `[LessonCardActions] Failed to parse KST date string. Original: '${targetKSTDateString}', Processed: '${kstCompliantString}'`
+      `[LessonCardActions] Unrecognized date format before timezone adjustment: Original: '${kstDateStringWithSuffix}', Processed: '${parsableDateStr}'`
     );
     return null;
   }
 
-  const now = new Date().getTime(); // Current UTC milliseconds
+  // Append KST offset if not already specified by Z or +/-HH:MM
+  const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
+  if (!hasTimezoneRegex.test(parsableDateStr)) {
+    parsableDateStr += "+09:00"; // Explicitly KST
+  }
+
+  const dateObj = new Date(parsableDateStr);
+
+  if (isNaN(dateObj.getTime())) {
+    console.warn(
+      `[LessonCardActions] Failed to parse KST date string. Original: '${kstDateStringWithSuffix}', Processed for Date constructor: '${parsableDateStr}'`
+    );
+    return null;
+  }
+  return dateObj;
+};
+
+// Helper function to calculate time difference from a target Date object
+const calculateTimeDifference = (targetDateObj: Date | null) => {
+  if (!targetDateObj) return null;
+
+  const now = new Date().getTime(); // Current time in UTC milliseconds
+  const targetTime = targetDateObj.getTime(); // Target time in UTC milliseconds
   const difference = targetTime - now;
 
   if (difference <= 0) {
@@ -63,11 +83,10 @@ const calculateTimeRemaining = (targetKSTDateString: string) => {
 };
 
 interface LessonCardActionsProps {
-  lesson: LessonDTO & { applicationStartDate?: string }; // Ensure DTO has status and appStartDate
+  lesson: LessonDTO;
   enrollment?: MypageEnrollDto;
   onRequestCancel?: (enrollId: number) => void;
   onApplyClick?: () => void;
-  // Add other callbacks like onGoToPayment, onRenewLesson if they become relevant here
 }
 
 const LessonCardActions: React.FC<LessonCardActionsProps> = ({
@@ -77,86 +96,60 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   onApplyClick,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState(() =>
-    !enrollment && lesson.applicationStartDate && lesson.status === "접수대기"
-      ? calculateTimeRemaining(lesson.applicationStartDate)
+    !enrollment && lesson.reservationId && lesson.status === "접수대기"
+      ? calculateTimeDifference(parseKSTDateString(lesson.reservationId))
       : null
   );
   const [isCountingDown, setIsCountingDown] = useState(
     !!(
       !enrollment &&
-      lesson.applicationStartDate &&
+      lesson.reservationId &&
       lesson.status === "접수대기" &&
       timeRemaining
     )
   );
 
   useEffect(() => {
-    if (
-      enrollment ||
-      !lesson.applicationStartDate ||
-      lesson.status !== "접수대기"
-    ) {
+    let intervalId: NodeJS.Timeout | undefined = undefined;
+
+    if (enrollment || !lesson.reservationId || lesson.status !== "접수대기") {
       setIsCountingDown(false);
+      if (intervalId) clearInterval(intervalId);
       return;
     }
 
-    const initialRemaining = calculateTimeRemaining(
-      lesson.applicationStartDate
-    );
-    if (!initialRemaining) {
-      setIsCountingDown(false);
-      setTimeRemaining(null);
-      return;
-    }
-    setTimeRemaining(initialRemaining);
-    setIsCountingDown(true);
-    // Log initial remaining time
-    console.log(
-      `Lesson ID ${lesson.id} (${lesson.title}): Initial remaining time - Days: ${initialRemaining.days}, Hours: ${initialRemaining.hours}, Minutes: ${initialRemaining.minutes}, Seconds: ${initialRemaining.seconds}`
-    );
+    const targetApplicationStartDate = parseKSTDateString(lesson.reservationId);
 
-    const interval = setInterval(() => {
-      const remaining = calculateTimeRemaining(lesson.applicationStartDate!);
+    const updateCountdown = () => {
+      const remaining = calculateTimeDifference(targetApplicationStartDate);
       setTimeRemaining(remaining);
       if (remaining) {
-        // Log remaining time for the specific lesson
-        console.log(
-          `Lesson ID ${lesson.id} (${lesson.title}): Time Remaining - Days: ${remaining.days}, Hours: ${remaining.hours}, Minutes: ${remaining.minutes}, Seconds: ${remaining.seconds}`
-        );
+        if (!isCountingDown) setIsCountingDown(true);
       } else {
-        console.log(
-          `Lesson ID ${lesson.id} (${lesson.title}): Countdown finished.`
-        );
         setIsCountingDown(false);
-        clearInterval(interval);
-        // Optionally, trigger a re-fetch of lesson data here if status might have changed
+        if (intervalId) clearInterval(intervalId);
       }
-    }, 1000);
+    };
 
-    return () => clearInterval(interval);
+    updateCountdown();
+
+    intervalId = setInterval(updateCountdown, 1000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [
-    lesson.applicationStartDate,
+    lesson.reservationId,
     lesson.status,
     enrollment,
     lesson.id,
     lesson.title,
+    isCountingDown,
   ]);
 
   if (enrollment) {
-    // Existing logic for when an enrollment is present (My Page context)
-    const {
-      status: enrollStatus,
-      cancelStatus, // Added to check for APPROVED in conjunction with REFUND_PENDING_ADMIN_CANCEL
-      // paymentExpireDt, // Not used
-      // renewalWindow, // Not used
-      // canAttemptPayment, // Assumed false or irrelevant for this branch
-      // paymentPageUrl, // Not used
-      enrollId,
-    } = enrollment;
+    const { status: enrollStatus, cancelStatus, enrollId } = enrollment;
 
-    // For this temporary branch, we primarily handle "UNPAID" and "CANCELED_UNPAID"
-
-    // State 1: Admin has cancelled the enrollment
     if (
       enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
       cancelStatus === "APPROVED"
@@ -172,7 +165,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       );
     }
 
-    // State 2: If the enrollment is cancelled (specifically in the unpaid context by user)
     if (enrollStatus === "CANCELED_UNPAID") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
@@ -184,20 +176,15 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         </Flex>
       );
     }
-
-    // Default state for this temporary branch: "Unpaid" status and a "Cancel" button
-    // All other enrollStatus values will also show this, assuming they are effectively "UNPAID" for this branch's purpose.
     return (
       <Flex align="center" gap={3} w="100%">
         <Flex direction="column" align="center" gap={2} w="50%">
           <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
-              {/* More specific status could be shown if available on enrollment */}
               미결제 상태
             </Text>
           </Button>
         </Flex>
-
         {onRequestCancel && (
           <Button
             colorPalette="red"
@@ -210,42 +197,78 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       </Flex>
     );
   } else {
-    // New logic for "listing" context (no enrollment) - countdown or apply button
+    // Listing context (no enrollment)
     let buttonContent: React.ReactNode = "신청불가";
     let buttonDisabled = true;
-    let buttonBgColor = "#888888"; // Default disabled color
+    let buttonBgColor = "#888888";
     let hoverBgColor = "#888888";
 
-    if (isCountingDown && timeRemaining) {
-      let countdownText = "";
-      if (timeRemaining.days > 0) {
-        countdownText += `${timeRemaining.days}일 `;
+    const now = new Date();
+    const applicationStartTime = parseKSTDateString(lesson.reservationId);
+    const applicationEndTime = parseKSTDateString(lesson.receiptId);
+
+    if (lesson.status === "접수대기") {
+      if (applicationStartTime && now < applicationStartTime) {
+        if (isCountingDown && timeRemaining) {
+          let countdownText = "";
+          if (timeRemaining.days > 0) {
+            countdownText += `${timeRemaining.days}일 `;
+          }
+          countdownText += `${String(timeRemaining.hours).padStart(
+            2,
+            "0"
+          )}:${String(timeRemaining.minutes).padStart(2, "0")}:${String(
+            timeRemaining.seconds
+          ).padStart(2, "0")}`;
+          buttonContent = `접수 시작 ${countdownText}`;
+          buttonDisabled = true;
+          buttonBgColor = "orange.400";
+          hoverBgColor = "orange.400";
+        } else {
+          // This case handles if the countdown isn't active but it is indeed before start time.
+          // It could be initial render or if the timer logic had an issue or just finished.
+          buttonContent = "접수시작전";
+          buttonDisabled = true;
+          // Optionally set a specific color for "접수시작전" if different from default disabled
+          buttonBgColor = "#A0AEC0"; // A more neutral disabled color
+          hoverBgColor = "#A0AEC0";
+        }
+      } else {
+        // "접수대기" but applicationStartTime is past or invalid, or countdown finished (timeRemaining is null)
+        // This implies the status might be stale and should ideally transition to "접수중" soon.
+        buttonContent = "확인중...";
+        buttonDisabled = true;
+        buttonBgColor = "#A0AEC0";
+        hoverBgColor = "#A0AEC0";
       }
-      countdownText += `${String(timeRemaining.hours).padStart(
-        2,
-        "0"
-      )}:${String(timeRemaining.minutes).padStart(2, "0")}:${String(
-        timeRemaining.seconds
-      ).padStart(2, "0")}`;
-      buttonContent = countdownText;
-      buttonDisabled = true;
-      buttonBgColor = "orange.400"; // Color for countdown
-      hoverBgColor = "orange.400";
     } else if (lesson.status === "접수중") {
+      buttonDisabled = false; // Assume enabled unless a condition below disables it
       buttonContent = "신청하기";
-      buttonDisabled = false;
       buttonBgColor = "#2D3092";
       hoverBgColor = "#1f2366";
+
+      if (applicationStartTime && now < applicationStartTime) {
+        buttonContent = "접수시작전";
+        buttonDisabled = true;
+        buttonBgColor = "orange.400"; // Or your preferred color for this state
+        hoverBgColor = "orange.400";
+        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Status '접수중' but current time is before application start. Button disabled.`);
+      } else if (applicationEndTime && now > applicationEndTime) {
+        buttonContent = "접수시간종료";
+        buttonDisabled = true;
+        buttonBgColor = "#888888";
+        hoverBgColor = "#888888";
+        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Status '접수중' but current time is after application end. Button disabled.`);
+      }
     } else if (lesson.status === "접수마감") {
       buttonContent = "접수마감";
+      buttonDisabled = true;
     } else if (lesson.status === "수강중") {
-      buttonContent = "수강중"; // Typically can't apply
-    } else if (lesson.status === "접수대기" && !isCountingDown) {
-      // Countdown finished, or applicationStartDate was in the past, but status not yet "접수중"
-      // Or applicationStartDate was not set/invalid for "접수대기" status
-      buttonContent = "접수시작전";
+      buttonContent = "수강중";
+      buttonDisabled = true;
     }
-    // Other statuses will default to "신청불가"
+
+    // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Status: ${lesson.status}, isCountingDown: ${isCountingDown}, Disabled: ${buttonDisabled}, Content: ${buttonContent}, Start: ${lesson.reservationId}, End: ${lesson.receiptId}`);
 
     return (
       <Button
@@ -255,7 +278,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         height="41px"
         borderRadius="10px"
         _hover={{
-          bgColor: hoverBgColor,
+          bgColor: buttonDisabled ? buttonBgColor : hoverBgColor,
         }}
         disabled={buttonDisabled}
         onClick={!buttonDisabled && onApplyClick ? onApplyClick : undefined}

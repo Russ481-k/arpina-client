@@ -114,13 +114,13 @@ export const SwimmingGuide = () => {
           borderRadius="10px"
         >
           <Text {...guideItemTextStyle}>
-            • 원하는 강습 일정과 시간을 확인 후 신청해 주세요 (금액 : 60,000원)
+            • 원하는 강습 일정과 시간을 확인 후 신청해 주세요 (금액 : 105,000원)
           </Text>
           <Text {...guideItemTextStyle}>
-            • 신규등록 : 매월 25일 ~ 말일 까지
+            • 신규등록 : 매월 26일 ~ 말일 까지
           </Text>
           <Text {...guideItemTextStyle}>
-            • 재등록 : 매월 18일 ~ 22일 까지 (마이페이지를 통해 재등록 가능)
+            • 재등록 : 매월 20일 ~ 25일 까지 (마이페이지를 통해 재등록 가능)
           </Text>
           <Text {...guideItemTextStyle}>
             • 수영장 온라인 신규 신청은 회원가입 후 신청 가능합니다
