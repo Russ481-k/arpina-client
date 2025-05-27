@@ -1,69 +1,103 @@
 import { Box, Container, Text, Link, Flex, Image } from "@chakra-ui/react";
 
 export function Footer() {
-  const topMenuItems = [
-    { label: "창업기업 소개", href: "/enterprise/participants" },
+  const footerLinks = [
+    { label: "개인정보처리방침", href: "/privacy-policy", isHighlighted: true },
+    { label: "영상정보처리기기운영․관리방침", href: "/video-policy" },
+    { label: "아르피나운영지침", href: "/operation-guidelines" },
     { label: "찾아오시는 길", href: "/about/location" },
+    { label: "청소년문화센터", href: "/youth-center" },
+    { label: "이메일무단수집거부", href: "/reject-spam-email" },
   ];
 
   return (
-    <Box as="footer" bg="white" color="#333333" py={0} mt="auto">
+    <Box as="footer" bg="white" color="#333333" mt="auto">
       <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
+        {/* Main Content Area */}
         <Flex
           direction={{ base: "column", md: "row" }}
           justify="space-between"
-          align={{ base: "flex-start", md: "center" }}
-          pt={7}
-          mb={9}
+          align={{ base: "center", md: "flex-start" }}
+          py={8}
         >
-          <Image src="/images/logo/logo4.png" alt="아르피나 푸터 로고" />
-          <Flex gap={5} mb={{ base: 4, md: 0 }} align="center">
-            {topMenuItems.map((item, index) => (
-              <Flex key={index} align="center">
+          {/* Left Section: Logo, Address, Contact */}
+          <Box
+            textAlign={{ base: "center", md: "left" }}
+            mb={{ base: 6, md: 0 }}
+          >
+            <Image
+              src="/images/logo/logo4.png" // Replace with your actual logo path
+              alt="BMC 부산유스호스텔 아르피나 로고"
+              h={{ base: "35px", md: "40px" }} // Adjusted height for responsiveness
+              mb={4}
+              mx={{ base: "auto", md: 0 }}
+            />
+            <Text fontSize="sm" color="#333333" mb={1}>
+              (48089) 부산광역시 해운대구 해운대해변로 35 (우동)
+            </Text>
+            <Flex
+              justify={{ base: "center", md: "flex-start" }}
+              gap={4} // Provides space between T. and F.
+              color="#333333"
+              fontSize="sm"
+            >
+              <Text>T.051-740-3220</Text>
+              <Text>F.051-740-3220</Text>
+            </Flex>
+          </Box>
+
+          {/* Right Section: Links and Social Icon */}
+          <Flex
+            direction="column"
+            align={{ base: "center", md: "flex-end" }}
+            mt={{ base: 4, md: 0 }}
+          >
+            <Flex
+              wrap="wrap"
+              justify={{ base: "center", md: "flex-end" }}
+              gapX={4}
+              gapY={2}
+              mb={4}
+              maxW={{ base: "100%", md: "450px" }} // To control wrapping on md+
+              textAlign={{ base: "center", md: "right" }}
+            >
+              {footerLinks.map((item, index) => (
                 <Link
+                  key={index}
                   href={item.href}
-                  fontSize="md"
-                  fontWeight="300"
-                  color="#333333"
-                  _hover={{ textDecoration: "none", color: "gray.300" }}
+                  fontSize="xs"
+                  fontWeight={item.isHighlighted ? "bold" : "300"}
+                  color={item.isHighlighted ? "yellow.500" : "#555555"} // Changed to yellow
+                  _hover={{
+                    textDecoration: "underline",
+                    color: item.isHighlighted ? "yellow.600" : "black", // Changed to yellow
+                  }}
                 >
                   {item.label}
                 </Link>
-              </Flex>
-            ))}
-          </Flex>
-          {/* <Box position="relative">
-            <Flex
-              as="button"
-              align="center"
-              gap={1}
-              color="white"
-              fontSize="14px"
-              _hover={{ color: "gray.300" }}
-              transition="color 0.2s"
-            >
-              패밀리사이트
+              ))}
             </Flex>
-          </Box> */}
+            <Link
+              href="https://www.instagram.com" // Replace with your actual Instagram URL
+              aria-label="인스타그램 방문"
+            >
+              <Image
+                src="/images/icons/instagram_icon.png" // Replace with your actual icon path
+                alt="인스타그램 로고"
+                boxSize={{ base: "28px", md: "32px" }}
+              />
+            </Link>
+          </Flex>
         </Flex>
 
-        <Box pb={9}>
-          <Text fontSize="md" color="#333333" mb={2} fontWeight="500">
-            (48089) 부산 해운대구 해운대해변로 35 (우동)
-          </Text>
-          <Flex gap={0} color="#333333" fontSize="md" align="center">
-            <Text>TEL : 051-740-3220</Text>
-            <Text mx={2} color="#333333">
-              ·
-            </Text>
-            <Text>FAX : 051-740-3220</Text>
-            <Text mx={2} color="#333333">
-              ·
-            </Text>
-          </Flex>
-        </Box>
-        <Box borderTop="1px solid" borderColor="#333333/20" py={6}>
-          <Text fontSize="sm" color="#657580">
+        {/* Copyright Section */}
+        <Box
+          borderTop="1px solid"
+          borderColor="gray.300"
+          py={6}
+          textAlign={{ base: "center", md: "left" }} // Copyright to the left on desktop
+        >
+          <Text fontSize="xs" color="#657580">
             Copyright (c) 2025 Busan Youth Hostel Arpina. All Rights Reserved.
           </Text>
         </Box>
