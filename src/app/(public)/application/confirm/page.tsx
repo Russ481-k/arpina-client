@@ -18,12 +18,7 @@ import {
   Fieldset,
   Icon,
 } from "@chakra-ui/react";
-import {
-  MdInfoOutline,
-  MdChevronRight,
-  MdCheck,
-  MdLocalFlorist,
-} from "react-icons/md";
+import { MdInfoOutline } from "react-icons/md";
 import { swimmingPaymentService } from "@/lib/api/swimming";
 import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
 import { EnrollLessonRequestDto, LockerAvailabilityDto } from "@/types/api";
@@ -53,12 +48,6 @@ const membershipOptions = [
 const DEFAULT_LOCKER_FEE = 5000;
 const APPLICATION_TIMEOUT_SECONDS = 300; // 5 minutes
 
-interface LockerLessonDetails {
-  lessonId: number;
-  maleLockerCount: number;
-  femaleLockerCount: number;
-}
-
 const ApplicationConfirmPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,6 +55,9 @@ const ApplicationConfirmPage = () => {
   const [lessonId, setLessonId] = useState<number | null>(null);
   const [lessonTitle, setLessonTitle] = useState<string>("");
   const [lessonPrice, setLessonPrice] = useState<number>(0);
+  const [lessonStartDate, setLessonStartDate] = useState<string>("");
+  const [lessonEndDate, setLessonEndDate] = useState<string>("");
+  const [lessonTime, setLessonTime] = useState<string>("");
 
   const [profile, setProfile] = useState<ProfileDto | null>(null);
   const [userGender, setUserGender] = useState<"MALE" | "FEMALE" | null>(null);
@@ -87,28 +79,22 @@ const ApplicationConfirmPage = () => {
   const [countdown, setCountdown] = useState(APPLICATION_TIMEOUT_SECONDS);
 
   const colors = useColors();
-
   const pageBg = colors.bg;
   const cardBg = colors.cardBg;
   const primaryText = colors.text.primary;
   const secondaryText = colors.text.secondary;
-  const mutedText = colors.text.muted;
   const inverseText = colors.text.inverse;
   const borderColor = colors.border;
   const primaryDefault = colors.primary.default;
   const primaryHover = colors.primary.hover;
   const primaryDark = colors.primary.dark;
-  const primaryLight = colors.primary.light;
-  const primaryAlpha = colors.primary.alpha;
-
   const accentDelete = colors.accent.delete.default;
   const accentWarning = colors.accent.warning.default;
-  const accentInfo = colors.accent.info.default;
-  const leafIconColor = colors.accent.leafIcon;
-  const timerYellowColor = colors.accent.timerYellow;
   const outlineButtonHoverBg = colors.accent.outlineButtonHoverBg;
   const errorNoticeBg = colors.accent.errorNoticeBg;
   const errorNoticeBorder = colors.accent.errorNoticeBorder;
+  const timerYellowColor = colors.accent.timerYellow;
+  const primaryAlpha = colors.primary.alpha;
   const radioUnselectedBg = colors.accent.radioUnselectedBg;
   const radioUnselectedHoverBorder = colors.accent.radioUnselectedHoverBorder;
 
@@ -135,23 +121,33 @@ const ApplicationConfirmPage = () => {
     const idStr = searchParams.get("lessonId");
     const title = searchParams.get("lessonTitle");
     const priceStr = searchParams.get("lessonPrice");
+    const startDate = searchParams.get("lessonStartDate");
+    const endDate = searchParams.get("lessonEndDate");
+    const time = searchParams.get("lessonTime");
 
     if (
       idStr &&
       !isNaN(parseInt(idStr)) &&
       title &&
       priceStr &&
-      !isNaN(parseFloat(priceStr))
+      !isNaN(parseFloat(priceStr)) &&
+      startDate &&
+      endDate &&
+      time
     ) {
       setLessonId(parseInt(idStr));
       setLessonTitle(title);
       setLessonPrice(parseFloat(priceStr));
+      setLessonStartDate(startDate);
+      setLessonEndDate(endDate);
+      setLessonTime(time);
     } else {
       setError("잘못된 접근입니다. 강습 정보가 URL에 충분하지 않습니다.");
       setIsLoading(false);
       toaster.create({
         title: "오류",
-        description: "필수 강습 정보가 URL에 없습니다.",
+        description:
+          "필수 강습 정보가 URL에 없습니다. 이전 페이지로 돌아갑니다.",
         type: "error",
       });
       router.push("/sports/swimming/lesson");
@@ -161,7 +157,7 @@ const ApplicationConfirmPage = () => {
   useEffect(() => {
     if (!lessonId) return;
     setIsLoading(true);
-    const fetchInitialData = async () => {
+    const fetchProfile = async () => {
       try {
         const profileData = await mypageApi.getProfile();
         if (profileData) {
@@ -190,42 +186,38 @@ const ApplicationConfirmPage = () => {
           console.error("Failed to fetch profile:", err);
           setError(err.message || "프로필 정보를 불러오는데 실패했습니다.");
         }
-        // If 401, withAuthRedirect should handle it.
       } finally {
         setIsLoading(false);
       }
     };
-    fetchInitialData();
+    fetchProfile();
   }, [lessonId]);
 
   useEffect(() => {
-    if (lessonId) {
-      if (userGender === "MALE" || userGender === "FEMALE") {
-        setIsLockerDetailsLoading(true);
-        setLockerError(null);
-        mypageApi
-          .getLockerAvailabilityStatus(userGender)
-          .then((data) => {
-            setLockerAvailability(data);
-          })
-          .catch((err) => {
-            console.error("Failed to fetch locker availability:", err);
-            setLockerError("사물함 정보를 불러오는데 실패했습니다.");
-            setLockerAvailability(null);
-          })
-          .finally(() => {
-            setIsLockerDetailsLoading(false);
-          });
-      } else {
-        // userGender is null (not MALE or FEMALE)
-        setLockerError(
-          "사용자 성별이 남성 또는 여성이 아니거나 확인되지 않아, 해당 성별의 사물함 정보를 제공할 수 없습니다."
-        );
-        setLockerAvailability(null);
-        setIsLockerDetailsLoading(false);
-      }
+    if (lessonId && userGender) {
+      setIsLockerDetailsLoading(true);
+      setLockerError(null);
+      mypageApi
+        .getLockerAvailabilityStatus(userGender)
+        .then((data) => {
+          setLockerAvailability(data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch locker availability:", err);
+          setLockerError("사물함 정보를 불러오는데 실패했습니다.");
+          setLockerAvailability(null);
+        })
+        .finally(() => {
+          setIsLockerDetailsLoading(false);
+        });
+    } else if (lessonId && profile && userGender === null) {
+      setLockerError(
+        "사용자 성별이 남성 또는 여성이 아니거나 확인되지 않아, 해당 성별의 사물함 정보를 제공할 수 없습니다."
+      );
+      setLockerAvailability(null);
+      setIsLockerDetailsLoading(false);
     }
-  }, [lessonId, userGender]);
+  }, [lessonId, userGender, profile]);
 
   useEffect(() => {
     if (!lessonPrice) return;
@@ -247,10 +239,10 @@ const ApplicationConfirmPage = () => {
   };
 
   const handleProceedToPayment = async () => {
-    if (!lessonId || !profile) {
+    if (!lessonId || !profile || !lessonStartDate || !lessonTime) {
       toaster.create({
         title: "오류",
-        description: "필수 정보(강습 또는 사용자)가 로드되지 않았습니다.",
+        description: "필수 정보(강습 상세 또는 사용자)가 로드되지 않았습니다.",
         type: "error",
       });
       return;
@@ -316,7 +308,7 @@ const ApplicationConfirmPage = () => {
 
   const spinnerColor = primaryDefault;
 
-  if (isLoading || (lessonId && !profile && !error)) {
+  if (isLoading) {
     return (
       <Flex
         bg={pageBg}
@@ -364,7 +356,7 @@ const ApplicationConfirmPage = () => {
     );
   }
 
-  if (!profile && !isLoading && !error) {
+  if (!profile && !error) {
     return (
       <Flex
         bg={pageBg}
@@ -372,6 +364,8 @@ const ApplicationConfirmPage = () => {
         justify="center"
         align="center"
         color={primaryText}
+        direction="column"
+        p={5}
       >
         <Spinner size="xl" color={spinnerColor} />
         <Text mt={4} ml={3} color={secondaryText}>
@@ -447,23 +441,23 @@ const ApplicationConfirmPage = () => {
         </HStack>
         <VStack align="stretch" gap={1} pl={2}>
           {[
-            {
-              text: "신청은 ",
-              boldRed: "5분 이내",
-              rest: "에 결제까지 완료하셔야 신청이 확정됩니다.",
-            },
+            // {
+            //   text: "신청은 ",
+            //   boldRed: "5분 이내",
+            //   rest: "에 결제까지 완료하셔야 신청이 확정됩니다.",
+            // },
             {
               text: "수영장강습과, 사물함신청은 ",
               boldRed: "결제완료 기준",
               rest: "으로 선착순 확정됩니다.",
             },
-            {
-              text: "",
-              boldRed: "5분 이내",
-              rest: " 미결제 시 신청은 ",
-              boldRed2: "자동취소",
-              rest2: " 됩니다.",
-            },
+            // {
+            //   text: "",
+            //   boldRed: "5분 이내",
+            //   rest: " 미결제 시 신청은 ",
+            //   boldRed2: "자동취소",
+            //   rest2: " 됩니다.",
+            // },
             {
               text: "할인회원 신청시 ",
               boldRed: "오프라인으로 증빙서류 제출",
@@ -490,17 +484,6 @@ const ApplicationConfirmPage = () => {
                   </Text>
                 )}
                 {item.rest}
-                {item.boldRed2 && (
-                  <Text
-                    as="span"
-                    fontWeight="bold"
-                    color={accentDelete}
-                    mx="3px"
-                  >
-                    {item.boldRed2}
-                  </Text>
-                )}
-                {item.rest2}
               </Text>
             </Flex>
           ))}
@@ -597,13 +580,13 @@ const ApplicationConfirmPage = () => {
               <HStack justifyContent="space-between">
                 <Text color={secondaryText}>강습기간</Text>
                 <Text fontWeight="medium" color={primaryText}>
-                  25년 05월 01일 ~ 25년 05월 30일
+                  {lessonStartDate} ~ {lessonEndDate}
                 </Text>
               </HStack>
               <HStack justifyContent="space-between">
                 <Text color={secondaryText}>강습시간</Text>
                 <Text fontWeight="medium" color={primaryText}>
-                  오전 06:00 ~ 06:50
+                  {lessonTime}
                 </Text>
               </HStack>
               <HStack justifyContent="space-between">
