@@ -94,6 +94,17 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   onRequestCancel,
   onApplyClick,
 }) => {
+  console.log(
+    "[LessonCardActions] Component Rendering. Lesson ID:",
+    lesson?.id
+  );
+  console.log(
+    "[LessonCardActions] Props received: lesson:",
+    lesson,
+    "enrollment:",
+    enrollment
+  );
+
   const [timeRemaining, setTimeRemaining] = useState(() => {
     if (!enrollment && lesson.reservationId && lesson.status === "접수대기") {
       const targetDate = parseKSTDateString(lesson.reservationId);
@@ -112,48 +123,70 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   );
 
   useEffect(() => {
+    console.log(
+      `[Lesson ID: ${lesson.id}] useEffect triggered. Checking initial conditions.`
+    );
+    console.log(
+      `[Lesson ID: ${lesson.id}] useEffect - Initial check values: enrollment:`,
+      enrollment,
+      `lesson.reservationId: ${lesson.reservationId}, lesson.status: ${lesson.status}`
+    );
+
     let intervalId: NodeJS.Timeout | undefined = undefined;
 
     if (enrollment || !lesson.reservationId || lesson.status !== "접수대기") {
+      console.log(
+        `[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown logic due to initial conditions.`
+      );
       setIsCountingDown(false);
       setTimeRemaining(null);
-      if (intervalId) clearInterval(intervalId); // Clear interval if conditions no longer met
+      if (intervalId) clearInterval(intervalId);
       return;
     }
 
     console.log(
-      `[Lesson ID: ${lesson.id}] Raw reservationId: ${lesson.reservationId}`
+      `[Lesson ID: ${lesson.id}] useEffect - Proceeding with countdown setup. Raw reservationId: ${lesson.reservationId}`
     );
     const targetApplicationStartDate = parseKSTDateString(lesson.reservationId);
     console.log(
-      `[Lesson ID: ${lesson.id}] Parsed targetApplicationStartDate:`,
+      `[Lesson ID: ${lesson.id}] useEffect - Parsed targetApplicationStartDate:`,
       targetApplicationStartDate
     );
 
     if (!targetApplicationStartDate) {
       console.log(
-        `[Lesson ID: ${lesson.id}] Invalid targetApplicationStartDate, stopping countdown.`
+        `[Lesson ID: ${lesson.id}] useEffect - Invalid targetApplicationStartDate, stopping countdown.`
       );
       setIsCountingDown(false);
       setTimeRemaining(null);
       return;
     }
 
-    // Initial check and set state if countdown should start
     const initialRemaining = calculateTimeDifference(
       targetApplicationStartDate
     );
     console.log(
-      `[Lesson ID: ${lesson.id}] Initial timeRemaining:`,
+      `[Lesson ID: ${lesson.id}] useEffect - Initial timeRemaining:`,
       initialRemaining
     );
+
     if (initialRemaining) {
       setTimeRemaining(initialRemaining);
-      if (!isCountingDown) setIsCountingDown(true); // Start countdown if not already
+      if (!isCountingDown) {
+        setIsCountingDown(true);
+        console.log(
+          `[Lesson ID: ${lesson.id}] useEffect - Countdown STARTING. isCountingDown set to true.`
+        );
+      }
     } else {
       setTimeRemaining(null);
-      if (isCountingDown) setIsCountingDown(false); // Stop countdown if time is up
-      return; // No interval needed if time is already up
+      if (isCountingDown) {
+        setIsCountingDown(false);
+        console.log(
+          `[Lesson ID: ${lesson.id}] useEffect - Countdown STOPPED (initialRemaining is null/zero). isCountingDown set to false.`
+        );
+      }
+      return;
     }
 
     intervalId = setInterval(() => {
@@ -167,13 +200,13 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       console.log(
         `[Lesson ID: ${lesson.id}] Tick: Now: ${nowForInterval}, Target: ${targetTimeForInterval}, Diff: ${differenceInInterval}, Remaining: `,
         remainingInInterval,
-        `isCountingDown: ${isCountingDown}` // Log isCountingDown state directly from its current value
+        `isCountingDown: ${isCountingDown}`
       );
       setTimeRemaining(remainingInInterval);
 
       if (!remainingInInterval) {
         console.log(
-          `[Lesson ID: ${lesson.id}] Countdown FINISHED in interval.`
+          `[Lesson ID: ${lesson.id}] Tick - Countdown FINISHED in interval.`
         );
         setIsCountingDown(false);
         clearInterval(intervalId);
@@ -181,8 +214,10 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }, 1000);
 
     return () => {
-      if (intervalId) clearInterval(intervalId); // Cleanup on unmount or when dependencies change
-      console.log(`[Lesson ID: ${lesson.id}] Countdown effect cleanup.`);
+      if (intervalId) clearInterval(intervalId);
+      console.log(
+        `[Lesson ID: ${lesson.id}] useEffect - Countdown effect cleanup.`
+      );
     };
   }, [
     lesson.id,
@@ -190,8 +225,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     lesson.reservationId,
     lesson.status,
     enrollment,
-    isCountingDown,
-  ]); // Removed isCountingDown
+  ]);
 
   if (enrollment) {
     const { status: enrollStatus, cancelStatus, enrollId } = enrollment;
