@@ -29,10 +29,10 @@ import {
   PasswordStrengthMeter,
 } from "@/components/ui/password-input";
 import { Tooltip } from "@/components/ui/tooltip";
-import { CheckCircle2Icon, XCircleIcon, ExternalLinkIcon } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle2Icon, XCircleIcon } from "lucide-react";
 import { LessonDTO } from "@/types/swimming";
 import { LessonCard } from "@/components/swimming/LessonCard";
+import { swimmingPaymentService } from "@/lib/api/swimming"; // For renewal
 
 // Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
 const formatDate = (dateString: string | undefined | null): string => {
@@ -118,6 +118,32 @@ export default function MyPage() {
     useState(false);
   const [passwordsMatch, setPasswordsMatch] = useState(true);
 
+  async function fetchEnrollments() {
+    try {
+      const enrollmentsApiResponse = await mypageApi.getEnrollments();
+      if (
+        enrollmentsApiResponse &&
+        Array.isArray(enrollmentsApiResponse.content)
+      ) {
+        setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
+      } else {
+        console.warn(
+          "Enrollments API response is not in the expected format or content is missing/not an array:",
+          enrollmentsApiResponse
+        );
+        setEnrollments([]);
+      }
+    } catch (error) {
+      console.error("[Mypage] Failed to load enrollments:", error);
+      toaster.create({
+        title: "오류",
+        description: "수강 신청 정보를 불러오는데 실패했습니다.",
+        type: "error",
+      });
+      setEnrollments([]);
+    }
+  }
+
   useEffect(() => {
     let localUserData: any = null;
 
@@ -144,7 +170,15 @@ export default function MyPage() {
                     gender: prevProfile.gender,
                   };
                 } else {
-                  return null;
+                  return {
+                    id: 0, // Placeholder, ensure ProfileDto allows this or handle null better
+                    userId: localUserData.username || "",
+                    name: localUserData.name || "",
+                    email: localUserData.email || "",
+                    phone: localUserData.phone || "",
+                    address: localUserData.address || "",
+                    carNo: localUserData.carNo || "",
+                  } as ProfileDto;
                 }
               });
             } catch (e) {
@@ -201,26 +235,21 @@ export default function MyPage() {
                   gender: prevProfile.gender,
                 };
               } else {
-                return null;
+                return {
+                  id: 0, // Placeholder
+                  userId: localUserData.username || "",
+                  name: localUserData.name || "",
+                  email: localUserData.email || "",
+                  phone: localUserData.phone || "",
+                  address: localUserData.address || "",
+                  carNo: localUserData.carNo || "",
+                } as ProfileDto;
               }
             });
           }
         }
 
-        const enrollmentsApiResponse = await mypageApi.getEnrollments();
-        if (
-          enrollmentsApiResponse &&
-          Array.isArray(enrollmentsApiResponse.content)
-        ) {
-          setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
-        } else {
-          console.warn(
-            "Enrollments API response is not in the expected format or content is missing/not an array:",
-            enrollmentsApiResponse
-          );
-          setEnrollments([]);
-        }
-
+        await fetchEnrollments(); // Call the new function to load enrollments
         const paymentsData = await mypageApi.getPayments();
         setPayments(paymentsData as MypagePaymentDto[]);
       } catch (error) {
@@ -250,7 +279,15 @@ export default function MyPage() {
                 gender: prevProfile.gender,
               };
             } else {
-              return null;
+              return {
+                id: 0, // Placeholder
+                userId: localUserData.username || "",
+                name: localUserData.name || "",
+                email: localUserData.email || "",
+                phone: localUserData.phone || "",
+                address: localUserData.address || "",
+                carNo: localUserData.carNo || "",
+              } as ProfileDto;
             }
           });
           setEnrollments([]);
@@ -275,7 +312,7 @@ export default function MyPage() {
 
     fetchUserData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // profile is used in catch block, but effect is for initial load.
+  }, [router]); // Consider dependencies carefully
 
   const validateNewPasswordCriteria = (password: string) => {
     const criteria = {
@@ -427,6 +464,110 @@ export default function MyPage() {
     ),
     [passwordCriteriaMet]
   );
+
+  // Event Handlers for LessonCardActions
+  const handleGoToPayment = (paymentPageUrl: string) => {
+    if (paymentPageUrl) {
+      if (paymentPageUrl.startsWith("http")) {
+        window.location.href = paymentPageUrl;
+      } else {
+        router.push(paymentPageUrl);
+      }
+    } else {
+      toaster.create({
+        title: "오류",
+        description: "결제 페이지 정보를 찾을 수 없습니다.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleRequestCancel = async (enrollId: number) => {
+    if (!enrollId) {
+      toaster.create({
+        title: "경고",
+        description: "잘못된 강습 정보입니다.",
+        type: "warning",
+      });
+      return;
+    }
+    if (window.confirm("정말로 이 강습의 취소를 요청하시겠습니까?")) {
+      try {
+        setIsLoading(true);
+        await mypageApi.cancelEnrollment(enrollId);
+        toaster.create({
+          title: "성공",
+          description: "취소 요청이 접수되었습니다. 관리자 확인 후 처리됩니다.",
+          type: "success",
+        });
+        await fetchEnrollments();
+      } catch (error: any) {
+        console.error("[Mypage] Failed to request cancellation:", error);
+        toaster.create({
+          title: "오류",
+          description: `취소 요청 중 오류가 발생했습니다: ${getApiErrorMessage(
+            error,
+            ""
+          )}`,
+          type: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleRenewLesson = async (lessonId: number) => {
+    if (!lessonId) {
+      toaster.create({
+        title: "경고",
+        description: "잘못된 강습 정보입니다.",
+        type: "warning",
+      });
+      return;
+    }
+    if (
+      window.confirm(
+        "이 강습을 재등록 하시겠습니까? 현재 사물함 사용 여부는 재등록 시 유지되지 않으며, 결제 페이지에서 다시 선택해야 합니다."
+      )
+    ) {
+      try {
+        setIsLoading(true);
+        const renewalResponse = await swimmingPaymentService.renewalLesson({
+          lessonId,
+          carryLocker: false,
+        });
+        if (renewalResponse && renewalResponse.paymentPageUrl) {
+          toaster.create({
+            title: "정보",
+            description:
+              "재등록 신청이 시작되었습니다. 결제 페이지로 이동합니다.",
+            type: "info",
+          });
+          handleGoToPayment(renewalResponse.paymentPageUrl);
+        } else {
+          toaster.create({
+            title: "오류",
+            description:
+              "재등록 절차를 시작하지 못했습니다. 관리자에게 문의해주세요.",
+            type: "error",
+          });
+        }
+      } catch (error: any) {
+        console.error("[Mypage] Failed to renew lesson:", error);
+        toaster.create({
+          title: "오류",
+          description: `재등록 중 오류가 발생했습니다: ${getApiErrorMessage(
+            error,
+            "관리자에게 문의해주세요."
+          )}`,
+          type: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
   return (
     <Container maxW="container.lg" py={8}>
@@ -657,11 +798,7 @@ export default function MyPage() {
             </Box>
           ) : enrollments && enrollments.length > 0 ? (
             <Grid
-              templateColumns={{
-                base: "1fr",
-                md: "repeat(2, 1fr)",
-                lg: "repeat(3, 1fr)",
-              }} // Adjusted for more info
+              templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
               gap={6}
               py={4}
             >
@@ -670,20 +807,20 @@ export default function MyPage() {
                 const lessonDataForCard: LessonDTO = {
                   id: enroll.lesson.lessonId,
                   title: enroll.lesson.title,
-                  name: enroll.lesson.name, // from new API response
-                  startDate: formatDate(enroll.lesson.startDate),
-                  endDate: formatDate(enroll.lesson.endDate),
-                  timeSlot: enroll.lesson.timeSlot,
-                  timePrefix: enroll.lesson.timePrefix,
-                  days: enroll.lesson.days,
-                  capacity: enroll.lesson.capacity,
-                  remaining: enroll.lesson.remaining, // Actual available spots
-                  price: enroll.lesson.price,
-                  status: enroll.lesson.status, // Lesson's operational status for the card
-                  reservationId: enroll.lesson.reservationId, // Already formatted string
-                  receiptId: enroll.lesson.receiptId, // Already formatted string
-                  instructor: enroll.lesson.instructor,
-                  location: enroll.lesson.location,
+                  name: enroll.lesson.name, // Make sure this field exists or is mapped
+                  startDate: formatDate(enroll.lesson.startDate), // Use formatDate
+                  endDate: formatDate(enroll.lesson.endDate), // Use formatDate
+                  timeSlot: enroll.lesson.timeSlot, // from enroll.lesson
+                  timePrefix: enroll.lesson.timePrefix, // from enroll.lesson
+                  days: enroll.lesson.days, // from enroll.lesson
+                  capacity: enroll.lesson.capacity, // from enroll.lesson
+                  remaining: enroll.lesson.remaining, // from enroll.lesson
+                  price: enroll.lesson.price, // from enroll.lesson
+                  status: enroll.lesson.status, // Lesson's operational status, not enrollment status
+                  reservationId: enroll.lesson.reservationId, // from enroll.lesson
+                  receiptId: enroll.lesson.receiptId, // from enroll.lesson
+                  instructor: enroll.lesson.instructor, // from enroll.lesson
+                  location: enroll.lesson.location, // from enroll.lesson
                 };
 
                 return (
@@ -693,8 +830,14 @@ export default function MyPage() {
                     flexDirection="column"
                     h="100%"
                   >
-                    <LessonCard lesson={lessonDataForCard} />
-                    {/* User-specific enrollment details below the card */}
+                    <LessonCard
+                      lesson={lessonDataForCard}
+                      context="mypage" // Set context to "mypage"
+                      enrollment={enroll} // Pass the full enrollment object
+                      onGoToPayment={handleGoToPayment}
+                      onRequestCancel={handleRequestCancel}
+                      onRenewLesson={handleRenewLesson}
+                    />
                   </GridItem>
                 );
               })}
