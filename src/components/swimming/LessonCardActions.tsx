@@ -105,48 +105,41 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     enrollment
   );
 
-  const [timeRemaining, setTimeRemaining] = useState(() => {
-    if (!enrollment && lesson.reservationId && lesson.status === "접수대기") {
+  const getInitialTimeRemaining = () => {
+    if (!enrollment && lesson.reservationId) {
       const targetDate = parseKSTDateString(lesson.reservationId);
+      // calculateTimeDifference will return null if targetDate is in the past or invalid
       return calculateTimeDifference(targetDate);
     }
     return null;
-  });
+  };
 
-  const [isCountingDown, setIsCountingDown] = useState(
-    !!(
-      !enrollment &&
-      lesson.reservationId &&
-      lesson.status === "접수대기" &&
-      timeRemaining
-    )
-  );
+  const [timeRemaining, setTimeRemaining] = useState(getInitialTimeRemaining);
+  // isCountingDown is true if there was an initial time remaining (i.e., reservationId is in the future)
+  const [isCountingDown, setIsCountingDown] = useState(!!timeRemaining);
 
   useEffect(() => {
     console.log(
-      `[Lesson ID: ${lesson.id}] useEffect triggered. Checking initial conditions.`
+      `[Lesson ID: ${lesson.id}] useEffect triggered. Checking conditions for countdown.`
     );
     console.log(
-      `[Lesson ID: ${lesson.id}] useEffect - Initial check values: enrollment:`,
+      `[Lesson ID: ${lesson.id}] useEffect - Values: enrollment:`,
       enrollment,
-      `lesson.reservationId: ${lesson.reservationId}, lesson.status: ${lesson.status}`
+      `lesson.reservationId: ${lesson.reservationId}`
     );
 
     let intervalId: NodeJS.Timeout | undefined = undefined;
 
-    if (enrollment || !lesson.reservationId || lesson.status !== "접수대기") {
+    if (enrollment || !lesson.reservationId) {
       console.log(
-        `[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown logic due to initial conditions.`
+        `[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: Enrollment present or no reservationId.`
       );
       setIsCountingDown(false);
       setTimeRemaining(null);
-      if (intervalId) clearInterval(intervalId);
+      if (intervalId) clearInterval(intervalId); // Though intervalId would not be set here yet
       return;
     }
 
-    console.log(
-      `[Lesson ID: ${lesson.id}] useEffect - Proceeding with countdown setup. Raw reservationId: ${lesson.reservationId}`
-    );
     const targetApplicationStartDate = parseKSTDateString(lesson.reservationId);
     console.log(
       `[Lesson ID: ${lesson.id}] useEffect - Parsed targetApplicationStartDate:`,
@@ -155,63 +148,69 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
 
     if (!targetApplicationStartDate) {
       console.log(
-        `[Lesson ID: ${lesson.id}] useEffect - Invalid targetApplicationStartDate, stopping countdown.`
+        `[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: Invalid targetApplicationStartDate.`
       );
       setIsCountingDown(false);
       setTimeRemaining(null);
       return;
     }
 
-    const initialRemaining = calculateTimeDifference(
+    // Check if the target start date is actually in the future
+    const initialRemainingOnEffect = calculateTimeDifference(
       targetApplicationStartDate
     );
     console.log(
-      `[Lesson ID: ${lesson.id}] useEffect - Initial timeRemaining:`,
-      initialRemaining
+      `[Lesson ID: ${lesson.id}] useEffect - Initial timeRemaining check in effect:`,
+      initialRemainingOnEffect
     );
 
-    if (initialRemaining) {
-      setTimeRemaining(initialRemaining);
+    if (initialRemainingOnEffect) {
+      // Only set if not already set by useState, or if it needs update (though deps should handle this)
+      // This ensures that if the component re-renders and time has passed, state is up-to-date.
+      setTimeRemaining(initialRemainingOnEffect);
       if (!isCountingDown) {
-        setIsCountingDown(true);
+        setIsCountingDown(true); // Ensure counting state is true if we are starting interval
         console.log(
-          `[Lesson ID: ${lesson.id}] useEffect - Countdown STARTING. isCountingDown set to true.`
+          `[Lesson ID: ${lesson.id}] useEffect - Countdown STARTING or RE-AFFIRMED. isCountingDown set to true.`
         );
       }
+
+      intervalId = setInterval(() => {
+        const remainingInInterval = calculateTimeDifference(
+          targetApplicationStartDate
+        );
+        const nowForInterval = new Date().getTime();
+        const targetTimeForInterval = targetApplicationStartDate.getTime();
+        const differenceInInterval = targetTimeForInterval - nowForInterval;
+
+        console.log(
+          `[Lesson ID: ${lesson.id}] Tick: Now: ${nowForInterval}, Target: ${targetTimeForInterval}, Diff: ${differenceInInterval}, Remaining: `,
+          remainingInInterval
+          // Removed isCountingDown from here as it might be stale within closure, rely on remainingInInterval
+        );
+        setTimeRemaining(remainingInInterval);
+
+        if (!remainingInInterval) {
+          console.log(
+            `[Lesson ID: ${lesson.id}] Tick - Countdown FINISHED in interval.`
+          );
+          setIsCountingDown(false); // Stop counting
+          clearInterval(intervalId);
+        }
+      }, 1000);
     } else {
-      setTimeRemaining(null);
-      if (isCountingDown) {
-        setIsCountingDown(false);
-        console.log(
-          `[Lesson ID: ${lesson.id}] useEffect - Countdown STOPPED (initialRemaining is null/zero). isCountingDown set to false.`
-        );
-      }
-      return;
-    }
-
-    intervalId = setInterval(() => {
-      const nowForInterval = new Date().getTime();
-      const targetTimeForInterval = targetApplicationStartDate.getTime();
-      const differenceInInterval = targetTimeForInterval - nowForInterval;
-      const remainingInInterval = calculateTimeDifference(
-        targetApplicationStartDate
-      );
-
+      // Target date is in the past or now, ensure countdown is stopped.
       console.log(
-        `[Lesson ID: ${lesson.id}] Tick: Now: ${nowForInterval}, Target: ${targetTimeForInterval}, Diff: ${differenceInInterval}, Remaining: `,
-        remainingInInterval,
-        `isCountingDown: ${isCountingDown}`
+        `[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: targetApplicationStartDate is not in the future.`
       );
-      setTimeRemaining(remainingInInterval);
-
-      if (!remainingInInterval) {
+      if (isCountingDown) {
+        setIsCountingDown(false); // Stop counting if it was somehow true
         console.log(
-          `[Lesson ID: ${lesson.id}] Tick - Countdown FINISHED in interval.`
+          `[Lesson ID: ${lesson.id}] useEffect - Explicitly STOPPING countdown as start date is past. isCountingDown set to false.`
         );
-        setIsCountingDown(false);
-        clearInterval(intervalId);
       }
-    }, 1000);
+      setTimeRemaining(null); // Clear any remaining time
+    }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
@@ -219,13 +218,10 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         `[Lesson ID: ${lesson.id}] useEffect - Countdown effect cleanup.`
       );
     };
-  }, [
-    lesson.id,
-    lesson.title,
-    lesson.reservationId,
-    lesson.status,
-    enrollment,
-  ]);
+    // Dependencies: lesson.id and lesson.reservationId for re-calculating if these change.
+    // enrollment to stop countdown if user enrolls/unenrolls (though this component might unmount then).
+    // isCountingDown is NOT included to prevent re-triggering based on its own change.
+  }, [lesson.id, lesson.reservationId, enrollment]);
 
   if (enrollment) {
     const { status: enrollStatus, cancelStatus, enrollId } = enrollment;
@@ -287,68 +283,77 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     const applicationStartTime = parseKSTDateString(lesson.reservationId);
     const applicationEndTime = parseKSTDateString(lesson.receiptId);
 
-    if (lesson.status === "접수대기") {
+    if (isCountingDown && timeRemaining) {
+      // Countdown is active and has time left
+      let countdownText = "";
+      if (timeRemaining.days > 0) {
+        countdownText += `${timeRemaining.days}일 `;
+      }
+      countdownText += `${String(timeRemaining.hours).padStart(
+        2,
+        "0"
+      )}:${String(timeRemaining.minutes).padStart(2, "0")}:${String(
+        timeRemaining.seconds
+      ).padStart(2, "0")}`;
+      buttonContent = `접수 시작 ${countdownText}`;
+      buttonDisabled = true;
+      buttonBgColor = "orange.400";
+      hoverBgColor = "orange.400";
+    } else {
+      // Countdown is not active (either finished, never started, or reservationId is invalid/past)
       if (applicationStartTime && now < applicationStartTime) {
-        if (isCountingDown && timeRemaining) {
-          let countdownText = "";
-          if (timeRemaining.days > 0) {
-            countdownText += `${timeRemaining.days}일 `;
-          }
-          countdownText += `${String(timeRemaining.hours).padStart(
-            2,
-            "0"
-          )}:${String(timeRemaining.minutes).padStart(2, "0")}:${String(
-            timeRemaining.seconds
-          ).padStart(2, "0")}`;
-          buttonContent = `접수 시작 ${countdownText}`;
-          buttonDisabled = true;
-          buttonBgColor = "orange.400";
-          hoverBgColor = "orange.400";
-        } else {
-          // This case handles if the countdown isn't active but it is indeed before start time.
-          // It could be initial render or if the timer logic had an issue or just finished.
-          buttonContent = "접수시작전";
-          buttonDisabled = true;
-          // Optionally set a specific color for "접수시작전" if different from default disabled
-          buttonBgColor = "#A0AEC0"; // A more neutral disabled color
-          hoverBgColor = "#A0AEC0";
-        }
-      } else {
-        // "접수대기" but applicationStartTime is past or invalid, or countdown finished (timeRemaining is null)
-        // This implies the status might be stale and should ideally transition to "접수중" soon.
-        buttonContent = "확인중...";
+        // This case should ideally be covered by countdown.
+        // If somehow isCountingDown is false but time is still future, show "접수시작전".
+        // This might happen on initial render if useEffect hasn't set isCountingDown to true yet.
+        buttonContent = "접수시작전";
         buttonDisabled = true;
         buttonBgColor = "#A0AEC0";
         hoverBgColor = "#A0AEC0";
-      }
-    } else if (lesson.status === "접수중") {
-      buttonDisabled = false; // Assume enabled unless a condition below disables it
-      buttonContent = "신청하기";
-      buttonBgColor = "#2D3092";
-      hoverBgColor = "#1f2366";
-
-      if (applicationStartTime && now < applicationStartTime) {
-        buttonContent = "접수시작전";
-        buttonDisabled = true;
-        buttonBgColor = "orange.400"; // Or your preferred color for this state
-        hoverBgColor = "orange.400";
-        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Status '접수중' but current time is before application start. Button disabled.`);
+      } else if (
+        applicationStartTime &&
+        applicationEndTime &&
+        now >= applicationStartTime &&
+        now <= applicationEndTime
+      ) {
+        // Active application period
+        if (lesson.remaining != null && lesson.remaining > 0) {
+          buttonContent = "신청하기";
+          buttonDisabled = false;
+          buttonBgColor = "#2D3092";
+          hoverBgColor = "#1f2366";
+        } else {
+          buttonContent = "정원마감"; // Or "신청마감" if remaining is 0
+          buttonDisabled = true;
+          buttonBgColor = "#CC0000"; // A more distinct color for full
+          hoverBgColor = "#CC0000";
+        }
       } else if (applicationEndTime && now > applicationEndTime) {
+        // Application period ended
         buttonContent = "접수시간종료";
         buttonDisabled = true;
         buttonBgColor = "#888888";
         hoverBgColor = "#888888";
-        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Status '접수중' but current time is after application end. Button disabled.`);
+      } else if (lesson.status === "접수마감") {
+        // Fallback to lesson.status if time conditions don't set a clear state
+        buttonContent = "접수마감";
+        buttonDisabled = true;
+      } else if (lesson.status === "수강중") {
+        buttonContent = "수강중";
+        buttonDisabled = true;
+      } else {
+        // Default or if reservationId/receiptId are invalid for some reason
+        // but status is '접수대기' or '접수중'
+        if (
+          (lesson.status === "접수대기" || lesson.status === "접수중") &&
+          (!applicationStartTime || !applicationEndTime)
+        ) {
+          buttonContent = "정보확인필요";
+        } else {
+          buttonContent = "신청불가";
+        }
+        buttonDisabled = true;
       }
-    } else if (lesson.status === "접수마감") {
-      buttonContent = "접수마감";
-      buttonDisabled = true;
-    } else if (lesson.status === "수강중") {
-      buttonContent = "수강중";
-      buttonDisabled = true;
     }
-
-    // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Status: ${lesson.status}, isCountingDown: ${isCountingDown}, Disabled: ${buttonDisabled}, Content: ${buttonContent}, Start: ${lesson.reservationId}, End: ${lesson.receiptId}`);
 
     return (
       <Button
