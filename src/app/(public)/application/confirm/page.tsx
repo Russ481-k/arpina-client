@@ -249,33 +249,6 @@ const ApplicationConfirmPage = () => {
   }, [lessonId, userGender, profile]);
 
   useEffect(() => {
-    if (isLoading || isLockerDetailsLoading || isSubmitting || error) return;
-
-    if (countdown <= 0) {
-      toaster.create({
-        id: "application-timeout-toast",
-        title: "시간 초과",
-        description:
-          "신청 시간이 초과되었습니다. 강습 목록 페이지로 이동합니다.",
-        type: "warning",
-        duration: 5000,
-      });
-      router.push("/sports/swimming/lesson");
-      return;
-    }
-
-    const timerId = setInterval(() => setCountdown((prev) => prev - 1), 1000);
-    return () => clearInterval(timerId);
-  }, [
-    countdown,
-    isLoading,
-    isLockerDetailsLoading,
-    isSubmitting,
-    error,
-    router,
-  ]);
-
-  useEffect(() => {
     if (!lessonPrice) return;
     let currentAmount = lessonPrice;
     const selectedMembership = membershipOptions.find(
@@ -320,14 +293,6 @@ const ApplicationConfirmPage = () => {
       return;
     }
 
-    if (countdown <= 0) {
-      toaster.create({
-        title: "시간 초과",
-        description: "신청 시간이 초과되었습니다. 다시 시도해주세요.",
-        type: "error",
-      });
-      return;
-    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -339,18 +304,24 @@ const ApplicationConfirmPage = () => {
       const enrollResponse = await swimmingPaymentService.enrollLesson(
         enrollRequestData
       );
-      if (enrollResponse && enrollResponse.paymentPageUrl) {
+
+      if (enrollResponse) {
         toaster.create({
-          title: "신청 시작",
-          description: "결제 페이지로 이동합니다.",
+          title: "신청 완료",
+          description:
+            "강습 신청이 완료되었습니다. 마이페이지 신청 정보로 이동합니다.",
           type: "success",
-          duration: 2000,
+          duration: 3000,
         });
-        router.push(enrollResponse.paymentPageUrl);
-      } else throw new Error("결제 페이지 URL 정보 누락");
+        router.push("/mypage?tab=수영장_신청정보");
+      } else {
+        throw new Error("강습 신청은 되었으나 응답 정보가 올바르지 않습니다.");
+      }
     } catch (err: any) {
       const errMsg =
-        err.response?.data?.message || err.message || "강습 신청 실패";
+        err.response?.data?.message ||
+        err.message ||
+        "강습 신청 중 오류가 발생했습니다.";
       if (err.status !== 401) {
         setError(errMsg);
         toaster.create({
@@ -892,21 +863,17 @@ const ApplicationConfirmPage = () => {
           isSubmitting ||
           isLoading ||
           isLockerDetailsLoading ||
-          countdown <= 0 ||
           !profile ||
           (!!lockerError && selectedLocker)
         }
         loading={isSubmitting}
-        loadingText="처리 중..."
+        loadingText="신청 처리 중..."
       >
         {isSubmitting ? (
-          "처리 중..."
+          "신청 처리 중..."
         ) : (
           <Flex align="center">
-            <Text>신청완료 / 결제하러가기</Text>
-            <Text as="span" fontWeight="bold" color={timerYellowColor} ml={2}>
-              ({formatTime(countdown)})
-            </Text>
+            <Text>최종 신청 및 내역 확인</Text>
           </Flex>
         )}
       </Button>

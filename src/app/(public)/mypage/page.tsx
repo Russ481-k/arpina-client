@@ -19,8 +19,10 @@ import {
   Table,
   Fieldset,
   Field,
+  CloseButton,
+  Portal,
 } from "@chakra-ui/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
 import { MypageEnrollDto, MypagePaymentDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
@@ -33,6 +35,7 @@ import { CheckCircle2Icon, XCircleIcon } from "lucide-react";
 import { LessonDTO } from "@/types/swimming";
 import { LessonCard } from "@/components/swimming/LessonCard";
 import { swimmingPaymentService } from "@/lib/api/swimming"; // For renewal
+import { Dialog } from "@chakra-ui/react";
 
 // Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
 const formatDate = (dateString: string | undefined | null): string => {
@@ -109,6 +112,7 @@ export default function MyPage() {
   const [enrollments, setEnrollments] = useState<MypageEnrollDto[]>([]);
   const [payments, setPayments] = useState<MypagePaymentDto[]>([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [passwordCriteriaMet, setPasswordCriteriaMet] = useState(
     initialPasswordCriteria
@@ -117,6 +121,27 @@ export default function MyPage() {
   const [isPasswordTooltipVisible, setIsPasswordTooltipVisible] =
     useState(false);
   const [passwordsMatch, setPasswordsMatch] = useState(true);
+
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [cancelTargetEnrollId, setCancelTargetEnrollId] = useState<
+    number | null
+  >(null);
+
+  // Determine initial tab based on query parameter
+  const initialTabFromQuery = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (initialTabFromQuery === "수영장_신청정보") {
+      return "수영장_신청정보";
+    }
+    // Add other potential tab values from query if needed
+    // else if (initialTabFromQuery === "비밀번호_변경") {
+    //   return "비밀번호_변경";
+    // }
+    // else if (initialTabFromQuery === "수영장_결제정보") {
+    //   return "수영장_결제정보";
+    // }
+    return "회원정보_수정"; // Default tab
+  });
 
   async function fetchEnrollments() {
     try {
@@ -314,6 +339,21 @@ export default function MyPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]); // Consider dependencies carefully
 
+  // Update activeTab if query param changes after initial load (optional, but good practice)
+  useEffect(() => {
+    const tabFromQuery = searchParams.get("tab");
+    if (tabFromQuery === "수영장_신청정보" && activeTab !== "수영장_신청정보") {
+      setActiveTab("수영장_신청정보");
+    }
+    // Add other conditions if other tabs can also be set via query params
+    // else if (tabFromQuery === "비밀번호_변경" && activeTab !== "비밀번호_변경") {
+    //   setActiveTab("비밀번호_변경");
+    // }
+    // else if (tabFromQuery === "수영장_결제정보" && activeTab !== "수영장_결제정보") {
+    //   setActiveTab("수영장_결제정보");
+    // }
+  }, [searchParams, activeTab]);
+
   const validateNewPasswordCriteria = (password: string) => {
     const criteria = {
       minLength: password.length >= 8,
@@ -491,29 +531,56 @@ export default function MyPage() {
       });
       return;
     }
-    if (window.confirm("정말로 이 강습의 취소를 요청하시겠습니까?")) {
-      try {
-        setIsLoading(true);
-        await mypageApi.cancelEnrollment(enrollId);
-        toaster.create({
-          title: "성공",
-          description: "취소 요청이 접수되었습니다. 관리자 확인 후 처리됩니다.",
-          type: "success",
-        });
-        await fetchEnrollments();
-      } catch (error: any) {
-        console.error("[Mypage] Failed to request cancellation:", error);
-        toaster.create({
-          title: "오류",
-          description: `취소 요청 중 오류가 발생했습니다: ${getApiErrorMessage(
-            error,
-            ""
-          )}`,
-          type: "error",
-        });
-      } finally {
-        setIsLoading(false);
-      }
+
+    try {
+      setIsLoading(true);
+      await mypageApi.cancelEnrollment(enrollId);
+      toaster.create({
+        title: "성공",
+        description: "취소 요청이 접수되었습니다.",
+        type: "success",
+      });
+      await fetchEnrollments();
+    } catch (error: any) {
+      console.error("[Mypage] Failed to request cancellation:", error);
+      toaster.create({
+        title: "오류",
+        description: `취소 요청 중 오류가 발생했습니다: ${getApiErrorMessage(
+          error,
+          ""
+        )}`,
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const executeDialogCancellation = async () => {
+    if (cancelTargetEnrollId === null) return;
+    try {
+      setIsLoading(true);
+      await mypageApi.cancelEnrollment(cancelTargetEnrollId);
+      toaster.create({
+        title: "성공",
+        description: "취소 요청이 접수되었습니다. 관리자 확인 후 처리됩니다.",
+        type: "success",
+      });
+      await fetchEnrollments();
+    } catch (error: any) {
+      console.error("[Mypage] Failed to request cancellation:", error);
+      toaster.create({
+        title: "오류",
+        description: `취소 요청 중 오류가 발생했습니다: ${getApiErrorMessage(
+          error,
+          ""
+        )}`,
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsCancelDialogOpen(false);
+      setCancelTargetEnrollId(null);
     }
   };
 
@@ -576,7 +643,8 @@ export default function MyPage() {
       </Heading>
 
       <Tabs.Root
-        defaultValue="회원정보_수정"
+        value={activeTab}
+        onValueChange={(details) => setActiveTab(details.value)}
         variant="line"
         colorPalette="blue"
       >
@@ -932,6 +1000,48 @@ export default function MyPage() {
           )}
         </Tabs.Content>
       </Tabs.Root>
+
+      <Dialog.Root
+        open={isCancelDialogOpen}
+        onOpenChange={(open) => !open && setIsCancelDialogOpen(false)}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content maxW="sm">
+              <Dialog.Header>
+                <Dialog.Title>강습 취소 확인</Dialog.Title>
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton
+                    onClick={() => setIsCancelDialogOpen(false)}
+                    position="absolute"
+                    top="2"
+                    right="2"
+                  />
+                </Dialog.CloseTrigger>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Text>정말로 이 강습의 취소를 요청하시겠습니까?</Text>
+                <Text fontSize="sm" color="gray.500" mt={2}>
+                  취소 요청 후에는 되돌릴 수 없습니다.
+                </Text>
+              </Dialog.Body>
+              <Dialog.Footer mt={4}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCancelDialogOpen(false)}
+                  mr={3}
+                >
+                  닫기
+                </Button>
+                <Button colorPalette="red" onClick={executeDialogCancellation}>
+                  취소 요청
+                </Button>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Container>
   );
 }

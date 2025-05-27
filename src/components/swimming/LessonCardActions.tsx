@@ -1,223 +1,53 @@
-import React, { useState, useEffect } from "react";
+import React from "react"; // Removed useState, useEffect as timer logic is removed
 import { Button, Text, Box, Flex } from "@chakra-ui/react";
-import { MypageEnrollDto } from "@/types/api"; // Assuming MypageEnrollDto is here
+import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
 
 interface LessonCardActionsProps {
   enrollment: MypageEnrollDto;
-  lesson: LessonDTO; // LessonDTO for lesson details
-  onGoToPayment?: (paymentPageUrl: string) => void;
+  lesson: LessonDTO; // Kept for potential future use or if lessonId is needed from it
   onRequestCancel?: (enrollId: number) => void;
-  onRenewLesson?: (lessonId: number) => void;
+  // onGoToPayment and onRenewLesson are removed as they are not applicable here
 }
 
 const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   enrollment,
-  lesson,
-  onGoToPayment,
+  // lesson, // lesson prop is available if needed for lessonId, but not used in simplified logic
   onRequestCancel,
-  onRenewLesson,
 }) => {
-  const [timeLeft, setTimeLeft] = useState<string>("");
-
   const {
     status: enrollStatus,
-    paymentExpireDt,
-    cancelStatus,
-    renewalWindow,
-    canAttemptPayment,
-    paymentPageUrl,
+    cancelStatus, // Added to check for APPROVED in conjunction with REFUND_PENDING_ADMIN_CANCEL
+    // paymentExpireDt, // Not used
+    // renewalWindow, // Not used
+    // canAttemptPayment, // Assumed false or irrelevant for this branch
+    // paymentPageUrl, // Not used
     enrollId,
   } = enrollment;
-  // The lesson object (enrollment.lesson) within MypageEnrollDto might be a summary.
-  // We use the main lesson prop for full details like endDate.
-  const { endDate: lessonEndDate, id: lessonId } = lesson;
 
-  const isPastLesson = lessonEndDate
-    ? new Date(lessonEndDate) < new Date()
-    : false;
+  // For this temporary branch, we primarily handle "UNPAID" and "CANCELED_UNPAID"
 
-  const isRenewalPeriod =
-    renewalWindow?.open && renewalWindow?.close
-      ? new Date() >= new Date(renewalWindow.open) &&
-        new Date() <= new Date(renewalWindow.close)
-      : false;
-
-  // Placeholder for admin cancel review. Confirm actual status values from backend.
-  // Example: if enroll.adminReviewStatus === 'PENDING'
-  const isAdminCancelReview =
-    enrollStatus === "PAID" && cancelStatus === "REQ_ADMIN_APPROVAL"; // Placeholder, adjust as needed
-
-  useEffect(() => {
-    if (enrollStatus === "UNPAID" && paymentExpireDt && canAttemptPayment) {
-      const calculateTimeLeft = () => {
-        const difference = +new Date(paymentExpireDt) - +new Date();
-        let timeLeftOutput = "";
-
-        if (difference > 0) {
-          const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-          const minutes = Math.floor((difference / 1000 / 60) % 60);
-          const seconds = Math.floor((difference / 1000) % 60);
-          timeLeftOutput = `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-        } else {
-          timeLeftOutput = "결제 시간 만료";
-        }
-        setTimeLeft(timeLeftOutput);
-      };
-
-      calculateTimeLeft();
-      const timer = setInterval(calculateTimeLeft, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [paymentExpireDt, enrollStatus, canAttemptPayment]);
-
-  // 1. Payment Pending (UNPAID and can attempt payment)
-  if (enrollStatus === "UNPAID" && canAttemptPayment && paymentPageUrl) {
-    if (timeLeft === "결제 시간 만료") {
-      return (
-        <Text color="red.500" fontSize="sm">
-          결제 시간이 만료되었습니다.
-        </Text>
-      );
-    }
+  // State 1: Admin has cancelled the enrollment
+  if (
+    enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
+    cancelStatus === "APPROVED"
+  ) {
     return (
       <Flex direction="column" align="center" gap={2} w="100%">
-        <Text color="red.500" fontSize="sm">
-          결제 대기중: {timeLeft}
-        </Text>
-        <Button
-          colorScheme="blue"
-          w="100%"
-          onClick={() =>
-            onGoToPayment && paymentPageUrl && onGoToPayment(paymentPageUrl)
-          }
-        >
-          결제하기
-        </Button>
-      </Flex>
-    );
-  }
-  console.log(enrollStatus, canAttemptPayment);
-  // Handle cases where payment cannot be attempted (e.g., UNPAID but payment window closed)
-  if (enrollStatus === "UNPAID" && !canAttemptPayment) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
           <Text color="gray.500" fontSize="sm">
-            결제 기간이 지났습니다.
+            관리자 확인 취소
           </Text>
         </Button>
       </Flex>
     );
   }
 
-  // 2. Paid Status and sub-statuses
-  if (enrollStatus === "PAID") {
-    if (isPastLesson) {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
-            <Text color="gray.500" fontSize="sm">
-              수강 완료{" "}
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-    if (isAdminCancelReview) {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
-            <Text color="gray.500" fontSize="sm">
-              관리자 취소 검토중
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-    if (cancelStatus === "REQ") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
-            <Text color="gray.500" fontSize="sm">
-              취소 요청됨 (승인 대기중)
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-    if (cancelStatus === "APPROVED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
-            <Text color="gray.500" fontSize="sm">
-              취소 승인 (환불 처리중)
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-    if (cancelStatus === "DENIED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
-            <Text color="gray.500" fontSize="sm">
-              취소 요청 거부됨
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-    // If paid, not past, no pending/approved/denied cancellation, allow cancellation if applicable
-    // The `canCancel` prop logic needs to be determined by the parent based on policy
-    // Let's assume if `onRequestCancel` is provided, cancellation is possible.
-    if (onRequestCancel) {
-      return (
-        <Button
-          colorScheme="red"
-          w="100%"
-          onClick={() => onRequestCancel(enrollId)}
-        >
-          취소 신청
-        </Button>
-      );
-    }
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            결제 완료
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // 3. Payment Timeout
-  if (enrollStatus === "PAYMENT_TIMEOUT") {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            결제 시간 초과
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // 4. Admin Cancelled (Example, confirm actual status from backend like enroll.isAdministrativelyCancelled)
-  // if (enrollment.isAdministrativelyCancelled) {
-  //   return <Text color="red.600" fontSize="sm">취소됨 (관리자)</Text>;
-  // }
-
-  // 5. User Cancelled (CANCELED_UNPAID or CANCELED post-payment - though PAID + cancelStatus=APPROVED covers latter)
+  // State 2: If the enrollment is cancelled (specifically in the unpaid context by user)
   if (enrollStatus === "CANCELED_UNPAID") {
     return (
       <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
           <Text color="gray.500" fontSize="sm">
             취소 완료 (미결제)
           </Text>
@@ -225,82 +55,30 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       </Flex>
     );
   }
-  // If enrollStatus is CANCELLED (generic, could be after refund) and cancelStatus was APPROVED
-  if (
-    (enrollStatus === "CANCELED" || enrollStatus === "CANCELLED") &&
-    cancelStatus === "APPROVED"
-  ) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
+
+  // Default state for this temporary branch: "Unpaid" status and a "Cancel" button
+  // All other enrollStatus values will also show this, assuming they are effectively "UNPAID" for this branch's purpose.
+  return (
+    <Flex align="center" gap={3} w="100%">
+      <Flex direction="column" align="center" gap={2} w="50%">
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
           <Text color="gray.500" fontSize="sm">
-            취소 완료
+            미결제 상태
           </Text>
         </Button>
       </Flex>
-    );
-  }
 
-  // Potentially a more general 'CANCELLED' or 'REFUNDED' if these are final states
-  if (enrollStatus === "REFUNDED") {
-    // From images, seems like REFUNDED is a final state
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            환불 완료
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // 6. Renewal Period
-  if (isRenewalPeriod && !isPastLesson && onRenewLesson) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
+      {onRequestCancel && (
         <Button
-          variant="outline"
-          colorPalette="gray"
-          w="100%"
-          onClick={() => onRenewLesson(lessonId)}
+          colorPalette="red"
+          w="50%"
+          onClick={() => onRequestCancel(enrollId)}
         >
-          <Text color="gray.500" fontSize="sm">
-            재등록 신청
-          </Text>
+          취소 신청
         </Button>
-      </Flex>
-    );
-  }
-
-  // 7. Past Lesson (if no other specific status applies)
-  if (isPastLesson) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            수업 종료
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // Fallback for any other unhandled enrollStatus
-  // This helps in development to see what status is not covered.
-  if (enrollStatus) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            상태: {enrollStatus} (cancel: {cancelStatus || "N/A"})
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  return null; // Default empty return if no specific state matches
+      )}
+    </Flex>
+  );
 };
 
 export default LessonCardActions;
