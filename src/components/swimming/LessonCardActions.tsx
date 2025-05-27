@@ -4,16 +4,52 @@ import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
 
 // Helper function to calculate time remaining
-const calculateTimeRemaining = (targetDate: string) => {
-  const targetTime = new Date(targetDate).getTime();
-  if (isNaN(targetTime)) {
-    return null; // Invalid date string
+const calculateTimeRemaining = (targetKSTDateString: string) => {
+  if (!targetKSTDateString) {
+    // console.warn("[LessonCardActions] calculateTimeRemaining: targetKSTDateString is null or empty.");
+    return null;
   }
-  const now = new Date().getTime();
+
+  let kstCompliantString = targetKSTDateString.replace(" ", "T");
+
+  // Check if the string already has a timezone offset (Z, +HH:MM, or -HH:MM at the end)
+  const hasTimezoneRegex = /Z|[+-]\d{2}:\d{2}$/;
+
+  if (!hasTimezoneRegex.test(kstCompliantString)) {
+    // If no timezone offset is present, assume KST and append +09:00.
+    if (kstCompliantString.includes("T")) {
+      // Likely "YYYY-MM-DDTHH:MM:SS" or "YYYY-MM-DDTHH:MM"
+      // Ensure seconds are present if only HH:MM
+      if (/T\d{2}:\d{2}$/.test(kstCompliantString)) {
+        // Ends with T HH:MM
+        kstCompliantString += ":00+09:00";
+      } else {
+        // Assumed to be T HH:MM:SS or other, just add offset
+        kstCompliantString += "+09:00";
+      }
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(kstCompliantString)) {
+      // Date-only string "YYYY-MM-DD", interpret as start of day KST.
+      kstCompliantString += "T00:00:00+09:00";
+    }
+    // If it's some other format without 'T' and not date-only, it might be problematic.
+    // For now, this covers common ISO-like date and datetime strings.
+  }
+  // If it already has a timezone, kstCompliantString is used as is (after T replacement).
+
+  const targetTime = new Date(kstCompliantString).getTime();
+
+  if (isNaN(targetTime)) {
+    console.warn(
+      `[LessonCardActions] Failed to parse KST date string. Original: '${targetKSTDateString}', Processed: '${kstCompliantString}'`
+    );
+    return null;
+  }
+
+  const now = new Date().getTime(); // Current UTC milliseconds
   const difference = targetTime - now;
 
   if (difference <= 0) {
-    return null; // Time is up or past
+    return null;
   }
 
   const days = Math.floor(difference / (1000 * 60 * 60 * 24));
@@ -64,7 +100,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       return;
     }
 
-    // Initial check in case date is already past when component mounts
     const initialRemaining = calculateTimeRemaining(
       lesson.applicationStartDate
     );
@@ -82,7 +117,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       if (!remaining) {
         setIsCountingDown(false);
         clearInterval(interval);
-        // Optionally, trigger a re-fetch of lesson data here if status might have changed
       }
     }, 1000);
 
@@ -91,15 +125,26 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
 
   if (enrollment) {
     // Existing logic for when an enrollment is present (My Page context)
-    const { status: enrollStatus, cancelStatus, enrollId } = enrollment;
+    const {
+      status: enrollStatus,
+      cancelStatus, // Added to check for APPROVED in conjunction with REFUND_PENDING_ADMIN_CANCEL
+      // paymentExpireDt, // Not used
+      // renewalWindow, // Not used
+      // canAttemptPayment, // Assumed false or irrelevant for this branch
+      // paymentPageUrl, // Not used
+      enrollId,
+    } = enrollment;
 
+    // For this temporary branch, we primarily handle "UNPAID" and "CANCELED_UNPAID"
+
+    // State 1: Admin has cancelled the enrollment
     if (
       enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
       cancelStatus === "APPROVED"
     ) {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorScheme="gray" w="100%" disabled>
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
               관리자 확인 취소
             </Text>
@@ -108,10 +153,11 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       );
     }
 
+    // State 2: If the enrollment is cancelled (specifically in the unpaid context by user)
     if (enrollStatus === "CANCELED_UNPAID") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorScheme="gray" w="100%" disabled>
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
               취소 완료 (미결제)
             </Text>
@@ -119,11 +165,13 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         </Flex>
       );
     }
-    // Default for "UNPAID" or similar states in this branch
+
+    // Default state for this temporary branch: "Unpaid" status and a "Cancel" button
+    // All other enrollStatus values will also show this, assuming they are effectively "UNPAID" for this branch's purpose.
     return (
       <Flex align="center" gap={3} w="100%">
         <Flex direction="column" align="center" gap={2} w="50%">
-          <Button variant="outline" colorScheme="gray" w="100%" disabled>
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
               {/* More specific status could be shown if available on enrollment */}
               미결제 상태
@@ -133,7 +181,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
 
         {onRequestCancel && (
           <Button
-            colorScheme="red"
+            colorPalette="red"
             w="50%"
             onClick={() => onRequestCancel(enrollId)}
           >
