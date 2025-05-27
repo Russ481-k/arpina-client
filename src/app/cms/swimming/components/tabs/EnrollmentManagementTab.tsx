@@ -254,7 +254,7 @@ export const EnrollmentManagementTab = ({
     enabled: !!lessonIdFilter,
   });
 
-  const rowData = enrollmentsData || [];
+  const rowData = useMemo(() => enrollmentsData || [], [enrollmentsData]);
 
   const [selectedUserForMemo, setSelectedUserForMemo] =
     useState<EnrollmentData | null>(null);
@@ -503,7 +503,7 @@ export const EnrollmentManagementTab = ({
       adminCancelEnrollment: handleAdminCancelRequest,
       handleDiscountApproval,
     }),
-    [handleAdminCancelRequest, handleDiscountApproval]
+    [openMemoDialog, handleAdminCancelRequest, handleDiscountApproval]
   );
 
   const filteredEnrollmentsForGrid = useMemo(() => {

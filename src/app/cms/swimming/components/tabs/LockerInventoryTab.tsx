@@ -128,7 +128,7 @@ export const LockerInventoryTab = () => {
 
       updateMutation.mutate({ gender, newTotalQuantity });
     },
-    [updateMutation, toaster, inventoryDtoArray]
+    [updateMutation, inventoryDtoArray]
   );
 
   if (isLoading) {

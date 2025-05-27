@@ -177,9 +177,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             <LessonCardActions
               enrollment={enrollment}
               lesson={lesson}
-              onGoToPayment={onGoToPayment}
               onRequestCancel={onRequestCancel}
-              onRenewLesson={onRenewLesson}
             />
           ) : (
             <Button

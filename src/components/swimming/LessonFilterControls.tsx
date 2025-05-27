@@ -195,7 +195,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
           return newFilterState;
         });
       },
-      [setFilter, timeTypeOptions, timeSlots]
+      [setFilter]
     ); // Added dependencies for useCallback
 
     const removeFilterInternal = useCallback(
@@ -284,7 +284,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
           });
         }
       },
-      [setFilter, statusOptions, monthOptions, timeTypeOptions, timeSlots]
+      [setFilter]
     ); // Added dependencies for useCallback
 
     // Renamed and updated to reset filters to an empty state
@@ -453,3 +453,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
     );
   }
 ); // Close React.memo
+
+LessonFilterControls.displayName = "LessonFilterControls";
+
+export { ACCORDION_ITEM_VALUE }; // Export the constant
