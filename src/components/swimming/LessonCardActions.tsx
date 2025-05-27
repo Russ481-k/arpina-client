@@ -95,11 +95,14 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   onRequestCancel,
   onApplyClick,
 }) => {
-  const [timeRemaining, setTimeRemaining] = useState(() =>
-    !enrollment && lesson.reservationId && lesson.status === "접수대기"
-      ? calculateTimeDifference(parseKSTDateString(lesson.reservationId))
-      : null
-  );
+  const [timeRemaining, setTimeRemaining] = useState(() => {
+    if (!enrollment && lesson.reservationId && lesson.status === "접수대기") {
+      const targetDate = parseKSTDateString(lesson.reservationId);
+      return calculateTimeDifference(targetDate);
+    }
+    return null;
+  });
+
   const [isCountingDown, setIsCountingDown] = useState(
     !!(
       !enrollment &&
@@ -110,42 +113,56 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   );
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | undefined = undefined;
-
     if (enrollment || !lesson.reservationId || lesson.status !== "접수대기") {
       setIsCountingDown(false);
-      if (intervalId) clearInterval(intervalId);
+      setTimeRemaining(null);
       return;
     }
 
     const targetApplicationStartDate = parseKSTDateString(lesson.reservationId);
 
-    const updateCountdown = () => {
+    if (!targetApplicationStartDate) {
+      setIsCountingDown(false);
+      setTimeRemaining(null);
+      return;
+    }
+
+    // Initial check and set state if countdown should start
+    const initialRemaining = calculateTimeDifference(
+      targetApplicationStartDate
+    );
+    if (initialRemaining) {
+      setTimeRemaining(initialRemaining);
+      if (!isCountingDown) setIsCountingDown(true); // Start countdown if not already
+    } else {
+      setTimeRemaining(null);
+      if (isCountingDown) setIsCountingDown(false); // Stop countdown if time is up
+      return; // No interval needed if time is already up
+    }
+
+    const intervalId = setInterval(() => {
       const remaining = calculateTimeDifference(targetApplicationStartDate);
-      setTimeRemaining(remaining);
+      setTimeRemaining(remaining); // This will trigger re-render
+
       if (remaining) {
-        if (!isCountingDown) setIsCountingDown(true);
+        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Remaining - ${remaining.days}d ${remaining.hours}h ${remaining.minutes}m ${remaining.seconds}s`);
       } else {
-        setIsCountingDown(false);
-        if (intervalId) clearInterval(intervalId);
+        // console.log(`Lesson ID ${lesson.id} (${lesson.title}): Countdown finished.`);
+        setIsCountingDown(false); // Ensure countdown state is false
+        clearInterval(intervalId); // Stop the interval
       }
-    };
-
-    updateCountdown();
-
-    intervalId = setInterval(updateCountdown, 1000);
+    }, 1000);
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      clearInterval(intervalId); // Cleanup on unmount or when dependencies change
     };
   }, [
+    lesson.id,
+    lesson.title,
     lesson.reservationId,
     lesson.status,
     enrollment,
-    lesson.id,
-    lesson.title,
-    isCountingDown,
-  ]);
+  ]); // Removed isCountingDown
 
   if (enrollment) {
     const { status: enrollStatus, cancelStatus, enrollId } = enrollment;
