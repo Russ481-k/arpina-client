@@ -174,7 +174,7 @@ export const Header = memo(function Header({
               currentPage={currentPage}
               isMainPage={isMainPage}
             /> */}
-
+            <Box flex={1} />
             <UtilityIcons
               iconColor={iconColor}
               onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
