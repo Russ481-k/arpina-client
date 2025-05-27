@@ -3,19 +3,39 @@
 import { LessonDTO } from "@/types/swimming";
 import { MypageEnrollDto } from "@/types/api";
 import { Box, Text, Button, Flex, Image } from "@chakra-ui/react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toaster } from "../ui/toaster";
 import LessonCardActions from "./LessonCardActions";
 
 interface LessonCardProps {
-  lesson: LessonDTO;
+  lesson: LessonDTO & { applicationStartDate?: string };
   context?: "listing" | "mypage";
   enrollment?: MypageEnrollDto;
   onGoToPayment?: (paymentPageUrl: string) => void;
   onRequestCancel?: (enrollId: number) => void;
   onRenewLesson?: (lessonId: number) => void;
 }
+
+// Helper function to calculate time remaining
+const calculateTimeRemaining = (targetDate: string) => {
+  const now = new Date().getTime();
+  const targetTime = new Date(targetDate).getTime();
+  const difference = targetTime - now;
+
+  if (difference <= 0) {
+    return null; // Or some indicator that time is up
+  }
+
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+  const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+  return { days, hours, minutes, seconds };
+};
 
 export const LessonCard: React.FC<LessonCardProps> = React.memo(
   ({
@@ -27,14 +47,44 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
     onRenewLesson,
   }) => {
     const router = useRouter();
+    const [timeRemaining, setTimeRemaining] = useState(() =>
+      lesson.applicationStartDate
+        ? calculateTimeRemaining(lesson.applicationStartDate)
+        : null
+    );
+    const [isCountingDown, setIsCountingDown] = useState(
+      !!(lesson.applicationStartDate && timeRemaining)
+    );
+
+    useEffect(() => {
+      if (!lesson.applicationStartDate || lesson.status !== "접수대기") {
+        setIsCountingDown(false);
+        return;
+      }
+
+      const interval = setInterval(() => {
+        const remaining = calculateTimeRemaining(lesson.applicationStartDate!);
+        setTimeRemaining(remaining);
+        if (!remaining) {
+          setIsCountingDown(false);
+          clearInterval(interval);
+          // Potentially trigger a re-fetch or state update to change lesson status if needed
+          // For now, it will just stop counting and button state will change via isCountingDown
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }, [lesson.applicationStartDate, lesson.status]);
 
     const occupiedSpots = Math.max(0, lesson.capacity - lesson.remaining);
 
     const handleApplyClick = () => {
-      if (lesson.status !== "접수중" || !lesson.id) {
+      if (isCountingDown || lesson.status !== "접수중" || !lesson.id) {
         toaster.create({
           title: "신청 불가",
-          description: "현재 이 강습은 신청할 수 없습니다.",
+          description: isCountingDown
+            ? "아직 접수 시작 전입니다."
+            : "현재 이 강습은 신청할 수 없습니다.",
           type: "warning",
           duration: 3000,
           closable: true,
@@ -53,10 +103,47 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
         lessonId: lesson.id.toString(),
         lessonTitle: lesson.title,
         lessonPrice: lesson.price.toString(),
+        lessonStartDate: lesson.startDate, // Assuming this is the actual lesson start, not application start
+        lessonEndDate: lesson.endDate,
+        lessonTime: lesson.timeSlot,
+        lessonDays: lesson.days,
+        lessonTimePrefix: lesson.timePrefix,
       });
 
       router.push(`/application/confirm?${queryParams.toString()}`);
     };
+
+    let buttonContent: React.ReactNode;
+    let buttonDisabled = false;
+    let buttonBgColor = "#888888"; // Default to disabled/non-actionable color
+
+    if (isCountingDown && timeRemaining) {
+      buttonContent = `접수시작: ${
+        timeRemaining.days > 0 ? `${timeRemaining.days}일 ` : ""
+      }${String(timeRemaining.hours).padStart(2, "0")}:${String(
+        timeRemaining.minutes
+      ).padStart(2, "0")}:${String(timeRemaining.seconds).padStart(2, "0")}`;
+      buttonDisabled = true;
+      buttonBgColor = "#orange.400"; // A color to indicate countdown/waiting
+    } else if (lesson.status === "접수중") {
+      buttonContent = "신청하기";
+      buttonDisabled = false;
+      buttonBgColor = "#2D3092";
+    } else if (lesson.status === "접수마감") {
+      buttonContent = "접수마감";
+      buttonDisabled = true;
+    } else if (lesson.status === "수강중") {
+      buttonContent = "수강중";
+      buttonDisabled = true;
+    } else if (lesson.status === "접수대기" && !isCountingDown) {
+      // This case means countdown finished or applicationStartDate was in the past but status is still 대기
+      buttonContent = "접수시작전"; // Or some other appropriate label
+      buttonDisabled = true;
+      // Potentially refresh data here as status might be stale
+    } else {
+      buttonContent = "신청불가"; // Default for other unhandled statuses
+      buttonDisabled = true;
+    }
 
     return (
       <Box className="swimming-card">
@@ -78,7 +165,9 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
                 ? "#4CBB17"
                 : lesson.status === "접수마감"
                 ? "#888888"
-                : "gray.400" // Default for other statuses like "접수대기"
+                : lesson.status === "접수대기"
+                ? "#orange.500" // Color for 접수대기
+                : "gray.400"
             }
           >
             {lesson.status}
@@ -151,9 +240,21 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
                 접수기간
               </Text>
               <Text fontWeight="400" color="#666">
-                {lesson.reservationId}
-                <br />
-                {lesson.receiptId}
+                {/* Display applicationStartDate and potentially an applicationEndDate if available */}
+                {
+                  lesson.applicationStartDate
+                    ? `${new Date(
+                        lesson.applicationStartDate
+                      ).toLocaleDateString("ko-KR")} 부터`
+                    : lesson.reservationId || "확인 중" // Fallback to existing fields or a placeholder
+                }
+                {lesson.receiptId && (
+                  <>
+                    <br />
+                    {lesson.receiptId}
+                  </>
+                )}
+                {/* This seems to be used for something else, keep if needed*/}
               </Text>
             </Flex>
             <Flex mb={2}>
@@ -182,29 +283,20 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
           ) : (
             <Button
               w="100%"
-              bgColor={
-                lesson.status === "접수중"
-                  ? "#2D3092"
-                  : lesson.status === "접수마감" || lesson.status === "수강중"
-                  ? "#888888"
-                  : "#888888"
-              }
+              bgColor={buttonBgColor}
               color="white"
               height="41px"
               borderRadius="10px"
               _hover={{
-                bgColor: lesson.status === "접수중" ? "#1f2366" : "#888888",
+                bgColor:
+                  !buttonDisabled && lesson.status === "접수중"
+                    ? "#1f2366"
+                    : buttonBgColor,
               }}
-              disabled={lesson.status !== "접수중"}
+              disabled={buttonDisabled}
               onClick={handleApplyClick}
             >
-              {lesson.status === "접수중"
-                ? "신청하기"
-                : lesson.status === "접수마감"
-                ? "접수마감"
-                : lesson.status === "수강중"
-                ? "수강중"
-                : "신청마감"}
+              {buttonContent}
             </Button>
           )}
         </Box>
