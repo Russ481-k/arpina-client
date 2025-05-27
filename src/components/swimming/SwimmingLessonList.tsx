@@ -13,21 +13,6 @@ import { useLessons } from "@/lib/hooks/useSwimming";
 import { LessonDTO } from "@/types/swimming";
 import { LessonFilterControls } from "./LessonFilterControls";
 import { LessonCard } from "./LessonCard";
-import {
-  statusOptions,
-  monthOptions,
-  timeTypeOptions,
-  timeSlots,
-} from "./filterConstants";
-
-// Create a mapping from Korean status labels to English uppercase values
-const statusApiToFilterValue: { [key: string]: string } = {};
-statusOptions.forEach((option) => {
-  if (option.value !== "all") {
-    // "all" is not an API status
-    statusApiToFilterValue[option.label] = option.value;
-  }
-});
 
 // Updated FilterState to support multi-select (array-based)
 interface FilterState {
@@ -95,23 +80,6 @@ export const SwimmingLessonList = () => {
       // Condition 1: Available and Remaining
       if (showAvailableOnly && lesson.remaining === 0) {
         return false;
-      }
-
-      // Condition 2: Status Match
-      if (filter.status.length > 0) {
-        if (!lesson.status) {
-          return false;
-        }
-        // Convert API's Korean status to the English value used in filters
-        const lessonStatusInFilterFormat =
-          statusApiToFilterValue[lesson.status];
-        if (!lessonStatusInFilterFormat) {
-          // Decide if this should filter out or not. For now, assume if it's unmappable, it doesn't match.
-          return false;
-        }
-        if (!filter.status.includes(lessonStatusInFilterFormat)) {
-          return false;
-        }
       }
 
       // Condition 3: Month Match

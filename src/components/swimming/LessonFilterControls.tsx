@@ -11,13 +11,11 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import {
-  statusOptions,
   monthOptions,
   timeTypeOptions,
   timeSlots,
   ACCORDION_ITEM_VALUE,
 } from "./filterConstants"; // Import constants
-import { StatusFilterGroup } from "./StatusFilterGroup"; // Import the new component
 import { MonthFilterGroup } from "./MonthFilterGroup"; // Import MonthFilterGroup
 import { TimeFilterGroup } from "./TimeFilterGroup"; // Import TimeFilterGroup
 import { SelectedFilterTags } from "./SelectedFilterTags"; // Import the new component
@@ -95,11 +93,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
         filter
       );
       const newSelectedFilterLabels: string[] = [];
-      filter.status.forEach((val) => {
-        const option = statusOptions.find((opt) => opt.value === val);
-        if (option && option.value !== "all")
-          newSelectedFilterLabels.push(option.label);
-      });
+
       filter.month.forEach((val) => {
         const option = monthOptions.find((opt) => opt.value === val);
         if (option && option.value !== "all")
@@ -140,10 +134,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
             | number
           )[];
           let allPossiblePrimaryValues: (string | number)[] = [];
-
-          if (category === "status") {
-            allPossiblePrimaryValues = getAllValues(statusOptions);
-          } else if (category === "month") {
+          if (category === "month") {
             allPossiblePrimaryValues = getAllValues(monthOptions);
           } else if (category === "timeType") {
             allPossiblePrimaryValues = getAllValues(timeTypeOptions);
@@ -213,13 +204,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
         );
         let categoryToUpdate: keyof FilterState | null = null;
         let valueToRemove: string | number | null = null;
-        const statusOpt = statusOptions.find(
-          (opt) => opt.label === filterLabel
-        );
-        if (statusOpt) {
-          categoryToUpdate = "status";
-          valueToRemove = statusOpt.value;
-        } else {
+        {
           const monthOpt = monthOptions.find(
             (opt) => opt.label === filterLabel
           );
@@ -429,12 +414,6 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
                   width="100%"
                   mb={6}
                 >
-                  <StatusFilterGroup
-                    selectedValues={filter.status}
-                    onFilterChange={(value) =>
-                      handleFilterChangeInternal("status", value)
-                    }
-                  />
                   <MonthFilterGroup
                     selectedValues={filter.month}
                     onFilterChange={(value) =>

@@ -36,16 +36,6 @@ interface LessonEditorProps {
   onAddNew?: () => void; // For add new lesson functionality
 }
 
-// Status options for the select component
-const statusOptions = createListCollection({
-  items: [
-    { label: "모집중", value: "OPEN" },
-    { label: "모집종료", value: "CLOSED" },
-    { label: "진행중", value: "ONGOING" },
-    { label: "완료", value: "COMPLETED" },
-  ],
-});
-
 export const LessonEditor: React.FC<LessonEditorProps> = ({
   lesson,
   onSubmit,
@@ -405,54 +395,6 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
               />
             </Box>
           </Flex>
-
-          <Box>
-            <Text mb={1} fontWeight="medium" color={textColor}>
-              상태
-            </Text>
-            <Select.Root
-              collection={statusOptions}
-              value={[formData.status]}
-              onValueChange={(details) => {
-                setFormData({
-                  ...formData,
-                  status: details.value[0] as
-                    | "OPEN"
-                    | "CLOSED"
-                    | "ONGOING"
-                    | "COMPLETED",
-                });
-              }}
-              size="sm"
-            >
-              <Select.Control>
-                <Select.Trigger
-                  borderColor={borderColor}
-                  _focus={{
-                    borderColor: colors.primary.default,
-                    boxShadow: `0 0 0 1px ${colors.primary.default}`,
-                  }}
-                >
-                  <Select.ValueText placeholder="상태를 선택하세요" />
-                </Select.Trigger>
-                <Select.IndicatorGroup>
-                  <Select.Indicator />
-                </Select.IndicatorGroup>
-              </Select.Control>
-              <Portal>
-                <Select.Positioner>
-                  <Select.Content>
-                    {statusOptions.items.map((status) => (
-                      <Select.Item item={status} key={status.value}>
-                        {status.label}
-                        <Select.ItemIndicator />
-                      </Select.Item>
-                    ))}
-                  </Select.Content>
-                </Select.Positioner>
-              </Portal>
-            </Select.Root>
-          </Box>
         </VStack>
 
         <Flex gap={2} mt={4}>
