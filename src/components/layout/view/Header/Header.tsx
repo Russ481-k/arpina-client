@@ -167,13 +167,13 @@ export const Header = memo(function Header({
               </Link>
             </Box>
 
-            <DesktopNav
+            {/* <DesktopNav
               menusWithLastFlag={menusWithLastFlag}
               isNavHovered={isNavHovered}
               isDark={isDark}
               currentPage={currentPage}
               isMainPage={isMainPage}
-            />
+            /> */}
 
             <UtilityIcons
               iconColor={iconColor}
@@ -183,7 +183,7 @@ export const Header = memo(function Header({
         </Container>
       </Box>
 
-      <MobileMenuDrawer
+      {/* <MobileMenuDrawer
         menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}
         isDark={isDark}
@@ -200,7 +200,7 @@ export const Header = memo(function Header({
         isDark={isDark}
         width={logoWidth}
         height={logoHeight}
-      />
+      /> */}
     </>
   );
 });

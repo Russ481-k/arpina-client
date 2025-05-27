@@ -8,6 +8,16 @@ export const heroSectionData: Record<
     breadcrumb: { label: string; url: string }[];
   }
 > = {
+  "/mypage": {
+    header: "사용자정보",
+    title: "마이페이지",
+    image: "/images/mypage/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "사용자정보", url: "/mypage" },
+    ],
+  },
   "/bbs/faq": {
     header: "종합게시판",
     title: "자주하는질문",
