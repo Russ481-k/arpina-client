@@ -8,7 +8,8 @@ import {
 
 // Java 백엔드 서버 주소 설정
 const BASE_URL =
-  (process.env.NEXT_PUBLIC_API_URL || "http://222.119.41.194:8080") + "/api/v1";
+  (process.env.NEXT_PUBLIC_API_URL || "https://222.119.41.194:8080") +
+  "/api/v1";
 
 // 기본 API 클라이언트 설정
 export const api = axios.create({
