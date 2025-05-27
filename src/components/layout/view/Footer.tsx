@@ -48,21 +48,21 @@ export function Footer() {
         </Flex>
 
         <Box pb={9}>
-          <Text fontSize="md" color="white/70" mb={2} fontWeight="500">
+          <Text fontSize="md" color="#333333" mb={2} fontWeight="500">
             (48089) 부산 해운대구 해운대해변로 35 (우동)
           </Text>
-          <Flex gap={0} color="white/70" fontSize="md" align="center">
+          <Flex gap={0} color="#333333" fontSize="md" align="center">
             <Text>TEL : 051-740-3220</Text>
-            <Text mx={2} color="whiteAlpha.400">
+            <Text mx={2} color="#333333">
               ·
             </Text>
             <Text>FAX : 051-740-3220</Text>
-            <Text mx={2} color="whiteAlpha.400">
+            <Text mx={2} color="#333333">
               ·
             </Text>
           </Flex>
         </Box>
-        <Box borderTop="1px solid" borderColor="white/20" py={6}>
+        <Box borderTop="1px solid" borderColor="#333333/20" py={6}>
           <Text fontSize="sm" color="#657580">
             Copyright (c) 2025 Busan Youth Hostel Arpina. All Rights Reserved.
           </Text>
