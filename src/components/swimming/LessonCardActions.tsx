@@ -110,18 +110,37 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }
     setTimeRemaining(initialRemaining);
     setIsCountingDown(true);
+    // Log initial remaining time
+    console.log(
+      `Lesson ID ${lesson.id} (${lesson.title}): Initial remaining time - Days: ${initialRemaining.days}, Hours: ${initialRemaining.hours}, Minutes: ${initialRemaining.minutes}, Seconds: ${initialRemaining.seconds}`
+    );
 
     const interval = setInterval(() => {
       const remaining = calculateTimeRemaining(lesson.applicationStartDate!);
       setTimeRemaining(remaining);
-      if (!remaining) {
+      if (remaining) {
+        // Log remaining time for the specific lesson
+        console.log(
+          `Lesson ID ${lesson.id} (${lesson.title}): Time Remaining - Days: ${remaining.days}, Hours: ${remaining.hours}, Minutes: ${remaining.minutes}, Seconds: ${remaining.seconds}`
+        );
+      } else {
+        console.log(
+          `Lesson ID ${lesson.id} (${lesson.title}): Countdown finished.`
+        );
         setIsCountingDown(false);
         clearInterval(interval);
+        // Optionally, trigger a re-fetch of lesson data here if status might have changed
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [lesson.applicationStartDate, lesson.status, enrollment]);
+  }, [
+    lesson.applicationStartDate,
+    lesson.status,
+    enrollment,
+    lesson.id,
+    lesson.title,
+  ]);
 
   if (enrollment) {
     // Existing logic for when an enrollment is present (My Page context)
