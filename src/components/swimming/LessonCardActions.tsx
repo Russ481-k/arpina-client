@@ -121,9 +121,19 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       return;
     }
 
+    console.log(
+      `[Lesson ID: ${lesson.id}] Raw reservationId: ${lesson.reservationId}`
+    );
     const targetApplicationStartDate = parseKSTDateString(lesson.reservationId);
+    console.log(
+      `[Lesson ID: ${lesson.id}] Parsed targetApplicationStartDate:`,
+      targetApplicationStartDate
+    );
 
     if (!targetApplicationStartDate) {
+      console.log(
+        `[Lesson ID: ${lesson.id}] Invalid targetApplicationStartDate, stopping countdown.`
+      );
       setIsCountingDown(false);
       setTimeRemaining(null);
       return;
@@ -132,6 +142,10 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     // Initial check and set state if countdown should start
     const initialRemaining = calculateTimeDifference(
       targetApplicationStartDate
+    );
+    console.log(
+      `[Lesson ID: ${lesson.id}] Initial timeRemaining:`,
+      initialRemaining
     );
     if (initialRemaining) {
       setTimeRemaining(initialRemaining);
@@ -143,24 +157,32 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }
 
     intervalId = setInterval(() => {
-      const remaining = calculateTimeDifference(targetApplicationStartDate);
-      setTimeRemaining(remaining); // This will trigger re-render
+      const nowForInterval = new Date().getTime();
+      const targetTimeForInterval = targetApplicationStartDate.getTime();
+      const differenceInInterval = targetTimeForInterval - nowForInterval;
+      const remainingInInterval = calculateTimeDifference(
+        targetApplicationStartDate
+      );
 
-      if (remaining) {
+      console.log(
+        `[Lesson ID: ${lesson.id}] Tick: Now: ${nowForInterval}, Target: ${targetTimeForInterval}, Diff: ${differenceInInterval}, Remaining: `,
+        remainingInInterval,
+        `isCountingDown: ${isCountingDown}` // Log isCountingDown state directly from its current value
+      );
+      setTimeRemaining(remainingInInterval);
+
+      if (!remainingInInterval) {
         console.log(
-          `Lesson ID ${lesson.id} (${lesson.title}): Remaining - ${remaining.days}d ${remaining.hours}h ${remaining.minutes}m ${remaining.seconds}s`
+          `[Lesson ID: ${lesson.id}] Countdown FINISHED in interval.`
         );
-      } else {
-        console.log(
-          `Lesson ID ${lesson.id} (${lesson.title}): Countdown finished.`
-        );
-        setIsCountingDown(false); // Ensure countdown state is false
-        clearInterval(intervalId); // Stop the interval
+        setIsCountingDown(false);
+        clearInterval(intervalId);
       }
     }, 1000);
 
     return () => {
       if (intervalId) clearInterval(intervalId); // Cleanup on unmount or when dependencies change
+      console.log(`[Lesson ID: ${lesson.id}] Countdown effect cleanup.`);
     };
   }, [
     lesson.id,

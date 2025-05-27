@@ -38,10 +38,7 @@ interface FilterState {
 }
 
 export const SwimmingLessonList = () => {
-  console.log("SwimmingLessonList: Rendering");
-
   const [filter, setFilter] = useState<FilterState>(() => {
-    console.log("SwimmingLessonList: Initializing filter state");
     return {
       status: [],
       month: [],
@@ -50,19 +47,11 @@ export const SwimmingLessonList = () => {
     };
   });
 
-  useEffect(() => {
-    console.log("SwimmingLessonList: filter state changed", filter);
-  }, [filter]);
+  useEffect(() => {}, [filter]);
 
   const [showAvailableOnly, setShowAvailableOnly] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [categoryOpen, setCategoryOpen] = useState(false);
-
-  console.log("SwimmingLessonList: Props for LessonFilterControls", {
-    filter,
-    selectedFilters,
-    categoryOpen,
-  });
 
   // Determine API query parameters based on filter state and showAvailableOnly toggle
   let statusForApi: string | undefined;
@@ -93,75 +82,34 @@ export const SwimmingLessonList = () => {
     ...(monthForApi && { month: monthForApi }),
   });
 
-  useEffect(() => {
-    console.log("SwimmingLessonList: lessonsData changed", lessonsData);
-  }, [lessonsData]);
+  useEffect(() => {}, [lessonsData]);
 
   const lessons = lessonsData?.data?.content;
 
-  console.log("SwimmingLessonList: Raw lessons before filtering", lessons);
-
   const filteredLessons = useMemo(() => {
-    console.log(
-      "SwimmingLessonList: Recalculating filteredLessons. Dependencies:",
-      {
-        lessonsL: lessons,
-        filterL: filter,
-        showAvailableOnlyL: showAvailableOnly,
-      }
-    );
     if (!lessons || lessons.length === 0) {
-      console.log(
-        "SLL.filteredLessons: No lessons to filter or lessons array is empty."
-      );
       return [];
     }
 
     const result = lessons.filter((lesson: LessonDTO) => {
-      console.log(
-        `SLL.filteredLessons: Evaluating Lesson ID ${lesson.id} ('${lesson.title}'). API Status: '${lesson.status}', Remaining: ${lesson.remaining}`
-      );
-
       // Condition 1: Available and Remaining
       if (showAvailableOnly && lesson.remaining === 0) {
-        console.log(
-          `SLL.filteredLessons: Lesson ID ${lesson.id} filtered out by: showAvailableOnly && remaining === 0.`
-        );
         return false;
       }
 
       // Condition 2: Status Match
       if (filter.status.length > 0) {
         if (!lesson.status) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${lesson.id} filtered out by: !lesson.status (status is null or undefined).`
-          );
           return false;
         }
         // Convert API's Korean status to the English value used in filters
         const lessonStatusInFilterFormat =
           statusApiToFilterValue[lesson.status];
         if (!lessonStatusInFilterFormat) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${lesson.id} ('${
-              lesson.title
-            }') has status '${
-              lesson.status
-            }' which couldn't be mapped to a filter value. Known API statuses: ${Object.keys(
-              statusApiToFilterValue
-            ).join(", ")}`
-          );
           // Decide if this should filter out or not. For now, assume if it's unmappable, it doesn't match.
           return false;
         }
         if (!filter.status.includes(lessonStatusInFilterFormat)) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${
-              lesson.id
-            } filtered out by: status mismatch. Lesson API status (mapped): '${lessonStatusInFilterFormat}', Filter statuses: [${filter.status.join(
-              ", "
-            )}]`
-          );
           return false;
         }
       }
@@ -169,20 +117,10 @@ export const SwimmingLessonList = () => {
       // Condition 3: Month Match
       if (filter.month.length > 0) {
         if (!lesson.startDate) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${lesson.id} filtered out by: !lesson.startDate (startDate is null or undefined for month filter).`
-          );
           return false;
         }
         const lessonMonth = new Date(lesson.startDate).getMonth() + 1;
         if (!filter.month.includes(lessonMonth)) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${
-              lesson.id
-            } filtered out by: month mismatch. Lesson month: ${lessonMonth}, Filter months: [${filter.month.join(
-              ", "
-            )}]`
-          );
           return false;
         }
       }
@@ -190,9 +128,6 @@ export const SwimmingLessonList = () => {
       // Condition 4: Time Type Match
       if (filter.timeType.length > 0) {
         if (!lesson.timePrefix) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${lesson.id} filtered out by: !lesson.timePrefix (timePrefix is null or undefined for timeType filter).`
-          );
           return false;
         }
         const lessonIsMorning = lesson.timePrefix === "오전";
@@ -203,13 +138,6 @@ export const SwimmingLessonList = () => {
             (type === "afternoon" && lessonIsAfternoon)
         );
         if (!typeMatch) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${
-              lesson.id
-            } filtered out by: timeType mismatch. Lesson timePrefix: '${
-              lesson.timePrefix
-            }', Filter timeTypes: [${filter.timeType.join(", ")}]`
-          );
           return false;
         }
       }
@@ -217,9 +145,6 @@ export const SwimmingLessonList = () => {
       // Condition 5: Time Slot Match
       if (filter.timeSlot.length > 0) {
         if (!lesson.timeSlot) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${lesson.id} filtered out by: !lesson.timeSlot (timeSlot is null or undefined for timeSlot filter).`
-          );
           return false;
         }
         const lessonTimeSlotInternal = lesson.timeSlot?.replace("~", "-");
@@ -227,65 +152,33 @@ export const SwimmingLessonList = () => {
           !lessonTimeSlotInternal ||
           !filter.timeSlot.includes(lessonTimeSlotInternal)
         ) {
-          console.log(
-            `SLL.filteredLessons: Lesson ID ${
-              lesson.id
-            } filtered out by: timeSlot mismatch. Lesson timeSlot: '${
-              lesson.timeSlot
-            }', Filter timeSlots: [${filter.timeSlot.join(", ")}]`
-          );
           return false;
         }
       }
 
-      console.log(
-        `SLL.filteredLessons: Lesson ID ${lesson.id} ('${lesson.title}') PASSED all client-side filters.`
-      );
       return true;
     });
-    console.log(
-      "SwimmingLessonList: Recalculated filteredLessons result",
-      result
-    );
     return result;
   }, [lessons, filter, showAvailableOnly]);
 
-  console.log(
-    "SwimmingLessonList: Final filteredLessons to render",
-    filteredLessons
-  );
-
   const handleSetFilter = useCallback((newFilter: FilterState) => {
-    console.log(
-      "SwimmingLessonList: setFilter (onFilterChange in child) called with newFilter:",
-      newFilter
-    );
     setFilter(newFilter);
   }, []);
 
   const handleSetSelectedFilters = useCallback(
     (newSelectedFilters: string[]) => {
-      console.log(
-        "SwimmingLessonList: setSelectedFilters (onSelectedFiltersChange in child) called with:",
-        newSelectedFilters
-      );
       setSelectedFilters(newSelectedFilters);
     },
     []
   );
 
   const handleSetCategoryOpen = useCallback((isOpen: boolean) => {
-    console.log(
-      "SwimmingLessonList: setCategoryOpen (onCategoryToggle in child) called with:",
-      isOpen
-    );
     setCategoryOpen(isOpen);
   }, []);
 
   // Conditional rendering for the lesson grid area only
   let lessonContent;
   if (lessonsLoading) {
-    console.log("SwimmingLessonList: Grid - Showing loading state");
     lessonContent = (
       <Box textAlign="center" py={10} width="100%">
         <Text fontSize={{ base: "md", md: "lg" }}>
@@ -294,7 +187,6 @@ export const SwimmingLessonList = () => {
       </Box>
     );
   } else if (lessonsError) {
-    console.log("SwimmingLessonList: Grid - Showing error state", lessonsError);
     lessonContent = (
       <Box textAlign="center" py={10} color="red.500" width="100%">
         <Text fontSize={{ base: "md", md: "lg" }}>
@@ -306,7 +198,6 @@ export const SwimmingLessonList = () => {
       </Box>
     );
   } else {
-    console.log("SwimmingLessonList: Grid - Rendering lessons");
     lessonContent = (
       <Grid
         templateColumns={{
@@ -339,9 +230,6 @@ export const SwimmingLessonList = () => {
     lg: "27px",
   });
 
-  console.log(
-    "SwimmingLessonList: Rendering main structure with controls and lesson content area"
-  );
   return (
     <Box px={{ base: 2, md: 0 }}>
       <Flex
@@ -405,10 +293,6 @@ export const SwimmingLessonList = () => {
             borderRadius="33.3333px"
             bg={showAvailableOnly ? "#2E3192" : "#ccc"}
             onClick={() => {
-              console.log(
-                "SwimmingLessonList: Toggling showAvailableOnly. Prev:",
-                showAvailableOnly
-              );
               setShowAvailableOnly(!showAvailableOnly);
             }}
             cursor="pointer"
