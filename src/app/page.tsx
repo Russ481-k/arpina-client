@@ -11,12 +11,13 @@ import { sortMenus } from "@/lib/api/menu";
 import { useMemo } from "react";
 import { STYLES } from "@/styles/theme-tokens";
 import type { Styles } from "@/styles/theme";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
   const { menus } = useMenu();
-
+  const router = useRouter();
   const treeMenus = useMemo(() => {
     try {
       // API 응답이 성공했는지 확인
@@ -39,7 +40,7 @@ export default function Home() {
       return [];
     }
   }, [menus]);
-
+  router.push("/signup");
   const styles = useUserStyles(STYLES as Styles);
   return (
     <Layout menus={treeMenus} currentPage="홈">

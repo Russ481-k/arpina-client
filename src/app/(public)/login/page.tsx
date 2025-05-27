@@ -66,6 +66,7 @@ export default function LoginPage() {
         type: "success",
         duration: 3000,
       });
+      router.push("/sports/swimming/lesson");
       // The redirect is handled in the AuthContext
     } catch (error: any) {
       console.error("Login error:", error);
@@ -192,7 +193,7 @@ export default function LoginPage() {
                 >
                   {isLoading ? "로그인 중..." : "로그인"}
                 </Button>
-                <HStack gap="3" justify="center" fontSize="sm" w="full">
+                {/* <HStack gap="3" justify="center" fontSize="sm" w="full">
                   <Button
                     variant="outline"
                     size="md"
@@ -221,7 +222,7 @@ export default function LoginPage() {
                   >
                     아이디/비밀번호 찾기
                   </Button>
-                </HStack>
+                </HStack> */}
               </VStack>
             </Fieldset.Root>
           </form>

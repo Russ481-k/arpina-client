@@ -59,7 +59,7 @@ export const Step4Complete = ({ username }: Step4CompleteProps) => {
           로그인
         </Button>
 
-        <Button
+        {/* <Button
           variant="outline"
           borderColor="#2E3192"
           color="#2E3192"
@@ -71,7 +71,7 @@ export const Step4Complete = ({ username }: Step4CompleteProps) => {
           }}
         >
           홈으로
-        </Button>
+        </Button> */}
       </HStack>
     </VStack>
   );
