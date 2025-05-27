@@ -1,6 +1,13 @@
 "use client";
 
-import { Box, Flex, Text, Grid, GridItem } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Text,
+  Grid,
+  GridItem,
+  useBreakpointValue,
+} from "@chakra-ui/react";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useLessons } from "@/lib/hooks/useSwimming";
 import { LessonDTO } from "@/types/swimming";
@@ -281,15 +288,21 @@ export const SwimmingLessonList = () => {
     console.log("SwimmingLessonList: Grid - Showing loading state");
     lessonContent = (
       <Box textAlign="center" py={10} width="100%">
-        <Text fontSize="lg">강습 정보를 불러오는 중입니다...</Text>
+        <Text fontSize={{ base: "md", md: "lg" }}>
+          강습 정보를 불러오는 중입니다...
+        </Text>
       </Box>
     );
   } else if (lessonsError) {
     console.log("SwimmingLessonList: Grid - Showing error state", lessonsError);
     lessonContent = (
       <Box textAlign="center" py={10} color="red.500" width="100%">
-        <Text fontSize="lg">강습 정보를 불러오는데 문제가 발생했습니다.</Text>
-        <Text mt={2}>다시 시도해주세요.</Text>
+        <Text fontSize={{ base: "md", md: "lg" }}>
+          강습 정보를 불러오는데 문제가 발생했습니다.
+        </Text>
+        <Text mt={2} fontSize={{ base: "sm", md: "md" }}>
+          다시 시도해주세요.
+        </Text>
       </Box>
     );
   } else {
@@ -298,14 +311,16 @@ export const SwimmingLessonList = () => {
       <Grid
         templateColumns={{
           base: "repeat(1, 1fr)",
-          md: "repeat(2, 1fr)",
+          sm: "repeat(2, 1fr)",
+          md: "repeat(3, 1fr)",
           lg: "repeat(4, 1fr)",
         }}
-        gap={6}
+        gap={{ base: 4, md: 6 }}
         justifyItems="center"
+        width="100%"
       >
         {filteredLessons.map((lesson: LessonDTO) => (
-          <GridItem key={lesson.id}>
+          <GridItem key={lesson.id} w="100%">
             <LessonCard lesson={lesson} />
           </GridItem>
         ))}
@@ -313,34 +328,48 @@ export const SwimmingLessonList = () => {
     );
   }
 
+  const infoTextFontSize = useBreakpointValue({
+    base: "16px",
+    md: "18px",
+    lg: "21px",
+  });
+  const toggleTextFontSize = useBreakpointValue({
+    base: "18px",
+    md: "22px",
+    lg: "27px",
+  });
+
   console.log(
     "SwimmingLessonList: Rendering main structure with controls and lesson content area"
   );
   return (
-    <Box>
+    <Box px={{ base: 2, md: 0 }}>
       <Flex
+        direction={{ base: "column", md: "row" }}
         justify="space-between"
-        align="center"
+        align={{ base: "flex-start", md: "center" }}
         width="100%"
         maxW="1600px"
-        height="35px"
+        minHeight="35px"
         mb={6}
+        gap={{ base: 3, md: 0 }}
       >
-        <Flex align="center" gap="15px" width="auto" height="35px">
+        <Flex
+          align="center"
+          gap={{ base: 2, md: "15px" }}
+          width="auto"
+          minHeight="35px"
+        >
           <Text
             fontFamily="'Paperlogy', sans-serif"
             fontWeight="500"
-            fontSize="21px"
-            lineHeight="25px"
+            fontSize={infoTextFontSize}
+            lineHeight={{ base: "20px", md: "25px" }}
             letterSpacing="-0.05em"
             color="#373636"
           >
             신청정보{" "}
             <Text as="span" color="#2E3192" fontWeight="700">
-              {/* Show total elements from API if available and not filtering client-side heavily, 
-                  otherwise, fall back to filteredLessons.length. 
-                  Consider if lessonsData.data.totalElements is still relevant if client-side filters are very active.
-              */}
               {lessonsData?.data?.totalElements != null &&
               !filter.status.length &&
               !filter.month.length &&
@@ -353,12 +382,17 @@ export const SwimmingLessonList = () => {
           </Text>
         </Flex>
 
-        <Flex align="center" gap="15px" width="auto" height="35px">
+        <Flex
+          align="center"
+          gap={{ base: 2, md: "15px" }}
+          width="auto"
+          minHeight="35px"
+        >
           <Text
             fontFamily="'Paperlogy', sans-serif"
             fontWeight="700"
-            fontSize="27px"
-            lineHeight="32px"
+            fontSize={toggleTextFontSize}
+            lineHeight={{ base: "22px", md: "32px" }}
             letterSpacing="-0.05em"
             color="#373636"
           >
@@ -379,6 +413,7 @@ export const SwimmingLessonList = () => {
             }}
             cursor="pointer"
             transition="background-color 0.2s"
+            flexShrink={0}
           >
             <Box
               position="absolute"
@@ -402,7 +437,6 @@ export const SwimmingLessonList = () => {
         onCategoryToggle={handleSetCategoryOpen}
       />
 
-      {/* Render the conditionally prepared lesson content (Grid, Loading, or Error) */}
       {lessonContent}
     </Box>
   );

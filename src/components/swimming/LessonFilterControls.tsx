@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, memo } from "react";
-import { Box, Flex, Text, Image, Accordion, Separator } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Text,
+  Image,
+  Accordion,
+  Separator,
+  useBreakpointValue,
+} from "@chakra-ui/react";
 import {
   statusOptions,
   monthOptions,
@@ -300,6 +308,18 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
       // onFilterChange will be triggered by the useEffect watching 'filter'
     }, [setFilter]); // Added setFilter as dependency
 
+    const titleFontSize = useBreakpointValue({
+      base: "18px",
+      md: "22px",
+      lg: "27px",
+    });
+    const resetTextFontSize = useBreakpointValue({
+      base: "14px",
+      md: "18px",
+      lg: "23px",
+    });
+    const iconSize = useBreakpointValue({ base: "20px", md: "23px" });
+
     console.log(
       "LessonFilterControls: Rendering main content. Internal filter:",
       filter,
@@ -327,66 +347,71 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
             <Accordion.ItemTrigger _hover={{ bg: "transparent" }}>
               <Box width="100%">
                 <Flex
+                  direction={{ base: "column", sm: "row" }}
                   justify="space-between"
-                  align="center"
+                  align={{ base: "flex-start", sm: "center" }}
                   width="100%"
-                  height="60px"
+                  minHeight="60px"
                   bg="#F7F8FB"
                   borderRadius="10px"
-                  p={5}
+                  p={{ base: 3, md: 5 }}
+                  gap={{ base: 2, sm: 0 }}
                 >
-                  <Flex align="center" gap="10px" flex={1} height="30px">
+                  <Flex
+                    align="center"
+                    gap={{ base: 2, md: "10px" }}
+                    flex={1}
+                    minHeight="30px"
+                  >
                     <Image
                       src="/images/swimming/icon1.png"
                       alt="카테고리 아이콘"
-                      width={23}
-                      height={23}
+                      width={iconSize}
+                      height={iconSize}
                     />
                     <Text
                       fontFamily="'Paperlogy', sans-serif"
                       fontWeight="700"
-                      fontSize="27px"
-                      lineHeight="30px"
-                      display="flex"
-                      alignItems="center"
+                      fontSize={titleFontSize}
+                      lineHeight={{ base: "22px", md: "30px" }}
                       letterSpacing="-0.05em"
                       color="#373636"
                     >
                       출력하실 카테고리를 선택해주세요
                     </Text>
+                  </Flex>
 
-                    <Flex
-                      align="center"
-                      gap={2}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        resetFiltersToEmpty();
-                      }}
+                  <Flex
+                    align="center"
+                    gap={2}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      resetFiltersToEmpty();
+                    }}
+                    cursor="pointer"
+                    mt={{ base: 2, sm: 0 }}
+                  >
+                    <Text
+                      fontFamily="'Paperlogy', sans-serif"
+                      fontWeight="500"
+                      fontSize={resetTextFontSize}
+                      lineHeight={{ base: "20px", md: "28px" }}
+                      letterSpacing="-0.05em"
+                      color="#373636"
+                      display={{ base: "none", md: "flex" }}
+                      alignItems="center"
                     >
-                      <Text
-                        fontFamily="'Paperlogy', sans-serif"
-                        fontWeight="500"
-                        fontSize="23px"
-                        lineHeight="28px"
-                        display="flex"
-                        alignItems="center"
-                        letterSpacing="-0.05em"
-                        color="#373636"
-                        height="30px"
-                        cursor="pointer"
-                      >
-                        선택 초기화
-                      </Text>
-                      <Image
-                        src="/images/swimming/icon7.png"
-                        alt="초기화 아이콘"
-                        width={23}
-                        height={23}
-                        cursor="pointer"
-                      />
-                    </Flex>
+                      선택 초기화
+                    </Text>
+                    <Image
+                      src="/images/swimming/icon7.png"
+                      alt="초기화 아이콘"
+                      width={iconSize}
+                      height={iconSize}
+                    />
                   </Flex>
                   <Accordion.ItemIndicator
+                    ml={{ base: "auto", sm: 2 }}
                     onClick={(e) => {
                       e.stopPropagation();
                       onCategoryToggle(!categoryOpen);
@@ -396,7 +421,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
               </Box>
             </Accordion.ItemTrigger>
             <Accordion.ItemContent>
-              <Accordion.ItemBody p={0}>
+              <Accordion.ItemBody p={{ base: 2, md: 0 }}>
                 <Flex
                   direction="column"
                   align="flex-start"

@@ -68,9 +68,7 @@ const ApplicationConfirmPage = () => {
   const [lessonPrice, setLessonPrice] = useState<number>(0);
 
   const [profile, setProfile] = useState<ProfileDto | null>(null);
-  const [userGender, setUserGender] = useState<
-    "MALE" | "FEMALE" | "OTHER" | undefined
-  >(undefined);
+  const [userGender, setUserGender] = useState<"MALE" | "FEMALE" | null>(null);
 
   const [lockerAvailability, setLockerAvailability] =
     useState<LockerAvailabilityDto | null>(null);
@@ -169,36 +167,20 @@ const ApplicationConfirmPage = () => {
         if (profileData) {
           setProfile(profileData);
           if (profileData.gender) {
-            let mappedGender: "MALE" | "FEMALE" | "OTHER" | undefined =
-              undefined;
-            if (profileData.gender === "1") {
-              mappedGender = "MALE";
-            } else if (profileData.gender === "2") {
-              mappedGender = "FEMALE";
-            } else if (
-              typeof profileData.gender === "string" &&
-              profileData.gender.toUpperCase() === "MALE"
-            ) {
-              mappedGender = "MALE";
-            } else if (
-              typeof profileData.gender === "string" &&
-              profileData.gender.toUpperCase() === "FEMALE"
-            ) {
-              mappedGender = "FEMALE";
-            } else if (
-              typeof profileData.gender === "string" &&
-              profileData.gender.toUpperCase() === "OTHER"
-            ) {
-              mappedGender = "OTHER";
+            const apiGender = String(profileData.gender).toUpperCase();
+            if (apiGender === "MALE" || apiGender === "1") {
+              setUserGender("MALE");
+            } else if (apiGender === "FEMALE" || apiGender === "0") {
+              setUserGender("FEMALE");
             } else {
               console.warn(
-                `Unknown gender value from API: ${profileData.gender}`
+                `Unsupported gender value from API: ${profileData.gender}. Gender will be treated as unspecified.`
               );
-              mappedGender = "OTHER";
+              setUserGender(null);
             }
-            setUserGender(mappedGender);
           } else {
             console.warn("Gender not found on profile DTO from API");
+            setUserGender(null);
           }
         } else {
           console.warn("Profile data is null after fetch.");
@@ -217,36 +199,33 @@ const ApplicationConfirmPage = () => {
   }, [lessonId]);
 
   useEffect(() => {
-    if (lessonId && userGender && userGender !== "OTHER") {
-      setIsLockerDetailsLoading(true);
-      setLockerError(null);
-
-      mypageApi
-        .getLockerAvailabilityStatus(userGender)
-        .then((data) => {
-          setLockerAvailability(data);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch locker availability:", err);
-          setLockerError("사물함 정보를 불러오는데 실패했습니다.");
-          setLockerAvailability(null);
-        })
-        .finally(() => {
-          setIsLockerDetailsLoading(false);
-        });
-    } else if (lessonId && userGender === "OTHER") {
-      setLockerError("해당 성별은 사물함 정보를 제공하지 않습니다.");
-      setLockerAvailability(null);
-      setIsLockerDetailsLoading(false);
-    } else if (lessonId && !userGender && profile) {
-      console.log("profile", profile);
-      setLockerError(
-        "사용자 성별 정보가 없어 사물함 정보를 가져올 수 없습니다."
-      );
-      setLockerAvailability(null);
-      setIsLockerDetailsLoading(false);
+    if (lessonId) {
+      if (userGender === "MALE" || userGender === "FEMALE") {
+        setIsLockerDetailsLoading(true);
+        setLockerError(null);
+        mypageApi
+          .getLockerAvailabilityStatus(userGender)
+          .then((data) => {
+            setLockerAvailability(data);
+          })
+          .catch((err) => {
+            console.error("Failed to fetch locker availability:", err);
+            setLockerError("사물함 정보를 불러오는데 실패했습니다.");
+            setLockerAvailability(null);
+          })
+          .finally(() => {
+            setIsLockerDetailsLoading(false);
+          });
+      } else {
+        // userGender is null (not MALE or FEMALE)
+        setLockerError(
+          "사용자 성별이 남성 또는 여성이 아니거나 확인되지 않아, 해당 성별의 사물함 정보를 제공할 수 없습니다."
+        );
+        setLockerAvailability(null);
+        setIsLockerDetailsLoading(false);
+      }
     }
-  }, [lessonId, userGender, profile]);
+  }, [lessonId, userGender]);
 
   useEffect(() => {
     if (!lessonPrice) return;
@@ -435,10 +414,13 @@ const ApplicationConfirmPage = () => {
     price * (1 - discount / 100);
 
   let currentLockerCount: number | string = "-";
-  if (lockerAvailability && userGender && userGender !== "OTHER") {
+  if (
+    lockerAvailability &&
+    (userGender === "MALE" || userGender === "FEMALE")
+  ) {
     currentLockerCount = lockerAvailability.availableQuantity;
-  } else if (userGender === "OTHER") {
-    currentLockerCount = "정보없음";
+  } else if (userGender === null) {
+    currentLockerCount = "정보없음 (성별 미확인)";
   }
 
   const radioItemSpinnerColor = primaryDefault;

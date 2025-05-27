@@ -18,6 +18,26 @@ export const heroSectionData: Record<
       { label: "사용자정보", url: "/mypage" },
     ],
   },
+  "/sports/swimming/lesson": {
+    header: "스포츠",
+    title: "수영장 온라인 신청",
+    image: "/images/mypage/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/swimming/lesson" },
+    ],
+  },
+  "/application/confirm": {
+    header: "스포츠",
+    title: "수영장 온라인 신청",
+    image: "/images/mypage/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/swimming/lesson" },
+    ],
+  },
   "/bbs/faq": {
     header: "종합게시판",
     title: "자주하는질문",

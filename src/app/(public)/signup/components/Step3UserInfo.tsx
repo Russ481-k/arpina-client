@@ -100,6 +100,12 @@ const validateCarNumber = (carNumber: string): string => {
   return "";
 };
 
+const formatGender = (gender: string): string => {
+  if (gender === "0") return "FEMALE";
+  if (gender === "1") return "MALE";
+  return "";
+};
+
 // Helper function to format phone number
 const formatPhoneNumber = (phoneNumber: string): string => {
   if (!phoneNumber) return "";
@@ -514,7 +520,9 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           initialAuthData?.name ||
           rawFormData.name,
         birthDate: initialAuthData?.birthDate || rawFormData.birthDate, // Will be overridden by NICE data on backend
-        gender: initialAuthData?.gender || rawFormData.genderFromAuth, // Will be overridden by NICE data on backend
+        gender: formatGender(
+          initialAuthData?.gender || rawFormData.genderFromAuth
+        ), // Will be overridden by NICE data on backend
         phone: initialAuthData?.mobileNo
           ? formatPhoneNumber(initialAuthData.mobileNo)
           : "", // Format phone number before sending
