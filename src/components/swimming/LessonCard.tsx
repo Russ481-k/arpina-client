@@ -1,20 +1,33 @@
 "use client";
 
 import { LessonDTO } from "@/types/swimming";
+import { MypageEnrollDto } from "@/types/api";
 import { Box, Text, Button, Flex, Image } from "@chakra-ui/react";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { toaster } from "../ui/toaster";
+import LessonCardActions from "./LessonCardActions";
 
 interface LessonCardProps {
   lesson: LessonDTO;
+  context?: "listing" | "mypage";
+  enrollment?: MypageEnrollDto;
+  onGoToPayment?: (paymentPageUrl: string) => void;
+  onRequestCancel?: (enrollId: number) => void;
+  onRenewLesson?: (lessonId: number) => void;
 }
 
 export const LessonCard: React.FC<LessonCardProps> = React.memo(
-  ({ lesson }) => {
+  ({
+    lesson,
+    context = "listing",
+    enrollment,
+    onGoToPayment,
+    onRequestCancel,
+    onRenewLesson,
+  }) => {
     const router = useRouter();
 
-    // Calculate occupied spots. lesson.remaining is now actual available spots.
     const occupiedSpots = Math.max(0, lesson.capacity - lesson.remaining);
 
     const handleApplyClick = () => {
@@ -36,13 +49,10 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
         duration: 1500,
       });
 
-      // Encode title and price to ensure they are URL-safe
       const queryParams = new URLSearchParams({
         lessonId: lesson.id.toString(),
         lessonTitle: lesson.title,
-        lessonPrice: lesson.price.toString(), // Assuming lesson.price is a number
-        // Add lesson.lockerFee if available and needed, e.g.:
-        // ...(lesson.lockerFee !== undefined && { lessonLockerFee: lesson.lockerFee.toString() })
+        lessonPrice: lesson.price.toString(),
       });
 
       router.push(`/application/confirm?${queryParams.toString()}`);
@@ -163,32 +173,42 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
               </Text>
             </Flex>
           </Box>
-          <Button
-            className="apply-button"
-            bgColor={
-              lesson.status === "접수중"
-                ? "#2D3092"
-                : lesson.status === "접수마감" || lesson.status === "수강중"
-                ? "#888888"
-                : "#888888"
-            }
-            color="white"
-            height="41px"
-            borderRadius="10px"
-            _hover={{
-              bgColor: lesson.status === "접수중" ? "#1f2366" : "#888888",
-            }}
-            disabled={lesson.status !== "접수중"}
-            onClick={handleApplyClick}
-          >
-            {lesson.status === "접수중"
-              ? "신청하기"
-              : lesson.status === "접수마감"
-              ? "접수마감"
-              : lesson.status === "수강중"
-              ? "수강중"
-              : "신청마감"}
-          </Button>
+          {context === "mypage" && enrollment ? (
+            <LessonCardActions
+              enrollment={enrollment}
+              lesson={lesson}
+              onGoToPayment={onGoToPayment}
+              onRequestCancel={onRequestCancel}
+              onRenewLesson={onRenewLesson}
+            />
+          ) : (
+            <Button
+              w="100%"
+              bgColor={
+                lesson.status === "접수중"
+                  ? "#2D3092"
+                  : lesson.status === "접수마감" || lesson.status === "수강중"
+                  ? "#888888"
+                  : "#888888"
+              }
+              color="white"
+              height="41px"
+              borderRadius="10px"
+              _hover={{
+                bgColor: lesson.status === "접수중" ? "#1f2366" : "#888888",
+              }}
+              disabled={lesson.status !== "접수중"}
+              onClick={handleApplyClick}
+            >
+              {lesson.status === "접수중"
+                ? "신청하기"
+                : lesson.status === "접수마감"
+                ? "접수마감"
+                : lesson.status === "수강중"
+                ? "수강중"
+                : "신청마감"}
+            </Button>
+          )}
         </Box>
       </Box>
     );
