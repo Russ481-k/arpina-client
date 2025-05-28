@@ -408,7 +408,7 @@ export interface PaginatedResponse<T> {
  */
 export interface EnrollLessonRequestDto {
   lessonId: number;
-  wantsLocker: boolean;
+  usesLocker: boolean;
   membershipType: string;
 }
 

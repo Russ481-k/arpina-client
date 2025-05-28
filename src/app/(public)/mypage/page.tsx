@@ -908,6 +908,15 @@ export default function MyPage() {
                   </GridItem>
                 );
               })}
+
+              <Button
+                colorPalette="orange"
+                size="md"
+                px={8}
+                onClick={() => router.push("/sports/swimming/lesson")}
+              >
+                강습 목록으로 이동
+              </Button>
             </Grid>
           ) : (
             <Box textAlign="center" p={8}>

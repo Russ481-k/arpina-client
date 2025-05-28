@@ -266,12 +266,14 @@ const ApplicationConfirmPage = () => {
 
     setIsSubmitting(true);
     setError(null);
+
+    const enrollRequestData: EnrollLessonRequestDto = {
+      lessonId,
+      usesLocker: selectedLocker,
+      membershipType: selectedMembershipType,
+    };
+
     try {
-      const enrollRequestData: EnrollLessonRequestDto = {
-        lessonId,
-        wantsLocker: selectedLocker,
-        membershipType: selectedMembershipType,
-      };
       const enrollResponse = await swimmingPaymentService.enrollLesson(
         enrollRequestData
       );
@@ -441,23 +443,11 @@ const ApplicationConfirmPage = () => {
         </HStack>
         <VStack align="stretch" gap={1} pl={2}>
           {[
-            // {
-            //   text: "신청은 ",
-            //   boldRed: "5분 이내",
-            //   rest: "에 결제까지 완료하셔야 신청이 확정됩니다.",
-            // },
             {
               text: "수영장강습과, 사물함신청은 ",
               boldRed: "결제완료 기준",
               rest: "으로 선착순 확정됩니다.",
             },
-            // {
-            //   text: "",
-            //   boldRed: "5분 이내",
-            //   rest: " 미결제 시 신청은 ",
-            //   boldRed2: "자동취소",
-            //   rest2: " 됩니다.",
-            // },
             {
               text: "할인회원 신청시 ",
               boldRed: "오프라인으로 증빙서류 제출",
