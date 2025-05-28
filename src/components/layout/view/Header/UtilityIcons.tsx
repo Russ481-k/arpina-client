@@ -17,13 +17,33 @@ export const UtilityIcons = memo(
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-      // Ensure this runs only on the client
-      if (typeof window !== "undefined") {
-        const authToken = localStorage.getItem("auth_token");
-        const authUser = localStorage.getItem("auth_user");
-        setIsAuthenticated(!!(authToken && authUser));
-      }
-    }, []); // Check on initial mount
+      const checkAuthState = () => {
+        // Ensure this runs only on the client
+        if (typeof window !== "undefined") {
+          const authToken = localStorage.getItem("auth_token");
+          const authUser = localStorage.getItem("auth_user");
+          setIsAuthenticated(!!(authToken && authUser));
+        }
+      };
+
+      checkAuthState(); // Initial check
+
+      const handleStorageChange = (event: StorageEvent) => {
+        if (
+          event.key === "auth_token" ||
+          event.key === "auth_user" ||
+          event.key === null
+        ) {
+          checkAuthState();
+        }
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+
+      return () => {
+        window.removeEventListener("storage", handleStorageChange);
+      };
+    }, []); // Check on initial mount and when storage changes
 
     const handleLogin = useCallback(() => {
       router.push("/login");

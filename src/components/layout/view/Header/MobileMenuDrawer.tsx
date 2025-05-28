@@ -10,7 +10,6 @@ import {
   IconButton,
   Button,
   Separator,
-  Text,
 } from "@chakra-ui/react";
 import Image from "next/image";
 import { memo, useState, useEffect, useCallback } from "react";
@@ -18,6 +17,7 @@ import NextLink from "next/link";
 import { Menu } from "@/types/api";
 import { Grid3X3Icon, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toaster } from "@/components/ui/toaster";
 
 interface MobileMenuDrawerProps {
   menusWithLastFlag: (Menu & { isLastMenuItem?: boolean })[];
@@ -42,12 +42,39 @@ export const MobileMenuDrawer = memo(
     const [isDrawerOpen, setIsDrawerOpen] = useState(false); // To manually control drawer closing
 
     useEffect(() => {
-      if (typeof window !== "undefined") {
-        const authToken = localStorage.getItem("auth_token");
-        const authUser = localStorage.getItem("auth_user");
-        setIsAuthenticated(!!(authToken && authUser));
-      }
-    }, []);
+      const checkAuthState = () => {
+        if (typeof window !== "undefined") {
+          const authToken = localStorage.getItem("auth_token");
+          const authUser = localStorage.getItem("auth_user");
+          setIsAuthenticated(!!(authToken && authUser));
+        }
+      };
+
+      checkAuthState(); // Initial check
+
+      const handleStorageChange = (event: StorageEvent) => {
+        // Check if the keys that changed are the ones we care about,
+        // or if storage was cleared (event.key would be null).
+        if (
+          event.key === "auth_token" ||
+          event.key === "auth_user" ||
+          event.key === null
+        ) {
+          checkAuthState();
+        }
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+
+      // It's also good practice to listen for a custom event if you control the login/logout mechanism,
+      // as 'storage' event is primarily for cross-tab communication.
+      // For example: window.addEventListener('authChanged', checkAuthState);
+
+      return () => {
+        window.removeEventListener("storage", handleStorageChange);
+        // For custom event: window.removeEventListener('authChanged', checkAuthState);
+      };
+    }, []); // Empty dependency array is correct as we manage listeners manually.
 
     const handleNavigate = useCallback(
       (path: string) => {
@@ -64,6 +91,13 @@ export const MobileMenuDrawer = memo(
         setIsAuthenticated(false);
         router.push("/");
         setIsDrawerOpen(false); // Close drawer after logout
+        toaster.create({
+          title: "로그아웃 성공",
+          description: "성공적으로 로그아웃되었습니다.",
+          type: "success",
+          duration: 3000,
+          closable: true,
+        });
       }
     }, [router]);
 
