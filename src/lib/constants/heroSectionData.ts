@@ -18,7 +18,7 @@ export const heroSectionData: Record<
       { label: "사용자정보", url: "/mypage" },
     ],
   },
-  "/sports/swimming/lesson": {
+  "/sports/swimming": {
     header: "스포츠",
     title: "수영장 온라인 신청",
     image: "/images/mypage/sub_visual.png",
