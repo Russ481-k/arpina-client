@@ -338,69 +338,69 @@ export const EnrollmentManagementTab = ({
           justifyContent: "center",
         },
       },
-      {
-        headerName: "할인",
-        field: "discountInfo",
-        width: 80,
-        cellRenderer: (params: ICellRendererParams<EnrollmentData>) => {
-          const { data, context } = params;
-          if (!data || !data.discountInfo)
-            return (
-              <Badge colorPalette="gray" variant="outline" size="sm">
-                없음
-              </Badge>
-            );
+      // {
+      //   headerName: "할인",
+      //   field: "discountInfo",
+      //   width: 80,
+      //   cellRenderer: (params: ICellRendererParams<EnrollmentData>) => {
+      //     const { data, context } = params;
+      //     if (!data || !data.discountInfo)
+      //       return (
+      //         <Badge colorPalette="gray" variant="outline" size="sm">
+      //           없음
+      //         </Badge>
+      //       );
 
-          const statusConfig = {
-            APPROVED: { colorPalette: "green", label: "승인" },
-            DENIED: { colorPalette: "red", label: "거절" },
-            PENDING: { colorPalette: "yellow", label: "대기" },
-          };
-          const config = statusConfig[data.discountInfo.status];
+      //     const statusConfig = {
+      //       APPROVED: { colorPalette: "green", label: "승인" },
+      //       DENIED: { colorPalette: "red", label: "거절" },
+      //       PENDING: { colorPalette: "yellow", label: "대기" },
+      //     };
+      //     const config = statusConfig[data.discountInfo.status];
 
-          return (
-            <Stack gap={1} h="100%" justifyContent="center" alignItems="center">
-              <Text fontSize="xs" color={colors.text.secondary}>
-                {data.discountInfo.type}
-              </Text>
-              <Badge
-                colorPalette={config.colorPalette}
-                variant="solid"
-                size="sm"
-              >
-                {config.label}
-              </Badge>
-              {data.discountInfo.status === "PENDING" && context && (
-                <HStack mt={1} gap={1}>
-                  <Button
-                    size="xs"
-                    colorPalette="green"
-                    onClick={() =>
-                      context.handleDiscountApproval(data.enrollId, "APPROVED")
-                    }
-                  >
-                    승인
-                  </Button>
-                  <Button
-                    size="xs"
-                    colorPalette="red"
-                    onClick={() =>
-                      context.handleDiscountApproval(data.enrollId, "DENIED")
-                    }
-                  >
-                    거절
-                  </Button>
-                </HStack>
-              )}
-            </Stack>
-          );
-        },
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        },
-      },
+      //     return (
+      //       <Stack gap={1} h="100%" justifyContent="center" alignItems="center">
+      //         <Text fontSize="xs" color={colors.text.secondary}>
+      //           {data.discountInfo.type}
+      //         </Text>
+      //         <Badge
+      //           colorPalette={config.colorPalette}
+      //           variant="solid"
+      //           size="sm"
+      //         >
+      //           {config.label}
+      //         </Badge>
+      //         {data.discountInfo.status === "PENDING" && context && (
+      //           <HStack mt={1} gap={1}>
+      //             <Button
+      //               size="xs"
+      //               colorPalette="green"
+      //               onClick={() =>
+      //                 context.handleDiscountApproval(data.enrollId, "APPROVED")
+      //               }
+      //             >
+      //               승인
+      //             </Button>
+      //             <Button
+      //               size="xs"
+      //               colorPalette="red"
+      //               onClick={() =>
+      //                 context.handleDiscountApproval(data.enrollId, "DENIED")
+      //               }
+      //             >
+      //               거절
+      //             </Button>
+      //           </HStack>
+      //         )}
+      //       </Stack>
+      //     );
+      //   },
+      //   cellStyle: {
+      //     display: "flex",
+      //     alignItems: "center",
+      //     justifyContent: "center",
+      //   },
+      // },
       {
         headerName: "구분",
         field: "isRenewal",
