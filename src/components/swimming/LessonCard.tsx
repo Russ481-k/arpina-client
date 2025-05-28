@@ -241,7 +241,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             {context === "mypage" && enrollment && (
               <Flex mt={1}>
                 <Text fontWeight="600" color="#333" w="70px">
-                  라커사용
+                  사물함
                 </Text>
                 <Text fontWeight="400" color="#666">
                   {enrollment.usesLocker ? "사용" : "미사용"}
