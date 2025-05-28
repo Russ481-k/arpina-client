@@ -96,7 +96,6 @@ export const MobileMenuDrawer = memo(
           description: "성공적으로 로그아웃되었습니다.",
           type: "success",
           duration: 3000,
-          closable: true,
         });
       }
     }, [router]);

@@ -173,11 +173,14 @@ export const ReviewCancelRequestDialog: React.FC<
       queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] }); // Broad invalidation
       // queryClient.invalidateQueries(cancelTabQueryKeys.cancelRequests()); // More specific
       // queryClient.invalidateQueries(cancelTabQueryKeys.refundPreview(selectedRequest!.enrollId));
-      toaster.success({ title: "승인 처리 완료" });
+      toaster.success({ title: "승인 처리 완료", closable: true });
       onClose();
     },
     onError: (error) => {
-      toaster.error({ title: "승인 처리 실패", description: error.message });
+      toaster.error({
+        title: "승인 처리 실패",
+        description: error.message,
+      });
     },
   });
 
@@ -194,7 +197,10 @@ export const ReviewCancelRequestDialog: React.FC<
       onClose();
     },
     onError: (error) => {
-      toaster.error({ title: "거부 처리 실패", description: error.message });
+      toaster.error({
+        title: "거부 처리 실패",
+        description: error.message,
+      });
     },
   });
 

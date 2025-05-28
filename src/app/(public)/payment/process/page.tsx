@@ -110,7 +110,11 @@ const PaymentProcessPage = () => {
         err.message ||
         "결제 정보를 불러오는데 실패했습니다.";
       setError(errMsg);
-      toaster.create({ title: "오류", description: errMsg, type: "error" });
+      toaster.create({
+        title: "오류",
+        description: errMsg,
+        type: "error",
+      });
     }
     setIsLoadingDetails(false);
   }, [effectiveEnrollId, selectedLocker]);
@@ -137,7 +141,6 @@ const PaymentProcessPage = () => {
               description: "결제 시간이 만료되었습니다. 다시 신청해주세요.",
               type: "error",
               duration: 7000,
-              closable: true,
             });
             router.push("/sports/swimming/lesson");
           }
@@ -238,7 +241,6 @@ const PaymentProcessPage = () => {
           error.message ||
           "KISPG 결제 연동 중 오류가 발생했습니다.",
         type: "error",
-        closable: true,
       });
       setIsProcessingPayment(false);
     }

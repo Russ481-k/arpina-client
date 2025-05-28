@@ -45,7 +45,6 @@ export function withAuthRedirect<T extends (...args: any[]) => Promise<any>>(
           description: description,
           type: "warning",
           duration: 3000, // Reduced duration slightly for faster UX
-          closable: true,
         });
 
         // Capture the current path to redirect back after login

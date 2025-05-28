@@ -151,7 +151,6 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
           description: "현재 이 강습은 신청할 수 없거나 기간이 아닙니다.",
           type: "warning",
           duration: 3000,
-          closable: true,
         });
         return;
       }
