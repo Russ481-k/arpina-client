@@ -63,6 +63,7 @@ import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import { toaster } from "@/components/ui/toaster";
 import { AdminCancelReasonDialog } from "./enrollmentManagement/AdminCancelReasonDialog";
 import { payStatusOptions } from "@/lib/utils/statusUtils";
+import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 // Import the new dialog components
 import { UserMemoDialog } from "./enrollmentManagement/UserMemoDialog";
@@ -97,6 +98,7 @@ interface EnrollmentData {
   userMemo?: string;
   enrollStatus?: string;
   createdAt?: string;
+  membershipType?: string;
 }
 
 interface EnrollmentManagementTabProps {
@@ -248,6 +250,7 @@ export const EnrollmentManagementTab = ({
           enrollStatus: dto.status,
           createdAt: dto.createdAt,
           userMemo: (dto as any).userMemo || undefined,
+          membershipType: dto.membershipType,
         })
       );
     },
@@ -275,21 +278,32 @@ export const EnrollmentManagementTab = ({
   const colDefs = useMemo<ColDef<EnrollmentData>[]>(
     () => [
       {
-        headerName: "이름",
-        field: "userName",
-
-        minWidth: 80,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        },
+        headerName: "회원ID",
+        field: "userLoginId",
+        minWidth: 120,
+        filter: "agTextColumnFilter",
       },
       {
-        headerName: "핸드폰 번호",
+        headerName: "회원명",
+        field: "userName",
+        minWidth: 100,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "연락처",
         field: "userPhone",
-        flex: 1,
         minWidth: 130,
+      },
+      {
+        headerName: "할인유형",
+        field: "membershipType",
+        minWidth: 120,
+        valueFormatter: (
+          params: ValueFormatterParams<EnrollmentData, string | undefined>
+        ) => {
+          return getMembershipLabel(params.value);
+        },
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "결제상태",
