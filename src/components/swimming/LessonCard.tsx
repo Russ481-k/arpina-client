@@ -31,8 +31,23 @@ const parseDisplayKSTDate = (
     parsableStr = parsableStr.replace(/\./g, "-"); // "YYYY-MM-DD HH:MM"
     console.log("[LessonCard] after . to - replace:", parsableStr);
 
-    if (parsableStr.length === 16 && parsableStr.includes(" ")) {
-      // YYYY-MM-DD HH:MM
+    if (
+      parsableStr.length === 19 &&
+      parsableStr.includes(" ") &&
+      parsableStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
+    ) {
+      // Handle "YYYY-MM-DD HH:MM:SS" (length 19 with space)
+      parsableStr = parsableStr.replace(" ", "T");
+      console.log(
+        "[LessonCard] after YYYY-MM-DD HH:MM:SS to YYYY-MM-DDTHH:MM:SS conversion:",
+        parsableStr
+      );
+    } else if (
+      parsableStr.length === 16 &&
+      parsableStr.includes(" ") &&
+      parsableStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)
+    ) {
+      // YYYY-MM-DD HH:MM (length 16 with space)
       parsableStr = parsableStr.replace(" ", "T") + ":00"; // YYYY-MM-DDTHH:MM:SS
       console.log(
         "[LessonCard] after HH:MM to HH:MM:SS conversion:",
@@ -49,7 +64,7 @@ const parseDisplayKSTDate = (
         parsableStr
       );
     } else if (!(parsableStr.length === 19 && parsableStr.includes("T"))) {
-      // Not YYYY-MM-DDTHH:MM:SS
+      // Not YYYY-MM-DDTHH:MM:SS and not handled above
       console.warn(
         "[LessonCard] Unrecognized date format for display status calc:",
         dateStringWithSuffix,
