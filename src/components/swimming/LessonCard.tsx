@@ -22,23 +22,41 @@ interface LessonCardProps {
 const parseDisplayKSTDate = (
   dateStringWithSuffix: string | undefined
 ): Date | null => {
+  console.log("[LessonCard] parseDisplayKSTDate input:", dateStringWithSuffix);
   if (!dateStringWithSuffix) return null;
   try {
     let parsableStr = dateStringWithSuffix.replace(/부터|까지/g, "").trim(); // "YYYY.MM.DD HH:MM"
+    console.log("[LessonCard] after first replace:", parsableStr);
+
     parsableStr = parsableStr.replace(/\./g, "-"); // "YYYY-MM-DD HH:MM"
+    console.log("[LessonCard] after . to - replace:", parsableStr);
 
     if (parsableStr.length === 16 && parsableStr.includes(" ")) {
       // YYYY-MM-DD HH:MM
       parsableStr = parsableStr.replace(" ", "T") + ":00"; // YYYY-MM-DDTHH:MM:SS
+      console.log(
+        "[LessonCard] after HH:MM to HH:MM:SS conversion:",
+        parsableStr
+      );
     } else if (
       parsableStr.length === 10 &&
       parsableStr.match(/^\d{4}-\d{2}-\d{2}$/)
     ) {
       // YYYY-MM-DD
       parsableStr += "T00:00:00"; // Assume start of day for date-only strings
+      console.log(
+        "[LessonCard] after date-only to full datetime:",
+        parsableStr
+      );
     } else if (!(parsableStr.length === 19 && parsableStr.includes("T"))) {
       // Not YYYY-MM-DDTHH:MM:SS
-      // console.warn("[LessonCard] Unrecognized date format for display status calc:", dateStringWithSuffix);
+      console.warn(
+        "[LessonCard] Unrecognized date format for display status calc:",
+        dateStringWithSuffix,
+        "(intermediate: ",
+        parsableStr,
+        ")"
+      );
       return null;
     }
 
@@ -46,11 +64,19 @@ const parseDisplayKSTDate = (
     const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
     if (!hasTimezoneRegex.test(parsableStr)) {
       parsableStr += "+09:00"; // Assume KST
+      console.log("[LessonCard] after adding KST offset:", parsableStr);
     }
     const date = new Date(parsableStr);
-    return isNaN(date.getTime()) ? null : date;
+    console.log("[LessonCard] final parsed Date object:", date);
+    const isInvalidDate = isNaN(date.getTime());
+    console.log("[LessonCard] isInvalidDate (isNaN):", isInvalidDate);
+    return isInvalidDate ? null : date;
   } catch (error) {
-    // console.error("[LessonCard] Error parsing date for display status:", dateStringWithSuffix, error);
+    console.error(
+      "[LessonCard] Error parsing date for display status:",
+      dateStringWithSuffix,
+      error
+    );
     return null;
   }
 };
