@@ -865,65 +865,65 @@ export default function MyPage() {
               <Text>로딩 중...</Text>
             </Box>
           ) : enrollments && enrollments.length > 0 ? (
-            <>
-              <Grid
-                templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
-                gap={6}
-                py={4}
-              >
-                {enrollments.map((enroll) => {
-                  // Prepare data for LessonCard from enroll.lesson
-                  const lessonDataForCard: LessonDTO = {
-                    id: enroll.lesson.lessonId,
-                    title: enroll.lesson.title,
-                    name: enroll.lesson.name, // Make sure this field exists or is mapped
-                    startDate: formatDate(enroll.lesson.startDate), // Use formatDate
-                    endDate: formatDate(enroll.lesson.endDate), // Use formatDate
-                    timeSlot: enroll.lesson.timeSlot, // from enroll.lesson
-                    timePrefix: enroll.lesson.timePrefix, // from enroll.lesson
-                    days: enroll.lesson.days, // from enroll.lesson
-                    capacity: enroll.lesson.capacity, // from enroll.lesson
-                    remaining: enroll.lesson.remaining, // from enroll.lesson
-                    price: enroll.lesson.price, // from enroll.lesson
-                    reservationId: enroll.lesson.reservationId, // from enroll.lesson
-                    receiptId: enroll.lesson.receiptId, // from enroll.lesson
-                    instructor: enroll.lesson.instructor, // from enroll.lesson
-                    location: enroll.lesson.location, // from enroll.lesson
-                  };
+            <Grid
+              templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
+              gap={6}
+              py={4}
+            >
+              {enrollments.map((enroll) => {
+                // Prepare data for LessonCard from enroll.lesson
+                const lessonDataForCard: LessonDTO = {
+                  id: enroll.lesson.lessonId,
+                  title: enroll.lesson.title,
+                  name: enroll.lesson.name, // Make sure this field exists or is mapped
+                  startDate: formatDate(enroll.lesson.startDate), // Use formatDate
+                  endDate: formatDate(enroll.lesson.endDate), // Use formatDate
+                  timeSlot: enroll.lesson.timeSlot, // from enroll.lesson
+                  timePrefix: enroll.lesson.timePrefix, // from enroll.lesson
+                  days: enroll.lesson.days, // from enroll.lesson
+                  capacity: enroll.lesson.capacity, // from enroll.lesson
+                  remaining: enroll.lesson.remaining, // from enroll.lesson
+                  price: enroll.lesson.price, // from enroll.lesson
+                  reservationId: enroll.lesson.reservationId, // from enroll.lesson
+                  receiptId: enroll.lesson.receiptId, // from enroll.lesson
+                  instructor: enroll.lesson.instructor, // from enroll.lesson
+                  location: enroll.lesson.location, // from enroll.lesson
+                };
 
-                  return (
-                    <GridItem
-                      key={enroll.enrollId}
-                      display="flex"
-                      flexDirection="column"
-                      h="100%"
-                    >
-                      <LessonCard
-                        lesson={lessonDataForCard}
-                        context="mypage" // Set context to "mypage"
-                        enrollment={enroll} // Pass the full enrollment object
-                        onGoToPayment={handleGoToPayment}
-                        onRequestCancel={handleRequestCancel}
-                        onRenewLesson={handleRenewLesson}
-                      />
-                    </GridItem>
-                  );
-                })}
-              </Grid>
-              <Button
-                colorPalette="orange"
-                size="md"
-                px={8}
-                onClick={() => router.push("/sports/swimming/lesson")}
-              >
-                강습 목록으로 이동
-              </Button>
-            </>
+                return (
+                  <GridItem
+                    key={enroll.enrollId}
+                    display="flex"
+                    flexDirection="column"
+                    h="100%"
+                  >
+                    <LessonCard
+                      lesson={lessonDataForCard}
+                      context="mypage" // Set context to "mypage"
+                      enrollment={enroll} // Pass the full enrollment object
+                      onGoToPayment={handleGoToPayment}
+                      onRequestCancel={handleRequestCancel}
+                      onRenewLesson={handleRenewLesson}
+                    />
+                  </GridItem>
+                );
+              })}
+            </Grid>
           ) : (
             <Box textAlign="center" p={8}>
               <Text>신청한 수영장 강습 정보가 없습니다.</Text>
             </Box>
           )}
+          <Box textAlign="center" p={8}>
+            <Button
+              colorPalette="orange"
+              size="md"
+              px={8}
+              onClick={() => router.push("/sports/swimming/lesson")}
+            >
+              강습 목록으로 이동
+            </Button>
+          </Box>
         </Tabs.Content>
 
         <Tabs.Content value="수영장_결제정보">
