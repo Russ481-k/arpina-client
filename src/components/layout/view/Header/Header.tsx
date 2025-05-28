@@ -183,7 +183,7 @@ export const Header = memo(function Header({
         </Container>
       </Box>
 
-      {/* <MobileMenuDrawer
+      <MobileMenuDrawer
         menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}
         isDark={isDark}
@@ -192,7 +192,7 @@ export const Header = memo(function Header({
         height={logoHeight}
       />
 
-      <SitemapDrawer
+      {/* <SitemapDrawer
         isOpen={isSitemapDrawerOpen}
         onClose={() => setIsSitemapDrawerOpen(false)}
         menusWithLastFlag={menusWithLastFlag}
