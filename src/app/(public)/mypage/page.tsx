@@ -56,7 +56,8 @@ const initialPasswordCriteria = {
   minLength: false,
   lowercase: false,
   number: false,
-  specialChar: false,
+  allowedSpecialChar: false,
+  noOtherSpecialChars: false,
 };
 
 const PasswordTooltipChecklistItem = ({
@@ -359,11 +360,19 @@ export default function MyPage() {
       minLength: password.length >= 8,
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),
-      specialChar: /[^A-Za-z0-9]/.test(password),
+      allowedSpecialChar: /[!@#$%^&*()]/.test(password),
+      noOtherSpecialChars: /^[a-zA-Z0-9!@#$%^&*()]*$/.test(password),
     };
     setPasswordCriteriaMet(criteria);
-    const strengthScore = Object.values(criteria).filter(Boolean).length;
-    setNewPasswordStrength(strengthScore);
+
+    const calculatedStrengthScore = [
+      criteria.minLength,
+      criteria.lowercase,
+      criteria.number,
+      criteria.allowedSpecialChar,
+    ].filter(Boolean).length;
+    setNewPasswordStrength(calculatedStrengthScore);
+
     return Object.values(criteria).every(Boolean);
   };
 
@@ -497,8 +506,12 @@ export default function MyPage() {
           isMet={passwordCriteriaMet.number}
         />
         <PasswordTooltipChecklistItem
-          label="특수문자 포함"
-          isMet={passwordCriteriaMet.specialChar}
+          label="특수문자 (!@#$%^&*()) 포함"
+          isMet={passwordCriteriaMet.allowedSpecialChar}
+        />
+        <PasswordTooltipChecklistItem
+          label="다른 종류의 특수문자 사용 불가"
+          isMet={passwordCriteriaMet.noOtherSpecialChars}
         />
       </VStack>
     ),
