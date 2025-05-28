@@ -38,12 +38,18 @@ export const UtilityIcons = memo(
         }
       };
 
+      const handleAuthChangeEvent = () => {
+        checkAuthState();
+      };
+
       window.addEventListener("storage", handleStorageChange);
+      window.addEventListener("authChange", handleAuthChangeEvent); // Listen for custom event
 
       return () => {
         window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("authChange", handleAuthChangeEvent); // Cleanup custom event listener
       };
-    }, []); // Check on initial mount and when storage changes
+    }, []); // Check on initial mount and when storage/auth changes
 
     const handleLogin = useCallback(() => {
       router.push("/login");
@@ -62,6 +68,7 @@ export const UtilityIcons = memo(
         localStorage.removeItem("auth_token");
         localStorage.removeItem("auth_user");
         setIsAuthenticated(false);
+        window.dispatchEvent(new CustomEvent("authChange")); // Dispatch custom event
         router.push("/"); // Redirect to homepage after logout
         // Optionally, you can add a toaster notification for successful logout here
       }
@@ -96,7 +103,7 @@ export const UtilityIcons = memo(
             </IconButton>
             <Button
               variant="ghost"
-              colorScheme="red"
+              colorPalette="red"
               size="sm"
               onClick={handleLogout}
             >
@@ -115,7 +122,7 @@ export const UtilityIcons = memo(
             </Button>
             <Button
               variant="solid"
-              colorScheme="blue"
+              colorPalette="blue"
               size="sm"
               onClick={handleSignup}
             >

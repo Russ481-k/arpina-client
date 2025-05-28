@@ -53,8 +53,6 @@ export const MobileMenuDrawer = memo(
       checkAuthState(); // Initial check
 
       const handleStorageChange = (event: StorageEvent) => {
-        // Check if the keys that changed are the ones we care about,
-        // or if storage was cleared (event.key would be null).
         if (
           event.key === "auth_token" ||
           event.key === "auth_user" ||
@@ -64,15 +62,16 @@ export const MobileMenuDrawer = memo(
         }
       };
 
-      window.addEventListener("storage", handleStorageChange);
+      const handleAuthChangeEvent = () => {
+        checkAuthState();
+      };
 
-      // It's also good practice to listen for a custom event if you control the login/logout mechanism,
-      // as 'storage' event is primarily for cross-tab communication.
-      // For example: window.addEventListener('authChanged', checkAuthState);
+      window.addEventListener("storage", handleStorageChange);
+      window.addEventListener("authChange", handleAuthChangeEvent); // Listen for custom event
 
       return () => {
         window.removeEventListener("storage", handleStorageChange);
-        // For custom event: window.removeEventListener('authChanged', checkAuthState);
+        window.removeEventListener("authChange", handleAuthChangeEvent); // Cleanup custom event listener
       };
     }, []); // Empty dependency array is correct as we manage listeners manually.
 
@@ -89,6 +88,7 @@ export const MobileMenuDrawer = memo(
         localStorage.removeItem("auth_token");
         localStorage.removeItem("auth_user");
         setIsAuthenticated(false);
+        window.dispatchEvent(new CustomEvent("authChange")); // Dispatch custom event
         router.push("/");
         setIsDrawerOpen(false); // Close drawer after logout
         toaster.create({
@@ -117,7 +117,7 @@ export const MobileMenuDrawer = memo(
             display={{ base: "flex", lg: "none" }}
             position="absolute"
             right={{ base: "10px", sm: "15px" }}
-            top={isPreview ? "calc(50% + 25px)" : "50%"}
+            top={isPreview ? "calc(50% + 25px)" : "10px"}
             transform={isPreview ? "translateY(-50%)" : "translateY(-50%)"}
             zIndex={1001}
             color={isDark ? "white" : "gray.600"}
@@ -262,7 +262,7 @@ export const MobileMenuDrawer = memo(
                       </Button>
                       <Button
                         variant="ghost"
-                        colorScheme="red"
+                        colorPalette="red"
                         onClick={handleLogout}
                         justifyContent="flex-start"
                       >
@@ -281,7 +281,7 @@ export const MobileMenuDrawer = memo(
                       </Button>
                       <Button
                         variant="solid"
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={() => handleNavigate("/signup")}
                         justifyContent="flex-start"
                       >
