@@ -7,6 +7,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { toaster } from "../ui/toaster";
 import LessonCardActions from "./LessonCardActions";
+import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 interface LessonCardProps {
   lesson: LessonDTO & { applicationStartDate?: string };
@@ -248,6 +249,18 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
                 </Text>
               </Flex>
             )}
+            {context === "mypage" &&
+              enrollment &&
+              enrollment.membershipType && (
+                <Flex mt={1}>
+                  <Text fontWeight="600" color="#333" w="70px">
+                    할인유형
+                  </Text>
+                  <Text fontWeight="400" color="#666">
+                    {getMembershipLabel(enrollment.membershipType)}
+                  </Text>
+                </Flex>
+              )}
           </Box>
 
           <LessonCardActions

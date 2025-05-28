@@ -530,6 +530,7 @@ export interface MypageEnrollDto {
   };
   canAttemptPayment: boolean;
   paymentPageUrl: string | null;
+  membershipType: string;
 }
 
 /**
