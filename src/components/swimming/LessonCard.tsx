@@ -17,24 +17,96 @@ interface LessonCardProps {
   onRenewLesson?: (lessonId: number) => void;
 }
 
+// Simplified KST Date Parser (should ideally be in a shared utils file)
+const parseDisplayKSTDate = (
+  dateStringWithSuffix: string | undefined
+): Date | null => {
+  if (!dateStringWithSuffix) return null;
+  try {
+    let parsableStr = dateStringWithSuffix.replace(/부터|까지/g, "").trim(); // "YYYY.MM.DD HH:MM"
+    parsableStr = parsableStr.replace(/\./g, "-"); // "YYYY-MM-DD HH:MM"
+
+    if (parsableStr.length === 16 && parsableStr.includes(" ")) {
+      // YYYY-MM-DD HH:MM
+      parsableStr = parsableStr.replace(" ", "T") + ":00"; // YYYY-MM-DDTHH:MM:SS
+    } else if (
+      parsableStr.length === 10 &&
+      parsableStr.match(/^\d{4}-\d{2}-\d{2}$/)
+    ) {
+      // YYYY-MM-DD
+      parsableStr += "T00:00:00"; // Assume start of day for date-only strings
+    } else if (!(parsableStr.length === 19 && parsableStr.includes("T"))) {
+      // Not YYYY-MM-DDTHH:MM:SS
+      // console.warn("[LessonCard] Unrecognized date format for display status calc:", dateStringWithSuffix);
+      return null;
+    }
+
+    // Append KST offset if not already specified
+    const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
+    if (!hasTimezoneRegex.test(parsableStr)) {
+      parsableStr += "+09:00"; // Assume KST
+    }
+    const date = new Date(parsableStr);
+    return isNaN(date.getTime()) ? null : date;
+  } catch (error) {
+    // console.error("[LessonCard] Error parsing date for display status:", dateStringWithSuffix, error);
+    return null;
+  }
+};
+
 export const LessonCard: React.FC<LessonCardProps> = React.memo(
-  ({
-    lesson,
-    context = "listing",
-    enrollment,
-    onRequestCancel,
-    onGoToPayment,
-    onRenewLesson,
-  }) => {
+  ({ lesson, context = "listing", enrollment, onRequestCancel }) => {
     const router = useRouter();
 
-    const occupiedSpots = Math.max(0, lesson.capacity - lesson.remaining);
+    const occupiedSpots = Math.max(
+      0,
+      lesson.capacity - (lesson.remaining ?? 0)
+    );
+
+    // --- Calculate Display Status based on time and remaining capacity ---
+    let displayStatus: string;
+    let displayStatusBgColor: string;
+    let remainingSpotsColor: string;
+    let canApply: boolean = false;
+
+    const now = new Date();
+    const applicationStartTime = parseDisplayKSTDate(lesson.reservationId);
+    const applicationEndTime = parseDisplayKSTDate(lesson.receiptId);
+
+    if (applicationStartTime && applicationEndTime) {
+      if (now < applicationStartTime) {
+        displayStatus = "접수대기";
+        displayStatusBgColor = "orange.500";
+        remainingSpotsColor = "#888888"; // Gray
+      } else if (now >= applicationStartTime && now <= applicationEndTime) {
+        if (lesson.remaining != null && lesson.remaining > 0) {
+          displayStatus = "접수중";
+          displayStatusBgColor = "#2D3092"; // Blue
+          remainingSpotsColor = "#76B947"; // Green
+          canApply = true;
+        } else {
+          displayStatus = "정원마감";
+          displayStatusBgColor = "#CC0000"; // Red
+          remainingSpotsColor = "#FF5A5A"; // Red
+        }
+      } else {
+        // now > applicationEndTime
+        displayStatus = "접수마감";
+        displayStatusBgColor = "#888888"; // Dark gray
+        remainingSpotsColor = "#888888"; // Dark gray
+      }
+    } else {
+      displayStatus = "정보확인필요";
+      displayStatusBgColor = "gray.400"; // Default gray
+      remainingSpotsColor = "#888888"; // Default gray
+    }
+    // --- End Display Status Calculation ---
 
     const handleApplyClick = () => {
-      if (lesson.status !== "접수중" || !lesson.id) {
+      if (!canApply || !lesson.id) {
         toaster.create({
           title: "신청 불가",
-          description: "현재 이 강습은 신청할 수 없습니다.",
+          description: "현재 이 강습은 신청할 수 없거나 기간이 아닙니다.",
           type: "warning",
           duration: 3000,
           closable: true,
@@ -55,9 +127,9 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
         lessonPrice: lesson.price.toString(),
         lessonStartDate: lesson.startDate,
         lessonEndDate: lesson.endDate,
-        lessonTime: lesson.timeSlot,
-        lessonDays: lesson.days,
-        lessonTimePrefix: lesson.timePrefix,
+        lessonTime: lesson.timeSlot || "",
+        lessonDays: lesson.days || "",
+        lessonTimePrefix: lesson.timePrefix || "",
       });
 
       router.push(`/application/confirm?${queryParams.toString()}`);
@@ -72,23 +144,13 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             py="4px"
             px="12px"
             borderRadius="md"
-            border={lesson.status === "접수중" ? "1px solid #2D3092" : "none"}
+            border={displayStatus === "접수중" ? "1px solid #2D3092" : "none"}
             fontSize="14px"
             fontWeight="600"
             color="white"
-            bg={
-              lesson.status === "접수중"
-                ? "#2D3092"
-                : lesson.status === "수강중"
-                ? "#4CBB17"
-                : lesson.status === "접수마감"
-                ? "#888888"
-                : lesson.status === "접수대기"
-                ? "orange.500"
-                : "gray.400"
-            }
+            bg={displayStatusBgColor}
           >
-            {lesson.status}
+            {displayStatus}
           </Box>
         </Box>
 
@@ -97,15 +159,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
           <Text
             fontSize="32px"
             fontWeight="700"
-            color={
-              lesson.remaining > 0 && lesson.status === "접수중"
-                ? "#76B947"
-                : lesson.status === "접수중" && lesson.remaining === 0
-                ? "#FF5A5A"
-                : lesson.status === "수강중"
-                ? "#FF5A5A"
-                : "#888888"
-            }
+            color={remainingSpotsColor}
             lineHeight="1"
           >
             {occupiedSpots}
@@ -115,7 +169,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
           </Text>
           <Text fontSize="12px" color="#666" fontWeight="400" mt="2px">
             잔여:
-            {lesson.remaining}
+            {lesson.remaining ?? 0}
           </Text>
         </Box>
 
@@ -158,11 +212,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
                 접수기간
               </Text>
               <Text fontWeight="400" color="#666">
-                {lesson.applicationStartDate
-                  ? `${new Date(lesson.applicationStartDate).toLocaleDateString(
-                      "ko-KR"
-                    )} 부터`
-                  : lesson.reservationId || "확인 중"}
+                {lesson.reservationId || "확인 중"}
                 {lesson.receiptId && (
                   <>
                     <br />

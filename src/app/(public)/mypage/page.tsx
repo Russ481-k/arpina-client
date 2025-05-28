@@ -884,7 +884,6 @@ export default function MyPage() {
                   capacity: enroll.lesson.capacity, // from enroll.lesson
                   remaining: enroll.lesson.remaining, // from enroll.lesson
                   price: enroll.lesson.price, // from enroll.lesson
-                  status: enroll.lesson.status, // Lesson's operational status, not enrollment status
                   reservationId: enroll.lesson.reservationId, // from enroll.lesson
                   receiptId: enroll.lesson.receiptId, // from enroll.lesson
                   instructor: enroll.lesson.instructor, // from enroll.lesson
