@@ -26,7 +26,14 @@ import { toaster } from "@/components/ui/toaster";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
 
-const membershipOptions = [
+interface MembershipOption {
+  value: string;
+  label: string;
+  discountPercentage: number;
+}
+
+// Keep original for fallback or initial structure, but API will be primary
+const DEFAULT_MEMBERSHIP_OPTIONS: MembershipOption[] = [
   { value: "general", label: "해당사항없음", discountPercentage: 0 },
   {
     value: "merit",
@@ -67,8 +74,13 @@ const ApplicationConfirmPage = () => {
   const [isLockerDetailsLoading, setIsLockerDetailsLoading] = useState(false);
 
   const [selectedLocker, setSelectedLocker] = useState(true);
+  const [membershipOptions, setMembershipOptions] = useState<
+    MembershipOption[]
+  >(DEFAULT_MEMBERSHIP_OPTIONS);
+  const [isMembershipOptionsLoading, setIsMembershipOptionsLoading] =
+    useState(true);
   const [selectedMembershipType, setSelectedMembershipType] = useState<string>(
-    membershipOptions[0].value
+    DEFAULT_MEMBERSHIP_OPTIONS[0].value
   );
 
   const [finalAmount, setFinalAmount] = useState<number>(0);
@@ -220,7 +232,7 @@ const ApplicationConfirmPage = () => {
   }, [lessonId, userGender, profile]);
 
   useEffect(() => {
-    if (!lessonPrice) return;
+    if (!lessonPrice || !membershipOptions.length) return; // Ensure options are loaded
     let currentAmount = lessonPrice;
     const selectedMembership = membershipOptions.find(
       (opt) => opt.value === selectedMembershipType
@@ -230,7 +242,36 @@ const ApplicationConfirmPage = () => {
     }
     if (selectedLocker) currentAmount += DEFAULT_LOCKER_FEE;
     setFinalAmount(currentAmount);
-  }, [lessonPrice, selectedLocker, selectedMembershipType]);
+  }, [lessonPrice, selectedLocker, selectedMembershipType, membershipOptions]);
+
+  useEffect(() => {
+    const fetchMembershipOptions = async () => {
+      setIsMembershipOptionsLoading(true);
+      try {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setMembershipOptions(DEFAULT_MEMBERSHIP_OPTIONS);
+        if (DEFAULT_MEMBERSHIP_OPTIONS.length > 0) {
+          setSelectedMembershipType(DEFAULT_MEMBERSHIP_OPTIONS[0].value);
+        }
+      } catch (err) {
+        console.error("Failed to fetch membership options:", err);
+        toaster.create({
+          title: "오류",
+          description:
+            "할인 유형 정보를 불러오는데 실패했습니다. 기본 옵션으로 진행합니다.",
+          type: "error",
+        });
+        setMembershipOptions(DEFAULT_MEMBERSHIP_OPTIONS);
+        if (DEFAULT_MEMBERSHIP_OPTIONS.length > 0) {
+          setSelectedMembershipType(DEFAULT_MEMBERSHIP_OPTIONS[0].value);
+        }
+      } finally {
+        setIsMembershipOptionsLoading(false);
+      }
+    };
+    fetchMembershipOptions();
+  }, []);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -310,7 +351,7 @@ const ApplicationConfirmPage = () => {
 
   const spinnerColor = primaryDefault;
 
-  if (isLoading) {
+  if (isLoading || isMembershipOptionsLoading) {
     return (
       <Flex
         bg={pageBg}
@@ -321,7 +362,9 @@ const ApplicationConfirmPage = () => {
       >
         <Spinner size="xl" color={spinnerColor} />
         <Text mt={4} ml={3}>
-          신청 정보를 불러오는 중입니다...
+          {isLoading
+            ? "신청 정보를 불러오는 중입니다..."
+            : "할인 옵션을 불러오는 중입니다..."}
         </Text>
       </Flex>
     );
@@ -591,41 +634,45 @@ const ApplicationConfirmPage = () => {
       </Fieldset.Root>
       <Fieldset.Root mb={6}>
         <Box {...cardStyleProps}>
-          <Flex justifyContent="space-between" alignItems="center" mb={3}>
-            <Checkbox.Root
-              display="flex"
-              alignItems="center"
-              checked={selectedLocker}
-              onCheckedChange={(d) => {
-                if (typeof d.checked === "boolean")
-                  setSelectedLocker(d.checked);
-              }}
-              colorPalette={primaryDefault}
-            >
-              <Checkbox.HiddenInput />
-              <Checkbox.Control
-                borderColor={borderColor}
-                mr={2}
-                _checked={{
-                  bg: primaryDefault,
-                  borderColor: primaryDefault,
-                  color: inverseText,
-                }}
-                _focus={{ boxShadow: "outline" }}
-              />
-              <Checkbox.Label
-                fontSize="md"
-                fontWeight="bold"
-                color={primaryText}
-              >
-                사물함을 추가 신청합니다
-              </Checkbox.Label>
-            </Checkbox.Root>
-            <Text fontSize="xs" color={accentDelete} fontWeight="bold">
-              * 선착순 배정입니다.
-            </Text>
-          </Flex>
+          <Fieldset.Legend {...legendStyleProps}>
+            사물함 추가 신청
+          </Fieldset.Legend>
           <Fieldset.Content>
+            <Flex justifyContent="space-between" alignItems="center" mb={3}>
+              <Checkbox.Root
+                display="flex"
+                alignItems="center"
+                checked={selectedLocker}
+                onCheckedChange={(d) => {
+                  if (typeof d.checked === "boolean")
+                    setSelectedLocker(d.checked);
+                }}
+                colorPalette={primaryDefault}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control
+                  borderColor={borderColor}
+                  mr={2}
+                  _checked={{
+                    bg: primaryDefault,
+                    borderColor: primaryDefault,
+                    color: inverseText,
+                  }}
+                  _focus={{ boxShadow: "outline" }}
+                />
+                <Checkbox.Label
+                  fontSize="md"
+                  fontWeight="bold"
+                  color={primaryText}
+                >
+                  사물함을 추가 신청합니다
+                </Checkbox.Label>
+              </Checkbox.Root>
+              <Text fontSize="xs" color={accentDelete} fontWeight="bold">
+                * 선착순 배정입니다.
+              </Text>
+            </Flex>
+
             <Text fontSize="xs" color={accentWarning} mt={0} mb={3} ml={0}>
               * 사물함은 신청 시에만 선택할 수 있으며, 이후 변경/추가는 현장
               문의바랍니다.
@@ -817,6 +864,7 @@ const ApplicationConfirmPage = () => {
         disabled={
           isSubmitting ||
           isLoading ||
+          isMembershipOptionsLoading ||
           isLockerDetailsLoading ||
           !profile ||
           (!!lockerError && selectedLocker)
