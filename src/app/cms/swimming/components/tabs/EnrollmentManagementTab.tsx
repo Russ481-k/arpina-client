@@ -86,6 +86,7 @@ interface EnrollmentData {
     | "REFUND_PENDING_ADMIN_CANCEL";
   usesLocker: boolean;
   userName: string;
+  userGender: string;
   userLoginId: string;
   userPhone: string;
   isRenewal?: boolean;
@@ -244,6 +245,7 @@ export const EnrollmentManagementTab = ({
           payStatus: dto.payStatus as EnrollmentData["payStatus"],
           usesLocker: dto.usesLocker,
           userName: dto.userName,
+          userGender: dto.userGender || "0",
           userLoginId: dto.userLoginId || "",
           userPhone: dto.userPhone || "",
           isRenewal: false,
@@ -280,24 +282,33 @@ export const EnrollmentManagementTab = ({
       {
         headerName: "회원ID",
         field: "userLoginId",
-        minWidth: 120,
+        minWidth: 80,
         filter: "agTextColumnFilter",
       },
       {
         headerName: "회원명",
         field: "userName",
-        minWidth: 100,
+        minWidth: 80,
         filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "성별",
+        field: "userGender",
+        minWidth: 60,
+        filter: "agTextColumnFilter",
+        cellRenderer: (params: ICellRendererParams<EnrollmentData, string>) => {
+          return params.value === "1" ? "남" : "여";
+        },
       },
       {
         headerName: "연락처",
         field: "userPhone",
-        minWidth: 130,
+        minWidth: 100,
       },
       {
         headerName: "할인유형",
         field: "membershipType",
-        minWidth: 120,
+        minWidth: 100,
         valueFormatter: (
           params: ValueFormatterParams<EnrollmentData, string | undefined>
         ) => {
@@ -309,7 +320,7 @@ export const EnrollmentManagementTab = ({
         headerName: "결제상태",
         field: "payStatus",
         flex: 1,
-        minWidth: 130,
+        minWidth: 80,
         cellRenderer: (
           params: ICellRendererParams<
             EnrollmentData,
@@ -331,7 +342,7 @@ export const EnrollmentManagementTab = ({
         headerName: "사물함",
         field: "usesLocker",
         cellRenderer: UsesLockerCellRenderer,
-        width: 90,
+        width: 80,
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -651,7 +662,7 @@ export const EnrollmentManagementTab = ({
       </Flex>
       <Box
         className={agGridTheme}
-        h="calc(100vh - 400px)"
+        maxH="480px"
         w="full"
         transform="none"
         willChange="auto"

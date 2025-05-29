@@ -252,8 +252,7 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
         showSearchButton={true}
       />
 
-      <Box className={agGridTheme} h="calc(100vh - 480px)" w="full">
-        {" "}
+      <Box className={agGridTheme} maxH="480px" w="full">
         {/* Adjusted height */}
         <AgGridReact<RefundData>
           ref={refundGridRef}
