@@ -1,306 +1,320 @@
 import React, { useState, useEffect } from "react";
 import { Button, Text, Box, Flex } from "@chakra-ui/react";
-import { MypageEnrollDto } from "@/types/api"; // Assuming MypageEnrollDto is here
+import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
 
+// Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
+// and return a Date object.
+const parseKSTDateString = (
+  kstDateStringWithSuffix: string | undefined
+): Date | null => {
+  if (!kstDateStringWithSuffix) {
+    return null;
+  }
+
+  let parsableDateStr = kstDateStringWithSuffix
+    .replace(/부터|까지/g, "")
+    .trim();
+  parsableDateStr = parsableDateStr.replace(/\./g, "-"); // e.g., "YYYY-MM-DD HH:MM" or "YYYY-MM-DD"
+
+  // Ensure it's in a format that new Date() can parse reliably with timezone
+  // YYYY-MM-DD HH:MM:SS or YYYY-MM-DDTHH:MM:SS
+  if (parsableDateStr.includes(" ")) {
+    parsableDateStr = parsableDateStr.replace(" ", "T");
+  }
+
+  // Add seconds if missing and time is present (e.g., "YYYY-MM-DDTHH:MM")
+  if (parsableDateStr.length === 16 && parsableDateStr.includes("T")) {
+    parsableDateStr += ":00"; // "YYYY-MM-DDTHH:MM:SS"
+  } else if (
+    parsableDateStr.length === 10 &&
+    parsableDateStr.match(/^\d{4}-\d{2}-\d{2}$/)
+  ) {
+    // Date-only "YYYY-MM-DD"
+    parsableDateStr += "T00:00:00"; // Assume start of the day
+  } else if (
+    !(parsableDateStr.length === 19 && parsableDateStr.includes("T"))
+  ) {
+    // If not a full YYYY-MM-DDTHH:MM:SS or recognized date-only, log and return null
+    return null;
+  }
+
+  // Append KST offset if not already specified by Z or +/-HH:MM
+  const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
+  if (!hasTimezoneRegex.test(parsableDateStr)) {
+    parsableDateStr += "+09:00"; // Explicitly KST
+  }
+
+  const dateObj = new Date(parsableDateStr);
+
+  if (isNaN(dateObj.getTime())) {
+    return null;
+  }
+  return dateObj;
+};
+
+// Helper function to calculate time difference from a target Date object
+const calculateTimeDifference = (targetDateObj: Date | null) => {
+  if (!targetDateObj) return null;
+
+  const now = new Date().getTime(); // Current time in UTC milliseconds
+  const targetTime = targetDateObj.getTime(); // Target time in UTC milliseconds
+  const difference = targetTime - now;
+
+  if (difference <= 0) {
+    return null;
+  }
+
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+  const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+  return { days, hours, minutes, seconds };
+};
+
 interface LessonCardActionsProps {
-  enrollment: MypageEnrollDto;
-  lesson: LessonDTO; // LessonDTO for lesson details
-  onGoToPayment?: (paymentPageUrl: string) => void;
+  lesson: LessonDTO;
+  enrollment?: MypageEnrollDto;
   onRequestCancel?: (enrollId: number) => void;
-  onRenewLesson?: (lessonId: number) => void;
+  onApplyClick?: () => void;
 }
 
 const LessonCardActions: React.FC<LessonCardActionsProps> = ({
-  enrollment,
   lesson,
-  onGoToPayment,
+  enrollment,
   onRequestCancel,
-  onRenewLesson,
+  onApplyClick,
 }) => {
-  const [timeLeft, setTimeLeft] = useState<string>("");
+  const getInitialTimeRemaining = () => {
+    if (!enrollment && lesson.reservationId) {
+      const targetDate = parseKSTDateString(lesson.reservationId);
+      // calculateTimeDifference will return null if targetDate is in the past or invalid
+      return calculateTimeDifference(targetDate);
+    }
+    return null;
+  };
 
-  const {
-    status: enrollStatus,
-    paymentExpireDt,
-    cancelStatus,
-    renewalWindow,
-    canAttemptPayment,
-    paymentPageUrl,
-    enrollId,
-  } = enrollment;
-  // The lesson object (enrollment.lesson) within MypageEnrollDto might be a summary.
-  // We use the main lesson prop for full details like endDate.
-  const { endDate: lessonEndDate, id: lessonId } = lesson;
-
-  const isPastLesson = lessonEndDate
-    ? new Date(lessonEndDate) < new Date()
-    : false;
-
-  const isRenewalPeriod =
-    renewalWindow?.open && renewalWindow?.close
-      ? new Date() >= new Date(renewalWindow.open) &&
-        new Date() <= new Date(renewalWindow.close)
-      : false;
-
-  // Placeholder for admin cancel review. Confirm actual status values from backend.
-  // Example: if enroll.adminReviewStatus === 'PENDING'
-  const isAdminCancelReview =
-    enrollStatus === "PAID" && cancelStatus === "REQ_ADMIN_APPROVAL"; // Placeholder, adjust as needed
+  const [timeRemaining, setTimeRemaining] = useState(getInitialTimeRemaining);
+  // isCountingDown is true if there was an initial time remaining (i.e., reservationId is in the future)
+  const [isCountingDown, setIsCountingDown] = useState(!!timeRemaining);
 
   useEffect(() => {
-    if (enrollStatus === "UNPAID" && paymentExpireDt && canAttemptPayment) {
-      const calculateTimeLeft = () => {
-        const difference = +new Date(paymentExpireDt) - +new Date();
-        let timeLeftOutput = "";
+    let intervalId: NodeJS.Timeout | undefined = undefined;
 
-        if (difference > 0) {
-          const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-          const minutes = Math.floor((difference / 1000 / 60) % 60);
-          const seconds = Math.floor((difference / 1000) % 60);
-          timeLeftOutput = `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-        } else {
-          timeLeftOutput = "결제 시간 만료";
+    if (enrollment || !lesson.reservationId) {
+      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: Enrollment present or no reservationId.`);
+      setIsCountingDown(false);
+      setTimeRemaining(null);
+      if (intervalId) clearInterval(intervalId); // Though intervalId would not be set here yet
+      return;
+    }
+
+    const targetApplicationStartDate = parseKSTDateString(lesson.reservationId);
+    // console.log(`[Lesson ID: ${lesson.id}] useEffect - Parsed targetApplicationStartDate:`, targetApplicationStartDate);
+
+    if (!targetApplicationStartDate) {
+      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: Invalid targetApplicationStartDate.`);
+      setIsCountingDown(false);
+      setTimeRemaining(null);
+      return;
+    }
+
+    // Check if the target start date is actually in the future
+    const initialRemainingOnEffect = calculateTimeDifference(
+      targetApplicationStartDate
+    );
+    // console.log(`[Lesson ID: ${lesson.id}] useEffect - Initial timeRemaining check in effect:`, initialRemainingOnEffect);
+
+    if (initialRemainingOnEffect) {
+      // Only set if not already set by useState, or if it needs update (though deps should handle this)
+      // This ensures that if the component re-renders and time has passed, state is up-to-date.
+      setTimeRemaining(initialRemainingOnEffect);
+      if (!isCountingDown) {
+        setIsCountingDown(true); // Ensure counting state is true if we are starting interval
+        // console.log(`[Lesson ID: ${lesson.id}] useEffect - Countdown STARTING or RE-AFFIRMED. isCountingDown set to true.`);
+      }
+
+      intervalId = setInterval(() => {
+        const remainingInInterval = calculateTimeDifference(
+          targetApplicationStartDate
+        );
+        // const nowForInterval = new Date().getTime();
+        // const targetTimeForInterval = targetApplicationStartDate.getTime();
+        // const differenceInInterval = targetTimeForInterval - nowForInterval;
+
+        // console.log(
+        //   `[Lesson ID: ${lesson.id}] Tick: Now: ${nowForInterval}, Target: ${targetTimeForInterval}, Diff: ${differenceInInterval}, Remaining: `,
+        //   remainingInInterval
+        // );
+        if (lesson.id === 18) {
+          // Specific log for lesson 18 per second
+          console.log(
+            `[Lesson ID: ${lesson.id}] Tick Countdown: ${remainingInInterval?.days}d ${remainingInInterval?.hours}h ${remainingInInterval?.minutes}m ${remainingInInterval?.seconds}s`
+          );
         }
-        setTimeLeft(timeLeftOutput);
-      };
 
-      calculateTimeLeft();
-      const timer = setInterval(calculateTimeLeft, 1000);
-      return () => clearInterval(timer);
+        setTimeRemaining(remainingInInterval);
+
+        if (!remainingInInterval) {
+          // console.log(`[Lesson ID: ${lesson.id}] Tick - Countdown FINISHED in interval.`);
+          setIsCountingDown(false); // Stop counting
+          clearInterval(intervalId);
+        }
+      }, 1000);
+    } else {
+      // Target date is in the past or now, ensure countdown is stopped.
+      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: targetApplicationStartDate is not in the future.`);
+      if (isCountingDown) {
+        setIsCountingDown(false); // Stop counting if it was somehow true
+        // console.log(`[Lesson ID: ${lesson.id}] useEffect - Explicitly STOPPING countdown as start date is past. isCountingDown set to false.`);
+      }
+      setTimeRemaining(null); // Clear any remaining time
     }
-  }, [paymentExpireDt, enrollStatus, canAttemptPayment]);
 
-  // 1. Payment Pending (UNPAID and can attempt payment)
-  if (enrollStatus === "UNPAID" && canAttemptPayment && paymentPageUrl) {
-    if (timeLeft === "결제 시간 만료") {
-      return (
-        <Text color="red.500" fontSize="sm">
-          결제 시간이 만료되었습니다.
-        </Text>
-      );
-    }
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Text color="red.500" fontSize="sm">
-          결제 대기중: {timeLeft}
-        </Text>
-        <Button
-          colorScheme="blue"
-          w="100%"
-          onClick={() =>
-            onGoToPayment && paymentPageUrl && onGoToPayment(paymentPageUrl)
-          }
-        >
-          결제하기
-        </Button>
-      </Flex>
-    );
-  }
-  console.log(enrollStatus, canAttemptPayment);
-  // Handle cases where payment cannot be attempted (e.g., UNPAID but payment window closed)
-  if (enrollStatus === "UNPAID" && !canAttemptPayment) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            결제 기간이 지났습니다.
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Countdown effect cleanup.`);
+    };
+    // Dependencies: lesson.id and lesson.reservationId for re-calculating if these change.
+    // enrollment to stop countdown if user enrolls/unenrolls (though this component might unmount then).
+    // isCountingDown is NOT included to prevent re-triggering based on its own change.
+  }, [lesson.id, lesson.reservationId, enrollment, isCountingDown]);
 
-  // 2. Paid Status and sub-statuses
-  if (enrollStatus === "PAID") {
-    if (isPastLesson) {
+  if (enrollment) {
+    const { status: enrollStatus, cancelStatus, enrollId } = enrollment;
+
+    if (
+      enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
+      cancelStatus === "APPROVED"
+    ) {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
-              수강 완료{" "}
+              관리자 확인 취소
             </Text>
           </Button>
         </Flex>
       );
     }
-    if (isAdminCancelReview) {
+
+    if (enrollStatus === "CANCELED_UNPAID") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
-              관리자 취소 검토중
+              취소 완료 (미결제)
             </Text>
           </Button>
         </Flex>
       );
     }
-    if (cancelStatus === "REQ") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
+    return (
+      <Flex align="center" gap={3} w="100%">
+        <Flex direction="column" align="center" gap={2} w="50%">
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
-              취소 요청됨 (승인 대기중)
+              미결제 상태
             </Text>
           </Button>
         </Flex>
-      );
-    }
-    if (cancelStatus === "APPROVED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
-            <Text color="gray.500" fontSize="sm">
-              취소 승인 (환불 처리중)
-            </Text>
+        {onRequestCancel && (
+          <Button
+            colorPalette="red"
+            w="50%"
+            onClick={() => onRequestCancel(enrollId)}
+          >
+            취소 신청
           </Button>
-        </Flex>
-      );
+        )}
+      </Flex>
+    );
+  } else {
+    // Listing context (no enrollment) - Purely time and capacity based
+    let buttonContent: React.ReactNode = "신청불가"; // Default
+    let buttonDisabled = true;
+    let buttonBgColor = "#A0AEC0"; // Default disabled color
+    let hoverBgColor = "#A0AEC0";
+
+    const now = new Date();
+    const applicationStartTime = parseKSTDateString(lesson.reservationId);
+    const applicationEndTime = parseKSTDateString(lesson.receiptId);
+
+    if (isCountingDown && timeRemaining) {
+      // 1. Countdown is active
+      let countdownText = "";
+      if (timeRemaining.days > 0) {
+        countdownText += `${timeRemaining.days}일 `;
+      }
+      countdownText += `${String(timeRemaining.hours).padStart(
+        2,
+        "0"
+      )}:${String(timeRemaining.minutes).padStart(2, "0")}:${String(
+        timeRemaining.seconds
+      ).padStart(2, "0")}`;
+      buttonContent = `접수 시작 ${countdownText}`;
+      buttonDisabled = true;
+      buttonBgColor = "orange.400";
+      hoverBgColor = "orange.400";
+    } else if (applicationStartTime && now < applicationStartTime) {
+      // 2. Before application period starts (and countdown is not active for some reason, or finished early)
+      buttonContent = "접수시작전";
+      buttonDisabled = true;
+      buttonBgColor = "#A0AEC0";
+      hoverBgColor = "#A0AEC0";
+    } else if (
+      applicationStartTime &&
+      applicationEndTime &&
+      now >= applicationStartTime &&
+      now <= applicationEndTime
+    ) {
+      // 3. Within application period
+      if (lesson.remaining != null && lesson.remaining > 0) {
+        buttonContent = "신청하기";
+        buttonDisabled = false;
+        buttonBgColor = "#2D3092"; // Primary blue
+        hoverBgColor = "#1f2366";
+      } else {
+        buttonContent = "정원마감"; // Capacity full
+        buttonDisabled = true;
+        buttonBgColor = "#CC0000"; // Red for full
+        hoverBgColor = "#CC0000";
+      }
+    } else if (applicationEndTime && now > applicationEndTime) {
+      // 4. After application period ends
+      buttonContent = "접수마감";
+      buttonDisabled = true;
+      buttonBgColor = "#888888"; // Darker gray for ended
+      hoverBgColor = "#888888";
+    } else if (!applicationStartTime || !applicationEndTime) {
+      // 5. Dates are invalid or missing
+      buttonContent = "정보확인필요";
+      buttonDisabled = true;
+      buttonBgColor = "#A0AEC0";
+      hoverBgColor = "#A0AEC0";
     }
-    if (cancelStatus === "DENIED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%">
-            <Text color="gray.500" fontSize="sm">
-              취소 요청 거부됨
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-    // If paid, not past, no pending/approved/denied cancellation, allow cancellation if applicable
-    // The `canCancel` prop logic needs to be determined by the parent based on policy
-    // Let's assume if `onRequestCancel` is provided, cancellation is possible.
-    if (onRequestCancel) {
-      return (
-        <Button
-          colorScheme="red"
-          w="100%"
-          onClick={() => onRequestCancel(enrollId)}
-        >
-          취소 신청
-        </Button>
-      );
-    }
+    // Default case is covered by initialization: "신청불가", disabled, gray
+
     return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            결제 완료
-          </Text>
-        </Button>
-      </Flex>
+      <Button
+        w="100%"
+        bgColor={buttonBgColor}
+        color="white"
+        height="41px"
+        borderRadius="10px"
+        _hover={{
+          bgColor: buttonDisabled ? buttonBgColor : hoverBgColor,
+        }}
+        disabled={buttonDisabled}
+        onClick={!buttonDisabled && onApplyClick ? onApplyClick : undefined}
+      >
+        {buttonContent}
+      </Button>
     );
   }
-
-  // 3. Payment Timeout
-  if (enrollStatus === "PAYMENT_TIMEOUT") {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            결제 시간 초과
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // 4. Admin Cancelled (Example, confirm actual status from backend like enroll.isAdministrativelyCancelled)
-  // if (enrollment.isAdministrativelyCancelled) {
-  //   return <Text color="red.600" fontSize="sm">취소됨 (관리자)</Text>;
-  // }
-
-  // 5. User Cancelled (CANCELED_UNPAID or CANCELED post-payment - though PAID + cancelStatus=APPROVED covers latter)
-  if (enrollStatus === "CANCELED_UNPAID") {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            취소 완료 (미결제)
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-  // If enrollStatus is CANCELLED (generic, could be after refund) and cancelStatus was APPROVED
-  if (
-    (enrollStatus === "CANCELED" || enrollStatus === "CANCELLED") &&
-    cancelStatus === "APPROVED"
-  ) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            취소 완료
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // Potentially a more general 'CANCELLED' or 'REFUNDED' if these are final states
-  if (enrollStatus === "REFUNDED") {
-    // From images, seems like REFUNDED is a final state
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            환불 완료
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // 6. Renewal Period
-  if (isRenewalPeriod && !isPastLesson && onRenewLesson) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button
-          variant="outline"
-          colorPalette="gray"
-          w="100%"
-          onClick={() => onRenewLesson(lessonId)}
-        >
-          <Text color="gray.500" fontSize="sm">
-            재등록 신청
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // 7. Past Lesson (if no other specific status applies)
-  if (isPastLesson) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            수업 종료
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  // Fallback for any other unhandled enrollStatus
-  // This helps in development to see what status is not covered.
-  if (enrollStatus) {
-    return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Button variant="outline" colorPalette="gray" w="100%">
-          <Text color="gray.500" fontSize="sm">
-            상태: {enrollStatus} (cancel: {cancelStatus || "N/A"})
-          </Text>
-        </Button>
-      </Flex>
-    );
-  }
-
-  return null; // Default empty return if no specific state matches
 };
 
 export default LessonCardActions;

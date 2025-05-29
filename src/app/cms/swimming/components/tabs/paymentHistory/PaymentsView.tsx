@@ -289,7 +289,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         showSearchButton={true}
       />
 
-      <Box className={agGridTheme} h="calc(100vh - 480px)" w="full">
+      <Box className={agGridTheme} maxH="480px" w="full">
         {" "}
         {/* Adjusted height considering filters might take more space */}
         <AgGridReact<PaymentData>

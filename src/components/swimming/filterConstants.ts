@@ -1,10 +1,10 @@
-export const statusOptions = [
-  { label: "상태 전체선택", value: "all" },
-  { label: "접수대기", value: "WAITING" },
-  { label: "접수중", value: "OPEN" },
-  { label: "수강중", value: "ONGOING" },
-  { label: "수강종료", value: "CLOSED" },
-];
+// export const statusOptions = [
+//   { label: "상태 전체선택", value: "all" },
+//   { label: "접수대기", value: "WAITING" },
+//   { label: "접수중", value: "OPEN" },
+//   { label: "수강중", value: "ONGOING" },
+//   { label: "수강종료", value: "CLOSED" },
+// ];
 
 export const monthOptions = (() => {
   const today = new Date();

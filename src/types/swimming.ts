@@ -13,7 +13,6 @@ export interface LessonDTO {
   capacity: number;
   remaining: number;
   price: number;
-  status: string; // 접수중, 접수마감, 수강중, 수강종료
   reservationId: string; // 접수 시작 정보
   receiptId: string; // 접수 마감 정보
   instructor: string;

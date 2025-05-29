@@ -60,7 +60,8 @@ const initialPasswordCriteria = {
   minLength: false,
   lowercase: false,
   number: false,
-  specialChar: false,
+  allowedSpecialChar: false,
+  noOtherSpecialChars: false,
 };
 
 const validateUsername = (username: string): string => {
@@ -97,6 +98,12 @@ const validateCarNumber = (carNumber: string): string => {
   if (!carPattern.test(carNumberWithoutSpaces)) {
     return "차량번호 형식이 올바르지 않습니다. (예: 12가 1234 또는 123가 1234)";
   }
+  return "";
+};
+
+const formatGender = (gender: string): string => {
+  if (gender === "0") return "FEMALE";
+  if (gender === "1") return "MALE";
   return "";
 };
 
@@ -237,16 +244,22 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
     });
 
     const validatePassword = (password: string) => {
-      if (!password) return "비밀번호를 입력해주세요."; // Added non-blank check
+      if (!password) return "비밀번호를 입력해주세요.";
 
       const criteria = {
         minLength: password.length >= 8,
         lowercase: /[a-z]/.test(password),
         number: /[0-9]/.test(password),
-        specialChar: /[^A-Za-z0-9]/.test(password),
+        allowedSpecialChar: /[!@#$%^&*()]/.test(password),
+        noOtherSpecialChars: /^[a-zA-Z0-9!@#$%^&*()]*$/.test(password),
       };
       setPasswordCriteriaMet(criteria);
-      const strengthScore = Object.values(criteria).filter(Boolean).length;
+      const strengthScore = [
+        criteria.minLength,
+        criteria.lowercase,
+        criteria.number,
+        criteria.allowedSpecialChar,
+      ].filter(Boolean).length;
       setPasswordStrength(strengthScore);
       return Object.values(criteria).every(Boolean);
     };
@@ -514,7 +527,9 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           initialAuthData?.name ||
           rawFormData.name,
         birthDate: initialAuthData?.birthDate || rawFormData.birthDate, // Will be overridden by NICE data on backend
-        gender: initialAuthData?.gender || rawFormData.genderFromAuth, // Will be overridden by NICE data on backend
+        gender: formatGender(
+          initialAuthData?.gender || rawFormData.genderFromAuth
+        ), // Will be overridden by NICE data on backend
         phone: initialAuthData?.mobileNo
           ? formatPhoneNumber(initialAuthData.mobileNo)
           : "", // Format phone number before sending
@@ -600,8 +615,12 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
             isMet={passwordCriteriaMet.number}
           />
           <PasswordTooltipChecklistItem
-            label="특수문자 포함"
-            isMet={passwordCriteriaMet.specialChar}
+            label="특수문자 (!@#$%^&*()) 포함"
+            isMet={passwordCriteriaMet.allowedSpecialChar}
+          />
+          <PasswordTooltipChecklistItem
+            label="다른 종류의 특수문자 사용 불가"
+            isMet={passwordCriteriaMet.noOtherSpecialChars}
           />
         </VStack>
       ),

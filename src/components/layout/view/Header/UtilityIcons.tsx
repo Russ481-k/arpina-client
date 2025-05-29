@@ -1,7 +1,7 @@
 "use client";
 
-import { Flex, IconButton } from "@chakra-ui/react";
-import { memo, useCallback } from "react";
+import { Flex, IconButton, Button } from "@chakra-ui/react";
+import { memo, useCallback, useState, useEffect } from "react";
 import { Grid3X3Icon, SearchCodeIcon, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -14,28 +14,70 @@ interface UtilityIconsProps {
 export const UtilityIcons = memo(
   ({ iconColor, onSitemapOpen }: UtilityIconsProps) => {
     const router = useRouter();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // 사용자 인증 상태 확인 함수
-    const checkAuthAndRedirect = useCallback(() => {
-      // 클라이언트 사이드에서만 실행
-      if (typeof window === "undefined") return;
+    useEffect(() => {
+      const checkAuthState = () => {
+        // Ensure this runs only on the client
+        if (typeof window !== "undefined") {
+          const authToken = localStorage.getItem("auth_token");
+          const authUser = localStorage.getItem("auth_user");
+          setIsAuthenticated(!!(authToken && authUser));
+        }
+      };
 
-      const authToken = localStorage.getItem("auth_token");
-      const authUser = localStorage.getItem("auth_user");
+      checkAuthState(); // Initial check
 
-      if (authToken && authUser) {
-        // 인증 정보가 있으면 마이페이지로 이동
-        router.push("/mypage");
-      } else {
-        // 인증 정보가 없으면 로그인 페이지로 이동
-        router.push("/login");
+      const handleStorageChange = (event: StorageEvent) => {
+        if (
+          event.key === "auth_token" ||
+          event.key === "auth_user" ||
+          event.key === null
+        ) {
+          checkAuthState();
+        }
+      };
+
+      const handleAuthChangeEvent = () => {
+        checkAuthState();
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+      window.addEventListener("authChange", handleAuthChangeEvent); // Listen for custom event
+
+      return () => {
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("authChange", handleAuthChangeEvent); // Cleanup custom event listener
+      };
+    }, []); // Check on initial mount and when storage/auth changes
+
+    const handleLogin = useCallback(() => {
+      router.push("/login");
+    }, [router]);
+
+    const handleSignup = useCallback(() => {
+      router.push("/signup"); // Assuming /signup is your registration page
+    }, [router]);
+
+    const handleMypage = useCallback(() => {
+      router.push("/mypage");
+    }, [router]);
+
+    const handleLogout = useCallback(() => {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+        setIsAuthenticated(false);
+        window.dispatchEvent(new CustomEvent("authChange")); // Dispatch custom event
+        router.push("/"); // Redirect to homepage after logout
+        // Optionally, you can add a toaster notification for successful logout here
       }
     }, [router]);
 
     return (
       <Flex
         alignItems="center"
-        gap={2}
+        gap={{ base: 2, md: 3 }}
         display={{ base: "none", lg: "flex" }}
         zIndex={1001}
       >
@@ -44,18 +86,51 @@ export const UtilityIcons = memo(
           width={120}
           height={40}
           alt="부산도시공사 로고"
+          style={{ cursor: "pointer" }}
+          onClick={() => router.push("/")}
         />
-        <IconButton
-          aria-label="User menu"
-          variant="ghost"
-          color={iconColor}
-          size="sm"
-          borderRadius="full"
-          onClick={checkAuthAndRedirect}
-        >
-          <User2Icon />
-        </IconButton>
-        <IconButton
+        {isAuthenticated ? (
+          <>
+            <IconButton
+              aria-label="My Page"
+              variant="ghost"
+              color={iconColor}
+              size="sm"
+              borderRadius="full"
+              onClick={handleMypage}
+            >
+              <User2Icon />
+            </IconButton>
+            <Button
+              variant="ghost"
+              colorPalette="red"
+              size="sm"
+              onClick={handleLogout}
+            >
+              로그아웃
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="ghost"
+              color={iconColor}
+              size="sm"
+              onClick={handleLogin}
+            >
+              로그인
+            </Button>
+            <Button
+              variant="solid"
+              colorPalette="blue"
+              size="sm"
+              onClick={handleSignup}
+            >
+              회원가입
+            </Button>
+          </>
+        )}
+        {/* <IconButton
           aria-label="Search"
           variant="ghost"
           color={iconColor}
@@ -74,7 +149,7 @@ export const UtilityIcons = memo(
           onClick={onSitemapOpen}
         >
           <Grid3X3Icon />
-        </IconButton>
+        </IconButton> */}
       </Flex>
     );
   }

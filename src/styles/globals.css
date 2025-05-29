@@ -79,7 +79,6 @@ select:focus option {
   animation: dropdownFadeIn 0.2s ease-out;
 }
 
-
 .editor-paragraph {
   margin-bottom: 8px;
 }
@@ -150,7 +149,7 @@ select:focus option {
 /* 수영 관련 스타일 */
 .swimming-card {
   width: 360px;
-  height: 445px;
+  min-height: 445px;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -193,7 +192,7 @@ select:focus option {
 }
 
 .info-box {
-  background: #F7F8FB;
+  background: #f7f8fb;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
@@ -227,7 +226,7 @@ select:focus option {
 }
 
 .switch-input:checked {
-  background-color: #2D3092;
+  background-color: #2d3092;
 }
 
 .switch-input:after {
@@ -366,9 +365,9 @@ select:focus option {
 }
 
 .tab-button.active {
-  background: #2D3092;
+  background: #2d3092;
   color: white;
-  border-color: #2D3092;
+  border-color: #2d3092;
 }
 
 .time-slots {
@@ -389,13 +388,13 @@ select:focus option {
 }
 
 .time-slot.active {
-  background: #2D3092;
+  background: #2d3092;
   color: white;
-  border-color: #2D3092;
+  border-color: #2d3092;
 }
 
 .time-slot.selected {
-  background: #08A4B4;
+  background: #08a4b4;
   color: white;
-  border-color: #08A4B4;
+  border-color: #08a4b4;
 }

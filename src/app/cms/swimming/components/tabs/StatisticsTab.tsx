@@ -207,7 +207,9 @@ export const StatisticsTab: React.FC = () => {
   });
 
   const handleExportData = () => {
-    toaster.info({ title: "엑셀 다운로드 준비 중... (구현 필요)" });
+    toaster.info({
+      title: "엑셀 다운로드 준비 중... (구현 필요)",
+    });
     console.log("Exporting data for:", selectedYear, selectedMonth, apiStats);
   };
 

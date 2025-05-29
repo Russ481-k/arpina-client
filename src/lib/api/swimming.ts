@@ -97,7 +97,6 @@ const mapLessonData = (backendLesson: BackendLessonDTO): LessonDTO => {
     capacity: backendLesson.capacity,
     remaining: backendLesson.remaining, // Directly use 'remaining' from API (available spots)
     price: backendLesson.price,
-    status: backendLesson.status, // Directly using backend status
     reservationId: `${formatDisplayDateTime(
       backendLesson.registrationStartDateTime
     )}부터`,

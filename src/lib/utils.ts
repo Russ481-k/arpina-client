@@ -15,6 +15,7 @@ export const getPublicFileDownloadUrl = (fileId: number): string => {
   // IMPORTANT: Ensure this base URL is correct for your file download endpoint.
   // It might be different from the main API_V1_URL.
   const apiBaseUrl =
-    (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080") + "/api/v1";
+    (process.env.NEXT_PUBLIC_API_URL || "https://222.119.41.194:8080") +
+    "/api/v1";
   return `${apiBaseUrl}/cms/file/public/download/${fileId}`; // 파일 다운로드 URL
 };

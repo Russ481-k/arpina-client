@@ -176,7 +176,7 @@ export const CancellationRefundTab = ({
   const colDefs = useMemo<ColDef<CancelRequestData>[]>(
     () => [
       {
-        headerName: "이름 (ID)",
+        headerName: "이름",
         valueGetter: (params) => {
           if (!params.data) return "";
           return `${params.data.userName}${
@@ -187,7 +187,20 @@ export const CancellationRefundTab = ({
         minWidth: 120,
         tooltipField: "userName",
       },
-      { headerName: "강습명", field: "lessonTitle", flex: 1.5, minWidth: 180 },
+      {
+        headerName: "ID",
+        field: "userLoginId",
+        flex: 1,
+        minWidth: 120,
+        tooltipField: "userLoginId",
+      },
+      {
+        headerName: "전화번호",
+        field: "userPhone",
+        flex: 1,
+        minWidth: 120,
+        tooltipField: "userPhone",
+      },
       {
         headerName: "요청일시",
         field: "requestedAt",
@@ -503,7 +516,7 @@ export const CancellationRefundTab = ({
         </Card.Body>
       </Card.Root>
 
-      <Box className={agGridTheme} h="calc(100vh - 400px)" w="full">
+      <Box className={agGridTheme} maxH="480px" w="full">
         <AgGridReact<CancelRequestData>
           ref={gridRef}
           rowData={finalFilteredRequests}

@@ -34,19 +34,19 @@ export default function ParticipantsPage() {
 
   const floorInfoItems = [
     {
-      header: "위치",
+      label: "위치",
       value: "그랜드볼륨(2층-국제회의실)",
     },
     {
-      header: "면적",
+      label: "면적",
       value: "543.15㎡",
     },
     {
-      header: "사이즈",
+      label: "사이즈",
       value: "가로 20.715m * 세로 26.22.m * 높이 4m",
     },
     {
-      header: "문의",
+      label: "문의",
       value: "051-731-9800",
     },
   ];

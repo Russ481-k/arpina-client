@@ -408,7 +408,7 @@ export interface PaginatedResponse<T> {
  */
 export interface EnrollLessonRequestDto {
   lessonId: number;
-  wantsLocker: boolean;
+  usesLocker: boolean;
   membershipType: string;
 }
 
@@ -530,6 +530,7 @@ export interface MypageEnrollDto {
   };
   canAttemptPayment: boolean;
   paymentPageUrl: string | null;
+  membershipType: string;
 }
 
 /**
@@ -604,6 +605,7 @@ export interface EnrollAdminResponseDto {
   remain_days_at_cancel?: number | null; // Calculated for audit
   userPhone: string | null; // User phone number from user table
   userLoginId: string | null; // User login ID from user table
+  membershipType?: string; // Added field for discount/membership type
 }
 
 // CancelRequestDto for GET /admin/swimming/enrolls/cancel-requests

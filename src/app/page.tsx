@@ -18,6 +18,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { colorMode } = useColorMode();
@@ -26,6 +27,7 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
+  const router = useRouter();
   const treeMenus = useMemo(() => {
     try {
       // API 응답이 성공했는지 확인
@@ -48,7 +50,7 @@ export default function Home() {
       return [];
     }
   }, [menus]);
-
+  router.push("/signup");
   const styles = useUserStyles(STYLES as Styles);
   return (
     <Layout menus={treeMenus} currentPage="홈">

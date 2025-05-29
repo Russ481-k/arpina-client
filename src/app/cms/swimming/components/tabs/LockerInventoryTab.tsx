@@ -69,7 +69,6 @@ export const LockerInventoryTab = () => {
           description: `${variables.gender} 사물함 총 수량이 ${response.data.totalQuantity}(으)로 업데이트되었습니다.`,
           type: "success",
           duration: 3000,
-          closable: true,
         });
         queryClient.invalidateQueries({ queryKey: lockerInventoryQueryKey });
       } else {
@@ -79,7 +78,6 @@ export const LockerInventoryTab = () => {
             response.message || "사물함 수량 업데이트 중 오류가 발생했습니다.",
           type: "error",
           duration: 5000,
-          closable: true,
         });
       }
     },
@@ -91,7 +89,6 @@ export const LockerInventoryTab = () => {
           `${variables.gender} 사물함 수량 업데이트 중 심각한 오류가 발생했습니다.`,
         type: "error",
         duration: 5000,
-        closable: true,
       });
     },
   });
@@ -104,7 +101,6 @@ export const LockerInventoryTab = () => {
           description: "총 수량은 0 이상이어야 합니다.",
           type: "warning",
           duration: 3000,
-          closable: true,
         });
         return;
       }
@@ -121,14 +117,13 @@ export const LockerInventoryTab = () => {
           description: `총 수량(${newTotalQuantity})은 사용 중인 수량(${currentInventoryItem.usedQuantity})보다 적을 수 없습니다.`,
           type: "error",
           duration: 5000,
-          closable: true,
         });
         return;
       }
 
       updateMutation.mutate({ gender, newTotalQuantity });
     },
-    [updateMutation, toaster, inventoryDtoArray]
+    [updateMutation, inventoryDtoArray]
   );
 
   if (isLoading) {

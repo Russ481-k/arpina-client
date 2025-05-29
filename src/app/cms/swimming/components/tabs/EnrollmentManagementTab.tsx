@@ -63,6 +63,7 @@ import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import { toaster } from "@/components/ui/toaster";
 import { AdminCancelReasonDialog } from "./enrollmentManagement/AdminCancelReasonDialog";
 import { payStatusOptions } from "@/lib/utils/statusUtils";
+import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 // Import the new dialog components
 import { UserMemoDialog } from "./enrollmentManagement/UserMemoDialog";
@@ -85,6 +86,7 @@ interface EnrollmentData {
     | "REFUND_PENDING_ADMIN_CANCEL";
   usesLocker: boolean;
   userName: string;
+  userGender: string;
   userLoginId: string;
   userPhone: string;
   isRenewal?: boolean;
@@ -97,6 +99,7 @@ interface EnrollmentData {
   userMemo?: string;
   enrollStatus?: string;
   createdAt?: string;
+  membershipType?: string;
 }
 
 interface EnrollmentManagementTabProps {
@@ -242,19 +245,21 @@ export const EnrollmentManagementTab = ({
           payStatus: dto.payStatus as EnrollmentData["payStatus"],
           usesLocker: dto.usesLocker,
           userName: dto.userName,
+          userGender: dto.userGender || "0",
           userLoginId: dto.userLoginId || "",
           userPhone: dto.userPhone || "",
           isRenewal: false,
           enrollStatus: dto.status,
           createdAt: dto.createdAt,
           userMemo: (dto as any).userMemo || undefined,
+          membershipType: dto.membershipType,
         })
       );
     },
     enabled: !!lessonIdFilter,
   });
 
-  const rowData = enrollmentsData || [];
+  const rowData = useMemo(() => enrollmentsData || [], [enrollmentsData]);
 
   const [selectedUserForMemo, setSelectedUserForMemo] =
     useState<EnrollmentData | null>(null);
@@ -275,27 +280,47 @@ export const EnrollmentManagementTab = ({
   const colDefs = useMemo<ColDef<EnrollmentData>[]>(
     () => [
       {
-        headerName: "이름",
-        field: "userName",
-
+        headerName: "회원ID",
+        field: "userLoginId",
         minWidth: 80,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "회원명",
+        field: "userName",
+        minWidth: 80,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "성별",
+        field: "userGender",
+        minWidth: 60,
+        filter: "agTextColumnFilter",
+        cellRenderer: (params: ICellRendererParams<EnrollmentData, string>) => {
+          return params.value === "1" ? "남" : "여";
         },
       },
       {
-        headerName: "핸드폰 번호",
+        headerName: "연락처",
         field: "userPhone",
-        flex: 1,
-        minWidth: 130,
+        minWidth: 100,
+      },
+      {
+        headerName: "할인유형",
+        field: "membershipType",
+        minWidth: 100,
+        valueFormatter: (
+          params: ValueFormatterParams<EnrollmentData, string | undefined>
+        ) => {
+          return getMembershipLabel(params.value);
+        },
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "결제상태",
         field: "payStatus",
         flex: 1,
-        minWidth: 130,
+        minWidth: 80,
         cellRenderer: (
           params: ICellRendererParams<
             EnrollmentData,
@@ -317,76 +342,76 @@ export const EnrollmentManagementTab = ({
         headerName: "사물함",
         field: "usesLocker",
         cellRenderer: UsesLockerCellRenderer,
-        width: 90,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        },
-      },
-      {
-        headerName: "할인",
-        field: "discountInfo",
         width: 80,
-        cellRenderer: (params: ICellRendererParams<EnrollmentData>) => {
-          const { data, context } = params;
-          if (!data || !data.discountInfo)
-            return (
-              <Badge colorPalette="gray" variant="outline" size="sm">
-                없음
-              </Badge>
-            );
-
-          const statusConfig = {
-            APPROVED: { colorPalette: "green", label: "승인" },
-            DENIED: { colorPalette: "red", label: "거절" },
-            PENDING: { colorPalette: "yellow", label: "대기" },
-          };
-          const config = statusConfig[data.discountInfo.status];
-
-          return (
-            <Stack gap={1} h="100%" justifyContent="center" alignItems="center">
-              <Text fontSize="xs" color={colors.text.secondary}>
-                {data.discountInfo.type}
-              </Text>
-              <Badge
-                colorPalette={config.colorPalette}
-                variant="solid"
-                size="sm"
-              >
-                {config.label}
-              </Badge>
-              {data.discountInfo.status === "PENDING" && context && (
-                <HStack mt={1} gap={1}>
-                  <Button
-                    size="xs"
-                    colorPalette="green"
-                    onClick={() =>
-                      context.handleDiscountApproval(data.enrollId, "APPROVED")
-                    }
-                  >
-                    승인
-                  </Button>
-                  <Button
-                    size="xs"
-                    colorPalette="red"
-                    onClick={() =>
-                      context.handleDiscountApproval(data.enrollId, "DENIED")
-                    }
-                  >
-                    거절
-                  </Button>
-                </HStack>
-              )}
-            </Stack>
-          );
-        },
         cellStyle: {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         },
       },
+      // {
+      //   headerName: "할인",
+      //   field: "discountInfo",
+      //   width: 80,
+      //   cellRenderer: (params: ICellRendererParams<EnrollmentData>) => {
+      //     const { data, context } = params;
+      //     if (!data || !data.discountInfo)
+      //       return (
+      //         <Badge colorPalette="gray" variant="outline" size="sm">
+      //           없음
+      //         </Badge>
+      //       );
+
+      //     const statusConfig = {
+      //       APPROVED: { colorPalette: "green", label: "승인" },
+      //       DENIED: { colorPalette: "red", label: "거절" },
+      //       PENDING: { colorPalette: "yellow", label: "대기" },
+      //     };
+      //     const config = statusConfig[data.discountInfo.status];
+
+      //     return (
+      //       <Stack gap={1} h="100%" justifyContent="center" alignItems="center">
+      //         <Text fontSize="xs" color={colors.text.secondary}>
+      //           {data.discountInfo.type}
+      //         </Text>
+      //         <Badge
+      //           colorPalette={config.colorPalette}
+      //           variant="solid"
+      //           size="sm"
+      //         >
+      //           {config.label}
+      //         </Badge>
+      //         {data.discountInfo.status === "PENDING" && context && (
+      //           <HStack mt={1} gap={1}>
+      //             <Button
+      //               size="xs"
+      //               colorPalette="green"
+      //               onClick={() =>
+      //                 context.handleDiscountApproval(data.enrollId, "APPROVED")
+      //               }
+      //             >
+      //               승인
+      //             </Button>
+      //             <Button
+      //               size="xs"
+      //               colorPalette="red"
+      //               onClick={() =>
+      //                 context.handleDiscountApproval(data.enrollId, "DENIED")
+      //               }
+      //             >
+      //               거절
+      //             </Button>
+      //           </HStack>
+      //         )}
+      //       </Stack>
+      //     );
+      //   },
+      //   cellStyle: {
+      //     display: "flex",
+      //     alignItems: "center",
+      //     justifyContent: "center",
+      //   },
+      // },
       {
         headerName: "구분",
         field: "isRenewal",
@@ -503,7 +528,7 @@ export const EnrollmentManagementTab = ({
       adminCancelEnrollment: handleAdminCancelRequest,
       handleDiscountApproval,
     }),
-    [handleAdminCancelRequest, handleDiscountApproval]
+    [openMemoDialog, handleAdminCancelRequest, handleDiscountApproval]
   );
 
   const filteredEnrollmentsForGrid = useMemo(() => {
@@ -637,7 +662,7 @@ export const EnrollmentManagementTab = ({
       </Flex>
       <Box
         className={agGridTheme}
-        h="calc(100vh - 400px)"
+        maxH="480px"
         w="full"
         transform="none"
         willChange="auto"
