@@ -301,19 +301,23 @@ export const Step2Identity = ({
           휴대폰인증
         </Text>
         <Button
-          bg="#2E3192"
+          bg={authResult?.status === "SUCCESS" ? "gray.400" : "#2E3192"}
           color="white"
-          _hover={{ bg: "#1A365D" }}
+          _hover={{
+            bg: authResult?.status === "SUCCESS" ? "gray.400" : "#1A365D",
+          }}
           px={12}
           mt={4}
           size="lg"
           minW="180px"
           onClick={handleNiceAuthClick}
           loading={initiateNiceMutation.isPending}
-          disabled={initiateNiceMutation.isPending}
+          disabled={
+            initiateNiceMutation.isPending || authResult?.status === "SUCCESS"
+          }
           loadingText="처리중..."
         >
-          인증하기
+          {authResult?.status === "SUCCESS" ? "인증완료" : "인증하기"}
         </Button>
         {initiateNiceMutation.isError && !authResult && (
           <Text color="red.500" mt={2} fontSize="sm">

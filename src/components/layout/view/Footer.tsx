@@ -41,8 +41,8 @@ export function Footer() {
               color="#333333"
               fontSize="sm"
             >
-              <Text>T.051-740-3220</Text>
-              <Text>F.051-740-3220</Text>
+              <Text>T.051-731-9800</Text>
+              <Text>F.051-740-3205</Text>
             </Flex>
           </Box>
 
