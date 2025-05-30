@@ -50,7 +50,6 @@ export default function Home() {
       return [];
     }
   }, [menus]);
-  router.push("/signup");
   const styles = useUserStyles(STYLES as Styles);
   return (
     <Layout menus={treeMenus} currentPage="홈">
