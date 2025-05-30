@@ -18,7 +18,6 @@ import {
   Field,
   Input,
   Box,
-  Separator,
   Spinner,
 } from "@chakra-ui/react";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -70,8 +69,6 @@ const validateUsername = (username: string): string => {
   if (!trimmedUsername) return "사용자 ID를 입력해주세요.";
   if (trimmedUsername.length < 4) return "사용자 ID는 4자 이상이어야 합니다.";
   if (trimmedUsername.length > 50) return "사용자 ID는 50자 이하여야 합니다.";
-  // Basic format check (optional, e.g., alphanumeric)
-  // if (!/^[a-zA-Z0-9]+$/.test(trimmedUsername)) return "사용자 ID는 영문자와 숫자만 사용할 수 있습니다.";
   return "";
 };
 

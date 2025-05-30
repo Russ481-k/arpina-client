@@ -34,7 +34,6 @@ export const DesktopNav = memo(
           <Flex
             as="nav"
             display={{ base: "none", md: "flex" }}
-            gap={1}
             width="100%"
             justifyContent="space-between"
           >

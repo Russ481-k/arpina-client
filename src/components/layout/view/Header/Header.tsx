@@ -167,14 +167,13 @@ export const Header = memo(function Header({
               </Link>
             </Box>
 
-            {/* <DesktopNav
+            <DesktopNav
               menusWithLastFlag={menusWithLastFlag}
               isNavHovered={isNavHovered}
               isDark={isDark}
               currentPage={currentPage}
               isMainPage={isMainPage}
-            /> */}
-            <Box flex={1} />
+            />
             <UtilityIcons
               iconColor={iconColor}
               onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
@@ -182,7 +181,6 @@ export const Header = memo(function Header({
           </Flex>
         </Container>
       </Box>
-
       <MobileMenuDrawer
         menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}
@@ -191,8 +189,7 @@ export const Header = memo(function Header({
         width={logoWidth}
         height={logoHeight}
       />
-
-      {/* <SitemapDrawer
+      <SitemapDrawer
         isOpen={isSitemapDrawerOpen}
         onClose={() => setIsSitemapDrawerOpen(false)}
         menusWithLastFlag={menusWithLastFlag}
@@ -200,7 +197,7 @@ export const Header = memo(function Header({
         isDark={isDark}
         width={logoWidth}
         height={logoHeight}
-      /> */}
+      />
     </>
   );
 });

@@ -58,11 +58,9 @@ export function MenuItem({
 
   const childColor = isDark ? "gray.300" : "#373636";
   const childHoverFocusColor = isDark ? "blue.200" : "#4CCEC6";
-  const childGroupHoverColor = isDark ? "blue.200" : "blue.500";
 
   const grandChildColor = isDark ? "gray.400" : "gray.500";
   const grandChildHoverFocusColor = isDark ? "blue.200" : "#4CCEC6";
-  const grandChildGroupHoverColor = isDark ? "blue.200" : "blue.500";
 
   return (
     <Box
@@ -167,8 +165,7 @@ export function MenuItem({
                       as={NextLink}
                       href={child.url || "#"}
                       display="block"
-                      px={3}
-                      py={1}
+                      p={1}
                       fontSize={{ base: "xs", md: "sm" }}
                       textAlign="left"
                       fontWeight="medium"
