@@ -29,15 +29,19 @@ export const Header = memo(function Header({
   menus = [],
   isPreview,
 }: HeaderProps) {
-  const { colorMode } = useColorMode();
-  const isDark = colorMode === "dark";
   const [isNavHovered, setIsNavHovered] = useState(false);
-  const navRef = useRef<HTMLDivElement>(null);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const pathname = usePathname();
-  const isMainPage = pathname === "/";
-
   const [isSitemapDrawerOpen, setIsSitemapDrawerOpen] = useState(false);
+  const [lastHoveredMenuId, setLastHoveredMenuId] = useState<number | null>(
+    null
+  );
+
+  const { colorMode } = useColorMode();
+  const navRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pathname = usePathname();
+  const isDark = colorMode === "dark";
+  const isMainPage = pathname === "/";
 
   const headerHeight = useBreakpointValue({
     base: "60px",
@@ -60,6 +64,7 @@ export const Header = memo(function Header({
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY) {
         setIsNavHovered(false);
+        setLastHoveredMenuId(null);
       }
       setLastScrollY(currentScrollY);
     };
@@ -67,12 +72,50 @@ export const Header = memo(function Header({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const handleMouseEnter = () => {
+  // 외부 클릭 시 헤더 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setIsNavHovered(false);
+        setLastHoveredMenuId(null);
+      }
+    };
+
+    if (isNavHovered) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNavHovered]);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleMenuHover = (menuId: number) => {
+    // 이전 타이머가 있다면 클리어
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setLastHoveredMenuId(menuId);
     setIsNavHovered(true);
   };
 
-  const handleMouseLeave = () => {
-    setIsNavHovered(false);
+  const handleMenuLeave = () => {
+    // 메뉴 아이템에서 나갈 때 약간의 지연 후 닫기
+    closeTimerRef.current = setTimeout(() => {
+      setIsNavHovered(false);
+      setLastHoveredMenuId(null);
+      closeTimerRef.current = null;
+    }, 150);
   };
 
   const logoWidth = useBreakpointValue({ base: 120, lg: 160 }) || 120;
@@ -95,12 +138,11 @@ export const Header = memo(function Header({
         left={0}
         right={0}
         zIndex={1000}
-        bg={isDark ? "gray.800" : "white"}
-        backgroundColor={
+        bg={
           isNavHovered
             ? isDark
-              ? "rgba(26, 32, 44, 0.8)"
-              : "rgba(255, 255, 255, 0.8)"
+              ? "rgba(26, 32, 44, 0.95)"
+              : "rgba(255, 255, 255, 0.95)"
             : isDark
             ? "gray.800"
             : "white"
@@ -108,29 +150,13 @@ export const Header = memo(function Header({
         backdropFilter={isNavHovered ? "blur(30px)" : "none"}
         transition="all 0.3s ease"
         ref={navRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         role="navigation"
         aria-label="Main navigation"
         height={headerHeight}
         overflow="visible"
         opacity={1}
         pointerEvents={"auto"}
-        _before={
-          isNavHovered
-            ? {
-                content: '""',
-                position: "absolute",
-                top: "70px",
-                left: 0,
-                width: "100%",
-                height: "2px",
-                bg: isDark ? "gray.700" : "gray.200",
-                opacity: 1,
-                transition: "opacity 0.3s ease",
-              }
-            : {}
-        }
+        boxShadow={isNavHovered ? "none" : "0 4px 20px rgba(0, 0, 0, 0.1)"}
       >
         <Container
           position="relative"
@@ -141,46 +167,78 @@ export const Header = memo(function Header({
           w="100%"
           maxW="1600px"
           margin="0 auto"
+          height="100%"
         >
-          <Flex position="relative" align="center" h={headerHeight}>
-            <Box zIndex={1000}>
-              <Link
-                as={NextLink}
-                href="/"
-                _hover={{ textDecoration: "none", opacity: 0.8 }}
-                display="flex"
-                alignItems="center"
-                transition="opacity 0.2s"
-              >
-                <Box>
-                  <Image
-                    src={
-                      isNavHovered && isDark
-                        ? "/images/logo/logo_w.png"
-                        : "/images/logo/logo.png"
-                    }
-                    width={logoWidth}
-                    height={logoHeight}
-                    alt="logo"
-                  />
-                </Box>
-              </Link>
-            </Box>
+          <Flex position="relative" direction="column" height="100%">
+            <Flex position="relative" align="center" minH={headerHeight}>
+              <Flex zIndex={1000} align="center" h={headerHeight}>
+                <Link
+                  as={NextLink}
+                  href="/"
+                  _hover={{ textDecoration: "none", opacity: 0.8 }}
+                  display="flex"
+                  alignItems="center"
+                  transition="opacity 0.2s"
+                >
+                  <Box>
+                    <Image
+                      src={
+                        isNavHovered && isDark
+                          ? "/images/logo/logo_w.png"
+                          : "/images/logo/logo.png"
+                      }
+                      width={logoWidth}
+                      height={logoHeight}
+                      alt="logo"
+                    />
+                  </Box>
+                </Link>
+              </Flex>
 
-            <DesktopNav
-              menusWithLastFlag={menusWithLastFlag}
-              isNavHovered={isNavHovered}
-              isDark={isDark}
-              currentPage={currentPage}
-              isMainPage={isMainPage}
-            />
-            <UtilityIcons
-              iconColor={iconColor}
-              onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
-            />
+              <DesktopNav
+                menusWithLastFlag={menusWithLastFlag}
+                isNavHovered={isNavHovered}
+                isDark={isDark}
+                currentPage={currentPage}
+                isMainPage={isMainPage}
+                lastHoveredMenuId={lastHoveredMenuId}
+                onMenuHover={handleMenuHover}
+                onMenuLeave={handleMenuLeave}
+              />
+              <UtilityIcons
+                iconColor={iconColor}
+                onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
+              />
+            </Flex>
           </Flex>
         </Container>
       </Box>
+
+      {/* 확장 영역을 헤더 밖으로 분리 */}
+      <Box
+        position="fixed"
+        top={(isPreview ? 50 : 0) + parseInt(headerHeight || "70")}
+        left={0}
+        right={0}
+        zIndex={999}
+        height={isNavHovered ? "160px" : "0"}
+        transition="height 0.3s ease"
+        bg={
+          isNavHovered
+            ? isDark
+              ? "rgba(26, 32, 44, 0.95)"
+              : "rgba(255, 255, 255, 0.95)"
+            : "transparent"
+        }
+        bgImage={isNavHovered ? "url('/images/header/header_bg.png')" : "none"}
+        bgSize="cover"
+        bgRepeat="no-repeat"
+        backgroundPosition="center"
+        backdropFilter={isNavHovered ? "blur(30px)" : "none"}
+        pointerEvents={isNavHovered ? "auto" : "none"}
+        overflow="hidden"
+        boxShadow={isNavHovered ? "0 4px 20px rgba(0, 0, 0, 0.1)" : "none"}
+      />
       <MobileMenuDrawer
         menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}

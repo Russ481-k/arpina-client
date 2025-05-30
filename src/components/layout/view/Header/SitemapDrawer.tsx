@@ -8,7 +8,6 @@ import {
   Portal,
   VStack,
   HStack,
-  CloseButton,
   Text as ChakraText,
   Icon,
   Grid,
@@ -233,7 +232,7 @@ export const SitemapDrawer = memo(
                           <GridItem
                             key={level1Menu.id}
                             id={`sitemap-section-${level1Menu.id}`}
-                            minW="200px"
+                            minW="160px"
                           >
                             <VStack align="flex-start" gap={3} h="100%">
                               {/* Level 1 Menu Name as a non-clickable header for the column/section if needed, though image implies Level 2 are the first headers shown in right panel */}

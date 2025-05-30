@@ -2,7 +2,7 @@
 
 import { Flex, IconButton, Button } from "@chakra-ui/react";
 import { memo, useCallback, useState, useEffect } from "react";
-import { Grid3X3Icon, SearchCodeIcon, User2Icon } from "lucide-react";
+import { Grid3x3, Search, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -130,7 +130,7 @@ export const UtilityIcons = memo(
             </Button>
           </>
         )}
-        {/* <IconButton
+        <IconButton
           aria-label="Search"
           variant="ghost"
           color={iconColor}
@@ -138,7 +138,7 @@ export const UtilityIcons = memo(
           borderRadius="full"
           // TODO: Implement search functionality or drawer
         >
-          <SearchCodeIcon />
+          <Search />
         </IconButton>
         <IconButton
           aria-label="Sitemap"
@@ -148,8 +148,8 @@ export const UtilityIcons = memo(
           borderRadius="full"
           onClick={onSitemapOpen}
         >
-          <Grid3X3Icon />
-        </IconButton> */}
+          <Grid3x3 />
+        </IconButton>
       </Flex>
     );
   }

@@ -10,6 +10,7 @@ import {
   IconButton,
   Button,
   Separator,
+  Flex,
 } from "@chakra-ui/react";
 import Image from "next/image";
 import { memo, useState, useEffect, useCallback } from "react";
@@ -116,7 +117,7 @@ export const MobileMenuDrawer = memo(
             display={{ base: "flex", lg: "none" }}
             position="absolute"
             right={{ base: "10px", sm: "15px" }}
-            top={isPreview ? "calc(50% + 25px)" : "-40px"}
+            top={isPreview ? "calc(50% + 25px)" : "32px"}
             transform={isPreview ? "translateY(-50%)" : "translateY(-50%)"}
             zIndex={1001}
             color={isDark ? "white" : "gray.600"}
@@ -155,13 +156,51 @@ export const MobileMenuDrawer = memo(
                 </Drawer.CloseTrigger>
               </Drawer.Header>
               <Drawer.Body>
-                <VStack
-                  gap={6}
-                  align="stretch"
-                  mt={4}
-                  flexGrow={1}
-                  display="none"
-                >
+                <VStack gap={3} align="stretch">
+                  {isAuthenticated ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleNavigate("/mypage")}
+                        color={isDark ? "gray.200" : "gray.700"}
+                        justifyContent="flex-start"
+                      >
+                        <User2Icon size={18} />
+                        마이페이지
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        colorPalette="red"
+                        onClick={handleLogout}
+                        justifyContent="flex-start"
+                      >
+                        로그아웃
+                      </Button>
+                    </>
+                  ) : (
+                    <Flex gap={2}>
+                      <Button
+                        flex={1}
+                        justifyContent="center"
+                        variant="outline"
+                        onClick={() => handleNavigate("/login")}
+                        color={isDark ? "gray.200" : "gray.700"}
+                      >
+                        로그인
+                      </Button>
+                      <Button
+                        flex={1}
+                        justifyContent="center"
+                        variant="solid"
+                        colorPalette="blue"
+                        onClick={() => handleNavigate("/signup")}
+                      >
+                        회원가입
+                      </Button>
+                    </Flex>
+                  )}
+                </VStack>
+                <VStack gap={6} align="stretch" mt={4} flexGrow={1}>
                   {menusWithLastFlag?.map((menu, index) => {
                     const isActive = isMenuActive(menu.url);
                     return (
@@ -247,48 +286,6 @@ export const MobileMenuDrawer = memo(
                   mb={4}
                   borderColor={isDark ? "gray.700" : "gray.200"}
                 />
-                <VStack gap={3} align="stretch">
-                  {isAuthenticated ? (
-                    <>
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleNavigate("/mypage")}
-                        color={isDark ? "gray.200" : "gray.700"}
-                        justifyContent="flex-start"
-                      >
-                        <User2Icon size={18} />
-                        마이페이지
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        colorPalette="red"
-                        onClick={handleLogout}
-                        justifyContent="flex-start"
-                      >
-                        로그아웃
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleNavigate("/login")}
-                        color={isDark ? "gray.200" : "gray.700"}
-                        justifyContent="flex-start"
-                      >
-                        로그인
-                      </Button>
-                      <Button
-                        variant="solid"
-                        colorPalette="blue"
-                        onClick={() => handleNavigate("/signup")}
-                        justifyContent="flex-start"
-                      >
-                        회원가입
-                      </Button>
-                    </>
-                  )}
-                </VStack>
               </Drawer.Body>
             </Drawer.Content>
           </Drawer.Positioner>

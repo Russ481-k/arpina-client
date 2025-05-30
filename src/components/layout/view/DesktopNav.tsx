@@ -11,6 +11,9 @@ interface DesktopNavProps {
   isDark: boolean;
   currentPage: string;
   isMainPage: boolean;
+  lastHoveredMenuId: number | null;
+  onMenuHover: (menuId: number) => void;
+  onMenuLeave: () => void;
 }
 
 export const DesktopNav = memo(
@@ -20,6 +23,9 @@ export const DesktopNav = memo(
     isDark,
     currentPage,
     isMainPage,
+    lastHoveredMenuId,
+    onMenuHover,
+    onMenuLeave,
   }: DesktopNavProps) => {
     return (
       <Box
@@ -36,6 +42,7 @@ export const DesktopNav = memo(
             display={{ base: "none", md: "flex" }}
             width="100%"
             justifyContent="space-between"
+            alignItems="flex-start"
           >
             {menusWithLastFlag?.map((menu, index) => (
               <MemoizedMenuItem
@@ -46,6 +53,9 @@ export const DesktopNav = memo(
                 isRoot={true}
                 currentPage={currentPage}
                 isMainPage={isMainPage}
+                lastHoveredMenuId={lastHoveredMenuId}
+                onMenuHover={onMenuHover}
+                onMenuLeave={onMenuLeave}
               />
             ))}
           </Flex>

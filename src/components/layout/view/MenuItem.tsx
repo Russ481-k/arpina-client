@@ -13,6 +13,9 @@ interface MenuItemProps {
   currentPage: string;
   isMainPage?: boolean;
   isLastItem?: boolean;
+  lastHoveredMenuId?: number | null;
+  onMenuHover?: (menuId: number) => void;
+  onMenuLeave?: () => void;
 }
 
 export function MenuItem({
@@ -23,6 +26,9 @@ export function MenuItem({
   currentPage,
   isMainPage = false,
   isLastItem = false,
+  lastHoveredMenuId,
+  onMenuHover,
+  onMenuLeave,
 }: MenuItemProps) {
   const [isSelfHovered, setIsSelfHovered] = useState(false);
 
@@ -38,12 +44,18 @@ export function MenuItem({
   const hasChildren = menu.children && menu.children.length > 0;
 
   // Determine colors based on header state (isNavHovered) and dark mode
+  const isCurrentlyHovered =
+    (lastHoveredMenuId === menu.id && isNavHovered) || isSelfHovered;
   const topLevelColor = isNavHovered
     ? isDark
       ? isActive
         ? "blue.200"
+        : isCurrentlyHovered
+        ? "blue.200"
         : "white"
       : isActive
+      ? "blue.500"
+      : isCurrentlyHovered
       ? "blue.500"
       : "#0D344E"
     : isDark
@@ -66,8 +78,13 @@ export function MenuItem({
     <Box
       flex="1"
       position="relative"
-      onMouseEnter={() => setIsSelfHovered(true)}
-      onMouseLeave={() => setIsSelfHovered(false)}
+      onMouseEnter={() => {
+        setIsSelfHovered(true);
+        onMenuHover?.(menu.id);
+      }}
+      onMouseLeave={() => {
+        setIsSelfHovered(false);
+      }}
     >
       <Box
         position="relative"
@@ -77,12 +94,12 @@ export function MenuItem({
           content: '""',
           position: "absolute",
           bottom: "-2px",
-          left: "50%",
-          width: "0",
+          left: lastHoveredMenuId === menu.id && isNavHovered ? "0" : "50%",
+          width: lastHoveredMenuId === menu.id && isNavHovered ? "100%" : "0",
           height: "2px",
           bg: isMainPage ? "#0D344E" : isDark ? "blue.200" : "blue.500",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          opacity: "0",
+          transition: "all 0.3s ",
+          opacity: lastHoveredMenuId === menu.id && isNavHovered ? "1" : "0",
         }}
         _hover={{
           _before: {
@@ -111,9 +128,6 @@ export function MenuItem({
             outline: "none",
             border: "none",
           }}
-          _groupHover={{
-            color: topLevelHoverFocusColor,
-          }}
           _active={{
             bg: "transparent",
           }}
@@ -133,15 +147,29 @@ export function MenuItem({
         top="100%"
         left={0}
         zIndex={10}
-        maxHeight={isSelfHovered && hasChildren ? "1000vh" : "0"}
-        opacity={isSelfHovered && hasChildren ? 1 : 0}
-        transform={`translateY(${isSelfHovered && hasChildren ? "0" : "0px"})`}
-        transition="opacity 0.3s ease, visibility 0.3s ease, max-height 0.3s ease"
-        visibility={isSelfHovered && hasChildren ? "visible" : "hidden"}
-        pointerEvents={isSelfHovered && hasChildren ? "auto" : "none"}
-        bg={"transparent"}
-        backdropFilter={"none"}
-        boxShadow={"none"}
+        w="100%"
+        opacity={
+          ((isSelfHovered && isNavHovered) ||
+            (lastHoveredMenuId === menu.id && isNavHovered)) &&
+          hasChildren
+            ? 1
+            : 0
+        }
+        visibility={
+          ((isSelfHovered && isNavHovered) ||
+            (lastHoveredMenuId === menu.id && isNavHovered)) &&
+          hasChildren
+            ? "visible"
+            : "hidden"
+        }
+        transition="all 0.3s ease"
+        pointerEvents={
+          ((isSelfHovered && isNavHovered) ||
+            (lastHoveredMenuId === menu.id && isNavHovered)) &&
+          hasChildren
+            ? "auto"
+            : "none"
+        }
       >
         <Box pt={3} pb={3} px={{ base: 2, md: 4 }}>
           <Flex
@@ -200,10 +228,9 @@ export function MenuItem({
                         gap={0}
                         p={0}
                         mt={1}
-                        position="absolute"
-                        top="100%"
-                        left={0}
-                        minW="200px"
+                        position="relative"
+                        flex={1}
+                        minW="150px"
                         bg="transparent"
                         boxShadow="none"
                         zIndex={20}
