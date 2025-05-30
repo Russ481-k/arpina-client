@@ -15,8 +15,7 @@ import { privateApiMethods, publicApiMethods } from "./client";
 import {
   EnrollLessonRequestDto,
   EnrollInitiationResponseDto,
-  PaymentPageDetailsDto,
-  KISPGInitParamsDto,
+  KISPGPaymentInitResponseDto,
   PaymentConfirmRequestDto,
   PaymentConfirmResponseDto,
   MypageRenewalRequestDto,
@@ -272,34 +271,6 @@ export const swimmingPaymentService = {
   ),
 
   /**
-   * Fetches details for the KISPG payment page.
-   * Corresponds to GET /api/v1/payment/details/{enrollId}
-   */
-  getPaymentPageDetails: withAuthRedirect(
-    (enrollId: number): Promise<PaymentPageDetailsDto> => {
-      return privateApiMethods.get<PaymentPageDetailsDto>(
-        `${PAYMENT_BASE_PATH}/details/${enrollId}`
-      );
-    }
-  ),
-
-  /**
-   * Fetches initialization parameters for KISPG payment.
-   * Corresponds to GET /api/v1/payment/kispg-init-params/{enrollId}
-   * (Path from Docs/cms/kispg-payment-integration.md, though Docs/cms/payment-page-integration.md also references it)
-   */
-  getKISPGInitParams: withAuthRedirect(
-    (enrollId: number): Promise<KISPGInitParamsDto> => {
-      // The path might be /api/v1/payment/kispg/init-params/{enrollId} or /api/v1/payment/kispg-init-params/{enrollId}
-      // Using the one from payment-page-integration.md which is /api/v1/payment/kispg-init-params/{enrollId}
-      // Docs/cms/swim-overview.md and Docs/cms/swim-user.md also point to similar /payment/kispg-init-params/{enrollId}
-      return privateApiMethods.get<KISPGInitParamsDto>(
-        `${PAYMENT_BASE_PATH}/kispg-init-params/${enrollId}`
-      );
-    }
-  ),
-
-  /**
    * Confirms payment after KISPG interaction.
    * Corresponds to POST /api/v1/payment/confirm/{enrollId}
    */
@@ -341,6 +312,19 @@ export const swimmingPaymentService = {
       return privateApiMethods.post<void, { reason?: string }>(
         `${SWIMMING_BASE_PATH}/enroll/${enrollId}/cancel`,
         data
+      );
+    }
+  ),
+
+  /**
+   * Initializes KISPG payment for an enrollment.
+   * Corresponds to GET /api/v1/payment/kispg-init-params/{enrollId}
+   * Returns payment initialization parameters for secure payment.
+   */
+  initKISPGPayment: withAuthRedirect(
+    (enrollId: number): Promise<KISPGPaymentInitResponseDto> => {
+      return privateApiMethods.get<KISPGPaymentInitResponseDto>(
+        `${PAYMENT_BASE_PATH}/kispg-init-params/${enrollId}`
       );
     }
   ),

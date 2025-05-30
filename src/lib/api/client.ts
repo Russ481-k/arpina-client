@@ -176,7 +176,15 @@ const createApiClient = (isPrivate: boolean): AxiosInstance => {
 // API 메서드 생성 함수
 const createApiMethods = (client: AxiosInstance) => ({
   get: async <T>(endpoint: string, config?: AxiosRequestConfig) => {
-    const response = await client.get<T>(endpoint, config);
+    const response = await client.get<any>(endpoint, config);
+    // 백엔드 응답이 { success, data, message } 형태인 경우
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      "data" in response.data
+    ) {
+      return response.data.data as T;
+    }
     return response.data as T;
   },
   post: async <T, D = unknown>(
@@ -184,28 +192,60 @@ const createApiMethods = (client: AxiosInstance) => ({
     data?: D,
     config?: AxiosRequestConfig
   ) => {
-    const response = await client.post<T>(endpoint, data, config);
-    return response.data;
+    const response = await client.post<any>(endpoint, data, config);
+    // 백엔드 응답이 { success, data, message } 형태인 경우
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      "data" in response.data
+    ) {
+      return response.data.data as T;
+    }
+    return response.data as T;
   },
   put: async <T, D = unknown>(
     endpoint: string,
     data?: D,
     config?: AxiosRequestConfig
   ) => {
-    const response = await client.put<T>(endpoint, data, config);
-    return response.data;
+    const response = await client.put<any>(endpoint, data, config);
+    // 백엔드 응답이 { success, data, message } 형태인 경우
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      "data" in response.data
+    ) {
+      return response.data.data as T;
+    }
+    return response.data as T;
   },
   patch: async <T, D = unknown>(
     endpoint: string,
     data?: D,
     config?: AxiosRequestConfig
   ) => {
-    const response = await client.patch<T>(endpoint, data, config);
-    return response.data;
+    const response = await client.patch<any>(endpoint, data, config);
+    // 백엔드 응답이 { success, data, message } 형태인 경우
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      "data" in response.data
+    ) {
+      return response.data.data as T;
+    }
+    return response.data as T;
   },
   delete: async <T>(endpoint: string, config?: AxiosRequestConfig) => {
-    const response = await client.delete<T>(endpoint, config);
-    return response.data;
+    const response = await client.delete<any>(endpoint, config);
+    // 백엔드 응답이 { success, data, message } 형태인 경우
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      "data" in response.data
+    ) {
+      return response.data.data as T;
+    }
+    return response.data as T;
   },
 });
 

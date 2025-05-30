@@ -36,6 +36,7 @@ import {
   CheckUsernameResponse,
 } from "@/lib/api/userApi";
 import { CheckCircle2Icon, CheckCircleIcon, XCircleIcon } from "lucide-react";
+import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 
 declare global {
   interface Window {
@@ -101,41 +102,11 @@ const validateCarNumber = (carNumber: string): string => {
   return "";
 };
 
+// Helper function to format gender from API (0 or 1) to internal format (FEMALE or MALE)
 const formatGender = (gender: string): string => {
   if (gender === "0") return "FEMALE";
   if (gender === "1") return "MALE";
   return "";
-};
-
-// Helper function to format phone number
-const formatPhoneNumber = (phoneNumber: string): string => {
-  if (!phoneNumber) return "";
-  const cleaned = phoneNumber.replace(/\D/g, ""); // Remove non-digits
-  if (cleaned.length === 11) {
-    // Common mobile format e.g., 01012345678
-    return `${cleaned.substring(0, 3)}-${cleaned.substring(
-      3,
-      7
-    )}-${cleaned.substring(7, 11)}`;
-  }
-  if (cleaned.length === 10 && cleaned.startsWith("02")) {
-    // Seoul landline e.g., 021234567
-    return `${cleaned.substring(0, 2)}-${cleaned.substring(
-      2,
-      6
-    )}-${cleaned.substring(6, 10)}`;
-  }
-  if (cleaned.length === 10) {
-    // Other 10-digit landlines e.g., 0311234567
-    return `${cleaned.substring(0, 3)}-${cleaned.substring(
-      3,
-      6
-    )}-${cleaned.substring(6, 10)}`;
-  }
-  // For other cases or if it's not a recognized Korean format, return cleaned or original.
-  // For this specific request 010-xxxx-xxxx, we primarily expect 11 digits.
-  // Fallback for unexpected formats:
-  return phoneNumber;
 };
 
 // Helper component for individual checklist item in tooltip
@@ -531,7 +502,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           initialAuthData?.gender || rawFormData.genderFromAuth
         ), // Will be overridden by NICE data on backend
         phone: initialAuthData?.mobileNo
-          ? formatPhoneNumber(initialAuthData.mobileNo)
+          ? formatPhoneNumberWithHyphen(initialAuthData.mobileNo)
           : "", // Format phone number before sending
         email: email,
         carNo: carNumber,
@@ -550,7 +521,9 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
     useEffect(() => {
       if (initialAuthData) {
         if (initialAuthData.mobileNo) {
-          setFormattedMobileNo(formatPhoneNumber(initialAuthData.mobileNo));
+          setFormattedMobileNo(
+            formatPhoneNumberWithHyphen(initialAuthData.mobileNo)
+          );
         }
       }
       if (!authKey && currentProgressValue === 3) {

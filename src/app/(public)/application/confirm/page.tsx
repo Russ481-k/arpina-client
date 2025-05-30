@@ -25,6 +25,8 @@ import { EnrollLessonRequestDto, LockerAvailabilityDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
+import KISPGPaymentPopup from "@/components/payment/KISPGPaymentPopup";
+import { useKISPGPayment } from "@/hooks/useKISPGPayment";
 
 interface MembershipOption {
   value: string;
@@ -65,6 +67,7 @@ const ApplicationConfirmPage = () => {
   const [lessonStartDate, setLessonStartDate] = useState<string>("");
   const [lessonEndDate, setLessonEndDate] = useState<string>("");
   const [lessonTime, setLessonTime] = useState<string>("");
+  const [enrollId, setEnrollId] = useState<number | null>(null);
 
   const [profile, setProfile] = useState<ProfileDto | null>(null);
   const [userGender, setUserGender] = useState<"MALE" | "FEMALE" | null>(null);
@@ -89,6 +92,33 @@ const ApplicationConfirmPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [lockerError, setLockerError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(APPLICATION_TIMEOUT_SECONDS);
+
+  // KISPG Payment Integration
+  const { isInitializing, paymentData, paymentRef, initializePayment } =
+    useKISPGPayment({
+      enrollId: enrollId || 0,
+      onPaymentInitError: async (error) => {
+        console.error("Payment initialization failed:", error);
+        setIsSubmitting(false);
+
+        // 결제 초기화 실패 시 신청 취소
+        if (enrollId) {
+          try {
+            await swimmingPaymentService.cancelUserEnrollment(enrollId, {
+              reason: "결제 초기화 실패",
+            });
+            toaster.create({
+              title: "신청 취소됨",
+              description:
+                "결제 준비 중 오류가 발생하여 신청이 취소되었습니다.",
+              type: "warning",
+            });
+          } catch (cancelError) {
+            console.error("Failed to cancel enrollment:", cancelError);
+          }
+        }
+      },
+    });
 
   const colors = useColors();
   const pageBg = colors.bg;
@@ -308,45 +338,113 @@ const ApplicationConfirmPage = () => {
     setIsSubmitting(true);
     setError(null);
 
-    const enrollRequestData: EnrollLessonRequestDto = {
-      lessonId,
-      usesLocker: selectedLocker,
-      membershipType: selectedMembershipType,
-    };
-
     try {
+      // Step 1: Create enrollment
+      const enrollRequestData: EnrollLessonRequestDto = {
+        lessonId,
+        usesLocker: selectedLocker,
+        membershipType: selectedMembershipType,
+      };
+
+      console.log("Enroll Request Data:", enrollRequestData);
+
       const enrollResponse = await swimmingPaymentService.enrollLesson(
         enrollRequestData
       );
 
-      if (enrollResponse) {
+      console.log("Enroll Response:", enrollResponse);
+
+      if (enrollResponse && enrollResponse.enrollId) {
+        setEnrollId(enrollResponse.enrollId);
+
         toaster.create({
-          title: "신청 완료",
-          description:
-            "강습 신청이 완료되었습니다. 마이페이지 신청 정보로 이동합니다.",
-          type: "success",
-          duration: 3000,
+          title: "신청 등록",
+          description: "강습 신청이 등록되었습니다. 결제를 진행합니다.",
+          type: "info",
+          duration: 2000,
         });
-        router.push("/mypage?tab=수영장_신청정보");
+
+        // Step 2: Initialize KISPG payment with the correct enrollId
+        // enrollId를 직접 전달하여 상태 업데이트 지연 문제 해결
+        setTimeout(() => {
+          setIsSubmitting(false); // 일단 submitting 상태 해제
+          initializePayment(enrollResponse.enrollId);
+        }, 500);
       } else {
-        throw new Error("강습 신청은 되었으나 응답 정보가 올바르지 않습니다.");
+        throw new Error("강습 신청 응답이 올바르지 않습니다.");
       }
     } catch (err: any) {
+      console.error("Enrollment Error:", err);
+      console.error("Error Response:", err.response);
+
       const errMsg =
         err.response?.data?.message ||
+        err.response?.data?.error ||
         err.message ||
         "강습 신청 중 오류가 발생했습니다.";
-      if (err.status !== 401) {
-        setError(errMsg);
+
+      // 401 Unauthorized 체크
+      if (err.response?.status === 401) {
         toaster.create({
-          title: "강습 신청 실패",
-          description: errMsg,
+          title: "인증 필요",
+          description: "로그인이 필요합니다. 로그인 페이지로 이동합니다.",
           type: "error",
         });
+        router.push("/login?redirect=/application/confirm");
+        return;
       }
-    } finally {
+
+      setError(errMsg);
+      toaster.create({
+        title: "강습 신청 실패",
+        description: errMsg,
+        type: "error",
+      });
       setIsSubmitting(false);
     }
+  };
+
+  // 결제 완료 콜백
+  const handlePaymentComplete = async (success: boolean, data: any) => {
+    console.log("Payment completed:", { success, data });
+
+    if (success) {
+      toaster.create({
+        title: "결제 완료",
+        description: "수영 강습 신청이 완료되었습니다.",
+        type: "success",
+        duration: 5000,
+      });
+
+      // 마이페이지로 이동
+      setTimeout(() => {
+        router.push("/mypage?tab=수영장_신청정보");
+      }, 1000);
+    } else {
+      toaster.create({
+        title: "결제 실패",
+        description: data?.message || "결제 처리 중 오류가 발생했습니다.",
+        type: "error",
+      });
+
+      // 결제 실패 시 신청 취소
+      if (enrollId) {
+        try {
+          await swimmingPaymentService.cancelUserEnrollment(enrollId, {
+            reason: `결제 실패: ${data?.message || "알 수 없는 오류"}`,
+          });
+        } catch (error) {
+          console.error("Failed to cancel enrollment:", error);
+        }
+      }
+
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentClose = () => {
+    console.log("Payment popup closed");
+    setIsSubmitting(false);
   };
 
   const spinnerColor = primaryDefault;
@@ -370,7 +468,7 @@ const ApplicationConfirmPage = () => {
     );
   }
 
-  if (error && !isSubmitting) {
+  if (error && !isSubmitting && !isInitializing) {
     return (
       <Flex
         bg={pageBg}
@@ -465,93 +563,146 @@ const ApplicationConfirmPage = () => {
   const radioItemSpinnerColor = primaryDefault;
 
   return (
-    <Container maxW="700px" py={8}>
-      {" "}
-      <Box
-        mb={6}
-        {...cardStyleProps}
-        bg={errorNoticeBg}
-        borderColor={errorNoticeBorder}
-      >
-        <HStack mb={3} alignItems="center">
+    <>
+      <Container maxW="700px" py={8}>
+        {" "}
+        <Box
+          mb={6}
+          {...cardStyleProps}
+          bg={errorNoticeBg}
+          borderColor={errorNoticeBorder}
+        >
+          <HStack mb={3} alignItems="center">
+            <Image
+              src="/images/apply/pay_asset.png"
+              alt="pay_asset"
+              width={16}
+              height={16}
+            />
+            <Heading as="h2" size="sm" color={primaryText} fontWeight="bold">
+              결제 안내 필독 사항
+            </Heading>
+          </HStack>
+          <VStack align="stretch" gap={1} pl={2}>
+            {[
+              {
+                text: "수영장강습과, 사물함신청은 ",
+                boldRed: "결제완료 기준",
+                rest: "으로 선착순 확정됩니다.",
+              },
+              {
+                text: "할인회원 신청시 ",
+                boldRed: "오프라인으로 증빙서류 제출",
+                rest: "이 필요합니다.",
+              },
+              {
+                text: "신청 후 5분 이내 ",
+                boldRed: "결제를 완료",
+                rest: "하지 않으면 자동 취소됩니다.",
+              },
+            ].map((item, index) => (
+              <Flex
+                key={index}
+                display="flex"
+                alignItems="flex-start"
+                fontSize="xs"
+                color={accentDelete}
+              >
+                <Text as="span" color={secondaryText}>
+                  {item.text}
+                  {item.boldRed && (
+                    <Text
+                      as="span"
+                      fontWeight="bold"
+                      color={accentDelete}
+                      mx="3px"
+                    >
+                      {item.boldRed}
+                    </Text>
+                  )}
+                  {item.rest}
+                </Text>
+              </Flex>
+            ))}
+          </VStack>
+        </Box>
+        <HStack mt={10} mb={1} justifyContent="center" alignItems="center">
           <Image
             src="/images/apply/pay_asset.png"
             alt="pay_asset"
             width={16}
             height={16}
           />
-          <Heading as="h2" size="sm" color={primaryText} fontWeight="bold">
-            결제 안내 필독 사항
+          <Heading
+            as="h1"
+            size="md"
+            textAlign="center"
+            color={primaryText}
+            fontWeight="bold"
+          >
+            수영 강습 프로그램 신청정보
           </Heading>
         </HStack>
-        <VStack align="stretch" gap={1} pl={2}>
-          {[
-            {
-              text: "수영장강습과, 사물함신청은 ",
-              boldRed: "결제완료 기준",
-              rest: "으로 선착순 확정됩니다.",
-            },
-            {
-              text: "할인회원 신청시 ",
-              boldRed: "오프라인으로 증빙서류 제출",
-              rest: "이 필요합니다.",
-            },
-          ].map((item, index) => (
-            <Flex
-              key={index}
-              display="flex"
-              alignItems="flex-start"
-              fontSize="xs"
-              color={accentDelete}
-            >
-              <Text as="span" color={secondaryText}>
-                {item.text}
-                {item.boldRed && (
-                  <Text
-                    as="span"
-                    fontWeight="bold"
-                    color={accentDelete}
-                    mx="3px"
-                  >
-                    {item.boldRed}
-                  </Text>
-                )}
-                {item.rest}
-              </Text>
-            </Flex>
-          ))}
-        </VStack>
-      </Box>
-      <HStack mt={10} mb={1} justifyContent="center" alignItems="center">
-        <Image
-          src="/images/apply/pay_asset.png"
-          alt="pay_asset"
-          width={16}
-          height={16}
-        />
-        <Heading
-          as="h1"
-          size="md"
+        <Text
           textAlign="center"
-          color={primaryText}
+          color={accentDelete}
           fontWeight="bold"
+          mb={6}
+          fontSize="sm"
         >
-          수영 강습 프로그램 신청정보
-        </Heading>
-      </HStack>
-      <Text
-        textAlign="center"
-        color={accentDelete}
-        fontWeight="bold"
-        mb={6}
-        fontSize="sm"
-      >
-        신청정보를 다시 한번 확인해주세요
-      </Text>
-      {profile && (
+          신청정보를 다시 한번 확인해주세요
+        </Text>
+        {profile && (
+          <Fieldset.Root mb={6}>
+            <Box {...cardStyleProps}>
+              <Fieldset.Legend {...legendStyleProps}>
+                신청자 정보
+              </Fieldset.Legend>
+              <Fieldset.Content>
+                <SimpleGrid
+                  columns={{ base: 1, sm: 2 }}
+                  gapX={8}
+                  gapY={3}
+                  fontSize="sm"
+                >
+                  <HStack justifyContent="space-between">
+                    <Text color={secondaryText}>이름</Text>
+                    <Text fontWeight="medium" color={primaryText}>
+                      {profile.name}
+                    </Text>
+                  </HStack>
+                  <HStack justifyContent="space-between">
+                    <Text color={secondaryText}>연락처</Text>
+                    <Text fontWeight="medium" color={primaryText}>
+                      {profile.phone}
+                    </Text>
+                  </HStack>
+                  <HStack justifyContent="space-between">
+                    <Text color={secondaryText}>이메일</Text>
+                    <Text fontWeight="medium" color={primaryText}>
+                      {profile.email}
+                    </Text>
+                  </HStack>
+                  {userGender && (
+                    <HStack justifyContent="space-between">
+                      <Text color={secondaryText}>성별</Text>
+                      <Text fontWeight="medium" color={primaryText}>
+                        {userGender === "MALE"
+                          ? "남성"
+                          : userGender === "FEMALE"
+                          ? "여성"
+                          : "기타"}
+                      </Text>
+                    </HStack>
+                  )}
+                </SimpleGrid>
+              </Fieldset.Content>
+            </Box>
+          </Fieldset.Root>
+        )}
         <Fieldset.Root mb={6}>
           <Box {...cardStyleProps}>
-            <Fieldset.Legend {...legendStyleProps}>신청자 정보</Fieldset.Legend>
+            <Fieldset.Legend {...legendStyleProps}>강습 정보</Fieldset.Legend>
             <Fieldset.Content>
               <SimpleGrid
                 columns={{ base: 1, sm: 2 }}
@@ -560,327 +711,303 @@ const ApplicationConfirmPage = () => {
                 fontSize="sm"
               >
                 <HStack justifyContent="space-between">
-                  <Text color={secondaryText}>이름</Text>
+                  <Text color={secondaryText}>강습명</Text>
                   <Text fontWeight="medium" color={primaryText}>
-                    {profile.name}
+                    {lessonTitle}
                   </Text>
                 </HStack>
                 <HStack justifyContent="space-between">
-                  <Text color={secondaryText}>연락처</Text>
+                  <Text color={secondaryText}>강습기간</Text>
                   <Text fontWeight="medium" color={primaryText}>
-                    {profile.phone}
+                    {lessonStartDate} ~ {lessonEndDate}
                   </Text>
                 </HStack>
                 <HStack justifyContent="space-between">
-                  <Text color={secondaryText}>이메일</Text>
+                  <Text color={secondaryText}>강습시간</Text>
                   <Text fontWeight="medium" color={primaryText}>
-                    {profile.email}
+                    {lessonTime}
                   </Text>
                 </HStack>
-                {userGender && (
-                  <HStack justifyContent="space-between">
-                    <Text color={secondaryText}>성별</Text>
-                    <Text fontWeight="medium" color={primaryText}>
-                      {userGender === "MALE"
-                        ? "남성"
-                        : userGender === "FEMALE"
-                        ? "여성"
-                        : "기타"}
-                    </Text>
-                  </HStack>
-                )}
+                <HStack justifyContent="space-between">
+                  <Text color={secondaryText}>결제금액 (기본)</Text>
+                  <Text fontWeight="bold" color={primaryText}>
+                    {lessonPrice.toLocaleString()}원
+                  </Text>
+                </HStack>
               </SimpleGrid>
             </Fieldset.Content>
           </Box>
         </Fieldset.Root>
-      )}
-      <Fieldset.Root mb={6}>
-        <Box {...cardStyleProps}>
-          <Fieldset.Legend {...legendStyleProps}>강습 정보</Fieldset.Legend>
-          <Fieldset.Content>
-            <SimpleGrid
-              columns={{ base: 1, sm: 2 }}
-              gapX={8}
-              gapY={3}
-              fontSize="sm"
-            >
-              <HStack justifyContent="space-between">
-                <Text color={secondaryText}>강습명</Text>
-                <Text fontWeight="medium" color={primaryText}>
-                  {lessonTitle}
-                </Text>
-              </HStack>
-              <HStack justifyContent="space-between">
-                <Text color={secondaryText}>강습기간</Text>
-                <Text fontWeight="medium" color={primaryText}>
-                  {lessonStartDate} ~ {lessonEndDate}
-                </Text>
-              </HStack>
-              <HStack justifyContent="space-between">
-                <Text color={secondaryText}>강습시간</Text>
-                <Text fontWeight="medium" color={primaryText}>
-                  {lessonTime}
-                </Text>
-              </HStack>
-              <HStack justifyContent="space-between">
-                <Text color={secondaryText}>결제금액 (기본)</Text>
-                <Text fontWeight="bold" color={primaryText}>
-                  {lessonPrice.toLocaleString()}원
-                </Text>
-              </HStack>
-            </SimpleGrid>
-          </Fieldset.Content>
-        </Box>
-      </Fieldset.Root>
-      <Fieldset.Root mb={6}>
-        <Box {...cardStyleProps}>
-          <Fieldset.Legend {...legendStyleProps}>
-            사물함 추가 신청
-          </Fieldset.Legend>
-          <Fieldset.Content>
-            <Flex justifyContent="space-between" alignItems="center" mb={3}>
-              <Checkbox.Root
-                display="flex"
-                alignItems="center"
-                checked={selectedLocker}
-                onCheckedChange={(d) => {
-                  if (typeof d.checked === "boolean")
-                    setSelectedLocker(d.checked);
-                }}
-                colorPalette={primaryDefault}
-              >
-                <Checkbox.HiddenInput />
-                <Checkbox.Control
-                  borderColor={borderColor}
-                  mr={2}
-                  _checked={{
-                    bg: primaryDefault,
-                    borderColor: primaryDefault,
-                    color: inverseText,
+        <Fieldset.Root mb={6}>
+          <Box {...cardStyleProps}>
+            <Fieldset.Legend {...legendStyleProps}>
+              사물함 추가 신청
+            </Fieldset.Legend>
+            <Fieldset.Content>
+              <Flex justifyContent="space-between" alignItems="center" mb={3}>
+                <Checkbox.Root
+                  display="flex"
+                  alignItems="center"
+                  checked={selectedLocker}
+                  onCheckedChange={(d) => {
+                    if (typeof d.checked === "boolean")
+                      setSelectedLocker(d.checked);
                   }}
-                  _focus={{ boxShadow: "outline" }}
-                />
-                <Checkbox.Label
-                  fontSize="md"
-                  fontWeight="bold"
-                  color={primaryText}
+                  colorPalette={primaryDefault}
                 >
-                  사물함을 추가 신청합니다
-                </Checkbox.Label>
-              </Checkbox.Root>
-              <Text fontSize="xs" color={accentDelete} fontWeight="bold">
-                * 선착순 배정입니다.
-              </Text>
-            </Flex>
-
-            <Text fontSize="xs" color={accentWarning} mt={0} mb={3} ml={0}>
-              * 사물함은 신청 시에만 선택할 수 있으며, 이후 변경/추가는 현장
-              문의바랍니다.
-            </Text>
-
-            <HStack justifyContent="space-between" mt={2} fontSize="sm">
-              <Text color={secondaryText}>추가요금:</Text>
-              <Text fontWeight="medium" color={primaryText}>
-                {DEFAULT_LOCKER_FEE.toLocaleString()}원
-              </Text>
-            </HStack>
-            <HStack justifyContent="space-between" mt={1} fontSize="sm">
-              <Text color={secondaryText}>
-                잔여 수량 (
-                {userGender
-                  ? userGender === "MALE"
-                    ? "남성"
-                    : userGender === "FEMALE"
-                    ? "여성"
-                    : "전체"
-                  : "전체"}
-                ):
-              </Text>
-              {isLockerDetailsLoading ? (
-                <Spinner size="xs" color={radioItemSpinnerColor} />
-              ) : lockerError ? (
-                <Text color={accentDelete} fontSize="xs">
-                  확인불가
+                  <Checkbox.HiddenInput />
+                  <Checkbox.Control
+                    borderColor={borderColor}
+                    mr={2}
+                    _checked={{
+                      bg: primaryDefault,
+                      borderColor: primaryDefault,
+                      color: inverseText,
+                    }}
+                    _focus={{ boxShadow: "outline" }}
+                  />
+                  <Checkbox.Label
+                    fontSize="md"
+                    fontWeight="bold"
+                    color={primaryText}
+                  >
+                    사물함을 추가 신청합니다
+                  </Checkbox.Label>
+                </Checkbox.Root>
+                <Text fontSize="xs" color={accentDelete} fontWeight="bold">
+                  * 선착순 배정입니다.
                 </Text>
-              ) : (
+              </Flex>
+
+              <Text fontSize="xs" color={accentWarning} mt={0} mb={3} ml={0}>
+                * 사물함은 신청 시에만 선택할 수 있으며, 이후 변경/추가는 현장
+                문의바랍니다.
+              </Text>
+
+              <HStack justifyContent="space-between" mt={2} fontSize="sm">
+                <Text color={secondaryText}>추가요금:</Text>
                 <Text fontWeight="medium" color={primaryText}>
-                  {currentLockerCount}개
+                  {DEFAULT_LOCKER_FEE.toLocaleString()}원
                 </Text>
-              )}
-            </HStack>
-          </Fieldset.Content>
-        </Box>
-      </Fieldset.Root>
-      <Fieldset.Root mb={6}>
-        <Box {...cardStyleProps}>
-          <HStack {...legendStyleProps} alignItems="baseline">
-            <Image
-              src="/images/apply/pay_asset.png"
-              alt="pay_asset"
-              width={16}
-              height={16}
-            />
-            <Text>
-              할인 회원유형선택{" "}
-              <Text
-                as="span"
-                fontSize="xs"
-                fontWeight="normal"
-                color={secondaryText}
-              >
-                (정상요금{" "}
-                {membershipOptions.find((o) => o.discountPercentage > 0)
-                  ?.discountPercentage || 10}
-                %할인)
+              </HStack>
+              <HStack justifyContent="space-between" mt={1} fontSize="sm">
+                <Text color={secondaryText}>
+                  잔여 수량 (
+                  {userGender
+                    ? userGender === "MALE"
+                      ? "남성"
+                      : userGender === "FEMALE"
+                      ? "여성"
+                      : "전체"
+                    : "전체"}
+                  ):
+                </Text>
+                {isLockerDetailsLoading ? (
+                  <Spinner size="xs" color={radioItemSpinnerColor} />
+                ) : lockerError ? (
+                  <Text color={accentDelete} fontSize="xs">
+                    확인불가
+                  </Text>
+                ) : (
+                  <Text fontWeight="medium" color={primaryText}>
+                    {currentLockerCount}개
+                  </Text>
+                )}
+              </HStack>
+            </Fieldset.Content>
+          </Box>
+        </Fieldset.Root>
+        <Fieldset.Root mb={6}>
+          <Box {...cardStyleProps}>
+            <HStack {...legendStyleProps} alignItems="baseline">
+              <Image
+                src="/images/apply/pay_asset.png"
+                alt="pay_asset"
+                width={16}
+                height={16}
+              />
+              <Text>
+                할인 회원유형선택{" "}
+                <Text
+                  as="span"
+                  fontSize="xs"
+                  fontWeight="normal"
+                  color={secondaryText}
+                >
+                  (정상요금{" "}
+                  {membershipOptions.find((o) => o.discountPercentage > 0)
+                    ?.discountPercentage || 10}
+                  %할인)
+                </Text>
               </Text>
-            </Text>
-          </HStack>
-          <Fieldset.Content>
-            <RadioGroup.Root
-              value={selectedMembershipType}
-              onValueChange={(d) => {
-                if (typeof d.value === "string")
-                  setSelectedMembershipType(d.value);
-              }}
-            >
-              <VStack align="stretch" gap={2}>
-                {membershipOptions.map((opt) => {
-                  const discountedLessonPrice = getDiscountedPrice(
-                    lessonPrice,
-                    opt.discountPercentage
-                  );
-                  const isSelected = selectedMembershipType === opt.value;
+            </HStack>
+            <Fieldset.Content>
+              <RadioGroup.Root
+                value={selectedMembershipType}
+                onValueChange={(d) => {
+                  if (typeof d.value === "string")
+                    setSelectedMembershipType(d.value);
+                }}
+              >
+                <VStack align="stretch" gap={2}>
+                  {membershipOptions.map((opt) => {
+                    const discountedLessonPrice = getDiscountedPrice(
+                      lessonPrice,
+                      opt.discountPercentage
+                    );
+                    const isSelected = selectedMembershipType === opt.value;
 
-                  const radioBg = isSelected ? primaryAlpha : radioUnselectedBg;
-                  const radioBorder = isSelected ? primaryDefault : borderColor;
-                  const radioHoverBorder = isSelected
-                    ? primaryDefault
-                    : radioUnselectedHoverBorder;
-                  const radioPriceTextColor = isSelected
-                    ? primaryDefault
-                    : primaryText;
-                  const radioControlBorder = borderColor;
-                  const radioControlCheckedBg = primaryDefault;
-                  const radioControlCheckedBorder = primaryDefault;
-                  const radioControlCheckedColor = inverseText;
+                    const radioBg = isSelected
+                      ? primaryAlpha
+                      : radioUnselectedBg;
+                    const radioBorder = isSelected
+                      ? primaryDefault
+                      : borderColor;
+                    const radioHoverBorder = isSelected
+                      ? primaryDefault
+                      : radioUnselectedHoverBorder;
+                    const radioPriceTextColor = isSelected
+                      ? primaryDefault
+                      : primaryText;
+                    const radioControlBorder = borderColor;
+                    const radioControlCheckedBg = primaryDefault;
+                    const radioControlCheckedBorder = primaryDefault;
+                    const radioControlCheckedColor = inverseText;
 
-                  return (
-                    <RadioGroup.Item
-                      key={opt.value}
-                      value={opt.value}
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      p={3}
-                      borderWidth={1}
-                      borderColor={radioBorder}
-                      borderRadius="md"
-                      bg={radioBg}
-                      cursor="pointer"
-                      _hover={{
-                        borderColor: radioHoverBorder,
-                      }}
-                    >
-                      <HStack gap={3}>
-                        <RadioGroup.ItemHiddenInput />
-                        <RadioGroup.ItemControl
-                          borderColor={radioControlBorder}
-                          _checked={{
-                            bg: radioControlCheckedBg,
-                            borderColor: radioControlCheckedBorder,
-                            color: radioControlCheckedColor,
-                            _before: {
-                              content: `""`,
-                              display: "inline-block",
-                              w: "50%",
-                              h: "50%",
-                              borderRadius: "50%",
-                              bg: radioControlCheckedColor,
-                            },
-                          }}
-                          _focus={{ boxShadow: "outline" }}
-                        />
-                        <RadioGroup.ItemText
-                          fontSize="sm"
-                          fontWeight="medium"
-                          color={primaryText}
-                        >
-                          {opt.label}
-                        </RadioGroup.ItemText>
-                      </HStack>
-                      <Text
-                        fontWeight="bold"
-                        fontSize="sm"
-                        color={radioPriceTextColor}
+                    return (
+                      <RadioGroup.Item
+                        key={opt.value}
+                        value={opt.value}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        p={3}
+                        borderWidth={1}
+                        borderColor={radioBorder}
+                        borderRadius="md"
+                        bg={radioBg}
+                        cursor="pointer"
+                        _hover={{
+                          borderColor: radioHoverBorder,
+                        }}
                       >
-                        {(opt.discountPercentage > 0
-                          ? discountedLessonPrice
-                          : lessonPrice
-                        ).toLocaleString()}
-                        원
-                      </Text>
-                    </RadioGroup.Item>
-                  );
-                })}
-              </VStack>
-            </RadioGroup.Root>
-            <Text fontSize="xs" color={secondaryText} mt={3}>
-              * 유공자 및 할인 대상 회원은 증빙서류를 지참하여 현장 안내데스크에
-              제출해주셔야 할인 적용이 완료됩니다.
+                        <HStack gap={3}>
+                          <RadioGroup.ItemHiddenInput />
+                          <RadioGroup.ItemControl
+                            borderColor={radioControlBorder}
+                            _checked={{
+                              bg: radioControlCheckedBg,
+                              borderColor: radioControlCheckedBorder,
+                              color: radioControlCheckedColor,
+                              _before: {
+                                content: `""`,
+                                display: "inline-block",
+                                w: "50%",
+                                h: "50%",
+                                borderRadius: "50%",
+                                bg: radioControlCheckedColor,
+                              },
+                            }}
+                            _focus={{ boxShadow: "outline" }}
+                          />
+                          <RadioGroup.ItemText
+                            fontSize="sm"
+                            fontWeight="medium"
+                            color={primaryText}
+                          >
+                            {opt.label}
+                          </RadioGroup.ItemText>
+                        </HStack>
+                        <Text
+                          fontWeight="bold"
+                          fontSize="sm"
+                          color={radioPriceTextColor}
+                        >
+                          {(opt.discountPercentage > 0
+                            ? discountedLessonPrice
+                            : lessonPrice
+                          ).toLocaleString()}
+                          원
+                        </Text>
+                      </RadioGroup.Item>
+                    );
+                  })}
+                </VStack>
+              </RadioGroup.Root>
+              <Text fontSize="xs" color={secondaryText} mt={3}>
+                * 유공자 및 할인 대상 회원은 증빙서류를 지참하여 현장
+                안내데스크에 제출해주셔야 할인 적용이 완료됩니다.
+              </Text>
+            </Fieldset.Content>
+          </Box>
+        </Fieldset.Root>
+        <Box
+          p={{ base: 3, md: 4 }}
+          borderRadius="md"
+          bg={primaryDefault}
+          color={inverseText}
+          mb={6}
+        >
+          <Flex justifyContent="space-between" alignItems="center">
+            <Heading as="h2" size="sm" fontWeight="bold">
+              최종 결제 예정 금액
+            </Heading>
+            <Text
+              fontSize={{ base: "lg", md: "xl" }}
+              fontWeight="bold"
+              color={timerYellowColor}
+            >
+              {finalAmount.toLocaleString()}원
             </Text>
-          </Fieldset.Content>
-        </Box>
-      </Fieldset.Root>
-      <Box
-        p={{ base: 3, md: 4 }}
-        borderRadius="md"
-        bg={primaryDefault}
-        color={inverseText}
-        mb={6}
-      >
-        <Flex justifyContent="space-between" alignItems="center">
-          <Heading as="h2" size="sm" fontWeight="bold">
-            최종 결제 예정 금액
-          </Heading>
-          <Text
-            fontSize={{ base: "lg", md: "xl" }}
-            fontWeight="bold"
-            color={timerYellowColor}
-          >
-            {finalAmount.toLocaleString()}원
-          </Text>
-        </Flex>
-      </Box>
-      <Button
-        bg={primaryDefault}
-        color={inverseText}
-        _hover={{ bg: primaryHover }}
-        _active={{ bg: primaryDark }}
-        size="lg"
-        height="50px"
-        fontSize="md"
-        onClick={handleProceedToPayment}
-        w="full"
-        disabled={
-          isSubmitting ||
-          isLoading ||
-          isMembershipOptionsLoading ||
-          isLockerDetailsLoading ||
-          !profile ||
-          (!!lockerError && selectedLocker)
-        }
-        loading={isSubmitting}
-        loadingText="신청 처리 중..."
-      >
-        {isSubmitting ? (
-          "신청 처리 중..."
-        ) : (
-          <Flex align="center">
-            <Text>최종 신청 및 내역 확인</Text>
           </Flex>
-        )}
-      </Button>
-    </Container>
+        </Box>
+        <Button
+          bg={primaryDefault}
+          color={inverseText}
+          _hover={{ bg: primaryHover }}
+          _active={{ bg: primaryDark }}
+          size="lg"
+          height="50px"
+          fontSize="md"
+          onClick={handleProceedToPayment}
+          w="full"
+          disabled={
+            isSubmitting ||
+            isLoading ||
+            isMembershipOptionsLoading ||
+            isLockerDetailsLoading ||
+            isInitializing ||
+            !profile ||
+            (!!lockerError && selectedLocker)
+          }
+          loading={isSubmitting || isInitializing}
+          loadingText={isInitializing ? "결제 준비 중..." : "신청 처리 중..."}
+        >
+          {isSubmitting || isInitializing ? (
+            isInitializing ? (
+              "결제 준비 중..."
+            ) : (
+              "신청 처리 중..."
+            )
+          ) : (
+            <Flex align="center">
+              <Text>최종 신청 및 결제하기</Text>
+            </Flex>
+          )}
+        </Button>
+      </Container>
+
+      {/* KISPG Payment Component */}
+      {paymentData && enrollId && (
+        <KISPGPaymentPopup
+          ref={paymentRef}
+          paymentData={paymentData}
+          enrollId={enrollId}
+          onPaymentComplete={handlePaymentComplete}
+          onPaymentClose={handlePaymentClose}
+        />
+      )}
+    </>
   );
 };
 

@@ -216,25 +216,11 @@ export default function LoginPage() {
                     color="#2E3192"
                     fontWeight="normal"
                     onClick={() => {
-                      router.push("/find-credentials/id");
+                      router.push("/find-credentials");
                     }}
                     disabled={isLoading}
                   >
-                    아이디 찾기
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="md"
-                    flex={1}
-                    borderColor="#2E3192"
-                    color="#2E3192"
-                    fontWeight="normal"
-                    onClick={() => {
-                      router.push("/find-credentials/password");
-                    }}
-                    disabled={isLoading}
-                  >
-                    비밀번호 찾기
+                    아이디/비밀번호 찾기
                   </Button>
                 </HStack>
               </VStack>

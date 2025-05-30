@@ -425,39 +425,21 @@ export interface EnrollInitiationResponseDto {
 }
 
 /**
- * DTO for GET /api/v1/payment/details/{enrollId}
- * Contains details needed for the KISPG payment page.
- */
-export interface PaymentPageDetailsDto {
-  enrollId: number;
-  lessonTitle: string;
-  lessonPrice: number;
-  userGender: "MALE" | "FEMALE" | "OTHER";
-  lockerOptions?: {
-    lockerAvailableForUserGender: boolean;
-    availableCountForUserGender: number;
-    lockerFee: number;
-  };
-  amountToPay: number;
-  paymentDeadline: string;
-}
-
-/**
  * DTO for GET /api/v1/payment/kispg-init-params/{enrollId}
- * Contains parameters required to initialize the KISPG payment gateway/widget.
+ * Response containing KISPG payment initialization parameters
  */
-export interface KISPGInitParamsDto {
-  mid?: string;
-  moid?: string;
-  itemName?: string;
-  amount?: number;
-  buyerName?: string;
-  buyerTel?: string;
-  buyerEmail?: string;
-  returnUrl?: string;
-  notifyUrl?: string;
-  requestHash?: string;
-  [key: string]: any;
+export interface KISPGPaymentInitResponseDto {
+  mid: string;
+  moid: string; // Merchant Order ID (enroll_12345_timestamp)
+  amt: string; // Amount as string
+  itemName: string; // Goods name (lesson title)
+  buyerName: string; // Buyer name
+  buyerTel: string; // Buyer phone
+  buyerEmail: string; // Buyer email
+  returnUrl: string; // Return URL after payment
+  notifyUrl: string; // Webhook URL
+  ediDate: string; // Transaction datetime (yyyyMMddHHmmss)
+  requestHash: string; // Security hash (encData)
 }
 
 /**
@@ -815,4 +797,20 @@ export interface WebhookLogDto {
   responseStatus: number; // HTTP status code our server responded with
   processedAt: string; // ISO DateTime string
   errorMessage?: string | null;
+}
+
+// --- KISPG Payment Integration DTOs ---
+
+/**
+ * DTO for POST /api/v1/payment/kispg/callback
+ * Callback data from KISPG payment gateway
+ */
+export interface KISPGPaymentCallbackDto {
+  resultCd: string; // Result code "0000" for success
+  resultMsg: string; // Result message
+  payMethod: string; // Payment method
+  tid: string; // KISPG Transaction ID
+  amt: string; // Amount
+  mbsReserved: string; // Merchant reserved field (enrollId)
+  [key: string]: any;
 }
