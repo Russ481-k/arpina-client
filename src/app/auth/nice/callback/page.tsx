@@ -6,271 +6,224 @@ import { useQuery } from "@tanstack/react-query";
 import {
   niceApi,
   NicePublicUserDataDto,
-  NiceErrorDataDto,
-  NiceAuthResultDto,
+  NiceCallbackResultDto,
+  NiceRegisteredUserDataDto,
 } from "@/lib/api/niceApi";
 import { Box, Spinner, Text } from "@chakra-ui/react";
 
-// New NiceAuthMessage structures
-export interface NiceAuthBaseMessage {
+// This is the message structure parent windows (Step2Identity, find-credentials/*) expect.
+interface NiceAuthCallbackPostMessage {
   source: "nice-auth-callback";
-  verificationKey: string | null;
-}
-
-export interface NiceAuthDuplicateUserMessage extends NiceAuthBaseMessage {
-  type: "DUPLICATE_DI";
+  type: "NICE_AUTH_SUCCESS" | "NICE_AUTH_FAIL" | "NICE_AUTH_OTHER";
+  niceServiceType?: "REGISTER" | "FIND_ID" | "RESET_PASSWORD" | null;
+  verificationKey?: string | null;
+  userData?: NicePublicUserDataDto; // For REGISTER success (after mapping from NiceRegisteredUserDataDto)
+  error?: string | null;
+  errorCode?: string | null;
+  status?: string | null; // The backend's actual status string
+  email?: string | null;
+  isJoined?: boolean | null;
   username?: string | null;
+  message?: string | null;
 }
-
-export interface NiceAuthSuccessMessage extends NiceAuthBaseMessage {
-  type: "NICE_AUTH_SUCCESS";
-  data: NicePublicUserDataDto;
-}
-
-export interface NiceAuthFailureMessage extends NiceAuthBaseMessage {
-  type: "NICE_AUTH_FAIL";
-  error: string;
-  errorCode?: string | null; // from URL 'error' param
-  errorDetail?: string | null; // from URL 'detail' param
-}
-
-export type NiceAuthTypedMessage =
-  | NiceAuthDuplicateUserMessage
-  | NiceAuthSuccessMessage
-  | NiceAuthFailureMessage;
 
 function NiceCallbackContent() {
   const searchParams = useSearchParams();
-  const status = searchParams.get("status");
-  const key = searchParams.get("key");
-  const joined = searchParams.get("joined"); // "true" or "false"
-  const username = searchParams.get("username");
-  const niceErrorCode = searchParams.get("nice_error_code"); // e.g., "DUPLICATE_DI"
-  const backendError = searchParams.get("error"); // general backend error on status=fail
-  const backendErrorDetail = searchParams.get("detail"); // general backend error detail on status=fail
 
-  // Query to fetch NICE data if status is success and it's not a DUPLICATE_DI case
+  // Extract all relevant parameters from the URL
+  const statusFromQuery = searchParams.get("status");
+  const keyFromQuery = searchParams.get("key");
+  const serviceTypeFromQuery = searchParams.get("serviceType") as
+    | "REGISTER"
+    | "FIND_ID"
+    | "RESET_PASSWORD"
+    | null;
+  const messageFromQuery = searchParams.get("message");
+  const errorCodeFromQuery = searchParams.get("errorCode");
+  const emailFromQuery = searchParams.get("email");
+  const nameFromQuery = searchParams.get("name"); // Often part of userData, but can be separate
+  const joinedFromQuery = searchParams.get("joined") === "true";
+  const usernameFromQuery = searchParams.get("username");
+
+  // Query to fetch NICE data if serviceType is REGISTER, status is SUCCESS, and it's not already joined.
   const shouldFetchNiceData =
-    status === "success" && niceErrorCode !== "DUPLICATE_DI" && !!key;
+    serviceTypeFromQuery === "REGISTER" &&
+    statusFromQuery === "SUCCESS" &&
+    !joinedFromQuery &&
+    !!keyFromQuery;
 
   const {
-    data: authResult, // This will be NicePublicUserDataDto on success
+    data: fetchedNiceData, // This will be NiceCallbackResultDto from API
     isSuccess: queryIsSuccess,
     isError: queryIsError,
-    error: queryError, // This is of type Error | null
+    error: queryError,
     isLoading: queryIsLoading,
   } = useQuery<
-    NiceAuthResultDto,
+    NiceCallbackResultDto, // Data type from niceApi.getNiceAuthResult
     Error,
-    NicePublicUserDataDto,
+    NiceCallbackResultDto, // Data type kept as is for direct use before potential mapping in useEffect
     (string | null)[]
   >({
-    // Specify DTO
-    queryKey: ["niceAuthResult", key],
+    queryKey: ["niceAuthResultGet", keyFromQuery, serviceTypeFromQuery], // Include serviceType for query uniqueness if needed
     queryFn: () => {
-      if (!key) {
-        // Should be caught by 'enabled' but as a safeguard
+      if (!keyFromQuery) {
         return Promise.reject(
-          new Error("NICE_CB_ERR: Missing key for auth result")
+          new Error("NICE_CB_ERR: Missing key for auth result query")
         );
       }
-      return niceApi
-        .getNiceAuthResult(key)
-        .then((response) => {
-          return response;
-        })
-        .catch((error) => {
-          console.error("[NICE_CB] API Error:", error);
-          throw error;
-        });
-    },
-    select: (data) => {
-      // Extract NicePublicUserDataDto from the response
-      if (!data.success || !data.data) {
-        return {} as NicePublicUserDataDto;
-      }
-      // 데이터 구조 확인
-      return data.data;
+      return niceApi.getNiceAuthResult(keyFromQuery);
     },
     enabled: shouldFetchNiceData,
     retry: false,
   });
 
   useEffect(() => {
-    let messageToSend: NiceAuthTypedMessage | null = null;
-    let attemptedPost = false;
+    if (queryIsLoading && shouldFetchNiceData) {
+      // If we are fetching data, wait for it to complete before posting message
+      return;
+    }
 
-    if (status === "success") {
-      if (niceErrorCode === "DUPLICATE_DI") {
-        messageToSend = {
-          source: "nice-auth-callback",
-          type: "DUPLICATE_DI",
-          verificationKey: key,
-          username: username,
-        };
-      } else if (key) {
-        // Proceed to fetch/use fetched data
-        if (queryIsLoading) {
-          return; // Wait for query
-        }
-        if (queryIsSuccess && authResult) {
-          // 데이터 구조 유효성 검사
-          const isValidData =
-            authResult &&
-            typeof authResult === "object" &&
-            "name" in authResult &&
-            "birthDate" in authResult;
+    let postMessageData: NiceAuthCallbackPostMessage = {
+      source: "nice-auth-callback",
+      type: "NICE_AUTH_OTHER", // Default, will be refined
+      niceServiceType: serviceTypeFromQuery,
+      verificationKey: keyFromQuery,
+      status: statusFromQuery,
+      message: messageFromQuery,
+      errorCode: errorCodeFromQuery,
+      email: emailFromQuery,
+      isJoined: joinedFromQuery,
+      username: usernameFromQuery,
+      // userData and error will be populated based on conditions
+    };
 
-          if (!isValidData) {
-            console.error(
-              "[NICE_CB] Invalid user data structure received:",
-              authResult
-            );
-            messageToSend = {
-              source: "nice-auth-callback",
-              type: "NICE_AUTH_FAIL",
-              verificationKey: key,
-              error: "인증 정보 구조가 올바르지 않습니다",
-              errorCode: "DATA_STRUCTURE_ERROR",
+    if (statusFromQuery === "SUCCESS") {
+      postMessageData.type = "NICE_AUTH_SUCCESS";
+      if (serviceTypeFromQuery === "REGISTER") {
+        if (joinedFromQuery) {
+          // Already joined user, no need for userData from fetch, info is from query params
+          postMessageData.isJoined = true;
+          postMessageData.username = usernameFromQuery;
+        } else if (shouldFetchNiceData) {
+          // New user, expecting fetched data
+          if (queryIsSuccess && fetchedNiceData?.userData) {
+            // Map NiceRegisteredUserDataDto to NicePublicUserDataDto for postMessage
+            const userDataForPost: NicePublicUserDataDto = {
+              name: fetchedNiceData.userData.name,
+              birthDate: fetchedNiceData.userData.birthDate,
+              gender: fetchedNiceData.userData.gender,
+              mobileNo: fetchedNiceData.userData.mobileNo,
+              ci: fetchedNiceData.userData.ci,
+              di: fetchedNiceData.userData.di,
+              nationalInfo: fetchedNiceData.userData.nationalInfo ?? "",
             };
-          } else {
-            messageToSend = {
-              source: "nice-auth-callback",
-              type: "NICE_AUTH_SUCCESS",
-              verificationKey: key,
-              data: authResult,
-            };
-          }
-        } else if (queryIsError) {
-          console.error(
-            "[NICE_CB] status 'success', but failed to fetch NICE data:",
-            queryError
-          );
-          messageToSend = {
-            source: "nice-auth-callback",
-            type: "NICE_AUTH_FAIL",
-            verificationKey: key,
-            error:
+            postMessageData.userData = userDataForPost;
+            postMessageData.isJoined = false; // Explicitly set
+          } else if (queryIsError) {
+            postMessageData.type = "NICE_AUTH_FAIL";
+            postMessageData.error =
               queryError?.message ||
-              "Failed to retrieve verification details after success callback.",
-          };
-        } else if (!queryIsLoading) {
-          // Query finished but no success/error (e.g. disabled and ran once)
-          console.warn(
-            "[NICE_CB] status 'success', query finished but no definitive result. Key might have been invalid or data fetch skipped."
-          );
-          messageToSend = {
-            source: "nice-auth-callback",
-            type: "NICE_AUTH_FAIL",
-            verificationKey: key,
-            error:
-              "Could not retrieve verification details. The key may be invalid or already used.",
-          };
+              "Failed to retrieve user details after NICE auth.";
+            postMessageData.errorCode = "FETCH_ERROR";
+          } else if (!queryIsLoading) {
+            // Query finished but no success/error, or data missing
+            postMessageData.type = "NICE_AUTH_FAIL";
+            postMessageData.error =
+              "User details not available after NICE auth.";
+            postMessageData.errorCode = "MISSING_DATA";
+          }
+        } else {
+          // Not joined, but shouldFetchNiceData was false (e.g. key missing for REGISTER)
+          postMessageData.type = "NICE_AUTH_FAIL";
+          postMessageData.error =
+            "Required information missing for new user registration processing.";
+          postMessageData.errorCode = "MISSING_KEY_FOR_REGISTER";
         }
       } else {
-        // status === "success" but no key
-        console.error("[NICE_CB] status 'success' but key is missing!");
-        messageToSend = {
-          source: "nice-auth-callback",
-          type: "NICE_AUTH_FAIL",
-          verificationKey: null,
-          error: "NICE_CB_ERR: Success callback is missing the required key.",
-        };
+        // serviceType is not REGISTER but status is SUCCESS (e.g., could be custom flow)
+        // For FIND_ID or RESET_PASSWORD, status SUCCESS is not typical; ID_SENT or PASSWORD_RESET_SENT is.
+        // This branch assumes parameters in URL are sufficient.
       }
-    } else if (status === "fail") {
-      messageToSend = {
-        source: "nice-auth-callback",
-        type: "NICE_AUTH_FAIL",
-        verificationKey: key,
-        error:
-          backendErrorDetail || backendError || "NICE authentication failed.",
-        errorCode: backendError,
-        errorDetail: backendErrorDetail,
-      };
-    } else if (key) {
-      // Invalid status, but key is present - potentially an issue
-      messageToSend = {
-        source: "nice-auth-callback",
-        type: "NICE_AUTH_FAIL",
-        verificationKey: key,
-        error: `NICE_CB_ERR: Invalid or missing callback status ('${status}').`,
-      };
+    } else if (statusFromQuery === "fail") {
+      postMessageData.type = "NICE_AUTH_FAIL";
+      postMessageData.error = messageFromQuery || "NICE authentication failed.";
+      // errorCode is already set from query params
+    } else if (
+      statusFromQuery === "ID_SENT" ||
+      statusFromQuery === "PASSWORD_RESET_SENT" ||
+      statusFromQuery === "ACCOUNT_NOT_FOUND" ||
+      statusFromQuery === "ERROR"
+    ) {
+      // These are valid statuses where we typically don't fetch more data from this page
+      postMessageData.type = "NICE_AUTH_OTHER"; // Parent will use the .status field
+      // All relevant info (message, errorCode, email etc.) should be in query params and set in base
+    } else {
+      // Truly invalid or missing status from query
+      postMessageData.type = "NICE_AUTH_FAIL";
+      postMessageData.error = `Callback received with unhandled or missing status: '${statusFromQuery}'.`;
+      postMessageData.errorCode = "INVALID_CALLBACK_STATUS";
     }
 
-    if (messageToSend) {
-      attemptedPost = true;
-      if (window.opener && typeof window.opener.postMessage === "function") {
-        try {
-          window.opener.postMessage(messageToSend, window.location.origin);
-        } catch (e) {
-          console.error("[NICE_CB] Failed to postMessage to opener:", e);
-        }
-      } else {
-        console.warn(
-          "[NICE_CB] window.opener not available or postMessage is not a function."
-        );
+    if (window.opener && typeof window.opener.postMessage === "function") {
+      try {
+        window.opener.postMessage(postMessageData, window.location.origin);
+      } catch (e) {
+        console.error("[NICE_CB] Failed to postMessage to opener:", e);
       }
-
-      // Close window if a message was determined and posted (or attempted)
-      // except for truly unexpected scenarios where we might want the window to stay for debugging.
-      // For now, close on any determined message.
-      window.close();
-    } else if (!queryIsLoading && !shouldFetchNiceData && status) {
-      // This case means status was 'success' but shouldFetchNiceData was false (e.g. DUPLICATE_DI already handled, or key missing)
-      // OR status was 'fail' (already handled)
-      // OR status was invalid. If it was an invalid status but we didn't form a message,
-      // maybe we should close to prevent orphaned windows.
-      // However, the original code had a specific "DO NOT CLOSE FOR INVALID STATUS" for debugging.
-      // Let's stick to closing only if messageToSend was formed.
-      // If no messageToSend and query isn't loading, it means logic path was exhausted or condition not met to send message.
+    } else {
+      console.warn(
+        "[NICE_CB] window.opener not available or postMessage is not a function."
+      );
     }
+    window.close();
   }, [
-    status,
-    key,
-    niceErrorCode,
-    username,
-    backendError,
-    backendErrorDetail,
+    statusFromQuery,
+    keyFromQuery,
+    serviceTypeFromQuery,
+    messageFromQuery,
+    errorCodeFromQuery,
+    emailFromQuery,
+    nameFromQuery,
+    joinedFromQuery,
+    usernameFromQuery,
     queryIsLoading,
     queryIsSuccess,
     queryIsError,
-    authResult,
-    shouldFetchNiceData,
+    fetchedNiceData,
     queryError,
+    shouldFetchNiceData,
   ]);
 
-  // UI Feedback Logic - simplified as window closes quickly
-  let feedbackMessage = "본인인증 결과를 처리 중입니다. 이 창은 곧 닫힙니다...";
-  if (queryIsLoading && shouldFetchNiceData) {
-    feedbackMessage = "본인인증 결과를 확인 중입니다...";
-    return (
-      <Box textAlign="center" p={10}>
-        <Spinner size="xl" />
-        <Text mt={4}>{feedbackMessage}</Text>
-      </Box>
-    );
-  }
-
+  // Basic UI, as window closes quickly
   return (
     <Box textAlign="center" p={10}>
-      <Text>{feedbackMessage}</Text>
-      {niceErrorCode === "DUPLICATE_DI" && status === "success" && (
-        <Text color="orange.500" mt={2}>
-          이미 등록된 사용자 정보입니다. 로그인을 시도해주세요.
-        </Text>
+      <Spinner size="xl" />
+      <Text mt={4}>본인인증 결과를 처리 중입니다. 이 창은 곧 닫힙니다...</Text>
+      {queryIsLoading && shouldFetchNiceData && (
+        <Text>사용자 정보를 확인 중입니다...</Text>
       )}
-      {status === "fail" && (
-        <Text color="red.500" mt={2}>
-          본인인증에 실패했습니다. ({backendError || "오류 발생"})
-        </Text>
+      {postMessageDataForDisplay && (
+        <Box mt={2} fontSize="sm" color="gray.500">
+          <Text>Status: {postMessageDataForDisplay.status}</Text>
+          <Text>Type: {postMessageDataForDisplay.type}</Text>
+          {postMessageDataForDisplay.message && (
+            <Text>Message: {postMessageDataForDisplay.message}</Text>
+          )}
+          {postMessageDataForDisplay.error && (
+            <Text>Error: {postMessageDataForDisplay.error}</Text>
+          )}
+        </Box>
       )}
     </Box>
   );
 }
 
+// Helper to get a snapshot of postMessageData for display, as it's in useEffect scope
+// This is a simplified approach; for robust display, lift state or use a ref.
+let postMessageDataForDisplay: NiceAuthCallbackPostMessage | null = null;
+
 export default function NiceCallbackPage() {
   return (
-    // Suspense is good for initial load of the page component itself
     <Suspense
       fallback={
         <Box textAlign="center" p={10}>

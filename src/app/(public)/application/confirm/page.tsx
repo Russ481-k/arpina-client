@@ -27,6 +27,7 @@ import { useColors } from "@/styles/theme";
 import Image from "next/image";
 import KISPGPaymentPopup from "@/components/payment/KISPGPaymentPopup";
 import { useKISPGPayment } from "@/hooks/useKISPGPayment";
+import { AuthGuard } from "@/components/guard/AuthGuard";
 
 interface MembershipOption {
   value: string;
@@ -346,13 +347,9 @@ const ApplicationConfirmPage = () => {
         membershipType: selectedMembershipType,
       };
 
-      console.log("Enroll Request Data:", enrollRequestData);
-
       const enrollResponse = await swimmingPaymentService.enrollLesson(
         enrollRequestData
       );
-
-      console.log("Enroll Response:", enrollResponse);
 
       if (enrollResponse && enrollResponse.enrollId) {
         setEnrollId(enrollResponse.enrollId);
@@ -406,8 +403,6 @@ const ApplicationConfirmPage = () => {
 
   // 결제 완료 콜백
   const handlePaymentComplete = async (success: boolean, data: any) => {
-    console.log("Payment completed:", { success, data });
-
     if (success) {
       toaster.create({
         title: "결제 완료",
@@ -443,7 +438,6 @@ const ApplicationConfirmPage = () => {
   };
 
   const handlePaymentClose = () => {
-    console.log("Payment popup closed");
     setIsSubmitting(false);
   };
 
@@ -563,7 +557,13 @@ const ApplicationConfirmPage = () => {
   const radioItemSpinnerColor = primaryDefault;
 
   return (
-    <>
+    <AuthGuard
+      allowedRoles={["ROLE_USER"]}
+      authorizationFailedMessage={{
+        title: "접근 권한 없음",
+        description: "수영 강습 신청은 일반 사용자만 가능합니다.",
+      }}
+    >
       <Container maxW="700px" py={8}>
         {" "}
         <Box
@@ -1007,7 +1007,7 @@ const ApplicationConfirmPage = () => {
           onPaymentClose={handlePaymentClose}
         />
       )}
-    </>
+    </AuthGuard>
   );
 };
 

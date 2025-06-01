@@ -36,6 +36,7 @@ import { NicePublicUserDataDto } from "@/lib/api/niceApi";
 interface NiceVerificationSuccessPayload {
   verificationData: NicePublicUserDataDto;
   verificationKey?: string | null;
+  niceServiceType?: string | null;
 }
 
 interface NiceVerificationFailPayload {

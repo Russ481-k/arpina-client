@@ -105,7 +105,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     let intervalId: NodeJS.Timeout | undefined = undefined;
 
     if (enrollment || !lesson.reservationId) {
-      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: Enrollment present or no reservationId.`);
       setIsCountingDown(false);
       setTimeRemaining(null);
       if (intervalId) clearInterval(intervalId); // Though intervalId would not be set here yet
@@ -113,10 +112,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }
 
     const targetApplicationStartDate = parseKSTDateString(lesson.reservationId);
-    // console.log(`[Lesson ID: ${lesson.id}] useEffect - Parsed targetApplicationStartDate:`, targetApplicationStartDate);
 
     if (!targetApplicationStartDate) {
-      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: Invalid targetApplicationStartDate.`);
       setIsCountingDown(false);
       setTimeRemaining(null);
       return;
@@ -126,7 +123,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     const initialRemainingOnEffect = calculateTimeDifference(
       targetApplicationStartDate
     );
-    // console.log(`[Lesson ID: ${lesson.id}] useEffect - Initial timeRemaining check in effect:`, initialRemainingOnEffect);
 
     if (initialRemainingOnEffect) {
       // Only set if not already set by useState, or if it needs update (though deps should handle this)
@@ -134,7 +130,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       setTimeRemaining(initialRemainingOnEffect);
       if (!isCountingDown) {
         setIsCountingDown(true); // Ensure counting state is true if we are starting interval
-        // console.log(`[Lesson ID: ${lesson.id}] useEffect - Countdown STARTING or RE-AFFIRMED. isCountingDown set to true.`);
       }
 
       intervalId = setInterval(() => {
@@ -145,10 +140,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         // const targetTimeForInterval = targetApplicationStartDate.getTime();
         // const differenceInInterval = targetTimeForInterval - nowForInterval;
 
-        // console.log(
-        //   `[Lesson ID: ${lesson.id}] Tick: Now: ${nowForInterval}, Target: ${targetTimeForInterval}, Diff: ${differenceInInterval}, Remaining: `,
-        //   remainingInInterval
-        // );
         if (lesson.id === 18) {
           // Specific log for lesson 18 per second
           console.log(
@@ -159,24 +150,20 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         setTimeRemaining(remainingInInterval);
 
         if (!remainingInInterval) {
-          // console.log(`[Lesson ID: ${lesson.id}] Tick - Countdown FINISHED in interval.`);
           setIsCountingDown(false); // Stop counting
           clearInterval(intervalId);
         }
       }, 1000);
     } else {
       // Target date is in the past or now, ensure countdown is stopped.
-      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Bypassing countdown: targetApplicationStartDate is not in the future.`);
       if (isCountingDown) {
         setIsCountingDown(false); // Stop counting if it was somehow true
-        // console.log(`[Lesson ID: ${lesson.id}] useEffect - Explicitly STOPPING countdown as start date is past. isCountingDown set to false.`);
       }
       setTimeRemaining(null); // Clear any remaining time
     }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
-      // console.log(`[Lesson ID: ${lesson.id}] useEffect - Countdown effect cleanup.`);
     };
     // Dependencies: lesson.id and lesson.reservationId for re-calculating if these change.
     // enrollment to stop countdown if user enrolls/unenrolls (though this component might unmount then).

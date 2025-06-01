@@ -4,12 +4,13 @@ import React, { useState, useEffect } from "react";
 import { VStack, Text, Button, Box, HStack } from "@chakra-ui/react";
 import Image from "next/image";
 import { StepHeader } from "./StepHeader";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import { toaster } from "@/components/ui/toaster";
 import {
   niceApi,
   NiceInitiateResponse,
-  NicePublicUserDataDto,
+  NiceRegisteredUserDataDto,
+  NiceCallbackResultDto,
 } from "@/lib/api/niceApi";
 
 // const identityOptions = [
@@ -25,8 +26,10 @@ interface Step2IdentityProps {
 }
 
 interface NiceVerificationSuccessPayload {
-  verificationData: NicePublicUserDataDto;
+  verificationData: NiceRegisteredUserDataDto;
   verificationKey: string | null;
+  isJoined?: boolean;
+  existingUsername?: string;
 }
 
 interface NiceVerificationFailPayload {
@@ -87,14 +90,31 @@ type NiceAuthCallbackMessage =
   | NiceAuthSuccessMessage
   | NiceAuthFailureMessage;
 
+// Message types from the /auth/nice-callback page (via postMessage)
+// Aligned with NiceAuthCallbackPostMessage from nice-auth-callback/page.tsx
+interface NiceAuthCallbackPostMessage {
+  source: "nice-auth-callback";
+  type: "NICE_AUTH_SUCCESS" | "NICE_AUTH_FAIL" | "NICE_AUTH_OTHER";
+  niceServiceType?: "REGISTER" | "FIND_ID" | "RESET_PASSWORD" | null;
+  verificationKey?: string | null;
+  userData?: NiceRegisteredUserDataDto; // For REGISTER success, fetched by callback page
+  error?: string | null;
+  errorCode?: string | null;
+  status?: string | null; // e.g., "SUCCESS", "ID_SENT", "ACCOUNT_NOT_FOUND"
+  email?: string | null;
+  isJoined?: boolean | null;
+  username?: string | null;
+  message?: string | null; // Message from backend redirect
+}
+
 const ICON_IMAGE_SIZE = 90;
+const NICE_POPUP_NAME = "niceAuthPopup_Signup";
 
 // State to hold the result displayed in this component
 interface DisplayAuthResult {
-  status: "SUCCESS" | "FAIL" | "ERROR" | "INVALID_CALLBACK";
+  status: "SUCCESS" | "FAIL" | "ERROR" | "ALREADY_JOINED";
   message?: string;
   rawData?: any;
-  verificationKey?: string | null;
 }
 
 export const Step2Identity = ({
@@ -106,166 +126,195 @@ export const Step2Identity = ({
   const [authResult, setAuthResult] = useState<DisplayAuthResult | null>(null);
   const [storedReqSeq, setStoredReqSeq] = useState<string | null>(null);
 
-  const initiateNiceMutation = useMutation<NiceInitiateResponse, Error>({
-    mutationFn: niceApi.initiateVerification,
-    onSuccess: (data) => {
-      const { encodeData, reqSeq } = data;
-      setStoredReqSeq(reqSeq); // 요청번호 저장
+  const mutationOptions: UseMutationOptions<NiceInitiateResponse, Error, void> =
+    {
+      onSuccess: (data: NiceInitiateResponse) => {
+        const { encodeData, reqSeq } = data;
+        setStoredReqSeq(reqSeq);
 
-      // 팝업 위치 계산
-      const width = 500;
-      const height = 550;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
+        const width = 500;
+        const height = 550;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
 
-      // 팝업 설정
-      window.name = "Parent_window";
-      const popup = window.open(
-        "",
-        "popupChk",
-        `width=${width},height=${height},top=${top},left=${left},fullscreen=no,menubar=no,status=no,toolbar=no,titlebar=yes,location=no,scrollbar=no`
-      );
+        if (!window.name) window.name = "Parent_Window_Arpina_Signup";
 
-      if (!popup) {
-        console.error("Failed to open NICE popup window");
+        const nicePopup = window.open(
+          "about:blank",
+          NICE_POPUP_NAME,
+          `width=${width},height=${height},top=${top},left=${left},fullscreen=no,menubar=no,status=no,toolbar=no,titlebar=yes,location=no,scrollbar=no`
+        );
+
+        if (!nicePopup) {
+          toaster.create({
+            title: "팝업 차단 감지",
+            description: "브라우저의 팝업 차단을 해제하고 다시 시도해주세요.",
+            type: "error",
+          });
+          setAuthResult({
+            status: "ERROR",
+            message: "팝업 창을 열 수 없습니다. 팝업 차단 기능을 확인해주세요.",
+          });
+          return;
+        }
+
+        const form = document.createElement("form");
+        form.setAttribute("method", "POST");
+        form.setAttribute(
+          "action",
+          "https://nice.checkplus.co.kr/CheckPlusSafeModel/checkplus.cb"
+        );
+        form.setAttribute("target", NICE_POPUP_NAME);
+
+        const mInput = document.createElement("input");
+        mInput.setAttribute("type", "hidden");
+        mInput.setAttribute("name", "m");
+        mInput.setAttribute("value", "checkplusService");
+        form.appendChild(mInput);
+
+        const encodeDataInput = document.createElement("input");
+        encodeDataInput.setAttribute("type", "hidden");
+        encodeDataInput.setAttribute("name", "EncodeData");
+        encodeDataInput.setAttribute("value", encodeData);
+        form.appendChild(encodeDataInput);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+        nicePopup.focus();
+      },
+      onError: (error: Error) => {
+        console.error("NICE Auth Initiation Error (Step2Identity):", error);
         toaster.create({
-          title: "팝업 차단 감지",
-          description: "브라우저의 팝업 차단을 해제해주세요.",
+          title: "본인인증 초기화 오류",
+          description:
+            error.message || "본인인증 서비스 실행 중 오류가 발생했습니다.",
           type: "error",
         });
         setAuthResult({
           status: "ERROR",
-          message:
-            "팝업 차단이 감지되었습니다. 브라우저 설정에서 팝업 차단을 해제해주세요.",
+          message: error.message || "본인인증 초기화 중 오류 발생",
+          rawData: error,
         });
-        return;
-      }
+      },
+    };
 
-      // 폼 생성 및 제출
-      const form = document.createElement("form");
-      form.setAttribute("method", "POST");
-      form.setAttribute(
-        "action",
-        "https://nice.checkplus.co.kr/CheckPlusSafeModel/checkplus.cb"
-      );
-      form.setAttribute("target", "popupChk");
-
-      // 필수 파라미터 추가
-      const mField = document.createElement("input");
-      mField.setAttribute("type", "hidden");
-      mField.setAttribute("name", "m");
-      mField.setAttribute("value", "checkplusService");
-      form.appendChild(mField);
-
-      const encodeDataField = document.createElement("input");
-      encodeDataField.setAttribute("type", "hidden");
-      encodeDataField.setAttribute("name", "EncodeData");
-      encodeDataField.setAttribute("value", encodeData);
-      form.appendChild(encodeDataField);
-
-      // 폼 제출
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-    },
-    onError: (error) => {
-      console.error("NICE Auth Initiation Error (Step2Identity):", error);
-      toaster.create({
-        title: "본인인증 초기화 오류",
-        description: error.message || "알 수 없는 에러가 발생했습니다.",
-        type: "error",
-      });
-      setAuthResult({
-        status: "ERROR",
-        message: `본인인증 초기화 실패: ${error.message || "알 수 없는 에러"}`,
-        rawData: error,
-      });
-    },
+  const initiateNiceMutation = useMutation<NiceInitiateResponse, Error, void>({
+    mutationFn: () => niceApi.initiateVerification({ serviceType: "REGISTER" }),
+    ...mutationOptions,
   });
 
   useEffect(() => {
     const handleAuthMessage = (event: MessageEvent) => {
-      // Security: Check the origin of the message
       if (event.origin !== window.location.origin) {
-        console.warn("Message received from unexpected origin:", event.origin);
+        console.warn("Message from unexpected origin ignored:", event.origin);
         return;
       }
 
-      const messageData = event.data as NiceAuthCallbackMessage;
+      const messageData = event.data as NiceAuthCallbackPostMessage;
 
-      // Check if the message is from our NICE callback
-      if (messageData && messageData.source === "nice-auth-callback") {
-        switch (messageData.type) {
-          case "NICE_AUTH_SUCCESS":
-            // 요청번호 검증
-            if (messageData.data.reqSeq !== storedReqSeq) {
-              console.error("Invalid request sequence detected");
-              setAuthResult({
-                status: "ERROR",
-                message: "인증 정보가 일치하지 않습니다. 다시 시도해주세요.",
-              });
-              return;
-            }
+      if (
+        messageData &&
+        messageData.source === "nice-auth-callback" &&
+        messageData.niceServiceType === "REGISTER"
+      ) {
+        const nicePopup = window.open("", NICE_POPUP_NAME);
+        if (nicePopup && !nicePopup.closed) nicePopup.close();
 
+        if (messageData.type === "NICE_AUTH_SUCCESS") {
+          if (messageData.isJoined) {
+            setAuthResult({
+              status: "ALREADY_JOINED",
+              message: `이미 가입된 사용자입니다. (아이디: ${
+                messageData.username || "정보 없음"
+              })`,
+              rawData: messageData,
+            });
+            toaster.create({
+              title: "가입 확인",
+              description:
+                messageData.message ||
+                `이미 가입된 계정입니다. (아이디: ${messageData.username})`,
+              type: "warning",
+            });
+            onVerificationFail({
+              error: messageData.message || "이미 가입된 사용자입니다.",
+              errorCode: "DUPLICATE_USER",
+              verificationKey: messageData.verificationKey ?? null,
+            });
+          } else if (messageData.userData) {
             setAuthResult({
               status: "SUCCESS",
-              message: `${messageData.data.name}님, 본인인증이 성공적으로 완료되었습니다.`,
-              rawData: messageData.data,
-              verificationKey: messageData.verificationKey,
+              message:
+                messageData.message ||
+                `${messageData.userData.name}님, 본인인증이 성공적으로 완료되었습니다.`,
+              rawData: messageData,
             });
-
             toaster.create({
               title: "본인인증 성공",
-              description: "본인인증이 성공적으로 완료되었습니다.",
+              description:
+                messageData.message || "본인인증이 성공적으로 완료되었습니다.",
               type: "success",
             });
-
-            if (onVerificationSuccess) {
-              onVerificationSuccess({
-                verificationData: {
-                  name: messageData.data.name,
-                  birthDate: messageData.data.birthDate,
-                  gender: messageData.data.gender,
-                  mobileNo: messageData.data.mobileNo,
-                  di: messageData.data.di,
-                  ci: messageData.data.ci,
-                  nationalInfo: messageData.data.nationalInfo,
-                },
-                verificationKey: messageData.verificationKey,
-              });
-            }
-            break;
-
-          case "NICE_AUTH_FAIL":
-            const errorMessage =
-              messageData.errorDetail ||
-              messageData.error ||
-              "알 수 없는 오류가 발생했습니다.";
+            onVerificationSuccess({
+              verificationData: messageData.userData,
+              verificationKey: messageData.verificationKey ?? null,
+              isJoined: false,
+            });
+          } else {
             setAuthResult({
-              status: "FAIL",
-              message: `본인인증 실패: ${errorMessage}`,
+              status: "ERROR",
+              message:
+                messageData.message ||
+                "본인인증 결과 처리 중 오류가 발생했습니다. (데이터 누락)",
               rawData: messageData,
-              verificationKey: messageData.verificationKey,
             });
-
-            toaster.create({
-              title: "본인인증 실패",
-              description: errorMessage,
-              type: "error",
+            onVerificationFail({
+              error:
+                messageData.message || "본인인증 데이터를 받아오지 못했습니다.",
+              errorCode: "MISSING_USER_DATA",
+              verificationKey: messageData.verificationKey ?? null,
             });
-
-            if (onVerificationFail) {
-              onVerificationFail({
-                error: errorMessage,
-                errorCode: messageData.errorCode,
-                verificationKey: messageData.verificationKey,
-              });
-            }
-            break;
-
-          case "DUPLICATE_DI":
-            // 중복 가입 처리는 상위 컴포넌트에서 처리
-            break;
+          }
+        } else if (messageData.type === "NICE_AUTH_FAIL") {
+          setAuthResult({
+            status: "FAIL",
+            message:
+              messageData.message ||
+              messageData.error ||
+              "본인인증에 실패했습니다.",
+            rawData: messageData,
+          });
+          toaster.create({
+            title: "본인인증 실패",
+            description:
+              messageData.message ||
+              messageData.error ||
+              "알 수 없는 오류로 본인인증에 실패했습니다.",
+            type: "error",
+          });
+          onVerificationFail({
+            error: messageData.message || messageData.error || "본인인증 실패",
+            errorCode: messageData.errorCode ?? undefined,
+            verificationKey: messageData.verificationKey ?? null,
+          });
+        } else {
+          setAuthResult({
+            status: "ERROR",
+            message:
+              messageData.message || "알 수 없는 본인인증 응답을 받았습니다.",
+            rawData: messageData,
+          });
+          toaster.create({
+            title: "본인인증 오류",
+            description: messageData.message || "알 수 없는 응답입니다.",
+            type: "error",
+          });
+          onVerificationFail({
+            error: messageData.message || "알 수 없는 본인인증 응답",
+            errorCode: "UNKNOWN_CALLBACK_TYPE",
+            verificationKey: messageData.verificationKey ?? null,
+          });
         }
       }
     };
@@ -319,32 +368,50 @@ export const Step2Identity = ({
         >
           {authResult?.status === "SUCCESS" ? "인증완료" : "인증하기"}
         </Button>
+
+        {authResult && (
+          <Box
+            mt={4}
+            p={4}
+            borderWidth="1px"
+            borderRadius="md"
+            borderColor={
+              authResult.status === "SUCCESS"
+                ? "green.300"
+                : authResult.status === "ALREADY_JOINED"
+                ? "orange.300"
+                : "red.300"
+            }
+            bg={
+              authResult.status === "SUCCESS"
+                ? "green.50"
+                : authResult.status === "ALREADY_JOINED"
+                ? "orange.50"
+                : "red.50"
+            }
+            w="full"
+            maxW="md"
+          >
+            <Text
+              fontWeight="bold"
+              color={
+                authResult.status === "SUCCESS"
+                  ? "green.700"
+                  : authResult.status === "ALREADY_JOINED"
+                  ? "orange.700"
+                  : "red.700"
+              }
+            >
+              {authResult.message}
+            </Text>
+          </Box>
+        )}
         {initiateNiceMutation.isError && !authResult && (
           <Text color="red.500" mt={2} fontSize="sm">
             초기화 실패: {initiateNiceMutation.error?.message}
           </Text>
         )}
       </VStack>
-
-      {authResult && (
-        <Box
-          mt={4}
-          p={4}
-          borderWidth="1px"
-          borderRadius="md"
-          borderColor={
-            authResult.status === "SUCCESS" ? "green.300" : "red.300"
-          }
-          bg={authResult.status === "SUCCESS" ? "green.50" : "red.50"}
-        >
-          <Text
-            fontWeight="bold"
-            color={authResult.status === "SUCCESS" ? "green.700" : "red.700"}
-          >
-            {authResult.message}
-          </Text>
-        </Box>
-      )}
 
       <Box bg="gray.50" p={5} borderRadius="md" mt={authResult ? 2 : 4}>
         <HStack align="flex-start" gap={3}>

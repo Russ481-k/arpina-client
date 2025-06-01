@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, IconButton, Button } from "@chakra-ui/react";
+import { Flex, IconButton, Menu, Portal } from "@chakra-ui/react";
 import { memo, useCallback, useState, useEffect } from "react";
 import { Grid3x3, Search, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -89,47 +89,67 @@ export const UtilityIcons = memo(
           style={{ cursor: "pointer" }}
           onClick={() => router.push("/")}
         />
-        {isAuthenticated ? (
-          <>
+
+        {/* User Menu */}
+        <Menu.Root>
+          <Menu.Trigger asChild>
             <IconButton
-              aria-label="My Page"
+              aria-label="User Menu"
               variant="ghost"
               color={iconColor}
               size="sm"
               borderRadius="full"
-              onClick={handleMypage}
             >
               <User2Icon />
             </IconButton>
-            <Button
-              variant="ghost"
-              colorPalette="red"
-              size="sm"
-              onClick={handleLogout}
-            >
-              로그아웃
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant="ghost"
-              color={iconColor}
-              size="sm"
-              onClick={handleLogin}
-            >
-              로그인
-            </Button>
-            <Button
-              variant="solid"
-              colorPalette="blue"
-              size="sm"
-              onClick={handleSignup}
-            >
-              회원가입
-            </Button>
-          </>
-        )}
+          </Menu.Trigger>
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content>
+                {isAuthenticated ? (
+                  <>
+                    <Menu.Item
+                      value="mypage"
+                      onClick={handleMypage}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      마이페이지
+                    </Menu.Item>
+                    <Menu.Item
+                      value="logout"
+                      onClick={handleLogout}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      로그아웃
+                    </Menu.Item>
+                  </>
+                ) : (
+                  <>
+                    <Menu.Item
+                      value="login"
+                      onClick={handleLogin}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      로그인
+                    </Menu.Item>
+                    <Menu.Item
+                      value="signup"
+                      onClick={handleSignup}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      회원가입
+                    </Menu.Item>
+                  </>
+                )}
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
+
         <IconButton
           aria-label="Search"
           variant="ghost"

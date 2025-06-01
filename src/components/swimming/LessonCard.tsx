@@ -22,14 +22,11 @@ interface LessonCardProps {
 const parseDisplayKSTDate = (
   dateStringWithSuffix: string | undefined
 ): Date | null => {
-  console.log("[LessonCard] parseDisplayKSTDate input:", dateStringWithSuffix);
   if (!dateStringWithSuffix) return null;
   try {
     let parsableStr = dateStringWithSuffix.replace(/부터|까지/g, "").trim(); // "YYYY.MM.DD HH:MM"
-    console.log("[LessonCard] after first replace:", parsableStr);
 
     parsableStr = parsableStr.replace(/\./g, "-"); // "YYYY-MM-DD HH:MM"
-    console.log("[LessonCard] after . to - replace:", parsableStr);
 
     if (
       parsableStr.length === 19 &&
@@ -38,10 +35,6 @@ const parseDisplayKSTDate = (
     ) {
       // Handle "YYYY-MM-DD HH:MM:SS" (length 19 with space)
       parsableStr = parsableStr.replace(" ", "T");
-      console.log(
-        "[LessonCard] after YYYY-MM-DD HH:MM:SS to YYYY-MM-DDTHH:MM:SS conversion:",
-        parsableStr
-      );
     } else if (
       parsableStr.length === 16 &&
       parsableStr.includes(" ") &&
@@ -49,20 +42,12 @@ const parseDisplayKSTDate = (
     ) {
       // YYYY-MM-DD HH:MM (length 16 with space)
       parsableStr = parsableStr.replace(" ", "T") + ":00"; // YYYY-MM-DDTHH:MM:SS
-      console.log(
-        "[LessonCard] after HH:MM to HH:MM:SS conversion:",
-        parsableStr
-      );
     } else if (
       parsableStr.length === 10 &&
       parsableStr.match(/^\d{4}-\d{2}-\d{2}$/)
     ) {
       // YYYY-MM-DD
       parsableStr += "T00:00:00"; // Assume start of day for date-only strings
-      console.log(
-        "[LessonCard] after date-only to full datetime:",
-        parsableStr
-      );
     } else if (!(parsableStr.length === 19 && parsableStr.includes("T"))) {
       // Not YYYY-MM-DDTHH:MM:SS and not handled above
       console.warn(
@@ -79,12 +64,9 @@ const parseDisplayKSTDate = (
     const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
     if (!hasTimezoneRegex.test(parsableStr)) {
       parsableStr += "+09:00"; // Assume KST
-      console.log("[LessonCard] after adding KST offset:", parsableStr);
     }
     const date = new Date(parsableStr);
-    console.log("[LessonCard] final parsed Date object:", date);
     const isInvalidDate = isNaN(date.getTime());
-    console.log("[LessonCard] isInvalidDate (isNaN):", isInvalidDate);
     return isInvalidDate ? null : date;
   } catch (error) {
     console.error(
@@ -145,6 +127,45 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
     // --- End Display Status Calculation ---
 
     const handleApplyClick = () => {
+      // 먼저 로그인 여부 확인
+      if (typeof window !== "undefined") {
+        const authToken = localStorage.getItem("auth_token");
+        const authUser = localStorage.getItem("auth_user");
+
+        if (!authToken || !authUser) {
+          toaster.create({
+            title: "로그인이 필요합니다",
+            description: "수영 강습 신청은 로그인 후 이용 가능합니다.",
+            type: "warning",
+            duration: 3000,
+          });
+          router.push("/login");
+          return;
+        }
+
+        // 역할 확인 - 관리자는 신청 불가
+        try {
+          const userInfo = JSON.parse(authUser);
+          if (userInfo.role === "ROLE_ADMIN") {
+            toaster.create({
+              title: "신청 권한 없음",
+              description: "관리자 계정은 수영 강습을 신청할 수 없습니다.",
+              type: "error",
+              duration: 3000,
+            });
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to parse user info:", error);
+          toaster.create({
+            title: "인증 오류",
+            description: "사용자 정보를 확인할 수 없습니다.",
+            type: "error",
+          });
+          return;
+        }
+      }
+
       if (!canApply || !lesson.id) {
         toaster.create({
           title: "신청 불가",
