@@ -546,18 +546,18 @@ export interface MypageRenewalRequestDto {
 
 /**
  * DTO for Mypage payment history (GET /mypage/payment)
- * Based on user.md PaymentDto.
+ * Based on actual API response structure.
  */
 export interface MypagePaymentDto {
   paymentId: number;
   enrollId: number;
-  tid: string | null;
-  paid_amt: number;
-  refunded_amt: number;
+  tid?: string | null; // Optional - KISPG Transaction ID
+  amount: number; // Main payment amount (matches API field name)
+  refundedAmount?: number; // Optional - total refunded amount if any
   paidAt: string | null;
-  refund_dt: string | null;
+  refundedAt?: string | null; // Optional - refund date if any
   status:
-    | "SUCCESS"
+    | "PAID"
     | "CANCELED"
     | "PARTIAL_REFUNDED"
     | "REFUND_REQUESTED"
@@ -833,4 +833,64 @@ export interface KISPGPaymentCallbackDto {
   amt: string; // Amount
   mbsReserved: string; // Merchant reserved field (enrollId)
   [key: string]: any;
+}
+
+// Payment verification API types (from backend documentation)
+export interface PaymentVerificationRequestDto {
+  moid: string; // Merchant Order ID from KISPG response
+}
+
+export interface PaymentVerificationResponseDto {
+  success: boolean;
+  message: string;
+  data?: {
+    enrollId: number;
+    status: "PAYMENT_SUCCESSFUL" | "PAYMENT_FAILED" | "PAYMENT_PROCESSING";
+    lesson: {
+      lessonId: number;
+      title: string;
+      startDate: string;
+      endDate: string;
+      time: string;
+      instructor: string;
+      location: string;
+    };
+    usesLocker: boolean;
+    paymentInfo: {
+      tid: string;
+      amount: number;
+      paidAt: string;
+    };
+  };
+}
+
+// Payment approval and enrollment creation API types (correct API)
+export interface PaymentApprovalRequestDto {
+  tid: string; // KISPG에서 반환된 TID
+  moid: string; // temp moid (e.g., temp_12_335ba429_1748790445804)
+  amt: string; // 결제 금액
+}
+
+export interface PaymentApprovalResponseDto {
+  success: boolean;
+  message: string;
+  data?: {
+    enrollId: number;
+    status: "PAYMENT_SUCCESSFUL" | "PAYMENT_FAILED" | "PAYMENT_PROCESSING";
+    lesson: {
+      lessonId: number;
+      title: string;
+      startDate: string;
+      endDate: string;
+      time: string;
+      instructor: string;
+      location: string;
+    };
+    usesLocker: boolean;
+    paymentInfo: {
+      tid: string;
+      amount: number;
+      paidAt: string;
+    };
+  };
 }

@@ -1,4 +1,4 @@
-import { api, publicApi } from "./client";
+import { api, publicApi, privateApi } from "./client";
 import {
   LessonDTO,
   LockerDTO,
@@ -20,6 +20,10 @@ import {
   PaymentConfirmResponseDto,
   MypageRenewalRequestDto,
   LessonDto,
+  PaymentVerificationRequestDto,
+  PaymentVerificationResponseDto,
+  PaymentApprovalRequestDto,
+  PaymentApprovalResponseDto,
 } from "@/types/api";
 import { withAuthRedirect } from "./withAuthRedirect";
 
@@ -329,6 +333,44 @@ export const swimmingPaymentService = {
       return privateApiMethods.get<KISPGPaymentInitResponseDto>(
         `${PAYMENT_BASE_PATH}/kispg-init-params/${enrollId}`
       );
+    }
+  ),
+
+  /**
+   * Verifies payment completion and retrieves enrollment information.
+   * Corresponds to POST /api/v1/payment/verify-and-get-enrollment
+   * This API confirms the payment with backend and updates enrollment status.
+   * NOTE: This API assumes Payment already exists in DB - use only for verification!
+   */
+  verifyPaymentAndGetEnrollment: withAuthRedirect(
+    async (
+      data: PaymentVerificationRequestDto
+    ): Promise<PaymentVerificationResponseDto> => {
+      // Use direct privateApi call to get the full response instead of processed data
+      const response = await privateApi.post(
+        `${PAYMENT_BASE_PATH}/verify-and-get-enrollment`,
+        data
+      );
+      return response.data; // Return the full response with success, message, data fields
+    }
+  ),
+
+  /**
+   * Approves KISPG payment and creates enrollment record.
+   * Corresponds to POST /api/v1/payment/approve-and-create-enrollment
+   * This is the CORRECT API to call after KISPG payment completion!
+   * Creates Payment record and Enrollment record in DB.
+   */
+  approvePaymentAndCreateEnrollment: withAuthRedirect(
+    async (
+      data: PaymentApprovalRequestDto
+    ): Promise<PaymentApprovalResponseDto> => {
+      // Use direct privateApi call to get the full response instead of processed data
+      const response = await privateApi.post(
+        `${PAYMENT_BASE_PATH}/approve-and-create-enrollment`,
+        data
+      );
+      return response.data; // Return the full response with success, message, data fields
     }
   ),
 };

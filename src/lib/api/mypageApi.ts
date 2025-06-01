@@ -177,12 +177,14 @@ export const mypageApi = {
   },
 
   // 3.4 결제 내역 (Payment)
-  getPayments: withAuthRedirect(async (): Promise<MypagePaymentDto[]> => {
-    const response = await privateApi.get<MypagePaymentDto[]>(
-      `${MYPAGE_API_BASE}/payment`
-    );
-    return response.data;
-  }),
+  getPayments: withAuthRedirect(
+    async (): Promise<{ content: MypagePaymentDto[] }> => {
+      const response = await privateApi.get<{ content: MypagePaymentDto[] }>(
+        `${MYPAGE_API_BASE}/payment`
+      );
+      return response.data;
+    }
+  ),
   requestPaymentCancel: async (
     paymentId: number,
     reason?: string

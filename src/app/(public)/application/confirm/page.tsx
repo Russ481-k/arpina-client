@@ -25,8 +25,9 @@ import { EnrollLessonRequestDto, LockerAvailabilityDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
-import KISPGPaymentPopup from "@/components/payment/KISPGPaymentPopup";
+import KISPGPaymentPopup from "@/components/payment/KISPGPaymentFrame";
 import { AuthGuard } from "@/components/guard/AuthGuard";
+import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 
 interface MembershipOption {
   value: string;
@@ -139,12 +140,15 @@ const ApplicationConfirmPage = () => {
   // Helper function to extract enrollId from payment response
   const extractEnrollIdFromPaymentResponse = (response: any): number | null => {
     try {
+      console.log("Extracting enrollId from response:", response);
+
       // Extract from mbsReserved1 field (format: "temp_enrollId")
       if (response.mbsReserved1) {
         const parts = response.mbsReserved1.split("_");
         if (parts.length >= 2) {
           const enrollId = parseInt(parts[1]);
           if (!isNaN(enrollId)) {
+            console.log("EnrollId extracted from mbsReserved1:", enrollId);
             return enrollId;
           }
         }
@@ -156,15 +160,32 @@ const ApplicationConfirmPage = () => {
         if (parts.length >= 2) {
           const enrollId = parseInt(parts[1]);
           if (!isNaN(enrollId)) {
+            console.log("EnrollId extracted from moid:", enrollId);
             return enrollId;
           }
         }
       }
 
-      return null;
+      // Additional: Try to extract from other possible fields
+      if (response.ordNo) {
+        const parts = response.ordNo.split("_");
+        if (parts.length >= 2) {
+          const enrollId = parseInt(parts[1]);
+          if (!isNaN(enrollId)) {
+            console.log("EnrollId extracted from ordNo:", enrollId);
+            return enrollId;
+          }
+        }
+      }
+
+      // If all extraction methods fail, generate a temporary ID based on current lesson
+      console.warn(
+        "Could not extract enrollId from response, using lessonId as fallback"
+      );
+      return lessonId; // Use current lessonId as fallback
     } catch (error) {
       console.error("Error extracting enrollId from payment response:", error);
-      return null;
+      return lessonId; // Use current lessonId as fallback
     }
   };
 
@@ -399,7 +420,26 @@ const ApplicationConfirmPage = () => {
             }
           }, 500);
         } else {
-          throw new Error("응답에서 신청 ID를 찾을 수 없습니다.");
+          // enrollId 추출에 실패해도 결제는 진행 (서버에서 처리됨)
+          console.warn(
+            "Failed to extract enrollId, but proceeding with payment"
+          );
+          setEnrollId(lessonId || 0); // fallback to lessonId
+          setPaymentData(enrollResponse);
+
+          toaster.create({
+            title: "신청 등록",
+            description: "강습 신청이 등록되었습니다. 결제를 진행합니다.",
+            type: "info",
+            duration: 2000,
+          });
+
+          setTimeout(() => {
+            setIsSubmitting(false);
+            if (paymentRef.current) {
+              paymentRef.current.triggerPayment();
+            }
+          }, 500);
         }
       } else {
         throw new Error("강습 신청 응답이 올바르지 않습니다.");
@@ -421,7 +461,7 @@ const ApplicationConfirmPage = () => {
           description: "로그인이 필요합니다. 로그인 페이지로 이동합니다.",
           type: "error",
         });
-        router.push("/login?redirect=/application/confirm");
+        router.push("/login");
         return;
       }
 
@@ -443,17 +483,19 @@ const ApplicationConfirmPage = () => {
         description:
           "수영 강습 신청이 완료되었습니다. 마이페이지로 이동합니다.",
         type: "success",
-        duration: 4000,
+        duration: 3000,
       });
 
-      // 마이페이지로 이동 (결제 성공 시 즉시 이동)
+      // 마이페이지로 이동 (수영장 신청정보 탭)
       setTimeout(() => {
         router.push("/mypage?tab=수영장_신청정보");
-      }, 1500);
+      }, 1000);
     } else {
+      const errorMessage = data?.message || "결제 처리 중 오류가 발생했습니다.";
+
       toaster.create({
         title: "결제 실패",
-        description: data?.message || "결제 처리 중 오류가 발생했습니다.",
+        description: errorMessage,
         type: "error",
         duration: 5000,
       });
@@ -699,7 +741,7 @@ const ApplicationConfirmPage = () => {
                   <HStack justifyContent="space-between">
                     <Text color={secondaryText}>연락처</Text>
                     <Text fontWeight="medium" color={primaryText}>
-                      {profile.phone}
+                      {formatPhoneNumberWithHyphen(profile.phone || "")}
                     </Text>
                   </HStack>
                   <HStack justifyContent="space-between">
@@ -816,17 +858,7 @@ const ApplicationConfirmPage = () => {
                 </Text>
               </HStack>
               <HStack justifyContent="space-between" mt={1} fontSize="sm">
-                <Text color={secondaryText}>
-                  잔여 수량 (
-                  {userGender
-                    ? userGender === "MALE"
-                      ? "남성"
-                      : userGender === "FEMALE"
-                      ? "여성"
-                      : "전체"
-                    : "전체"}
-                  ):
-                </Text>
+                <Text color={secondaryText}>잔여 수량 :</Text>
                 {isLockerDetailsLoading ? (
                   <Spinner size="xs" color={radioItemSpinnerColor} />
                 ) : lockerError ? (

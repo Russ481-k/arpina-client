@@ -49,9 +49,7 @@ export function withAuthRedirect<T extends (...args: any[]) => Promise<any>>(
 
         // Capture the current path to redirect back after login
         const currentPath = Router.asPath; // asPath includes query parameters
-        const loginUrl = `/login?redirectUrl=${encodeURIComponent(
-          currentPath
-        )}`;
+        const loginUrl = `/login`;
 
         console.log(
           `[withAuthRedirect] Attempting to redirect to: ${loginUrl}`

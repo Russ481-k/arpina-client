@@ -128,23 +128,48 @@ export default function MyPage() {
     number | null
   >(null);
 
-  // Determine initial tab based on query parameter
+  // Tab management with URL sync
   const initialTabFromQuery = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(() => {
     if (initialTabFromQuery === "수영장_신청정보") {
       return "수영장_신청정보";
     }
-    // Add other potential tab values from query if needed
-    // else if (initialTabFromQuery === "비밀번호_변경") {
-    //   return "비밀번호_변경";
-    // }
-    // else if (initialTabFromQuery === "수영장_결제정보") {
-    //   return "수영장_결제정보";
-    // }
     return "회원정보_수정"; // Default tab
   });
 
+  // Data loading flags to prevent unnecessary reloads
+  const [dataLoaded, setDataLoaded] = useState({
+    profile: false,
+    enrollments: false,
+    payments: false,
+  });
+
+  // Handle tab change with URL update
+  const handleTabChange = (newTab: string) => {
+    console.log("🔄 Tab changing from", activeTab, "to", newTab);
+
+    setActiveTab(newTab);
+
+    // Update URL without page reload - remove tab parameter for default tab
+    const newUrl = new URL(window.location.href);
+    if (newTab === "회원정보_수정") {
+      newUrl.searchParams.delete("tab");
+    } else {
+      newUrl.searchParams.set("tab", newTab);
+    }
+
+    // Use replaceState to avoid creating new history entries
+    window.history.replaceState({}, "", newUrl.toString());
+
+    console.log("🔗 URL updated to:", newUrl.toString());
+  };
+
   async function fetchEnrollments() {
+    if (dataLoaded.enrollments) {
+      console.log("📋 Enrollments already loaded, skipping fetch");
+      return;
+    }
+
     try {
       const enrollmentsApiResponse = await mypageApi.getEnrollments();
       if (
@@ -152,6 +177,8 @@ export default function MyPage() {
         Array.isArray(enrollmentsApiResponse.content)
       ) {
         setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
+        setDataLoaded((prev) => ({ ...prev, enrollments: true }));
+        console.log("✅ Enrollments loaded successfully");
       } else {
         console.warn(
           "Enrollments API response is not in the expected format or content is missing/not an array:",
@@ -167,6 +194,47 @@ export default function MyPage() {
         type: "error",
       });
       setEnrollments([]);
+    }
+  }
+
+  // Separate function for fetching payments
+  async function fetchPayments() {
+    if (dataLoaded.payments) {
+      console.log("💳 Payments already loaded, skipping fetch");
+      return;
+    }
+
+    try {
+      const paymentsApiResponse = await mypageApi.getPayments();
+      console.log("📦 Raw payments API response:", paymentsApiResponse);
+
+      // API returns paginated response with content array
+      if (
+        paymentsApiResponse &&
+        paymentsApiResponse.content &&
+        Array.isArray(paymentsApiResponse.content)
+      ) {
+        setPayments(paymentsApiResponse.content as MypagePaymentDto[]);
+        setDataLoaded((prev) => ({ ...prev, payments: true }));
+        console.log(
+          "✅ Payments loaded successfully:",
+          paymentsApiResponse.content
+        );
+      } else {
+        console.warn(
+          "Payments API response is not in expected format:",
+          paymentsApiResponse
+        );
+        setPayments([]);
+      }
+    } catch (error) {
+      console.error("[Mypage] Failed to load payments:", error);
+      toaster.create({
+        title: "오류",
+        description: "결제 정보를 불러오는데 실패했습니다.",
+        type: "error",
+      });
+      setPayments([]);
     }
   }
 
@@ -275,9 +343,18 @@ export default function MyPage() {
           }
         }
 
-        await fetchEnrollments(); // Call the new function to load enrollments
-        const paymentsData = await mypageApi.getPayments();
-        setPayments(paymentsData as MypagePaymentDto[]);
+        // Mark profile data as loaded
+        setDataLoaded((prev) => ({ ...prev, profile: true }));
+
+        // Only load enrollments if we're starting on the enrollment tab
+        if (initialTabFromQuery === "수영장_신청정보") {
+          await fetchEnrollments();
+        }
+
+        // Only load payments if we're starting on the payment tab
+        if (initialTabFromQuery === "수영장_결제정보") {
+          await fetchPayments();
+        }
       } catch (error) {
         console.error(
           "[Mypage] Failed to load user data (in catch block):",
@@ -598,55 +675,49 @@ export default function MyPage() {
   };
 
   const handleRenewLesson = async (lessonId: number) => {
-    if (!lessonId) {
-      toaster.create({
-        title: "경고",
-        description: "잘못된 강습 정보입니다.",
-        type: "warning",
+    console.log("[Mypage] Renewing lesson:", lessonId);
+    try {
+      const renewalResponse = await swimmingPaymentService.renewalLesson({
+        lessonId,
+        carryLocker: false, // Or allow user to choose
       });
-      return;
-    }
-    if (
-      window.confirm(
-        "이 강습을 재등록 하시겠습니까? 현재 사물함 사용 여부는 재등록 시 유지되지 않으며, 결제 페이지에서 다시 선택해야 합니다."
-      )
-    ) {
-      try {
-        setIsLoading(true);
-        const renewalResponse = await swimmingPaymentService.renewalLesson({
-          lessonId,
-          carryLocker: false,
-        });
-        if (renewalResponse && renewalResponse.paymentPageUrl) {
-          toaster.create({
-            title: "정보",
-            description:
-              "재등록 신청이 시작되었습니다. 결제 페이지로 이동합니다.",
-            type: "info",
-          });
-          handleGoToPayment(renewalResponse.paymentPageUrl);
-        } else {
-          toaster.create({
-            title: "오류",
-            description:
-              "재등록 절차를 시작하지 못했습니다. 관리자에게 문의해주세요.",
-            type: "error",
-          });
-        }
-      } catch (error: any) {
-        console.error("[Mypage] Failed to renew lesson:", error);
+
+      if (renewalResponse) {
         toaster.create({
-          title: "오류",
-          description: `재등록 중 오류가 발생했습니다: ${getApiErrorMessage(
-            error,
-            "관리자에게 문의해주세요."
-          )}`,
-          type: "error",
+          title: "재등록 성공",
+          description: "강습 재등록이 완료되었습니다.",
+          type: "success",
         });
-      } finally {
-        setIsLoading(false);
+
+        // Refresh enrollments data
+        setDataLoaded((prev) => ({ ...prev, enrollments: false }));
+        await fetchEnrollments();
       }
+    } catch (error) {
+      console.error("[Mypage] Failed to renew lesson:", error);
+      toaster.create({
+        title: "재등록 실패",
+        description: getApiErrorMessage(
+          error,
+          "강습 재등록에 실패했습니다. 다시 시도해주세요."
+        ),
+        type: "error",
+      });
     }
+  };
+
+  // Function to refresh enrollment data (useful after payment completion)
+  const refreshEnrollmentData = async () => {
+    console.log("🔄 Refreshing enrollment data...");
+    setDataLoaded((prev) => ({ ...prev, enrollments: false }));
+    await fetchEnrollments();
+  };
+
+  // Function to refresh payment data
+  const refreshPaymentData = async () => {
+    console.log("🔄 Refreshing payment data...");
+    setDataLoaded((prev) => ({ ...prev, payments: false }));
+    await fetchPayments();
   };
 
   return (
@@ -657,15 +728,35 @@ export default function MyPage() {
 
       <Tabs.Root
         value={activeTab}
-        onValueChange={(details) => setActiveTab(details.value)}
+        onValueChange={(details) => handleTabChange(details.value)}
         variant="line"
         colorPalette="blue"
       >
         <Tabs.List mb={6}>
           <Tabs.Trigger value="회원정보_수정">회원정보 수정</Tabs.Trigger>
           <Tabs.Trigger value="비밀번호_변경">비밀번호 변경</Tabs.Trigger>
-          <Tabs.Trigger value="수영장_신청정보">수영장 신청정보</Tabs.Trigger>
-          <Tabs.Trigger value="수영장_결제정보">수영장 결제정보</Tabs.Trigger>
+          <Tabs.Trigger
+            value="수영장_신청정보"
+            onClick={() => {
+              // Load enrollments data when tab is clicked
+              if (!dataLoaded.enrollments) {
+                fetchEnrollments();
+              }
+            }}
+          >
+            수영장 신청정보
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="수영장_결제정보"
+            onClick={() => {
+              // Load payments data when tab is clicked
+              if (!dataLoaded.payments) {
+                fetchPayments();
+              }
+            }}
+          >
+            수영장 결제정보
+          </Tabs.Trigger>
         </Tabs.List>
 
         <Tabs.Content value="회원정보_수정">
@@ -953,10 +1044,7 @@ export default function MyPage() {
                     <Table.ColumnHeader>신청 ID</Table.ColumnHeader>
                     <Table.ColumnHeader>결제일</Table.ColumnHeader>
                     <Table.ColumnHeader>결제 금액</Table.ColumnHeader>
-                    <Table.ColumnHeader>환불 금액</Table.ColumnHeader>
                     <Table.ColumnHeader>상태</Table.ColumnHeader>
-                    <Table.ColumnHeader>환불일</Table.ColumnHeader>
-                    <Table.ColumnHeader>거래 ID</Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -970,15 +1058,12 @@ export default function MyPage() {
                           : "-"}
                       </Table.Cell>
                       <Table.Cell>
-                        {payment.paid_amt.toLocaleString()}원
-                      </Table.Cell>
-                      <Table.Cell>
-                        {payment.refunded_amt.toLocaleString()}원
+                        {payment.amount.toLocaleString()}원
                       </Table.Cell>
                       <Table.Cell>
                         <Badge
                           colorPalette={
-                            payment.status === "SUCCESS"
+                            payment.status === "PAID"
                               ? "green"
                               : payment.status === "CANCELED"
                               ? "red"
@@ -987,11 +1072,11 @@ export default function MyPage() {
                               : payment.status === "REFUND_REQUESTED"
                               ? "yellow"
                               : payment.status === "FAILED"
-                              ? "purple" // Or another distinct color
+                              ? "purple"
                               : "gray"
                           }
                         >
-                          {payment.status === "SUCCESS"
+                          {payment.status === "PAID"
                             ? "결제완료"
                             : payment.status === "CANCELED"
                             ? "취소됨"
@@ -1004,12 +1089,6 @@ export default function MyPage() {
                             : payment.status}
                         </Badge>
                       </Table.Cell>
-                      <Table.Cell>
-                        {payment.refund_dt
-                          ? new Date(payment.refund_dt).toLocaleDateString()
-                          : "-"}
-                      </Table.Cell>
-                      <Table.Cell>{payment.tid || "-"}</Table.Cell>
                     </Table.Row>
                   ))}
                 </Table.Body>

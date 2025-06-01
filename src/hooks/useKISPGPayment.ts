@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { swimmingPaymentService } from "@/lib/api/swimming";
 import { KISPGPaymentInitResponseDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
-import type { KISPGPaymentPopupRef } from "@/components/payment/KISPGPaymentPopup";
+import type { KISPGPaymentPopupRef } from "@/components/payment/KISPGPaymentFrame";
 
 interface UseKISPGPaymentProps {
   enrollId: number;

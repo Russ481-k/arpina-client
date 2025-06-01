@@ -50,7 +50,7 @@ export default function Home() {
       return [];
     }
   }, [menus]);
-  const styles = useUserStyles(STYLES as Styles);
+  router.push("/sports/swimming/lesson");
   return (
     <Layout menus={treeMenus} currentPage="홈">
       <Global styles={getScrollbarStyle(isDark)} />
