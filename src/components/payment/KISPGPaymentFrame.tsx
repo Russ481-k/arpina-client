@@ -36,6 +36,96 @@ const KISPGPaymentFrame = forwardRef<
     null
   );
 
+  // 범용 enrollId 추출 함수 - temp_ 및 enroll_ 접두사 모두 처리
+  const extractEnrollIdFromResponse = (
+    data: any,
+    fallbackEnrollId: number
+  ): number => {
+    console.log("🔍 Extracting enrollId from response data:", data);
+    console.log("🔄 Fallback enrollId:", fallbackEnrollId);
+
+    try {
+      // 1. moid에서 추출 시도 (temp_enrollId_timestamp 또는 enroll_enrollId_timestamp)
+      if (data.moid || paymentData.moid) {
+        const moid = data.moid || paymentData.moid;
+        console.log("📋 Checking moid:", moid);
+
+        const parts = moid.split("_");
+        if (parts.length >= 2) {
+          // temp_123_timestamp 또는 enroll_123_timestamp 형식
+          if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
+            const extractedId = parseInt(parts[1]);
+            if (!isNaN(extractedId)) {
+              console.log(
+                `✅ EnrollId extracted from moid (${parts[0]}_):`,
+                extractedId
+              );
+              return extractedId;
+            }
+          }
+        }
+      }
+
+      // 2. mbsReserved1에서 추출 시도 (temp_enrollId 또는 enroll_enrollId)
+      if (data.mbsReserved1 || paymentData.mbsReserved1) {
+        const mbsReserved1 = data.mbsReserved1 || paymentData.mbsReserved1;
+        console.log("📋 Checking mbsReserved1:", mbsReserved1);
+
+        const parts = mbsReserved1.split("_");
+        if (parts.length >= 2) {
+          // temp_123 또는 enroll_123 형식
+          if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
+            const extractedId = parseInt(parts[1]);
+            if (!isNaN(extractedId)) {
+              console.log(
+                `✅ EnrollId extracted from mbsReserved1 (${parts[0]}_):`,
+                extractedId
+              );
+              return extractedId;
+            }
+          }
+        }
+      }
+
+      // 3. ordNo에서 추출 시도 (추가 대안)
+      if (data.ordNo) {
+        console.log("📋 Checking ordNo:", data.ordNo);
+
+        const parts = data.ordNo.split("_");
+        if (parts.length >= 2) {
+          if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
+            const extractedId = parseInt(parts[1]);
+            if (!isNaN(extractedId)) {
+              console.log(
+                `✅ EnrollId extracted from ordNo (${parts[0]}_):`,
+                extractedId
+              );
+              return extractedId;
+            }
+          }
+        }
+      }
+
+      // 4. 직접 enrollId 필드에서 추출 시도
+      if (data.enrollId && !isNaN(parseInt(data.enrollId))) {
+        const extractedId = parseInt(data.enrollId);
+        console.log(
+          "✅ EnrollId extracted from direct enrollId field:",
+          extractedId
+        );
+        return extractedId;
+      }
+
+      console.log(
+        "⚠️ Could not extract enrollId from response, using fallback"
+      );
+      return fallbackEnrollId;
+    } catch (error) {
+      console.error("💥 Error extracting enrollId from response:", error);
+      return fallbackEnrollId;
+    }
+  };
+
   // KISPG 결제창에서 오는 메시지 처리 (JSP의 returnData 함수와 동일한 역할)
   const handleKISPGMessage = (event: MessageEvent) => {
     console.log("🔔 KISPG Message received:", event);
@@ -159,6 +249,7 @@ const KISPGPaymentFrame = forwardRef<
   const submitToResultPage = async (data: any) => {
     console.log("🚀 submitToResultPage called with data:", data);
     console.log("💳 Current paymentData:", paymentData);
+    console.log("🆔 Current enrollId prop:", enrollId);
 
     // 결제창 먼저 닫기
     setShowPaymentFrame(false);
@@ -172,13 +263,22 @@ const KISPGPaymentFrame = forwardRef<
     }
 
     try {
+      // 🎯 enrollId 결정: prop으로 받은 값 우선, 추출 함수로 폴백
+      const effectiveEnrollId =
+        enrollId || extractEnrollIdFromResponse(data, 0);
+      console.log("🎯 Effective enrollId for API call:", effectiveEnrollId);
+
+      if (!effectiveEnrollId || effectiveEnrollId <= 0) {
+        throw new Error("유효한 enrollId를 확인할 수 없습니다.");
+      }
+
       // 🎯 올바른 API 호출: approve-and-create-enrollment
       // KISPG 결제 승인 후 Payment 및 Enrollment 생성
       console.log("🔍 Calling CORRECT payment approval API...");
 
       const approvalRequestData = {
         tid: data.tid || data.TID, // KISPG에서 반환된 TID
-        moid: paymentData.moid, // temp moid (e.g., temp_12_335ba429_1748790445804)
+        moid: paymentData.moid, // moid (temp_ 또는 enroll_ 형식)
         amt: data.amt || data.AMT || paymentData.amt, // 결제 금액
       };
 
@@ -216,6 +316,7 @@ const KISPGPaymentFrame = forwardRef<
             ...data,
             enrollmentData, // 백엔드에서 받은 수강신청 정보
             approved: true, // 승인 완료 플래그
+            enrollId: effectiveEnrollId, // 사용된 enrollId도 전달
           });
         }
       } else {
