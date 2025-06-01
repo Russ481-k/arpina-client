@@ -149,6 +149,14 @@ const KISPGPaymentFrame = forwardRef<
     // 🔍 전체 KISPG 파라미터 상세 로깅
     console.log("🔍 Detailed KISPG Parameter Analysis:");
     console.log("🏷️ Payment Result Fields:");
+
+    // 🐛 디버깅: 데이터 구조 정확히 파악
+    console.log("🐛 DEBUG - data variable:", data);
+    console.log("🐛 DEBUG - event.data:", event.data);
+    console.log("🐛 DEBUG - typeof data:", typeof data);
+    console.log("🐛 DEBUG - data is null:", data === null);
+    console.log("🐛 DEBUG - data is undefined:", data === undefined);
+
     const kispgFields = [
       "resultCd",
       "resultMsg",
@@ -185,13 +193,21 @@ const KISPGPaymentFrame = forwardRef<
       "mbsFeeAmt",
     ];
 
-    // 🎯 올바른 데이터 위치에서 파라미터 체크 (event.data.data 또는 event.data)
-    const actualPaymentData = data || event.data;
+    // 🎯 올바른 데이터 위치 확정
+    // data가 존재하고 객체이면 data 사용, 아니면 event.data 사용
+    const actualPaymentData =
+      data && typeof data === "object" ? data : event.data;
+    console.log("🎯 Selected actualPaymentData:", actualPaymentData);
+    console.log(
+      "🎯 actualPaymentData keys:",
+      Object.keys(actualPaymentData || {})
+    );
+
     const receivedFields: { [key: string]: any } = {};
     const missingFields: string[] = [];
 
     kispgFields.forEach((field) => {
-      if (actualPaymentData.hasOwnProperty(field)) {
+      if (actualPaymentData && actualPaymentData.hasOwnProperty(field)) {
         receivedFields[field] = actualPaymentData[field];
       } else {
         missingFields.push(field);
@@ -202,9 +218,12 @@ const KISPGPaymentFrame = forwardRef<
     console.log("❌ Missing KISPG Fields:", missingFields);
     console.log(
       "🎯 Total Fields in Payment Data:",
-      Object.keys(actualPaymentData).length
+      Object.keys(actualPaymentData || {}).length
     );
-    console.log("📋 All Payment Data Fields:", Object.keys(actualPaymentData));
+    console.log(
+      "📋 All Payment Data Fields:",
+      Object.keys(actualPaymentData || {})
+    );
     console.log("🎯 Total Fields in Message:", Object.keys(event.data).length);
     console.log("📋 All Message Fields:", Object.keys(event.data));
 
