@@ -185,12 +185,14 @@ const KISPGPaymentFrame = forwardRef<
       "mbsFeeAmt",
     ];
 
+    // 🎯 올바른 데이터 위치에서 파라미터 체크 (event.data.data 또는 event.data)
+    const actualPaymentData = data || event.data;
     const receivedFields: { [key: string]: any } = {};
     const missingFields: string[] = [];
 
     kispgFields.forEach((field) => {
-      if (event.data.hasOwnProperty(field)) {
-        receivedFields[field] = event.data[field];
+      if (actualPaymentData.hasOwnProperty(field)) {
+        receivedFields[field] = actualPaymentData[field];
       } else {
         missingFields.push(field);
       }
@@ -198,6 +200,11 @@ const KISPGPaymentFrame = forwardRef<
 
     console.log("✅ Received KISPG Fields:", receivedFields);
     console.log("❌ Missing KISPG Fields:", missingFields);
+    console.log(
+      "🎯 Total Fields in Payment Data:",
+      Object.keys(actualPaymentData).length
+    );
+    console.log("📋 All Payment Data Fields:", Object.keys(actualPaymentData));
     console.log("🎯 Total Fields in Message:", Object.keys(event.data).length);
     console.log("📋 All Message Fields:", Object.keys(event.data));
 
