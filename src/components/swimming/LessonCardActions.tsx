@@ -80,6 +80,7 @@ interface LessonCardActionsProps {
   enrollment?: MypageEnrollDto;
   onRequestCancel?: (enrollId: number) => void;
   onApplyClick?: () => void;
+  onGoToPayment?: (enrollId: number) => void;
 }
 
 const LessonCardActions: React.FC<LessonCardActionsProps> = ({
@@ -87,6 +88,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   enrollment,
   onRequestCancel,
   onApplyClick,
+  onGoToPayment,
 }) => {
   const getInitialTimeRemaining = () => {
     if (!enrollment && lesson.reservationId) {
@@ -201,10 +203,28 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }
     return (
       <Flex align="center" gap={3} w="100%">
+        <Flex direction="column" align="center" gap={2} w="50%">
+          <Button
+            colorPalette="teal"
+            w="100%"
+            onClick={() => {
+              // enrollId로 결제 시작
+              if (onGoToPayment && enrollment?.enrollId) {
+                onGoToPayment(enrollment.enrollId);
+              } else {
+                console.warn(
+                  "결제 핸들러가 설정되지 않았거나 enrollId가 없습니다."
+                );
+              }
+            }}
+          >
+            <Text fontSize="sm">결제 신청</Text>
+          </Button>
+        </Flex>
         {onRequestCancel && (
           <Button
             colorPalette="red"
-            w="100%"
+            w="50%"
             onClick={() => onRequestCancel(enrollId)}
           >
             취소 신청

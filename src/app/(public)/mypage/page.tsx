@@ -1,6 +1,6 @@
 "use client"; // 클라이언트 컴포넌트로 전환
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Box,
   Tabs,
@@ -36,6 +36,11 @@ import { LessonDTO } from "@/types/swimming";
 import { LessonCard } from "@/components/swimming/LessonCard";
 import { swimmingPaymentService } from "@/lib/api/swimming"; // For renewal
 import { Dialog } from "@chakra-ui/react";
+import KISPGPaymentFrame, {
+  KISPGPaymentFrameRef,
+} from "@/components/payment/KISPGPaymentFrame";
+import { EnrollInitiationResponseDto } from "@/types/api";
+import { KISPGPaymentInitResponseDto } from "@/types/api";
 
 // Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
 const formatDate = (dateString: string | undefined | null): string => {
@@ -127,6 +132,15 @@ export default function MyPage() {
   const [cancelTargetEnrollId, setCancelTargetEnrollId] = useState<
     number | null
   >(null);
+
+  // Payment module state
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [currentPaymentData, setCurrentPaymentData] =
+    useState<KISPGPaymentInitResponseDto | null>(null);
+  const [currentPaymentEnrollId, setCurrentPaymentEnrollId] = useState<
+    number | null
+  >(null);
+  const paymentFrameRef = useRef<KISPGPaymentFrameRef>(null);
 
   // Tab management with URL sync
   const initialTabFromQuery = searchParams.get("tab");
@@ -596,19 +610,40 @@ export default function MyPage() {
   );
 
   // Event Handlers for LessonCardActions
-  const handleGoToPayment = (paymentPageUrl: string) => {
-    if (paymentPageUrl) {
-      if (paymentPageUrl.startsWith("http")) {
-        window.location.href = paymentPageUrl;
-      } else {
-        router.push(paymentPageUrl);
-      }
-    } else {
+  const handleGoToPayment = async (enrollId: number) => {
+    console.log("🚀 Starting direct payment for enrollment:", enrollId);
+
+    try {
+      setIsLoading(true);
+
+      // enrollId로 KISPG 결제 초기화 API 호출
+      const paymentInitData = await swimmingPaymentService.initKISPGPayment(
+        enrollId
+      );
+      console.log("💳 Payment init data received:", paymentInitData);
+
+      // 결제 데이터 설정 및 결제창 표시
+      setCurrentPaymentData(paymentInitData);
+      setCurrentPaymentEnrollId(enrollId);
+
+      // 잠시 후 결제창 트리거 (DOM이 준비된 후)
+      setTimeout(() => {
+        if (paymentFrameRef.current) {
+          paymentFrameRef.current.triggerPayment();
+        }
+      }, 100);
+    } catch (error) {
+      console.error("결제 초기화 실패:", error);
       toaster.create({
-        title: "오류",
-        description: "결제 페이지 정보를 찾을 수 없습니다.",
+        title: "결제 초기화 실패",
+        description: getApiErrorMessage(
+          error,
+          "결제를 시작할 수 없습니다. 다시 시도해주세요."
+        ),
         type: "error",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1223,6 +1258,56 @@ export default function MyPage() {
           )}
         </Tabs.Content>
       </Tabs.Root>
+
+      {/* KISPG 결제창 - 기존 강의 신청 페이지와 동일한 방식 */}
+      {currentPaymentData && currentPaymentEnrollId && (
+        <KISPGPaymentFrame
+          ref={paymentFrameRef}
+          paymentData={currentPaymentData as any} // 타입 호환성을 위해 임시로 as any 사용
+          enrollId={currentPaymentEnrollId}
+          onPaymentComplete={(success, data) => {
+            console.log("🎉 Payment completed:", { success, data });
+
+            if (success) {
+              toaster.create({
+                title: "결제 완료",
+                description: "결제가 성공적으로 완료되었습니다!",
+                type: "success",
+                duration: 3000,
+              });
+
+              // 데이터 새로고침
+              refreshEnrollmentData();
+              refreshPaymentData();
+            } else {
+              toaster.create({
+                title: "결제 실패",
+                description: data?.message || "결제 중 오류가 발생했습니다.",
+                type: "error",
+                duration: 5000,
+              });
+            }
+
+            // 결제 데이터 초기화
+            setCurrentPaymentData(null);
+            setCurrentPaymentEnrollId(null);
+          }}
+          onPaymentClose={() => {
+            console.log("🚪 Payment frame closed");
+
+            // 결제 데이터 초기화
+            setCurrentPaymentData(null);
+            setCurrentPaymentEnrollId(null);
+
+            toaster.create({
+              title: "결제 창 닫기",
+              description: "결제가 취소되었습니다.",
+              type: "info",
+              duration: 2000,
+            });
+          }}
+        />
+      )}
 
       <Dialog.Root
         open={isCancelDialogOpen}

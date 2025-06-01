@@ -16,7 +16,7 @@ interface LessonCardProps {
   context?: "listing" | "mypage";
   enrollment?: MypageEnrollDto;
   onRequestCancel?: (enrollId: number) => void;
-  onGoToPayment?: (paymentPageUrl: string) => void;
+  onGoToPayment?: (enrollId: number) => void;
   onRenewLesson?: (lessonId: number) => void;
 }
 
@@ -81,7 +81,14 @@ const parseDisplayKSTDate = (
 };
 
 export const LessonCard: React.FC<LessonCardProps> = React.memo(
-  ({ lesson, context = "listing", enrollment, onRequestCancel }) => {
+  ({
+    lesson,
+    context = "listing",
+    enrollment,
+    onRequestCancel,
+    onGoToPayment,
+    onRenewLesson,
+  }) => {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authIsLoading } = useAuth();
 
@@ -334,6 +341,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             enrollment={context === "mypage" ? enrollment : undefined}
             onRequestCancel={context === "mypage" ? onRequestCancel : undefined}
             onApplyClick={context !== "mypage" ? handleApplyClick : undefined}
+            onGoToPayment={onGoToPayment}
           />
         </Box>
       </Box>

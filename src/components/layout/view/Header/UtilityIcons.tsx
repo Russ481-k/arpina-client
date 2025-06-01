@@ -114,7 +114,7 @@ export const UtilityIcons = memo(
           </Portal>
         </Menu.Root>
 
-        <IconButton
+        {/* <IconButton
           aria-label="Search"
           variant="ghost"
           color={iconColor}
@@ -133,7 +133,7 @@ export const UtilityIcons = memo(
           onClick={onSitemapOpen}
         >
           <Grid3x3 />
-        </IconButton>
+        </IconButton> */}
       </Flex>
     );
   }
