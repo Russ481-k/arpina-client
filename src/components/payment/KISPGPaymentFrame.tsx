@@ -422,8 +422,7 @@ const KISPGPaymentFrame = forwardRef<
         method="POST"
         target="kispg_payment_frame"
         action={
-          process.env.NEXT_PUBLIC_KISPG_URL ||
-          "https://testapi.kispg.co.kr/v2/auth"
+          process.env.NEXT_PUBLIC_KISPG_URL || "https://api.kispg.co.kr/v2/auth"
         }
         acceptCharset="UTF-8"
         style={{ display: "none" }}
