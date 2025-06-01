@@ -203,32 +203,66 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }
     return (
       <Flex align="center" gap={3} w="100%">
-        <Flex direction="column" align="center" gap={2} w="50%">
-          <Button
-            colorPalette="teal"
-            w="100%"
-            onClick={() => {
-              // enrollId로 결제 시작
-              if (onGoToPayment && enrollment?.enrollId) {
-                onGoToPayment(enrollment.enrollId);
-              } else {
-                console.warn(
-                  "결제 핸들러가 설정되지 않았거나 enrollId가 없습니다."
-                );
-              }
-            }}
-          >
-            <Text fontSize="sm">결제 신청</Text>
-          </Button>
-        </Flex>
-        {onRequestCancel && (
+        {/* UNPAID 상태: 결제 신청 + 취소 신청 버튼 */}
+        {enrollment.status === "UNPAID" && (
+          <>
+            <Flex direction="column" align="center" gap={2} w="50%">
+              <Button
+                colorPalette="teal"
+                w="100%"
+                onClick={() => {
+                  // enrollId로 결제 시작
+                  if (onGoToPayment && enrollment?.enrollId) {
+                    onGoToPayment(enrollment.enrollId);
+                  } else {
+                    console.warn(
+                      "결제 핸들러가 설정되지 않았거나 enrollId가 없습니다."
+                    );
+                  }
+                }}
+              >
+                <Text fontSize="sm">결제 신청</Text>
+              </Button>
+            </Flex>
+            {onRequestCancel && (
+              <Button
+                colorPalette="red"
+                w="50%"
+                onClick={() => onRequestCancel(enrollId)}
+              >
+                취소 신청
+              </Button>
+            )}
+          </>
+        )}
+
+        {/* PAID 상태: 취소 신청 버튼만 전체 너비 */}
+        {enrollment.status === "PAID" && onRequestCancel && (
           <Button
             colorPalette="red"
-            w="50%"
+            w="100%"
             onClick={() => onRequestCancel(enrollId)}
           >
             취소 신청
           </Button>
+        )}
+
+        {/* 기타 상태나 특수한 경우 처리 */}
+        {enrollment.status !== "UNPAID" && enrollment.status !== "PAID" && (
+          <Flex direction="column" align="center" gap={2} w="100%">
+            <Text fontSize="sm" color="gray.500" textAlign="center">
+              상태: {enrollment.status}
+            </Text>
+            {onRequestCancel && enrollment.status !== "CANCELED_UNPAID" && (
+              <Button
+                colorPalette="red"
+                w="100%"
+                onClick={() => onRequestCancel(enrollId)}
+              >
+                취소 신청
+              </Button>
+            )}
+          </Flex>
         )}
       </Flex>
     );
