@@ -1036,31 +1036,25 @@ export default function MyPage() {
               <Text>로딩 중...</Text>
             </Box>
           ) : payments && payments.length > 0 ? (
-            <Box overflowX="auto" py={4}>
-              <Table.Root>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeader>결제 ID</Table.ColumnHeader>
-                    <Table.ColumnHeader>신청 ID</Table.ColumnHeader>
-                    <Table.ColumnHeader>결제일</Table.ColumnHeader>
-                    <Table.ColumnHeader>결제 금액</Table.ColumnHeader>
-                    <Table.ColumnHeader>상태</Table.ColumnHeader>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {payments.map((payment) => (
-                    <Table.Row key={payment.paymentId}>
-                      <Table.Cell>{payment.paymentId}</Table.Cell>
-                      <Table.Cell>{payment.enrollId}</Table.Cell>
-                      <Table.Cell>
-                        {payment.paidAt
-                          ? new Date(payment.paidAt).toLocaleDateString()
-                          : "-"}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {payment.amount.toLocaleString()}원
-                      </Table.Cell>
-                      <Table.Cell>
+            <Box py={4}>
+              {/* 카드 형태로 결제 정보 표시 - 더 많은 정보를 깔끔하게 보여주기 위해 */}
+              <Grid
+                templateColumns="repeat(auto-fill, minmax(500px, 1fr))"
+                gap={6}
+              >
+                {payments.map((payment) => (
+                  <Box
+                    key={payment.paymentId}
+                    p={6}
+                    borderWidth="1px"
+                    borderRadius="lg"
+                    bg="white"
+                    shadow="sm"
+                    _hover={{ shadow: "md" }}
+                  >
+                    <VStack align="stretch" gap={4}>
+                      {/* 헤더: 결제 상태와 금액 */}
+                      <Flex justify="space-between" align="center">
                         <Badge
                           colorPalette={
                             payment.status === "PAID"
@@ -1075,6 +1069,7 @@ export default function MyPage() {
                               ? "purple"
                               : "gray"
                           }
+                          size="lg"
                         >
                           {payment.status === "PAID"
                             ? "결제완료"
@@ -1088,11 +1083,138 @@ export default function MyPage() {
                             ? "결제실패"
                             : payment.status}
                         </Badge>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
+                        <Text fontSize="xl" fontWeight="bold" color="blue.600">
+                          {payment.finalAmount.toLocaleString()}원
+                        </Text>
+                      </Flex>
+
+                      {/* 강습 정보 */}
+                      <Box>
+                        <Text fontSize="lg" fontWeight="semibold" mb={2}>
+                          {payment.lessonTitle}
+                        </Text>
+                        <VStack align="stretch" gap={1} fontSize="sm">
+                          <Flex justify="space-between">
+                            <Text color="gray.600">강습 기간:</Text>
+                            <Text>
+                              {formatDate(payment.lessonStartDate)} ~{" "}
+                              {formatDate(payment.lessonEndDate)}
+                            </Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text color="gray.600">강습 시간:</Text>
+                            <Text>{payment.lessonTime}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text color="gray.600">강사:</Text>
+                            <Text>{payment.instructorName}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text color="gray.600">장소:</Text>
+                            <Text>{payment.locationName}</Text>
+                          </Flex>
+                        </VStack>
+                      </Box>
+
+                      {/* 결제 상세 정보 */}
+                      <Box>
+                        <Text fontSize="md" fontWeight="semibold" mb={2}>
+                          결제 내역
+                        </Text>
+                        <VStack align="stretch" gap={1} fontSize="sm">
+                          <Flex justify="space-between">
+                            <Text color="gray.600">강습비:</Text>
+                            <Text>
+                              {payment.lessonPrice.toLocaleString()}원
+                            </Text>
+                          </Flex>
+                          {payment.usesLocker && (
+                            <Flex justify="space-between">
+                              <Text color="gray.600">사물함비:</Text>
+                              <Text>
+                                {payment.lockerFee.toLocaleString()}원
+                              </Text>
+                            </Flex>
+                          )}
+                          {payment.discountType &&
+                            payment.discountPercentage > 0 && (
+                              <Flex justify="space-between">
+                                <Text color="gray.600">할인:</Text>
+                                <Text color="red.500">
+                                  -{payment.discountPercentage}% (
+                                  {payment.discountType})
+                                </Text>
+                              </Flex>
+                            )}
+                          <Box
+                            borderTop="1px"
+                            borderColor="gray.200"
+                            pt={2}
+                            mt={2}
+                          >
+                            <Flex justify="space-between" fontWeight="bold">
+                              <Text>최종 결제 금액:</Text>
+                              <Text color="blue.600">
+                                {payment.finalAmount.toLocaleString()}원
+                              </Text>
+                            </Flex>
+                          </Box>
+                        </VStack>
+                      </Box>
+
+                      {/* 결제 정보 */}
+                      <Box>
+                        <Text fontSize="md" fontWeight="semibold" mb={2}>
+                          결제 정보
+                        </Text>
+                        <VStack align="stretch" gap={1} fontSize="sm">
+                          <Flex justify="space-between">
+                            <Text color="gray.600">결제 ID:</Text>
+                            <Text>{payment.paymentId}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text color="gray.600">신청 ID:</Text>
+                            <Text>{payment.enrollId}</Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text color="gray.600">결제일:</Text>
+                            <Text>
+                              {payment.paidAt
+                                ? new Date(payment.paidAt).toLocaleDateString(
+                                    "ko-KR",
+                                    {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )
+                                : "-"}
+                            </Text>
+                          </Flex>
+                          <Flex justify="space-between">
+                            <Text color="gray.600">회원 유형:</Text>
+                            <Text>
+                              {payment.membershipType === "GENERAL"
+                                ? "일반 회원"
+                                : payment.membershipType}
+                            </Text>
+                          </Flex>
+                          {payment.usesLocker && (
+                            <Flex justify="space-between">
+                              <Text color="gray.600">사물함 사용:</Text>
+                              <Badge colorPalette="blue" size="sm">
+                                사용함
+                              </Badge>
+                            </Flex>
+                          )}
+                        </VStack>
+                      </Box>
+                    </VStack>
+                  </Box>
+                ))}
+              </Grid>
             </Box>
           ) : (
             <Box textAlign="center" p={8}>

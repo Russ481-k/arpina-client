@@ -563,6 +563,27 @@ export interface MypagePaymentDto {
     | "REFUND_REQUESTED"
     | "FAILED"
     | string;
+
+  // Lesson details
+  lessonTitle: string; // 강습 제목
+  lessonStartDate: string; // 강습 시작일 (YYYY-MM-DD)
+  lessonEndDate: string; // 강습 종료일 (YYYY-MM-DD)
+  lessonTime: string; // 강습 시간 (예: "(월,화,수,목,금) 오전 06:00~06:50")
+  instructorName: string; // 강사명
+  locationName: string; // 장소명
+
+  // Payment breakdown
+  lessonPrice: number; // 강습비
+  lockerFee: number; // 사물함비
+  usesLocker: boolean; // 사물함 사용 여부
+
+  // Discount information
+  discountType: string | null; // 할인 유형
+  discountPercentage: number; // 할인율 (0-100)
+  finalAmount: number; // 최종 결제 금액
+
+  // Membership
+  membershipType: string; // 회원 유형 (예: "GENERAL")
 }
 
 // --- Admin DTOs (swim-admin.md) ---

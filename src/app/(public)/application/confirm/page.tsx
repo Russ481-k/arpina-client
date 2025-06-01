@@ -461,7 +461,7 @@ const ApplicationConfirmPage = () => {
           description: "로그인이 필요합니다. 로그인 페이지로 이동합니다.",
           type: "error",
         });
-        router.push("/login");
+        router.push("/login?redirect=/application/confirm");
         return;
       }
 

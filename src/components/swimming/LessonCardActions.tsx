@@ -201,17 +201,10 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }
     return (
       <Flex align="center" gap={3} w="100%">
-        <Flex direction="column" align="center" gap={2} w="50%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              미결제 상태
-            </Text>
-          </Button>
-        </Flex>
         {onRequestCancel && (
           <Button
             colorPalette="red"
-            w="50%"
+            w="100%"
             onClick={() => onRequestCancel(enrollId)}
           >
             취소 신청
