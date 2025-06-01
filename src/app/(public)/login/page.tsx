@@ -17,35 +17,33 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/lib/AuthContext";
+import { LoginCredentials } from "@/types/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isLoading: authLoading } = useAuth();
+  const { login, isLoading: authLoading, isAuthenticated } = useAuth();
 
-  // Form state
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(""); // email -> username
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({
-    username: "",
+    username: "", // email -> username
     password: "",
     general: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validation function
   const validateForm = () => {
     const newErrors = {
-      username: username ? "" : "아이디를 입력해주세요",
+      username: username ? "" : "아이디를 입력해주세요", // email -> username, 메시지 수정
       password: password ? "" : "비밀번호를 입력해주세요",
       general: "",
     };
 
     setErrors(newErrors);
-    return !newErrors.username && !newErrors.password;
+    return !newErrors.username && !newErrors.password; // email -> username
   };
 
-  // Handle login submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -57,7 +55,8 @@ export default function LoginPage() {
     setErrors({ ...errors, general: "" });
 
     try {
-      await login({ username, password });
+      const credentials: LoginCredentials = { username, password };
+      await login(credentials);
       // Login successful - toast will be shown during redirect
       toaster.create({
         title: "로그인 성공",
@@ -110,6 +109,20 @@ export default function LoginPage() {
       });
     }
   }, [searchParams]);
+
+  // 로그인 상태 확인 및 리디렉션 로직 추가
+  useEffect(() => {
+    // AuthContext의 로딩이 완료되었고, 사용자가 이미 로그인한 상태라면
+    if (!authLoading && isAuthenticated) {
+      toaster.create({
+        title: "이미 로그인됨",
+        description: "메인 페이지로 이동합니다.",
+        type: "info",
+        duration: 2000,
+      });
+      router.push("/"); // 메인 페이지로 리디렉션
+    }
+  }, [authLoading, isAuthenticated, router]); // 의존성 배열에 authLoading, isAuthenticated, router 추가
 
   // Check if the form is in loading state
   const isLoading = isSubmitting || authLoading;

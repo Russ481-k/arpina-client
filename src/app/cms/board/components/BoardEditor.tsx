@@ -39,9 +39,9 @@ export const BoardEditor = React.memo(function BoardEditor({
     menuId: 0,
     bbsId: 0,
     skinType: "BASIC",
-    readAuth: "ROLE_USER",
-    writeAuth: "ROLE_MEMBER",
-    adminAuth: "ROLE_ADMIN",
+    readAuth: "USER",
+    writeAuth: "USER",
+    adminAuth: "ADMIN",
     displayYn: "Y",
     noticeYn: "Y",
     publishYn: "Y",
@@ -87,9 +87,9 @@ export const BoardEditor = React.memo(function BoardEditor({
         menuId: 0,
         bbsId: 0,
         skinType: "BASIC",
-        readAuth: "ROLE_USER",
-        writeAuth: "ROLE_MEMBER",
-        adminAuth: "ROLE_ADMIN",
+        readAuth: "USER",
+        writeAuth: "USER",
+        adminAuth: "ADMIN",
         displayYn: "Y",
         sortOrder: "D",
         noticeYn: "Y",
@@ -188,9 +188,9 @@ export const BoardEditor = React.memo(function BoardEditor({
                 key={`read-auth-${formData.readAuth}`}
                 collection={createListCollection({
                   items: [
-                    { value: "ROLE_USER", label: "전체 공개" },
-                    { value: "ROLE_MEMBER", label: "회원" },
-                    { value: "ROLE_ADMIN", label: "관리자" },
+                    { value: "USER", label: "전체 공개" },
+                    { value: "ADMIN", label: "관리자" },
+                    { value: "SYSTEM_ADMIN", label: "시스템 관리자" },
                   ],
                 })}
                 size="xs"
@@ -212,17 +212,13 @@ export const BoardEditor = React.memo(function BoardEditor({
                 </Select.Control>
                 <Select.Positioner>
                   <Select.Content>
-                    <Select.Item
-                      item={{ value: "ROLE_USER", label: "전체 공개" }}
-                    >
+                    <Select.Item item={{ value: "USER", label: "전체 공개" }}>
                       전체 공개
                     </Select.Item>
-                    <Select.Item item={{ value: "ROLE_MEMBER", label: "회원" }}>
+                    <Select.Item item={{ value: "USER", label: "회원" }}>
                       회원
                     </Select.Item>
-                    <Select.Item
-                      item={{ value: "ROLE_ADMIN", label: "관리자" }}
-                    >
+                    <Select.Item item={{ value: "ADMIN", label: "관리자" }}>
                       관리자
                     </Select.Item>
                   </Select.Content>
@@ -237,9 +233,9 @@ export const BoardEditor = React.memo(function BoardEditor({
                 key={`write-auth-${formData.writeAuth}`}
                 collection={createListCollection({
                   items: [
-                    { value: "ROLE_USER", label: "전체 공개" },
-                    { value: "ROLE_MEMBER", label: "회원" },
-                    { value: "ROLE_ADMIN", label: "관리자" },
+                    { value: "USER", label: "전체 공개" },
+                    { value: "USER", label: "회원" },
+                    { value: "ADMIN", label: "관리자" },
                   ],
                 })}
                 size="xs"
@@ -261,17 +257,13 @@ export const BoardEditor = React.memo(function BoardEditor({
                 </Select.Control>
                 <Select.Positioner>
                   <Select.Content>
-                    <Select.Item
-                      item={{ value: "ROLE_USER", label: "전체 공개" }}
-                    >
+                    <Select.Item item={{ value: "USER", label: "전체 공개" }}>
                       전체 공개
                     </Select.Item>
-                    <Select.Item item={{ value: "ROLE_MEMBER", label: "회원" }}>
+                    <Select.Item item={{ value: "USER", label: "회원" }}>
                       회원
                     </Select.Item>
-                    <Select.Item
-                      item={{ value: "ROLE_ADMIN", label: "관리자" }}
-                    >
+                    <Select.Item item={{ value: "ADMIN", label: "관리자" }}>
                       관리자
                     </Select.Item>
                   </Select.Content>

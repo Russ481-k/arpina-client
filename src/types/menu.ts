@@ -20,7 +20,7 @@ export type MenuType =
   | "POPUP"
   | "PROGRAM";
 export type BoardSkinType = "BASIC" | "FAQ" | "QNA" | "PRESS" | "FORM";
-export type BoardAuthType = "PUBLIC" | "ROLE_USER" | "ROLE_ADMIN"; // Assuming ROLE_ADMIN can be part of auth
+export type BoardAuthType = "PUBLIC" | "USER" | "ADMIN"; // Assuming ROLE_ADMIN can be part of auth
 
 export interface PageDetailsBaseDto {
   menuId: number;

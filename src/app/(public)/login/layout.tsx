@@ -3,24 +3,24 @@
 import "@/styles/globals.css";
 import { Box } from "@chakra-ui/react";
 import { useColors } from "@/styles/theme";
+import { AuthProvider } from "@/lib/AuthContext";
+import { ReactNode } from "react";
 
-export default function LoginLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function LoginLayout({ children }: { children: ReactNode }) {
   const colors = useColors();
 
   return (
-    <Box
-      as="main"
-      bg={colors.bg}
-      flex="1"
-      position="relative"
-      minH="100vh"
-      mx="auto"
-    >
-      {children}
-    </Box>
+    <AuthProvider>
+      <Box
+        as="main"
+        bg={colors.bg}
+        flex="1"
+        position="relative"
+        minH="100vh"
+        mx="auto"
+      >
+        {children}
+      </Box>
+    </AuthProvider>
   );
 }

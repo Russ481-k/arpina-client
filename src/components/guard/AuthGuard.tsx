@@ -1,4 +1,4 @@
-import { useAuth, User } from "@/contexts/AuthContext";
+import { useAuth, UserContextState } from "@/lib/AuthContext";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, ReactNode } from "react";
 import { toaster } from "@/components/ui/toaster";
@@ -6,7 +6,7 @@ import { Center, Spinner, Text, Box, Flex } from "@chakra-ui/react";
 
 interface AuthGuardProps {
   children: ReactNode;
-  allowedRoles?: Array<"ROLE_USER" | "ROLE_ADMIN">;
+  allowedRoles?: Array<UserContextState["role"]>;
   checkPasswordChange?: boolean;
   redirectTo?: string;
   authenticationNeededMessage?: {
@@ -60,11 +60,14 @@ export const AuthGuard = ({
       return;
     }
 
-    const currentUser = user as User;
+    if (!user) {
+      if (pathname !== redirectTo) router.push(redirectTo);
+      return;
+    }
 
     if (
       checkPasswordChange &&
-      currentUser.requiresPasswordChange &&
+      user.requiresPasswordChange &&
       pathname !== changePasswordPath
     ) {
       toaster.create({
@@ -79,22 +82,19 @@ export const AuthGuard = ({
     }
 
     if (allowedRoles && allowedRoles.length > 0) {
-      const userRole = currentUser.role;
+      const userRole = user.role;
       if (!allowedRoles.includes(userRole)) {
         toaster.create({
           title: authorizationFailedMessage.title,
           description: authorizationFailedMessage.description,
           type: "error",
         });
-        router.push(userRole === "ROLE_ADMIN" ? "/admin/dashboard" : "/");
+        router.push(userRole === "ADMIN" ? "/admin/dashboard" : "/");
         return;
       }
     }
 
-    if (
-      currentUser.role === "ROLE_ADMIN" &&
-      pathname.startsWith("/application/confirm")
-    ) {
+    if (user.role === "ADMIN" && pathname.startsWith("/application/confirm")) {
       toaster.create({
         title: "접근 불가 (관리자)",
         description: "관리자 계정은 해당 페이지에 직접 접근할 수 없습니다.",

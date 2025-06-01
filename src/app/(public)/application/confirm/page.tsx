@@ -558,7 +558,7 @@ const ApplicationConfirmPage = () => {
 
   return (
     <AuthGuard
-      allowedRoles={["ROLE_USER"]}
+      allowedRoles={["USER"]}
       authorizationFailedMessage={{
         title: "접근 권한 없음",
         description: "수영 강습 신청은 일반 사용자만 가능합니다.",

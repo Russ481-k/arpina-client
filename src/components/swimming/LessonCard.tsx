@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { toaster } from "../ui/toaster";
 import LessonCardActions from "./LessonCardActions";
 import { getMembershipLabel } from "@/lib/utils/displayUtils";
+import { useAuth } from "@/lib/AuthContext";
+import { UserContextState } from "@/lib/AuthContext";
 
 interface LessonCardProps {
   lesson: LessonDTO & { applicationStartDate?: string };
@@ -81,6 +83,7 @@ const parseDisplayKSTDate = (
 export const LessonCard: React.FC<LessonCardProps> = React.memo(
   ({ lesson, context = "listing", enrollment, onRequestCancel }) => {
     const router = useRouter();
+    const { user, isAuthenticated, isLoading: authIsLoading } = useAuth();
 
     const occupiedSpots = Math.max(
       0,
@@ -127,45 +130,46 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
     // --- End Display Status Calculation ---
 
     const handleApplyClick = () => {
-      // 먼저 로그인 여부 확인
-      if (typeof window !== "undefined") {
-        const authToken = localStorage.getItem("auth_token");
-        const authUser = localStorage.getItem("auth_user");
+      // 1. 로그인 여부 확인 (useAuth 사용)
+      if (authIsLoading) {
+        toaster.create({
+          title: "확인 중",
+          description: "사용자 인증 정보를 확인하고 있습니다.",
+          type: "info",
+          duration: 1500,
+        });
+        return; // 인증 정보 로딩 중이면 아무것도 하지 않음
+      }
 
-        if (!authToken || !authUser) {
-          toaster.create({
-            title: "로그인이 필요합니다",
-            description: "수영 강습 신청은 로그인 후 이용 가능합니다.",
-            type: "warning",
-            duration: 3000,
-          });
-          router.push("/login");
-          return;
-        }
+      if (!isAuthenticated) {
+        toaster.create({
+          title: "로그인이 필요합니다",
+          description: "수영 강습 신청은 로그인 후 이용 가능합니다.",
+          type: "warning",
+          duration: 3000,
+        });
+        router.push("/login");
+        return;
+      }
 
-        // 역할 확인 - 관리자는 신청 불가
-        try {
-          const userInfo = JSON.parse(authUser);
-          if (userInfo.role === "ROLE_ADMIN") {
-            toaster.create({
-              title: "신청 권한 없음",
-              description: "관리자 계정은 수영 강습을 신청할 수 없습니다.",
-              type: "error",
-              duration: 3000,
-            });
-            return;
-          }
-        } catch (error) {
-          console.error("Failed to parse user info:", error);
+      // 2. 역할 확인 - 관리자는 신청 불가 (useAuth 사용)
+      if (user) {
+        const adminRoles: Array<UserContextState["role"]> = [
+          "ADMIN",
+          "SYSTEM_ADMIN",
+        ];
+        if (adminRoles.includes(user.role)) {
           toaster.create({
-            title: "인증 오류",
-            description: "사용자 정보를 확인할 수 없습니다.",
+            title: "신청 권한 없음",
+            description: "관리자 계정은 수영 강습을 신청할 수 없습니다.",
             type: "error",
+            duration: 3000,
           });
           return;
         }
       }
 
+      // 3. 신청 가능 여부 확인 (lesson.id 사용)
       if (!canApply || !lesson.id) {
         toaster.create({
           title: "신청 불가",
@@ -183,6 +187,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
         duration: 1500,
       });
 
+      // 4. 쿼리 파라미터 생성 (lesson.id 사용 및 toString 명시)
       const queryParams = new URLSearchParams({
         lessonId: lesson.id.toString(),
         lessonTitle: lesson.title,

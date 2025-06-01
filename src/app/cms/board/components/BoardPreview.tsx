@@ -891,7 +891,7 @@ const BoardPreview = React.memo(function BoardPreview({
             selectedArticleForDetail &&
             isAuthenticated &&
             (user?.username === selectedArticleForDetail.writer ||
-              user?.role === "ROLE_ADMIN")
+              user?.role === "ADMIN")
           )
         }
         canDelete={
@@ -900,7 +900,7 @@ const BoardPreview = React.memo(function BoardPreview({
             selectedArticleForDetail &&
             isAuthenticated &&
             (user?.username === selectedArticleForDetail.writer ||
-              user?.role === "ROLE_ADMIN")
+              user?.role === "ADMIN")
           )
         }
       />

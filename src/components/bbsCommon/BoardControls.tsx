@@ -65,13 +65,13 @@ const BoardControls: React.FC<BoardControlsProps> = ({
     const skinType = pageDetails.boardSkinType;
 
     if (skinType === "QNA" || skinType === "FORM") {
-      // For QNA/FORM, allow if auth is generally permissive for public users (e.g., ROLE_USER)
+      // For QNA/FORM, allow if auth is generally permissive for public users (e.g., USER)
       // Do NOT show if it's ADMIN-only or MEMBER-only for writing on these public Q&A types.
-      return boardAuth === "ROLE_USER"; // Or add other permissive public roles like ROLE_GUEST
+      return boardAuth === "USER"; // Or add other permissive public roles like GUEST
     } else {
       // For other board types (BASIC, PRESS etc.) on public side,
       // only show if write auth is explicitly set to a public/all users role.
-      return boardAuth === "ROLE_USER"; // Or a specific "PUBLIC_WRITE_ALLOWED" role
+      return boardAuth === "USER"; // Or a specific "PUBLIC_WRITE_ALLOWED" role
     }
   };
 
