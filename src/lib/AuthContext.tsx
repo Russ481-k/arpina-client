@@ -9,7 +9,7 @@ import {
   useRef,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useQuery, useMutation, QueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "@/lib/api/auth";
 import {
   User as ApiUserType,
@@ -97,11 +97,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<UserContextState | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setErrorState] = useState<string | null>(null);
+  const [isLoggedOut, setIsLoggedOut] = useState(false);
 
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   const currentPath = usePathname();
   const colors = useColors();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setIsClient(true);
@@ -127,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return response.data;
     },
-    enabled: isClient && !!getToken() && !user,
+    enabled: isClient && !!getToken() && !user && !isLoggedOut,
     retry: 1,
   });
 
@@ -207,6 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserState(mappedUser);
         setIsAuthenticated(true);
         setErrorState(null);
+        setIsLoggedOut(false);
 
         const fromCMSLogin = currentPath === "/cms/login";
         const fromPublicLogin = currentPath === "/login";
@@ -296,6 +299,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserState(null);
       setIsAuthenticated(false);
       setErrorState(null);
+      setIsLoggedOut(true);
+
+      queryClient.clear();
+
       router.push(fromCMS ? "/cms/login" : "/login");
       toaster.create({
         title: "로그아웃 성공",
@@ -311,6 +318,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserState(null);
       setIsAuthenticated(false);
       setErrorState(null);
+      setIsLoggedOut(true);
+
+      queryClient.clear();
+
       router.push(fromCMS ? "/cms/login" : "/login");
       toaster.create({
         title: "로그아웃",

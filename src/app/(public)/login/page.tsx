@@ -122,7 +122,7 @@ export default function LoginPage() {
       });
       router.push("/"); // 메인 페이지로 리디렉션
     }
-  }, [authLoading, isAuthenticated, router]); // 의존성 배열에 authLoading, isAuthenticated, router 추가
+  }, []); // 의존성 배열에 authLoading, isAuthenticated, router 추가
 
   // Check if the form is in loading state
   const isLoading = isSubmitting || authLoading;

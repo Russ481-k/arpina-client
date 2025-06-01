@@ -109,7 +109,7 @@ export interface RenewalRequestDto {
 }
 
 /**
- * DTO for POST /api/v1/swimming/enroll
+ * DTO for POST /api/v1/payment/prepare-kispg-payment
  * Request body when a user initiates a lesson enrollment.
  */
 export interface EnrollLessonRequestDto {
@@ -117,15 +117,27 @@ export interface EnrollLessonRequestDto {
 }
 
 /**
- * DTO for POST /api/v1/swimming/enroll
- * Response after successfully initiating a lesson enrollment.
- * Provides information needed to proceed to the KISPG payment page.
+ * DTO for POST /api/v1/payment/prepare-kispg-payment
+ * Response after successfully initiating a lesson enrollment and payment preparation.
+ * Contains KISPG payment initialization parameters.
  */
 export interface EnrollInitiationResponseDto {
-  enrollId: number;
-  lessonId: number; // Though not in user.md, swim-overview.md has it and it's useful
-  paymentPageUrl: string; // Example: /payment/process?enroll_id=12345
-  paymentExpiresAt: string; // UTC ISO 8601 string, 5 minutes from creation
+  mid: string;
+  moid: string; // Merchant Order ID (temp_enrollId_timestamp)
+  amt: string; // Amount as string
+  itemName: string; // Goods name (lesson title)
+  buyerName: string; // Buyer name
+  buyerTel: string; // Buyer phone
+  buyerEmail: string; // Buyer email
+  returnUrl: string; // Return URL after payment
+  notifyUrl: string; // Webhook URL
+  ediDate: string; // Transaction datetime (yyyyMMddHHmmss)
+  requestHash: string; // Security hash (encData)
+  mbsReserved1: string; // Contains enrollId info (temp_enrollId)
+  mbsUsrId: string; // Merchant user ID
+  userIp: string; // User IP address
+  goodsSplAmt: string; // Supply amount
+  goodsVat: string; // VAT amount
 }
 
 /**

@@ -226,7 +226,7 @@ const LessonList = React.memo(function LessonList({
                     </Badge>
                   </Flex>
                   <Text fontSize="xs" color={secondaryTextColor}>
-                    {lesson.startDate} ~ {lesson.endDate}
+                    {lesson.lessonTime}
                   </Text>
                 </VStack>
 

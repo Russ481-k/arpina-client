@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
@@ -26,7 +26,6 @@ import { toaster } from "@/components/ui/toaster";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
 import KISPGPaymentPopup from "@/components/payment/KISPGPaymentPopup";
-import { useKISPGPayment } from "@/hooks/useKISPGPayment";
 import { AuthGuard } from "@/components/guard/AuthGuard";
 
 interface MembershipOption {
@@ -94,32 +93,9 @@ const ApplicationConfirmPage = () => {
   const [lockerError, setLockerError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(APPLICATION_TIMEOUT_SECONDS);
 
-  // KISPG Payment Integration
-  const { isInitializing, paymentData, paymentRef, initializePayment } =
-    useKISPGPayment({
-      enrollId: enrollId || 0,
-      onPaymentInitError: async (error) => {
-        console.error("Payment initialization failed:", error);
-        setIsSubmitting(false);
-
-        // 결제 초기화 실패 시 신청 취소
-        if (enrollId) {
-          try {
-            await swimmingPaymentService.cancelUserEnrollment(enrollId, {
-              reason: "결제 초기화 실패",
-            });
-            toaster.create({
-              title: "신청 취소됨",
-              description:
-                "결제 준비 중 오류가 발생하여 신청이 취소되었습니다.",
-              type: "warning",
-            });
-          } catch (cancelError) {
-            console.error("Failed to cancel enrollment:", cancelError);
-          }
-        }
-      },
-    });
+  // Payment data for KISPG
+  const [paymentData, setPaymentData] = useState<any>(null);
+  const paymentRef = useRef<any>(null);
 
   const colors = useColors();
   const pageBg = colors.bg;
@@ -158,6 +134,38 @@ const ApplicationConfirmPage = () => {
     mb: 4,
     borderBottomWidth: "1px",
     borderColor: borderColor,
+  };
+
+  // Helper function to extract enrollId from payment response
+  const extractEnrollIdFromPaymentResponse = (response: any): number | null => {
+    try {
+      // Extract from mbsReserved1 field (format: "temp_enrollId")
+      if (response.mbsReserved1) {
+        const parts = response.mbsReserved1.split("_");
+        if (parts.length >= 2) {
+          const enrollId = parseInt(parts[1]);
+          if (!isNaN(enrollId)) {
+            return enrollId;
+          }
+        }
+      }
+
+      // Alternative: Extract from moid field (format: "temp_enrollId_timestamp")
+      if (response.moid) {
+        const parts = response.moid.split("_");
+        if (parts.length >= 2) {
+          const enrollId = parseInt(parts[1]);
+          if (!isNaN(enrollId)) {
+            return enrollId;
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error extracting enrollId from payment response:", error);
+      return null;
+    }
   };
 
   useEffect(() => {
@@ -336,6 +344,22 @@ const ApplicationConfirmPage = () => {
       return;
     }
 
+    if (!profile.phone) {
+      toaster.create({
+        title: "전화번호 필요",
+        description:
+          "결제를 위해 전화번호가 필요합니다. 마이페이지에서 프로필을 업데이트해주세요.",
+        type: "warning",
+      });
+      setError(
+        "결제를 위해 전화번호가 필요합니다. 마이페이지에서 프로필을 업데이트해주세요."
+      );
+      setIsSubmitting(false); // Ensure button is re-enabled
+      // Optionally, redirect to profile page:
+      // router.push("/mypage/profile-edit"); // Assuming such a page exists
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -351,22 +375,32 @@ const ApplicationConfirmPage = () => {
         enrollRequestData
       );
 
-      if (enrollResponse && enrollResponse.enrollId) {
-        setEnrollId(enrollResponse.enrollId);
+      if (enrollResponse) {
+        // Extract enrollId from the payment response
+        const extractedEnrollId =
+          extractEnrollIdFromPaymentResponse(enrollResponse);
 
-        toaster.create({
-          title: "신청 등록",
-          description: "강습 신청이 등록되었습니다. 결제를 진행합니다.",
-          type: "info",
-          duration: 2000,
-        });
+        if (extractedEnrollId) {
+          setEnrollId(extractedEnrollId);
+          setPaymentData(enrollResponse); // 결제 데이터 설정
 
-        // Step 2: Initialize KISPG payment with the correct enrollId
-        // enrollId를 직접 전달하여 상태 업데이트 지연 문제 해결
-        setTimeout(() => {
-          setIsSubmitting(false); // 일단 submitting 상태 해제
-          initializePayment(enrollResponse.enrollId);
-        }, 500);
+          toaster.create({
+            title: "신청 등록",
+            description: "강습 신청이 등록되었습니다. 결제를 진행합니다.",
+            type: "info",
+            duration: 2000,
+          });
+
+          // Step 2: 결제 팝업 트리거
+          setTimeout(() => {
+            setIsSubmitting(false);
+            if (paymentRef.current) {
+              paymentRef.current.triggerPayment();
+            }
+          }, 500);
+        } else {
+          throw new Error("응답에서 신청 ID를 찾을 수 없습니다.");
+        }
       } else {
         throw new Error("강습 신청 응답이 올바르지 않습니다.");
       }
@@ -406,32 +440,23 @@ const ApplicationConfirmPage = () => {
     if (success) {
       toaster.create({
         title: "결제 완료",
-        description: "수영 강습 신청이 완료되었습니다.",
+        description:
+          "수영 강습 신청이 완료되었습니다. 마이페이지로 이동합니다.",
         type: "success",
-        duration: 5000,
+        duration: 4000,
       });
 
-      // 마이페이지로 이동
+      // 마이페이지로 이동 (결제 성공 시 즉시 이동)
       setTimeout(() => {
         router.push("/mypage?tab=수영장_신청정보");
-      }, 1000);
+      }, 1500);
     } else {
       toaster.create({
         title: "결제 실패",
         description: data?.message || "결제 처리 중 오류가 발생했습니다.",
         type: "error",
+        duration: 5000,
       });
-
-      // 결제 실패 시 신청 취소
-      if (enrollId) {
-        try {
-          await swimmingPaymentService.cancelUserEnrollment(enrollId, {
-            reason: `결제 실패: ${data?.message || "알 수 없는 오류"}`,
-          });
-        } catch (error) {
-          console.error("Failed to cancel enrollment:", error);
-        }
-      }
 
       setIsSubmitting(false);
     }
@@ -462,7 +487,7 @@ const ApplicationConfirmPage = () => {
     );
   }
 
-  if (error && !isSubmitting && !isInitializing) {
+  if (error && !isSubmitting) {
     return (
       <Flex
         bg={pageBg}
@@ -976,19 +1001,14 @@ const ApplicationConfirmPage = () => {
             isLoading ||
             isMembershipOptionsLoading ||
             isLockerDetailsLoading ||
-            isInitializing ||
             !profile ||
             (!!lockerError && selectedLocker)
           }
-          loading={isSubmitting || isInitializing}
-          loadingText={isInitializing ? "결제 준비 중..." : "신청 처리 중..."}
+          loading={isSubmitting}
+          loadingText="신청 처리 중..."
         >
-          {isSubmitting || isInitializing ? (
-            isInitializing ? (
-              "결제 준비 중..."
-            ) : (
-              "신청 처리 중..."
-            )
+          {isSubmitting ? (
+            "신청 처리 중..."
           ) : (
             <Flex align="center">
               <Text>최종 신청 및 결제하기</Text>

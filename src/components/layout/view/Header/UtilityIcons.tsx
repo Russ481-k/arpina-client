@@ -1,10 +1,11 @@
 "use client";
 
 import { Flex, IconButton, Menu, Portal } from "@chakra-ui/react";
-import { memo, useCallback, useState, useEffect } from "react";
+import { memo, useCallback } from "react";
 import { Grid3x3, Search, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@/lib/AuthContext";
 
 interface UtilityIconsProps {
   iconColor: string;
@@ -14,42 +15,7 @@ interface UtilityIconsProps {
 export const UtilityIcons = memo(
   ({ iconColor, onSitemapOpen }: UtilityIconsProps) => {
     const router = useRouter();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-    useEffect(() => {
-      const checkAuthState = () => {
-        // Ensure this runs only on the client
-        if (typeof window !== "undefined") {
-          const authToken = localStorage.getItem("auth_token");
-          const authUser = localStorage.getItem("auth_user");
-          setIsAuthenticated(!!(authToken && authUser));
-        }
-      };
-
-      checkAuthState(); // Initial check
-
-      const handleStorageChange = (event: StorageEvent) => {
-        if (
-          event.key === "auth_token" ||
-          event.key === "auth_user" ||
-          event.key === null
-        ) {
-          checkAuthState();
-        }
-      };
-
-      const handleAuthChangeEvent = () => {
-        checkAuthState();
-      };
-
-      window.addEventListener("storage", handleStorageChange);
-      window.addEventListener("authChange", handleAuthChangeEvent); // Listen for custom event
-
-      return () => {
-        window.removeEventListener("storage", handleStorageChange);
-        window.removeEventListener("authChange", handleAuthChangeEvent); // Cleanup custom event listener
-      };
-    }, []); // Check on initial mount and when storage/auth changes
+    const { isAuthenticated, logout } = useAuth();
 
     const handleLogin = useCallback(() => {
       router.push("/login");
@@ -63,16 +29,14 @@ export const UtilityIcons = memo(
       router.push("/mypage");
     }, [router]);
 
-    const handleLogout = useCallback(() => {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("auth_user");
-        setIsAuthenticated(false);
-        window.dispatchEvent(new CustomEvent("authChange")); // Dispatch custom event
-        router.push("/"); // Redirect to homepage after logout
-        // Optionally, you can add a toaster notification for successful logout here
+    const handleLogout = useCallback(async () => {
+      try {
+        await logout();
+      } catch (error) {
+        console.error("Logout error:", error);
+        // logout() already handles error cases and cleans up local state
       }
-    }, [router]);
+    }, [logout]);
 
     return (
       <Flex

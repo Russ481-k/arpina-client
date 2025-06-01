@@ -13,12 +13,12 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import Image from "next/image";
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, useState, useCallback } from "react";
 import NextLink from "next/link";
 import { Menu } from "@/types/api";
 import { Grid3X3Icon, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toaster } from "@/components/ui/toaster";
+import { useAuth } from "@/lib/AuthContext";
 
 interface MobileMenuDrawerProps {
   menusWithLastFlag: (Menu & { isLastMenuItem?: boolean })[];
@@ -39,42 +39,8 @@ export const MobileMenuDrawer = memo(
     height,
   }: MobileMenuDrawerProps) => {
     const router = useRouter();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const { isAuthenticated, logout } = useAuth();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false); // To manually control drawer closing
-
-    useEffect(() => {
-      const checkAuthState = () => {
-        if (typeof window !== "undefined") {
-          const authToken = localStorage.getItem("auth_token");
-          const authUser = localStorage.getItem("auth_user");
-          setIsAuthenticated(!!(authToken && authUser));
-        }
-      };
-
-      checkAuthState(); // Initial check
-
-      const handleStorageChange = (event: StorageEvent) => {
-        if (
-          event.key === "auth_token" ||
-          event.key === "auth_user" ||
-          event.key === null
-        ) {
-          checkAuthState();
-        }
-      };
-
-      const handleAuthChangeEvent = () => {
-        checkAuthState();
-      };
-
-      window.addEventListener("storage", handleStorageChange);
-      window.addEventListener("authChange", handleAuthChangeEvent); // Listen for custom event
-
-      return () => {
-        window.removeEventListener("storage", handleStorageChange);
-        window.removeEventListener("authChange", handleAuthChangeEvent); // Cleanup custom event listener
-      };
-    }, []); // Empty dependency array is correct as we manage listeners manually.
 
     const handleNavigate = useCallback(
       (path: string) => {
@@ -84,22 +50,16 @@ export const MobileMenuDrawer = memo(
       [router]
     );
 
-    const handleLogout = useCallback(() => {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("auth_user");
-        setIsAuthenticated(false);
-        window.dispatchEvent(new CustomEvent("authChange")); // Dispatch custom event
-        router.push("/");
+    const handleLogout = useCallback(async () => {
+      try {
+        await logout();
         setIsDrawerOpen(false); // Close drawer after logout
-        toaster.create({
-          title: "로그아웃 성공",
-          description: "성공적으로 로그아웃되었습니다.",
-          type: "success",
-          duration: 3000,
-        });
+      } catch (error) {
+        console.error("Logout error:", error);
+        // logout() already handles error cases and cleans up local state
+        setIsDrawerOpen(false); // Still close drawer even if logout fails
       }
-    }, [router]);
+    }, [logout]);
 
     return (
       <Drawer.Root

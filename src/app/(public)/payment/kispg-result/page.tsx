@@ -82,15 +82,27 @@ const KISPGResultPage = () => {
         // Try to extract enrollId from mbsReserved or moid
         let enrollIdFromParam: number | null = null;
 
-        if (mbsReserved && !isNaN(parseInt(mbsReserved))) {
-          enrollIdFromParam = parseInt(mbsReserved);
-        } else if (moid) {
-          // moid format: "enroll_12345_timestamp"
+        // First try mbsReserved (format: "temp_12")
+        if (mbsReserved) {
+          const parts = mbsReserved.split("_");
+          if (parts.length >= 2 && !isNaN(parseInt(parts[1]))) {
+            enrollIdFromParam = parseInt(parts[1]);
+          }
+        }
+
+        // If not found, try moid (format: "temp_12_timestamp")
+        if (!enrollIdFromParam && moid) {
           const parts = moid.split("_");
           if (parts.length >= 2 && !isNaN(parseInt(parts[1]))) {
             enrollIdFromParam = parseInt(parts[1]);
           }
         }
+
+        console.log("EnrollId extraction:", {
+          mbsReserved,
+          moid,
+          extractedEnrollId: enrollIdFromParam,
+        });
 
         if (!enrollIdFromParam) {
           throw new Error("신청 정보를 찾을 수 없습니다.");
@@ -111,77 +123,34 @@ const KISPGResultPage = () => {
         };
 
         if (resultCd === "0000") {
-          // Payment successful - check enrollment status
-          try {
-            const enrollmentData = await mypageApi.getEnrollmentById(
-              enrollIdFromParam
-            );
+          // Payment successful - in the new flow, enrollment is created after payment success
+          finalResult = "SUCCESS";
+          finalMessage =
+            "결제가 성공적으로 완료되었습니다. 수강신청이 처리되었습니다.";
+          setPaymentResult("SUCCESS");
+          setResultMessage(finalMessage);
 
-            console.log("Enrollment Data:", enrollmentData);
-
-            if (
-              enrollmentData &&
-              (enrollmentData.status === "PAID" ||
-                enrollmentData.status === "PAYMENT_TIMEOUT")
-            ) {
-              finalResult = "SUCCESS";
-              finalMessage = "결제가 성공적으로 완료되었습니다.";
-              setPaymentResult("SUCCESS");
-              setResultMessage(finalMessage);
-
-              // 팝업이 아닌 경우만 토스터 표시
-              if (!window.opener) {
-                toaster.create({
-                  title: "결제 완료",
-                  description: "수영 강습 신청이 완료되었습니다.",
-                  type: "success",
-                  duration: 5000,
-                });
-              }
-            } else {
-              // Payment might still be processing
-              finalResult = "PROCESSING";
-              finalMessage =
-                "결제 처리 중입니다. 잠시 후 신청 내역을 확인해주세요.";
-              setPaymentResult("PROCESSING");
-              setResultMessage(finalMessage);
-            }
-          } catch (enrollError) {
-            console.error("Failed to fetch enrollment:", enrollError);
-            // Even if we can't fetch enrollment, if KISPG said success, show success
-            finalResult = "SUCCESS";
-            finalMessage =
-              "결제가 완료되었습니다. 신청 내역은 마이페이지에서 확인해주세요.";
-            setPaymentResult("SUCCESS");
-            setResultMessage(finalMessage);
+          // 팝업이 아닌 경우만 토스터 표시
+          if (!window.opener) {
+            toaster.create({
+              title: "결제 완료",
+              description: "수영 강습 결제 및 신청이 완료되었습니다.",
+              type: "success",
+              duration: 5000,
+            });
           }
         } else {
-          // Payment failed
+          // Payment failed - no enrollment to cancel in the new flow
           finalResult = "FAILED";
           finalMessage = resultMsg || "결제에 실패했습니다.";
           setPaymentResult("FAILED");
           setResultMessage(finalMessage);
 
-          // 결제 실패 시 신청 취소 시도
-          if (enrollIdFromParam) {
-            try {
-              const { swimmingPaymentService } = await import(
-                "@/lib/api/swimming"
-              );
-              await swimmingPaymentService.cancelUserEnrollment(
-                enrollIdFromParam,
-                {
-                  reason: `결제 실패: ${resultMsg || "알 수 없는 오류"}`,
-                }
-              );
-              console.log("Enrollment cancelled due to payment failure");
-            } catch (cancelError) {
-              console.error(
-                "Failed to cancel enrollment after payment failure:",
-                cancelError
-              );
-            }
-          }
+          console.log("Payment failed - no enrollment created:", {
+            resultCd,
+            resultMsg,
+            enrollIdFromParam,
+          });
         }
 
         // 팝업인 경우 부모 창에 메시지 전송
@@ -197,15 +166,15 @@ const KISPGResultPage = () => {
             },
           };
 
+          console.log("Sending postMessage to parent:", messageData);
+
           // 부모 창에 메시지 전송
           window.opener.postMessage(messageData, window.location.origin);
 
-          // 성공인 경우 3초 후 자동으로 창 닫기
-          if (finalResult === "SUCCESS") {
-            setTimeout(() => {
-              window.close();
-            }, 3000);
-          }
+          // 결제 성공/실패 상관없이 3초 후 자동 창 닫기 (팝업인 경우)
+          setTimeout(() => {
+            window.close();
+          }, 3000);
         }
       } catch (error: any) {
         console.error("Payment result processing error:", error);
@@ -222,12 +191,12 @@ const KISPGResultPage = () => {
         }
 
         // 팝업인 경우 에러도 부모 창에 전송
-        if (window.opener && enrollId) {
+        if (window.opener) {
           window.opener.postMessage(
             {
               type: "KISPG_PAYMENT_RESULT",
               success: false,
-              enrollId: enrollId,
+              enrollId: enrollId || 0,
               data: {
                 error: error.message,
                 result: "FAILED",
@@ -235,6 +204,11 @@ const KISPGResultPage = () => {
             },
             window.location.origin
           );
+
+          // 에러인 경우에도 3초 후 자동으로 창 닫기
+          setTimeout(() => {
+            window.close();
+          }, 3000);
         }
       } finally {
         setIsProcessing(false);
@@ -350,7 +324,7 @@ const KISPGResultPage = () => {
             {resultMessage}
           </Text>
 
-          {isPopup && paymentResult === "SUCCESS" && (
+          {isPopup && (
             <Text fontSize="sm" color={secondaryText}>
               3초 후 자동으로 창이 닫힙니다.
             </Text>

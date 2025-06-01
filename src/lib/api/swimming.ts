@@ -175,8 +175,11 @@ export const getLocker = async (lockerId: number): Promise<LockerDTO> => {
 // 수업 신청 및 결제
 export const enrollLesson = async (
   enrollRequest: EnrollRequestDto
-): Promise<EnrollResponseDto> => {
-  const response = await api.post("/swimming/enroll", enrollRequest);
+): Promise<EnrollInitiationResponseDto> => {
+  const response = await api.post(
+    "/payment/prepare-kispg-payment",
+    enrollRequest
+  );
   return response.data.data;
 };
 
@@ -258,15 +261,15 @@ export const swimmingPaymentService = {
   },
 
   /**
-   * Initiates a lesson enrollment.
-   * Corresponds to POST /api/v1/swimming/enroll
+   * Initiates a lesson enrollment and payment preparation.
+   * Corresponds to POST /api/v1/payment/prepare-kispg-payment
    */
   enrollLesson: withAuthRedirect(
     (data: EnrollLessonRequestDto): Promise<EnrollInitiationResponseDto> => {
       return privateApiMethods.post<
         EnrollInitiationResponseDto,
         EnrollLessonRequestDto
-      >(`${SWIMMING_BASE_PATH}/enroll`, data);
+      >(`${PAYMENT_BASE_PATH}/prepare-kispg-payment`, data);
     }
   ),
 

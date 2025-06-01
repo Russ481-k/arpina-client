@@ -403,7 +403,7 @@ export interface PaginatedResponse<T> {
 // --- Swimming & Payment Related DTOs ---
 
 /**
- * DTO for POST /api/v1/swimming/enroll
+ * DTO for POST /api/v1/payment/prepare-kispg-payment
  * Request body when a user initiates a lesson enrollment.
  */
 export interface EnrollLessonRequestDto {
@@ -413,15 +413,27 @@ export interface EnrollLessonRequestDto {
 }
 
 /**
- * DTO for POST /api/v1/swimming/enroll
- * Response after successfully initiating a lesson enrollment.
- * Provides information needed to proceed to the KISPG payment page.
+ * DTO for POST /api/v1/payment/prepare-kispg-payment
+ * Response after successfully initiating a lesson enrollment and payment preparation.
+ * Contains KISPG payment initialization parameters.
  */
 export interface EnrollInitiationResponseDto {
-  enrollId: number;
-  lessonId: number;
-  paymentPageUrl: string;
-  paymentExpiresAt: string;
+  mid: string;
+  moid: string; // Merchant Order ID (temp_enrollId_timestamp)
+  amt: string; // Amount as string
+  itemName: string; // Goods name (lesson title)
+  buyerName: string; // Buyer name
+  buyerTel: string; // Buyer phone
+  buyerEmail: string; // Buyer email
+  returnUrl: string; // Return URL after payment
+  notifyUrl: string; // Webhook URL
+  ediDate: string; // Transaction datetime (yyyyMMddHHmmss)
+  requestHash: string; // Security hash (encData)
+  mbsReserved1: string; // Contains enrollId info (temp_enrollId)
+  mbsUsrId: string; // Merchant user ID
+  userIp: string; // User IP address
+  goodsSplAmt: string; // Supply amount
+  goodsVat: string; // VAT amount
 }
 
 /**
@@ -440,6 +452,14 @@ export interface KISPGPaymentInitResponseDto {
   notifyUrl: string; // Webhook URL
   ediDate: string; // Transaction datetime (yyyyMMddHHmmss)
   requestHash: string; // Security hash (encData)
+
+  // Optional KISPG parameters
+  userIp?: string; // User IP address
+  mbsUsrId?: string; // Merchant user ID
+  mbsIp?: string; // Merchant server IP
+  goodsSplAmt?: string; // Supply amount
+  goodsVat?: string; // VAT amount
+  goodsSvsAmt?: string; // Service amount
 }
 
 /**
