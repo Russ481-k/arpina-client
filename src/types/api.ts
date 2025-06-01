@@ -885,13 +885,85 @@ export interface PaymentVerificationResponseDto {
   };
 }
 
-// Payment approval and enrollment creation API types (correct API)
+// --- KISPG Payment Result Interface ---
+
+/**
+ * Complete KISPG payment result parameters
+ * Based on KISPG API documentation
+ */
+export interface KISPGPaymentResultDto {
+  // 기본 결제 정보
+  resultCd: string; // 결과코드
+  resultMsg: string; // 결과메시지
+  payMethod: string; // 지불수단
+  tid: string; // 거래번호
+  appDtm: string; // 결제일시
+  appNo: string; // 승인번호
+  ordNo: string; // 주문번호
+  goodsName: string; // 결제 상품명
+  amt: string; // 거래금액
+  ordNm: string; // 결제자 이름
+
+  // 카드/은행 정보
+  fnNm?: string; // 카드사명, 은행명
+  cancelYN?: string; // 취소여부
+  appCardCd?: string; // 발급사코드
+  acqCardCd?: string; // 매입사코드
+  quota?: string; // 카드 할부기간
+  nointFlg?: string; // 분담무이자구분
+  usePointAmt?: string; // 사용 포인트 양
+  cardType?: string; // 카드타입 (0:신용, 1:체크)
+  authType?: string; // 인증타입
+  cardNo?: string; // 마스킹 카드번호
+
+  // 현금영수증 정보
+  cashCrctFlg?: string; // 현금영수증 사용여부
+  crctType?: string; // 현금영수증타입
+  crctNo?: string; // 현금영수증번호
+
+  // 가상계좌 정보
+  vacntNo?: string; // 가상계좌 번호
+  lmtDay?: string; // 입금기한
+
+  // 휴대폰 결제 정보
+  socHpNo?: string; // 휴대폰번호
+
+  // 간편결제 정보
+  easyPayCd?: string; // 간편결제 코드
+  easyPayNm?: string; // 간편결제사명
+
+  // 할인 정보
+  discountType?: string; // 할인구분
+  discountAmt?: string; // 할인금액
+
+  // 수수료 정보
+  mbsFeeType?: string; // 가맹점수수료구분
+  mbsFeeAmt?: string; // 가맹점수수료금액
+
+  // 가맹점 예약 필드
+  mbsReserved?: string; // 가맹점예약필드
+
+  // 추가 필드들 (KISPG에서 추가로 전달할 수 있는 필드들)
+  [key: string]: any;
+}
+
+/**
+ * DTO for POST /api/v1/payment/approve-and-create-enrollment
+ * Request body sent from frontend after KISPG payment completion
+ */
 export interface PaymentApprovalRequestDto {
   tid: string; // KISPG에서 반환된 TID
   moid: string; // temp moid (e.g., temp_12_335ba429_1748790445804)
   amt: string; // 결제 금액
+
+  // 🆕 전체 KISPG 결제 결과 정보 (백엔드에서 필요에 따라 저장)
+  kispgPaymentResult?: KISPGPaymentResultDto;
 }
 
+/**
+ * DTO for POST /api/v1/payment/approve-and-create-enrollment
+ * Response after successful payment approval and enrollment creation
+ */
 export interface PaymentApprovalResponseDto {
   success: boolean;
   message: string;
