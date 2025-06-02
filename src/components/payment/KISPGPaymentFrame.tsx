@@ -394,90 +394,33 @@ const KISPGPaymentFrame = forwardRef<
       console.log("🧹 Message listener removed after payment success");
     }
 
-    try {
-      // 🎯 enrollId 결정: prop으로 받은 값 우선, 추출 함수로 폴백
-      const effectiveEnrollId =
-        enrollId || extractEnrollIdFromResponse(data, 0);
-      console.log("🎯 Effective enrollId for API call:", effectiveEnrollId);
+    // 🆕 새로운 자동 승인 플로우: 백엔드에서 이미 모든 처리가 완료됨
+    // 결제 성공 시 바로 성공 처리 (더 이상 수동 승인 API 호출 안함)
+    console.log("✅ Payment completed with auto-approval flow!");
+    console.log("🎯 KISPG auto-approval: Backend already processed everything");
 
-      if (!effectiveEnrollId || effectiveEnrollId <= 0) {
-        throw new Error("유효한 enrollId를 확인할 수 없습니다.");
-      }
+    // 성공 토스터 표시
+    toaster.create({
+      title: "결제 완료",
+      description: "수영 강습 결제 및 신청이 완료되었습니다.",
+      type: "success",
+      duration: 4000,
+    });
 
-      // 🎯 올바른 API 호출: approve-and-create-enrollment
-      // KISPG 결제 승인 후 Payment 및 Enrollment 생성
-      console.log("🔍 Calling CORRECT payment approval API...");
+    // 🎯 enrollId 결정: prop으로 받은 값 우선, 추출 함수로 폴백
+    const effectiveEnrollId = enrollId || extractEnrollIdFromResponse(data, 0);
+    console.log("🎯 Effective enrollId for callback:", effectiveEnrollId);
 
-      const approvalRequestData = {
-        tid: kispgResult.tid, // KISPG에서 반환된 TID
-        moid: paymentData.moid, // moid (temp_ 또는 enroll_ 형식)
-        amt: kispgResult.amt || paymentData.amt, // 결제 금액
-
-        // 🆕 추가 KISPG 결제 정보도 백엔드로 전달 (백엔드에서 필요에 따라 저장)
-        kispgPaymentResult: kispgResult, // 전체 KISPG 결제 결과
-      };
-
-      console.log("📮 Enhanced API Request data:", approvalRequestData);
-
-      const approvalResponse =
-        await swimmingPaymentService.approvePaymentAndCreateEnrollment(
-          approvalRequestData
-        );
-
-      console.log("📥 Payment approval response:", approvalResponse);
-
-      if (
-        approvalResponse &&
-        approvalResponse.success &&
-        approvalResponse.data
-      ) {
-        const { data: enrollmentData } = approvalResponse;
-
-        // 승인 및 수강신청 생성 성공
-        console.log("✅ Payment approval and enrollment creation successful!");
-
-        // 성공 토스터 표시
-        toaster.create({
-          title: "결제 완료",
-          description: "수영 강습 결제 및 신청이 완료되었습니다.",
-          type: "success",
-          duration: 4000,
-        });
-
-        // 성공 콜백 호출 (백엔드에서 받은 상세 정보 전달)
-        if (onPaymentComplete) {
-          console.log("📞 Calling onPaymentComplete with success=true");
-          onPaymentComplete(true, {
-            ...kispgResult, // 전체 KISPG 결과 전달
-            enrollmentData, // 백엔드에서 받은 수강신청 정보
-            approved: true, // 승인 완료 플래그
-            enrollId: effectiveEnrollId, // 사용된 enrollId도 전달
-          });
-        }
-      } else {
-        // 승인 실패
-        console.log("❌ Payment approval failed - invalid response");
-        throw new Error(
-          (approvalResponse && approvalResponse.message) ||
-            "결제 승인에 실패했습니다."
-        );
-      }
-    } catch (approvalError: any) {
-      console.error("💥 Payment approval failed:", approvalError);
-      console.error("📊 Error details:", {
-        message: approvalError.message,
-        response: approvalError.response,
-        status: approvalError.response?.status,
-        data: approvalError.response?.data,
+    // 성공 콜백 호출 (KISPG 결제 결과 전달)
+    if (onPaymentComplete) {
+      console.log("📞 Calling onPaymentComplete with auto-approval success");
+      onPaymentComplete(true, {
+        ...kispgResult, // 전체 KISPG 결과 전달
+        approved: true, // 자동 승인 완료 플래그
+        autoApproval: true, // 자동 승인 방식임을 표시
+        enrollId: effectiveEnrollId, // 사용된 enrollId도 전달
+        message: "결제가 성공적으로 완료되었습니다.",
       });
-
-      // 승인 실패 시 실패 처리
-      handlePaymentFailure(
-        kispgResult, // 전체 KISPG 결과 전달
-        approvalError.message ||
-          "결제는 완료되었으나 시스템 처리 중 오류가 발생했습니다. 고객센터로 문의해주세요."
-      );
-      return; // 함수 종료
     }
   };
 

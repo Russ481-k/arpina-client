@@ -1276,9 +1276,17 @@ export default function MyPage() {
                 duration: 3000,
               });
 
-              // 데이터 새로고침
+              // 🎯 결제 완료 후 신청정보 탭으로 자동 이동
+              console.log("🔄 Refreshing enrollment data...");
               refreshEnrollmentData();
+              console.log("🔄 Refreshing payment data...");
               refreshPaymentData();
+
+              // 신청정보 탭으로 이동 (URL도 업데이트)
+              handleTabChange("수영장_신청정보");
+              console.log(
+                "📍 Switched to enrollment info tab after payment completion"
+              );
             } else {
               toaster.create({
                 title: "결제 실패",
