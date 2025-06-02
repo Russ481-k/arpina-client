@@ -234,17 +234,17 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             잔여:
             {lesson.remaining ?? 0}
           </Text>
-          <Text
+          {/* <Text
             fontSize="32px"
             fontWeight="700"
             color={remainingSpotsColor}
             lineHeight="1"
           >
             {occupiedSpots}
-            {/* <Text as="span" fontSize="18px" color="#666" fontWeight="400">
+            <Text as="span" fontSize="18px" color="#666" fontWeight="400">
               /{lesson.capacity}
-            </Text> */}
-          </Text>
+            </Text>
+          </Text> */}
         </Box>
 
         {/* 카드 내용 */}
