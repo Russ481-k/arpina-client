@@ -400,9 +400,18 @@ const KISPGPaymentFrame = forwardRef<
       );
     }
 
-    // 🎯 명시적 백엔드 승인 API 호출
+    let processingToastId: string | number | undefined = undefined;
+
     try {
       console.log("✅ KISPG 인증 성공! 백엔드 승인 API 호출 시작...");
+
+      // 승인 처리 중이라는 중간 상태 알림
+      processingToastId = toaster.create({
+        title: "승인 처리 중",
+        description:
+          "결제 정보를 확인했습니다. 최종 승인 처리를 진행 중입니다...",
+        type: "info",
+      });
 
       // 1. PaymentApprovalRequestDto 구성
       const approvalRequestData: PaymentApprovalRequestDto = {
@@ -424,6 +433,8 @@ const KISPGPaymentFrame = forwardRef<
 
       if (approvalResponse && approvalResponse.success) {
         console.log("✅ 백엔드 승인 및 등록 성공!", approvalResponse.data);
+
+        if (processingToastId) toaster.dismiss(processingToastId);
         toaster.create({
           title: "결제 및 신청 완료",
           description:
@@ -452,6 +463,8 @@ const KISPGPaymentFrame = forwardRef<
           approvalResponse?.message ||
           "결제는 성공했으나 최종 등록 처리에 실패했습니다. 관리자에게 문의해주세요.";
         console.error("❌ 백엔드 승인 실패:", errorMessage);
+
+        if (processingToastId) toaster.dismiss(processingToastId);
         toaster.create({
           title: "결제 처리 실패",
           description: errorMessage,
@@ -469,6 +482,8 @@ const KISPGPaymentFrame = forwardRef<
       }
     } catch (error: any) {
       console.error("❌ 백엔드 승인 API 호출 중 치명적 오류:", error);
+
+      if (processingToastId) toaster.dismiss(processingToastId);
       toaster.create({
         title: "승인 처리 오류",
         description:
