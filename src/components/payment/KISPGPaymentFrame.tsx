@@ -7,7 +7,11 @@ import React, {
   forwardRef,
   useState,
 } from "react";
-import { EnrollInitiationResponseDto } from "@/types/api";
+import {
+  EnrollInitiationResponseDto,
+  PaymentApprovalRequestDto,
+  KISPGPaymentResultDto,
+} from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 import { formatPhoneNumberForKISPG } from "@/lib/utils/phoneUtils";
 import { Box } from "@chakra-ui/react";
@@ -316,7 +320,7 @@ const KISPGPaymentFrame = forwardRef<
     console.log("🆔 Current enrollId prop:", enrollId);
 
     // 🔍 KISPG 결제 결과 파라미터 모두 추출 및 로깅
-    const kispgResult = {
+    const kispgResult: KISPGPaymentResultDto = {
       // 기본 결제 정보
       resultCd: data.resultCd || data.resultCode, // 결과코드
       resultMsg: data.resultMsg || data.resultMessage, // 결과메시지
@@ -391,36 +395,97 @@ const KISPGPaymentFrame = forwardRef<
     if (messageHandlerRef.current) {
       window.removeEventListener("message", messageHandlerRef.current);
       messageHandlerRef.current = null;
-      console.log("🧹 Message listener removed after payment success");
+      console.log(
+        "🧹 Message listener removed after payment processing attempt"
+      );
     }
 
-    // 🆕 새로운 자동 승인 플로우: 백엔드에서 이미 모든 처리가 완료됨
-    // 결제 성공 시 바로 성공 처리 (더 이상 수동 승인 API 호출 안함)
-    console.log("✅ Payment completed with auto-approval flow!");
-    console.log("🎯 KISPG auto-approval: Backend already processed everything");
+    // 🎯 명시적 백엔드 승인 API 호출
+    try {
+      console.log("✅ KISPG 인증 성공! 백엔드 승인 API 호출 시작...");
 
-    // 성공 토스터 표시
-    toaster.create({
-      title: "결제 완료",
-      description: "수영 강습 결제 및 신청이 완료되었습니다.",
-      type: "success",
-      duration: 4000,
-    });
+      // 1. PaymentApprovalRequestDto 구성
+      const approvalRequestData: PaymentApprovalRequestDto = {
+        tid: kispgResult.tid,
+        moid: kispgResult.ordNo, // KISPG의 ordNo가 백엔드의 moid에 해당 (주문번호)
+        amt: kispgResult.amt,
+        kispgPaymentResult: kispgResult, // 전체 KISPG 결과 전달
+      };
 
-    // 🎯 enrollId 결정: prop으로 받은 값 우선, 추출 함수로 폴백
-    const effectiveEnrollId = enrollId || extractEnrollIdFromResponse(data, 0);
-    console.log("🎯 Effective enrollId for callback:", effectiveEnrollId);
+      console.log("📬 Sending to backend approval API:", approvalRequestData);
 
-    // 성공 콜백 호출 (KISPG 결제 결과 전달)
-    if (onPaymentComplete) {
-      console.log("📞 Calling onPaymentComplete with auto-approval success");
-      onPaymentComplete(true, {
-        ...kispgResult, // 전체 KISPG 결과 전달
-        approved: true, // 자동 승인 완료 플래그
-        autoApproval: true, // 자동 승인 방식임을 표시
-        enrollId: effectiveEnrollId, // 사용된 enrollId도 전달
-        message: "결제가 성공적으로 완료되었습니다.",
+      // 2. 백엔드 승인 API 호출
+      const approvalResponse =
+        await swimmingPaymentService.approvePaymentAndCreateEnrollment(
+          approvalRequestData
+        );
+
+      console.log("📬 Backend approval API response:", approvalResponse);
+
+      if (approvalResponse && approvalResponse.success) {
+        console.log("✅ 백엔드 승인 및 등록 성공!", approvalResponse.data);
+        toaster.create({
+          title: "결제 및 신청 완료",
+          description:
+            approvalResponse.message ||
+            "수영 강습 결제 및 신청이 성공적으로 완료되었습니다.",
+          type: "success",
+          duration: 4000,
+        });
+        if (onPaymentComplete) {
+          const finalEnrollId =
+            approvalResponse.data?.enrollId ||
+            extractEnrollIdFromResponse(data, enrollId);
+
+          onPaymentComplete(true, {
+            ...kispgResult,
+            ...approvalResponse.data,
+            enrollId: finalEnrollId,
+            approved: true,
+            autoApproval: false,
+            message:
+              approvalResponse.message || "결제가 성공적으로 완료되었습니다.",
+          });
+        }
+      } else {
+        const errorMessage =
+          approvalResponse?.message ||
+          "결제는 성공했으나 최종 등록 처리에 실패했습니다. 관리자에게 문의해주세요.";
+        console.error("❌ 백엔드 승인 실패:", errorMessage);
+        toaster.create({
+          title: "결제 처리 실패",
+          description: errorMessage,
+          type: "error",
+          duration: 5000,
+        });
+        if (onPaymentComplete) {
+          onPaymentComplete(false, {
+            ...kispgResult,
+            approved: false,
+            autoApproval: false,
+            errorMessage: errorMessage,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error("❌ 백엔드 승인 API 호출 중 치명적 오류:", error);
+      toaster.create({
+        title: "승인 처리 오류",
+        description:
+          error.message ||
+          "결제는 성공했으나 승인 처리 중 시스템 오류가 발생했습니다. 관리자에게 문의해주세요.",
+        type: "error",
+        duration: 5000,
       });
+      if (onPaymentComplete) {
+        onPaymentComplete(false, {
+          ...kispgResult,
+          approved: false,
+          autoApproval: false,
+          errorMessage:
+            error.message || "승인 처리 중 시스템 오류가 발생했습니다.",
+        });
+      }
     }
   };
 
