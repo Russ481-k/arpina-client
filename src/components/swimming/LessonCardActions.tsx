@@ -220,7 +220,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
                     );
                   }
                 }}
-                disabled
               >
                 <Text fontSize="sm">결제 신청</Text>
               </Button>
