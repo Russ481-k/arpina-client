@@ -142,40 +142,64 @@ const ApplicationConfirmPage = () => {
     try {
       console.log("Extracting enrollId from response:", response);
 
-      // Extract from mbsReserved1 field (format: "temp_enrollId")
+      // 1. Extract from mbsReserved1 field (format: "temp_enrollId" or "enroll_enrollId")
       if (response.mbsReserved1) {
         const parts = response.mbsReserved1.split("_");
         if (parts.length >= 2) {
-          const enrollId = parseInt(parts[1]);
-          if (!isNaN(enrollId)) {
-            console.log("EnrollId extracted from mbsReserved1:", enrollId);
-            return enrollId;
+          // temp_123 or enroll_123 format
+          if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
+            const enrollId = parseInt(parts[1]);
+            if (!isNaN(enrollId)) {
+              console.log(
+                `EnrollId extracted from mbsReserved1 (${parts[0]}_):`,
+                enrollId
+              );
+              return enrollId;
+            }
           }
         }
       }
 
-      // Alternative: Extract from moid field (format: "temp_enrollId_timestamp")
+      // 2. Alternative: Extract from moid field (format: "temp_enrollId_timestamp" or "enroll_enrollId_timestamp")
       if (response.moid) {
         const parts = response.moid.split("_");
         if (parts.length >= 2) {
-          const enrollId = parseInt(parts[1]);
-          if (!isNaN(enrollId)) {
-            console.log("EnrollId extracted from moid:", enrollId);
-            return enrollId;
+          // temp_123_timestamp or enroll_123_timestamp format
+          if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
+            const enrollId = parseInt(parts[1]);
+            if (!isNaN(enrollId)) {
+              console.log(
+                `EnrollId extracted from moid (${parts[0]}_):`,
+                enrollId
+              );
+              return enrollId;
+            }
           }
         }
       }
 
-      // Additional: Try to extract from other possible fields
+      // 3. Additional: Try to extract from other possible fields
       if (response.ordNo) {
         const parts = response.ordNo.split("_");
         if (parts.length >= 2) {
-          const enrollId = parseInt(parts[1]);
-          if (!isNaN(enrollId)) {
-            console.log("EnrollId extracted from ordNo:", enrollId);
-            return enrollId;
+          if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
+            const enrollId = parseInt(parts[1]);
+            if (!isNaN(enrollId)) {
+              console.log(
+                `EnrollId extracted from ordNo (${parts[0]}_):`,
+                enrollId
+              );
+              return enrollId;
+            }
           }
         }
+      }
+
+      // 4. Direct enrollId field
+      if (response.enrollId && !isNaN(parseInt(response.enrollId))) {
+        const enrollId = parseInt(response.enrollId);
+        console.log("EnrollId extracted from direct enrollId field:", enrollId);
+        return enrollId;
       }
 
       // If all extraction methods fail, generate a temporary ID based on current lesson

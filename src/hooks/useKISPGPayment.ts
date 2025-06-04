@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { swimmingPaymentService } from "@/lib/api/swimming";
 import { KISPGPaymentInitResponseDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
-import type { KISPGPaymentPopupRef } from "@/components/payment/KISPGPaymentFrame";
+import type { KISPGPaymentFrameRef } from "@/components/payment/KISPGPaymentFrame";
 
 interface UseKISPGPaymentProps {
   enrollId: number;
@@ -18,7 +18,7 @@ export const useKISPGPayment = ({
   const [isInitializing, setIsInitializing] = useState(false);
   const [paymentData, setPaymentData] =
     useState<KISPGPaymentInitResponseDto | null>(null);
-  const paymentRef = useRef<KISPGPaymentPopupRef>(null);
+  const paymentRef = useRef<KISPGPaymentFrameRef>(null);
 
   const initializePayment = useCallback(
     async (overrideEnrollId?: number) => {

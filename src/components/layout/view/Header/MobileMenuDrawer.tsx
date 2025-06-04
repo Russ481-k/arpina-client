@@ -16,7 +16,7 @@ import Image from "next/image";
 import { memo, useState, useCallback } from "react";
 import NextLink from "next/link";
 import { Menu } from "@/types/api";
-import { Grid3X3Icon, User2Icon } from "lucide-react";
+import { Grid3X3Icon, LogOutIcon, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -77,7 +77,7 @@ export const MobileMenuDrawer = memo(
             display={{ base: "flex", lg: "none" }}
             position="absolute"
             right={{ base: "10px", sm: "15px" }}
-            top={isPreview ? "calc(50% + 25px)" : "32px"}
+            top={isPreview ? "calc(50% + 25px)" : "-48px"}
             transform={isPreview ? "translateY(-50%)" : "translateY(-50%)"}
             zIndex={1001}
             color={isDark ? "white" : "gray.600"}
@@ -134,6 +134,7 @@ export const MobileMenuDrawer = memo(
                         onClick={handleLogout}
                         justifyContent="flex-start"
                       >
+                        <LogOutIcon size={18} />
                         로그아웃
                       </Button>
                     </>
@@ -228,7 +229,6 @@ export const MobileMenuDrawer = memo(
                             })}
                           </VStack>
                         )}
-                        {/* Separator only if not the last top-level menu item AND it has children, or always if not last */}
                         {index < menusWithLastFlag.length - 1 && (
                           <Separator
                             my={2}

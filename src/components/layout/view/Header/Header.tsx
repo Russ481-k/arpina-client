@@ -194,7 +194,6 @@ export const Header = memo(function Header({
                   </Box>
                 </Link>
               </Flex>
-
               <DesktopNav
                 menusWithLastFlag={menusWithLastFlag}
                 isNavHovered={isNavHovered}

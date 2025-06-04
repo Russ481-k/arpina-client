@@ -3,14 +3,11 @@
 import { Box, Flex, Heading, Text, Image, Tabs, Link } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
 import { getScrollbarStyle } from "@/styles/scrollbar";
-import { useUserStyles } from "@/styles/theme";
 import Layout from "@/components/layout/view/Layout";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useMenu } from "@/lib/hooks/useMenu";
 import { sortMenus } from "@/lib/api/menu";
-import { useMemo, useState, useRef, useEffect } from "react";
-import { STYLES } from "@/styles/theme-tokens";
-import type { Styles } from "@/styles/theme";
+import { useMemo, useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";

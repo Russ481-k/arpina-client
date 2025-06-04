@@ -16,7 +16,7 @@ interface LessonCardProps {
   context?: "listing" | "mypage";
   enrollment?: MypageEnrollDto;
   onRequestCancel?: (enrollId: number) => void;
-  onGoToPayment?: (paymentPageUrl: string) => void;
+  onGoToPayment?: (enrollId: number) => void;
   onRenewLesson?: (lessonId: number) => void;
 }
 
@@ -81,7 +81,14 @@ const parseDisplayKSTDate = (
 };
 
 export const LessonCard: React.FC<LessonCardProps> = React.memo(
-  ({ lesson, context = "listing", enrollment, onRequestCancel }) => {
+  ({
+    lesson,
+    context = "listing",
+    enrollment,
+    onRequestCancel,
+    onGoToPayment,
+    onRenewLesson,
+  }) => {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authIsLoading } = useAuth();
 
@@ -223,7 +230,11 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
 
         {/* 잔여석 표시 */}
         <Box className="remaining-badge">
-          <Text
+          <Text fontSize="12px" color="#666" fontWeight="400" mt="2px">
+            잔여:
+            {lesson.remaining ?? 0}
+          </Text>
+          {/* <Text
             fontSize="32px"
             fontWeight="700"
             color={remainingSpotsColor}
@@ -233,11 +244,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             <Text as="span" fontSize="18px" color="#666" fontWeight="400">
               /{lesson.capacity}
             </Text>
-          </Text>
-          <Text fontSize="12px" color="#666" fontWeight="400" mt="2px">
-            잔여:
-            {lesson.remaining ?? 0}
-          </Text>
+          </Text> */}
         </Box>
 
         {/* 카드 내용 */}
@@ -334,6 +341,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             enrollment={context === "mypage" ? enrollment : undefined}
             onRequestCancel={context === "mypage" ? onRequestCancel : undefined}
             onApplyClick={context !== "mypage" ? handleApplyClick : undefined}
+            onGoToPayment={onGoToPayment}
           />
         </Box>
       </Box>
