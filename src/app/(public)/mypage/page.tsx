@@ -178,30 +178,31 @@ export default function MyPage() {
     console.log("🔗 URL updated to:", newUrl.toString());
   };
 
-  async function fetchEnrollments() {
-    if (dataLoaded.enrollments) {
+  async function fetchEnrollments(forceRefresh = false) {
+    if (dataLoaded.enrollments && !forceRefresh) {
       console.log("📋 Enrollments already loaded, skipping fetch");
       return;
     }
 
+    console.log("🔄 Fetching enrollments...", forceRefresh ? "(forced refresh)" : "");
     try {
       const enrollmentsApiResponse = await mypageApi.getEnrollments();
       if (
         enrollmentsApiResponse &&
         Array.isArray(enrollmentsApiResponse.content)
       ) {
+        console.log("✅ Enrollments loaded successfully:", enrollmentsApiResponse.content.length, "items");
         setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
         setDataLoaded((prev) => ({ ...prev, enrollments: true }));
-        console.log("✅ Enrollments loaded successfully");
       } else {
         console.warn(
-          "Enrollments API response is not in the expected format or content is missing/not an array:",
+          "⚠️ Enrollments API response is not in the expected format or content is missing/not an array:",
           enrollmentsApiResponse
         );
         setEnrollments([]);
       }
     } catch (error) {
-      console.error("[Mypage] Failed to load enrollments:", error);
+      console.error("❌ [Mypage] Failed to load enrollments:", error);
       toaster.create({
         title: "오류",
         description: "수강 신청 정보를 불러오는데 실패했습니다.",
@@ -745,7 +746,7 @@ export default function MyPage() {
   const refreshEnrollmentData = async () => {
     console.log("🔄 Refreshing enrollment data...");
     setDataLoaded((prev) => ({ ...prev, enrollments: false }));
-    await fetchEnrollments();
+    await fetchEnrollments(true); // Force refresh
   };
 
   // Function to refresh payment data
@@ -1263,9 +1264,9 @@ export default function MyPage() {
       {currentPaymentData && currentPaymentEnrollId && (
         <KISPGPaymentFrame
           ref={paymentFrameRef}
-          paymentData={currentPaymentData as any} // 타입 호환성을 위해 임시로 as any 사용
+          paymentData={currentPaymentData as any}
           enrollId={currentPaymentEnrollId}
-          onPaymentComplete={(success, data) => {
+          onPaymentComplete={async (success, data) => {
             console.log("🎉 Payment completed:", { success, data });
 
             if (success) {
@@ -1276,11 +1277,11 @@ export default function MyPage() {
                 duration: 3000,
               });
 
-              // 🎯 결제 완료 후 신청정보 탭으로 자동 이동
+              // 🎯 결제 완료 후 데이터 리프레시 (강제 리프레시)
               console.log("🔄 Refreshing enrollment data...");
-              refreshEnrollmentData();
+              await refreshEnrollmentData();
               console.log("🔄 Refreshing payment data...");
-              refreshPaymentData();
+              await refreshPaymentData();
 
               // 신청정보 탭으로 이동 (URL도 업데이트)
               handleTabChange("수영장_신청정보");
