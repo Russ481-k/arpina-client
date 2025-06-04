@@ -161,7 +161,7 @@ export const MobileMenuDrawer = memo(
                     </Flex>
                   )}
                 </VStack>
-                {/* <VStack gap={6} align="stretch" mt={4} flexGrow={1}>
+                <VStack gap={6} align="stretch" mt={4} flexGrow={1}>
                   {menusWithLastFlag?.map((menu, index) => {
                     const isActive = isMenuActive(menu.url);
                     return (
@@ -238,7 +238,7 @@ export const MobileMenuDrawer = memo(
                       </Box>
                     );
                   })}
-                </VStack> */}
+                </VStack>
 
                 {/* Auth buttons section */}
                 <Separator

@@ -194,8 +194,7 @@ export const Header = memo(function Header({
                   </Box>
                 </Link>
               </Flex>
-              <Box flex={1} />
-              {/* <DesktopNav
+              <DesktopNav
                 menusWithLastFlag={menusWithLastFlag}
                 isNavHovered={isNavHovered}
                 isDark={isDark}
@@ -204,7 +203,7 @@ export const Header = memo(function Header({
                 lastHoveredMenuId={lastHoveredMenuId}
                 onMenuHover={handleMenuHover}
                 onMenuLeave={handleMenuLeave}
-              /> */}
+              />
               <UtilityIcons
                 iconColor={iconColor}
                 onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
