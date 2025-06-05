@@ -65,7 +65,21 @@ interface CancelRequestData {
   usesLocker?: boolean;
   paidAmount: UIPaymentDetails;
   calculatedRefund: UICalculatedRefundDetails;
-  status: "PENDING" | "APPROVED" | "DENIED";
+  status: "PENDING" | "APPROVED" | "DENIED" | undefined;
+  originalCancellationStatus:
+    | "REQ"
+    | "PENDING"
+    | "APPROVED"
+    | "DENIED"
+    | "NONE"
+    | undefined;
+  paymentDisplayStatus:
+    | "UNPAID"
+    | "PAID"
+    | "REFUNDED"
+    | "REFUND_PENDING_ADMIN_CANCEL"
+    | "CANCELED_UNPAID"
+    | undefined;
   adminMemo?: string;
 }
 
@@ -80,15 +94,22 @@ const cancelTabQueryKeys = {
 };
 
 const StatusCellRenderer: React.FC<
-  ICellRendererParams<CancelRequestData, CancelRequestData["status"]>
+  ICellRendererParams<
+    CancelRequestData,
+    CancelRequestData["originalCancellationStatus"]
+  >
 > = (params) => {
   if (!params.value) return null;
-  const statusConfig = {
-    PENDING: { colorPalette: "yellow", label: "대기" },
-    APPROVED: { colorPalette: "green", label: "승인" },
-    DENIED: { colorPalette: "red", label: "거부" },
+  const statusConfig: {
+    [key: string]: { colorPalette: string; label: string };
+  } = {
+    REQ: { colorPalette: "blue", label: "취소 요청" },
+    PENDING: { colorPalette: "yellow", label: "처리 대기" },
+    APPROVED: { colorPalette: "green", label: "승인 완료" },
+    DENIED: { colorPalette: "red", label: "반려됨" },
+    NONE: { colorPalette: "gray", label: "해당 없음" },
   };
-  const config = statusConfig[params.value as keyof typeof statusConfig] || {
+  const config = statusConfig[params.value] || {
     colorPalette: "gray",
     label: params.value,
   };
@@ -103,16 +124,54 @@ const ActionCellRenderer: React.FC<ICellRendererParams<CancelRequestData>> = (
   params
 ) => {
   const { data, context } = params;
-  if (!data || data.status !== "PENDING") return null;
-  const handleReviewClick = () => context.openReviewDialog(data);
+  if (!data) return null;
+
+  const handleReviewClick = () => {
+    if (context && context.openReviewDialog) {
+      context.openReviewDialog(data);
+    }
+  };
+
+  if (data.originalCancellationStatus === "PENDING") {
+    return (
+      <Button
+        size="xs"
+        colorPalette="blue"
+        variant="outline"
+        onClick={handleReviewClick}
+      >
+        취소 검토
+      </Button>
+    );
+  } else if (data.originalCancellationStatus === "REQ") {
+    return (
+      <Button
+        size="xs"
+        colorPalette="blue"
+        variant="outline"
+        onClick={handleReviewClick}
+      >
+        요청 검토
+      </Button>
+    );
+  } else if (data.originalCancellationStatus === "APPROVED") {
+    return (
+      <Button size="xs" colorPalette="green" variant="solid" disabled>
+        승인 완료
+      </Button>
+    );
+  } else if (data.originalCancellationStatus === "DENIED") {
+    return (
+      <Button size="xs" colorPalette="red" variant="solid" disabled>
+        반려됨
+      </Button>
+    );
+  }
   return (
-    <Button
-      size="xs"
-      colorPalette="blue"
-      variant="outline"
-      onClick={handleReviewClick}
-    >
-      검토
+    <Button size="xs" variant="outline" disabled>
+      {data.originalCancellationStatus === "NONE"
+        ? "해당 없음"
+        : data.originalCancellationStatus || "처리 불가"}
     </Button>
   );
 };
@@ -230,7 +289,7 @@ export const CancellationRefundTab = ({
       },
       {
         headerName: "상태",
-        field: "status",
+        field: "originalCancellationStatus",
         cellRenderer: StatusCellRenderer,
         width: 80,
         minWidth: 80,
@@ -325,6 +384,17 @@ export const CancellationRefundTab = ({
                 dto.calculatedRefundDetails?.finalRefundAmount ??
                 0,
             };
+            const cancellationStatusFromAPI =
+              dto.cancellationProcessingStatus as CancelRequestData["originalCancellationStatus"];
+            let dialogCompatibleStatus: CancelRequestData["status"] = undefined;
+            if (
+              cancellationStatusFromAPI === "PENDING" ||
+              cancellationStatusFromAPI === "APPROVED" ||
+              cancellationStatusFromAPI === "DENIED"
+            ) {
+              dialogCompatibleStatus = cancellationStatusFromAPI;
+            }
+
             return {
               id:
                 dto.requestId !== undefined && dto.requestId !== null
@@ -341,7 +411,10 @@ export const CancellationRefundTab = ({
               usesLocker: dto.usesLocker,
               paidAmount: paidAmountData,
               calculatedRefund: calculatedRefundData,
-              status: dto.status,
+              status: dialogCompatibleStatus,
+              originalCancellationStatus: cancellationStatusFromAPI,
+              paymentDisplayStatus:
+                dto.paymentStatus as CancelRequestData["paymentDisplayStatus"],
               adminMemo: dto.adminComment,
             };
           }
@@ -516,14 +589,13 @@ export const CancellationRefundTab = ({
         </Card.Body>
       </Card.Root>
 
-      <Box className={agGridTheme} maxH="480px" w="full">
+      <Box className={agGridTheme} h="480px" w="full">
         <AgGridReact<CancelRequestData>
           ref={gridRef}
           rowData={finalFilteredRequests}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
           context={agGridContext}
-          domLayout="autoHeight"
           headerHeight={36}
           rowHeight={40}
           suppressCellFocus

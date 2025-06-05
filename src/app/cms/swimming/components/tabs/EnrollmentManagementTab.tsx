@@ -662,17 +662,16 @@ export const EnrollmentManagementTab = ({
       </Flex>
       <Box
         className={agGridTheme}
-        maxH="480px"
         w="full"
         transform="none"
         willChange="auto"
+        h="532px"
       >
         <AgGridReact<EnrollmentData>
           ref={gridRef}
           rowData={filteredEnrollmentsForGrid}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
-          domLayout="autoHeight"
           headerHeight={36}
           rowHeight={40}
           context={agGridContext}

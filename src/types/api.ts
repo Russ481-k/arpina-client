@@ -799,8 +799,10 @@ export interface CancelRequestAdminDto {
   userReason: string; // API uses 'userReason' for the reason provided by the user
   adminComment?: string; // API uses 'adminComment'
   status: "PENDING" | "APPROVED" | "DENIED"; // Assumed based on frontend usage & API query params
+  paymentStatus: "UNPAID" | "PAID" | "REFUNDED"; // Assumed based on frontend usage & API query params
   lessonStartDate?: string; // Kept as optional, ensure backend provides if used for display/logic
   usesLocker?: boolean; // Kept as optional, ensure backend provides if used
+  cancellationProcessingStatus?: "REQ" | "PENDING" | "APPROVED" | "DENIED" | "NONE" | string; // Added new field
   // Fields like paid_amt, calculated_refund_amt, kispg_tid, reason are now mapped from nested objects or renamed.
 }
 

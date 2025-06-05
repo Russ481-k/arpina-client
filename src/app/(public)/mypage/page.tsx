@@ -184,14 +184,21 @@ export default function MyPage() {
       return;
     }
 
-    console.log("🔄 Fetching enrollments...", forceRefresh ? "(forced refresh)" : "");
+    console.log(
+      "🔄 Fetching enrollments...",
+      forceRefresh ? "(forced refresh)" : ""
+    );
     try {
       const enrollmentsApiResponse = await mypageApi.getEnrollments();
       if (
         enrollmentsApiResponse &&
         Array.isArray(enrollmentsApiResponse.content)
       ) {
-        console.log("✅ Enrollments loaded successfully:", enrollmentsApiResponse.content.length, "items");
+        console.log(
+          "✅ Enrollments loaded successfully:",
+          enrollmentsApiResponse.content.length,
+          "items"
+        );
         setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
         setDataLoaded((prev) => ({ ...prev, enrollments: true }));
       } else {
@@ -757,7 +764,7 @@ export default function MyPage() {
   };
 
   return (
-    <Container maxW="container.lg" py={8}>
+    <Container maxW="1600px" py={8}>
       <Heading as="h1" mb={8} fontSize="3xl">
         마이페이지
       </Heading>
@@ -1005,11 +1012,7 @@ export default function MyPage() {
               <Text>로딩 중...</Text>
             </Box>
           ) : enrollments && enrollments.length > 0 ? (
-            <Grid
-              templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
-              gap={6}
-              py={4}
-            >
+            <Grid templateColumns="repeat(auto-fill, minmax(360px, 1fr))">
               {enrollments.map((enroll) => {
                 // Prepare data for LessonCard from enroll.lesson
                 const lessonDataForCard: LessonDTO = {
@@ -1031,21 +1034,15 @@ export default function MyPage() {
                 };
 
                 return (
-                  <GridItem
+                  <LessonCard
                     key={enroll.enrollId}
-                    display="flex"
-                    flexDirection="column"
-                    h="100%"
-                  >
-                    <LessonCard
-                      lesson={lessonDataForCard}
-                      context="mypage" // Set context to "mypage"
-                      enrollment={enroll} // Pass the full enrollment object
-                      onGoToPayment={handleGoToPayment}
-                      onRequestCancel={handleRequestCancel}
-                      onRenewLesson={handleRenewLesson}
-                    />
-                  </GridItem>
+                    lesson={lessonDataForCard}
+                    context="mypage" // Set context to "mypage"
+                    enrollment={enroll} // Pass the full enrollment object
+                    onGoToPayment={handleGoToPayment}
+                    onRequestCancel={handleRequestCancel}
+                    onRenewLesson={handleRenewLesson}
+                  />
                 );
               })}
             </Grid>

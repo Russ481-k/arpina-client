@@ -47,7 +47,7 @@ export default function Home() {
       return [];
     }
   }, [menus]);
-  router.push("/sports/swimming/lesson");
+
   return (
     <Layout menus={treeMenus} currentPage="홈">
       <Global styles={getScrollbarStyle(isDark)} />
