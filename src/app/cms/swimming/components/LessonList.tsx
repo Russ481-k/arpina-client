@@ -76,7 +76,9 @@ const LessonList = React.memo(function LessonList({
 
     const startDate = parseAdminDate(lesson.startDate);
     const endDate = parseAdminDate(lesson.endDate);
-    const registrationEndDate = parseAdminDate(lesson.registrationEndDate);
+    const registrationEndDateTime = parseAdminDate(
+      lesson.registrationEndDateTime
+    );
 
     if (!startDate || !endDate) {
       return { label: "- 날짜오류 -", colorScheme: "red" };
@@ -89,8 +91,8 @@ const LessonList = React.memo(function LessonList({
       return { label: "진행중", colorScheme: "blue" };
     }
     // If now < startDate (before lesson starts)
-    if (registrationEndDate) {
-      if (now <= registrationEndDate) {
+    if (registrationEndDateTime) {
+      if (now <= registrationEndDateTime) {
         return { label: "모집중", colorScheme: "green" };
       } else {
         return { label: "모집마감", colorScheme: "gray" }; // Was "마감"

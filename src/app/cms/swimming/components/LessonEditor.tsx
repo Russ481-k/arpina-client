@@ -50,7 +50,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     lessonTime: "",
     startDate: "",
     endDate: "",
-    registrationEndDate: "",
+    registrationEndDateTime: "",
     capacity: 0,
     price: 0,
     status: "OPEN",
@@ -60,13 +60,8 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const textColor = useColorModeValue("gray.700", "white");
-  const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const errorColor = useColorModeValue("red.500", "red.300");
-  const buttonBg = useColorModeValue(
-    colors.primary.default,
-    colors.primary.default
-  );
 
   // Reset the form when a new lesson is selected or set to null for new lesson
   useEffect(() => {
@@ -78,7 +73,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         lessonTime: lesson.lessonTime || "",
         startDate: lesson.startDate,
         endDate: lesson.endDate,
-        registrationEndDate: lesson.registrationEndDate || "",
+        registrationEndDateTime: lesson.registrationEndDateTime || "",
         capacity: lesson.capacity,
         price: lesson.price,
         status: lesson.status,
@@ -108,7 +103,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         lessonTime: "09:00~10:00",
         startDate: formatDate(firstDayOfMonth),
         endDate: formatDate(lastDayOfMonth),
-        registrationEndDate: formatDate(lastDayOflastMonth),
+        registrationEndDateTime: formatDate(lastDayOflastMonth),
         capacity: 0,
         price: 0,
         status: "OPEN",
@@ -155,15 +150,15 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         return;
       }
 
-      if (!formData.registrationEndDate) {
+      if (!formData.registrationEndDateTime) {
         setError("등록 마감일은 필수 입력 항목입니다.");
         return;
       }
 
       if (
-        formData.registrationEndDate &&
+        formData.registrationEndDateTime &&
         formData.startDate &&
-        formData.registrationEndDate > formData.startDate
+        formData.registrationEndDateTime > formData.startDate
       ) {
         setError("등록 마감일은 시작일보다 이전이거나 같아야 합니다.");
         return;
@@ -342,9 +337,9 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
             </Text>
             <Input
               size="xs"
-              type="date"
-              name="registrationEndDate"
-              value={formData.registrationEndDate}
+              type="datetime-local"
+              name="registrationEndDateTime"
+              value={formData.registrationEndDateTime}
               onChange={handleInputChange}
               borderColor={borderColor}
               _focus={{

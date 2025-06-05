@@ -6,27 +6,14 @@ import { CreditCardIcon } from "lucide-react"; // Keep if used by a renderer
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
-// import type { PaymentData } from "@/types/models"; // Assuming PaymentData is moved to a shared model type definition
+// Import types from PaymentHistoryTab.tsx
+import type { PaymentData, PaymentStatusType } from "../PaymentHistoryTab";
 
-// Define PaymentData locally for now, can be moved to a shared type later
-interface PaymentData {
-  paymentId: number;
-  enrollId: number;
-  lessonId: number;
-  tid: string;
-  userName: string;
-  userPhone?: string;
-  lessonTitle: string;
-  paidAmount: number;
-  refundedAmount: number;
-  paymentMethod: string;
-  paidAt: string;
-  refundAt?: string;
-  status: "PAID" | "PARTIALLY_REFUNDED" | "FULLY_REFUNDED" | "CANCELED";
-}
+// Local PaymentData interface is removed to resolve conflict
+// interface PaymentData { ... } // This local definition is deleted
 
 interface PaymentsViewProps {
-  payments: PaymentData[];
+  payments: PaymentData[]; // Uses imported PaymentData
   lessonIdFilter?: number | null;
   agGridTheme: string;
   bg: string;
@@ -59,14 +46,25 @@ const PaymentMethodCellRenderer: React.FC<
 > = (params) => {
   if (!params.value) return null;
   let paymentMethodText = params.value;
-  if (params.value.toUpperCase() === "CARD") {
+  // Ensure params.data exists and paymentMethod is available if needed for more complex logic
+  const paymentMethod = (
+    params.data as PaymentData
+  )?.paymentMethod?.toUpperCase();
+
+  if (paymentMethod === "CARD") {
     paymentMethodText = "카드결제";
-  } else if (params.value.toUpperCase() === "TRANSFER") {
+  } else if (paymentMethod === "BANK_TRANSFER") {
+    // Assuming BANK_TRANSFER as a possible value
     paymentMethodText = "계좌이체";
+  } else if (paymentMethod === "VIRTUAL_ACCOUNT") {
+    // Assuming VIRTUAL_ACCOUNT
+    paymentMethodText = "가상계좌";
   }
+  // Add more conditions as needed
+
   return (
     <Flex align="center" h="100%">
-      {params.value.toUpperCase() === "CARD" && (
+      {paymentMethod === "CARD" && (
         <CreditCardIcon size={16} style={{ marginRight: "4px" }} />
       )}
       <Text fontSize="sm">{paymentMethodText}</Text>
@@ -74,20 +72,24 @@ const PaymentMethodCellRenderer: React.FC<
   );
 };
 
-// PaymentStatusCellRenderer (can be part of this file or shared)
+// PaymentStatusCellRenderer updated for PaymentStatusType
 const PaymentStatusCellRenderer: React.FC<
-  ICellRendererParams<PaymentData, PaymentData["status"]>
+  ICellRendererParams<PaymentData, PaymentStatusType>
 > = (params) => {
   if (!params.value) return null;
-  const statusConfig = {
+  const statusConfig: Record<
+    PaymentStatusType,
+    { colorPalette: string; label: string }
+  > = {
     PAID: { colorPalette: "green", label: "결제완료" },
-    PARTIALLY_REFUNDED: { colorPalette: "yellow", label: "부분환불" },
-    FULLY_REFUNDED: { colorPalette: "red", label: "전액환불" },
-    CANCELED: { colorPalette: "gray", label: "취소" }, // Assuming CANCELED is a valid status
+    FAILED: { colorPalette: "red", label: "결제실패" },
+    CANCELED: { colorPalette: "gray", label: "취소됨" },
+    PARTIAL_REFUNDED: { colorPalette: "yellow", label: "부분환불" },
+    REFUND_REQUESTED: { colorPalette: "blue", label: "환불요청" },
   };
-  const config = statusConfig[params.value as keyof typeof statusConfig] || {
+  const config = statusConfig[params.value] || {
     colorPalette: "gray",
-    label: params.value,
+    label: params.value, // Fallback to the raw status if not in config
   };
   return (
     <Badge colorPalette={config.colorPalette} variant="solid" size="sm">
@@ -107,18 +109,20 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   const paymentGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [paymentFilters, setPaymentFilters] = useState({
     searchTerm: "",
-    status: "",
+    status: "" as PaymentStatusType | "", // Ensure status can be empty string for "all"
     period: "all", // "all", "today", "week", "month", "custom"
     startDate: "",
     endDate: "",
   });
 
-  const statusOptions = [
+  // statusOptions updated for PaymentStatusType
+  const statusOptions: { value: PaymentStatusType | ""; label: string }[] = [
     { value: "", label: "전체" },
     { value: "PAID", label: "결제완료" },
-    { value: "PARTIALLY_REFUNDED", label: "부분환불" },
-    { value: "FULLY_REFUNDED", label: "전액환불" },
-    { value: "CANCELED", label: "취소" },
+    { value: "FAILED", label: "결제실패" },
+    { value: "CANCELED", label: "취소됨" },
+    { value: "PARTIAL_REFUNDED", label: "부분환불" },
+    { value: "REFUND_REQUESTED", label: "환불요청" },
   ];
 
   const periodOptions = [
@@ -175,7 +179,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
       const matchesSearch =
         payment.userName.toLowerCase().includes(searchTermLower) ||
         (payment.userPhone && payment.userPhone.includes(searchTermLower)) ||
-        payment.tid.toLowerCase().includes(searchTermLower);
+        (payment.tid && payment.tid.toLowerCase().includes(searchTermLower)); // Check if tid exists
       const matchesStatus =
         !paymentFilters.status || payment.status === paymentFilters.status;
       return matchesSearch && matchesStatus;
@@ -254,7 +258,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             onChange: (e) =>
               setPaymentFilters((prev) => ({
                 ...prev,
-                status: e.target.value,
+                status: e.target.value as PaymentStatusType | "",
               })),
             options: statusOptions,
             placeholder: "전체",

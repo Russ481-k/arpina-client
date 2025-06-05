@@ -720,7 +720,7 @@ export interface AdminLessonDto {
   lessonTime?: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
-  registrationEndDate?: string; // YYYY-MM-DD -- ADDED FIELD
+  registrationEndDateTime?: string; // YYYY-MM-DD -- ADDED FIELD
   capacity: number;
   price: number;
   status: "OPEN" | "CLOSED" | "ONGOING" | "COMPLETED";
