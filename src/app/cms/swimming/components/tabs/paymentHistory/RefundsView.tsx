@@ -209,17 +209,10 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
   const refundColDefs = useMemo<ColDef<PaymentData>[]>(
     () => [
       {
-        headerName: "원본 주문ID",
-        field: "tid",
-        width: 180,
-        sortable: true,
-        filter: "agTextColumnFilter",
-      },
-      {
-        headerName: "강습명",
-        field: "lessonTitle",
-        flex: 1.5,
-        minWidth: 200,
+        headerName: "회원명",
+        field: "userName",
+        flex: 1,
+        minWidth: 100,
         sortable: true,
         filter: "agTextColumnFilter",
       },
@@ -232,10 +225,17 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
         filter: "agTextColumnFilter",
       },
       {
-        headerName: "회원명",
-        field: "userName",
-        flex: 1,
-        minWidth: 100,
+        headerName: "원본 주문ID",
+        field: "tid",
+        width: 180,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "강습명",
+        field: "lessonTitle",
+        flex: 1.5,
+        minWidth: 200,
         sortable: true,
         filter: "agTextColumnFilter",
       },

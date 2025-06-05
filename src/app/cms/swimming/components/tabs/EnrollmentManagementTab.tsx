@@ -278,35 +278,36 @@ export const EnrollmentManagementTab = ({
   const colDefs = useMemo<ColDef<EnrollmentData>[]>(
     () => [
       {
-        headerName: "회원ID",
-        field: "userLoginId",
-        minWidth: 80,
-        filter: "agTextColumnFilter",
-      },
-      {
         headerName: "회원명",
         field: "userName",
-        minWidth: 80,
+        width: 120,
         filter: "agTextColumnFilter",
       },
       {
-        headerName: "성별",
-        field: "userGender",
-        minWidth: 60,
+        headerName: "회원ID",
+        field: "userLoginId",
+        width: 120,
         filter: "agTextColumnFilter",
-        cellRenderer: (params: ICellRendererParams<EnrollmentData, string>) => {
-          return params.value === "1" ? "남" : "여";
-        },
       },
       {
         headerName: "연락처",
         field: "userPhone",
-        minWidth: 100,
+        filter: "agTextColumnFilter",
+        width: 120,
       },
+      {
+        headerName: "성별",
+        field: "userGender",
+        width: 60,
+        cellRenderer: (params: ICellRendererParams<EnrollmentData, string>) => {
+          return params.value === "1" ? "남" : "여";
+        },
+      },
+
       {
         headerName: "할인유형",
         field: "membershipType",
-        minWidth: 100,
+        width: 120,
         valueFormatter: (
           params: ValueFormatterParams<EnrollmentData, string | undefined>
         ) => {
@@ -317,8 +318,7 @@ export const EnrollmentManagementTab = ({
       {
         headerName: "결제상태",
         field: "payStatus",
-        flex: 1,
-        minWidth: 80,
+        minWidth: 120,
         cellRenderer: (
           params: ICellRendererParams<
             EnrollmentData,
@@ -331,12 +331,12 @@ export const EnrollmentManagementTab = ({
             />
           </Flex>
         ),
-        width: 100,
         cellStyle: {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         },
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "사물함",
@@ -363,7 +363,7 @@ export const EnrollmentManagementTab = ({
       {
         headerName: "관리",
         cellRenderer: ActionCellRenderer,
-        width: 100,
+        width: 80,
         cellStyle: {
           display: "flex",
           alignItems: "center",

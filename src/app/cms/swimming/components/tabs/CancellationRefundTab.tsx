@@ -41,6 +41,7 @@ import "@/styles/ag-grid-custom.css";
 import { useColorMode } from "@/components/ui/color-mode";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import { ReviewCancelRequestDialog } from "./cancellationRefund/ReviewCancelRequestDialog";
+import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -234,22 +235,18 @@ export const CancellationRefundTab = ({
     () => [
       {
         headerName: "이름",
-        valueGetter: (params) => {
-          if (!params.data) return "";
-          return `${params.data.userName}${
-            params.data.userLoginId ? ` (${params.data.userLoginId})` : ""
-          }`;
-        },
         flex: 1,
-        minWidth: 120,
-        tooltipField: "userName",
+        minWidth: 80,
+        field: "userName",
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "ID",
         field: "userLoginId",
         flex: 1,
-        minWidth: 120,
+        minWidth: 80,
         tooltipField: "userLoginId",
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "전화번호",
@@ -257,13 +254,14 @@ export const CancellationRefundTab = ({
         flex: 1,
         minWidth: 120,
         tooltipField: "userPhone",
+        valueFormatter: (params) => formatPhoneNumberWithHyphen(params.value),
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "요청일시",
         field: "requestedAt",
         valueFormatter: (params) => formatDate(params.value),
-        width: 150,
-        minWidth: 130,
+        width: 160,
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -273,8 +271,8 @@ export const CancellationRefundTab = ({
       {
         headerName: "환불사유",
         field: "reason",
-        flex: 2,
-        minWidth: 200,
+        flex: 1,
+        minWidth: 160,
         tooltipField: "reason",
         cellRenderer: (
           params: ICellRendererParams<CancelRequestData, string>

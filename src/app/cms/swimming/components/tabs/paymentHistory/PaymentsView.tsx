@@ -214,17 +214,10 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   const paymentColDefs = useMemo<ColDef<PaymentData>[]>(
     () => [
       {
-        headerName: "주문ID",
-        field: "tid",
-        width: 180,
-        sortable: true,
-        filter: "agTextColumnFilter",
-      },
-      {
-        headerName: "강습시간",
-        field: "lessonTitle",
-        flex: 1.5,
-        minWidth: 200,
+        headerName: "이름",
+        field: "userName",
+        flex: 1,
+        minWidth: 100,
         sortable: true,
         filter: "agTextColumnFilter",
       },
@@ -237,10 +230,17 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         filter: "agTextColumnFilter",
       },
       {
-        headerName: "이름",
-        field: "userName",
-        flex: 1,
-        minWidth: 100,
+        headerName: "주문ID",
+        field: "tid",
+        width: 180,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "강습명",
+        field: "lessonTitle",
+        flex: 1.5,
+        minWidth: 200,
         sortable: true,
         filter: "agTextColumnFilter",
       },
@@ -251,6 +251,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         minWidth: 130,
         sortable: true,
         valueFormatter: (params) => formatPhoneNumberWithHyphen(params.value),
+        filter: "agNumberColumnFilter",
       },
       {
         headerName: "결제금액",
@@ -277,21 +278,18 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         width: 110,
         cellStyle: { justifyContent: "center" },
         sortable: true,
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "PG사",
         field: "paymentGateway",
         width: 100,
         sortable: true,
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "PG결과코드",
         field: "pgResultCode",
         width: 120,
         sortable: true,
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "결제일시",
@@ -299,7 +297,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         valueFormatter: (params) => formatDateTime(params.value),
         width: 170,
         sortable: true,
-        filter: "agDateColumnFilter",
       },
       {
         headerName: "상태",
@@ -308,7 +305,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         width: 100,
         cellStyle: { justifyContent: "center" },
         sortable: true,
-        filter: "agTextColumnFilter",
       },
     ],
     []
