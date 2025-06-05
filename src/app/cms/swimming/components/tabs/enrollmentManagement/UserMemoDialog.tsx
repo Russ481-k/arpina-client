@@ -30,8 +30,8 @@ import {
 } from "ag-grid-community";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { PayStatus } from "@/lib/utils/statusUtils"; // Import the centralized PayStatus
 import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge"; // Import the common badge
+import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes"; // Added import
 
 // Re-define or import EnrollmentData if it's not too complex, or pass as generic
 // For simplicity, let's redefine a minimal version here or expect it from props.
@@ -40,7 +40,7 @@ interface EnrollmentData {
   enrollId: number;
   lessonId: number;
   lessonTitle: string;
-  payStatus: PayStatus; // Use the imported PayStatus type
+  payStatus: EnrollmentPaymentLifecycleStatus | string; // MODIFIED: Was PaymentTransactionStatus
   usesLocker: boolean;
   userName: string;
   userLoginId: string;
@@ -148,10 +148,16 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
         field: "payStatus",
         // cellRenderer: PayStatusCellRenderer, // Remove this
         cellRenderer: (
-          params: ICellRendererParams<EnrollmentData, PayStatus>
+          params: ICellRendererParams<
+            EnrollmentData,
+            EnrollmentData["payStatus"]
+          > // MODIFIED for clarity
         ) => (
           <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
-            <CommonPayStatusBadge status={params.value} />
+            {/* CommonPayStatusBadge now expects EnrollmentPaymentLifecycleStatus | string */}
+            <CommonPayStatusBadge
+              status={params.value as EnrollmentPaymentLifecycleStatus}
+            />
           </Flex>
         ), // Use CommonPayStatusBadge
         width: 100, // Adjusted width

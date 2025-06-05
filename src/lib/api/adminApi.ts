@@ -1,3 +1,4 @@
+import { PaymentTransactionStatus } from "@/types/statusTypes";
 import { privateApi } from "./client"; // Assuming CMS uses the same authenticated client
 import type {
   AdminLessonDto,
@@ -20,6 +21,7 @@ import type {
   PaginationParams,
   PaginatedResponse,
   TemporaryEnrollmentRequestDto,
+  AdminPaymentData,
 } from "@/types/api";
 
 const CMS_API_BASE = "/cms";
@@ -203,7 +205,7 @@ export const adminApi = {
       enrollId?: number;
       userId?: string;
       tid?: string;
-      period?: string; // Should define what 'period' means, e.g., YYYY-MM or specific date range
+      period?: string;
       status?: string;
     }
   ): Promise<PaginatedResponse<PaymentAdminDto>> => {
@@ -212,6 +214,48 @@ export const adminApi = {
       { params }
     );
     return response.data;
+  },
+  getAdminPaymentHistory: async (
+    params: PaginationParams & { lessonId?: number }
+  ): Promise<PaginatedResponse<AdminPaymentData>> => {
+    const response = await privateApi.get<PaginatedResponse<PaymentAdminDto>>(
+      `${CMS_API_BASE}/payments`,
+      { params: { ...params, sort: params.sort || 'paidAt,desc' } }
+    );
+    const paginatedDto = response.data;
+
+    const adminPaymentDataContent = paginatedDto.data.content.map(
+      (dto: PaymentAdminDto): AdminPaymentData => {
+        const mappedStatus: PaymentTransactionStatus = dto.status;
+
+        return {
+          paymentId: dto.paymentId,
+          enrollId: dto.enrollId,
+          tid: dto.tid,
+          userName: dto.userName,
+          userId: dto.userId,
+          userPhone: dto.userPhone,
+          lessonTitle: dto.lessonTitle,
+          initialAmount: dto.paidAmt + (dto.refundedAmt || 0),
+          paidAmount: dto.paidAmt,
+          refundedAmount: dto.refundedAmt,
+          paymentMethod: dto.payMethod || "N/A",
+          paymentGateway: dto.pgProvider,
+          status: mappedStatus,
+          paidAt: dto.paidAt || new Date().toISOString(),
+          lastRefundAt: dto.lastRefundDt ?? undefined,
+          pgResultCode: dto.pgResultCode,
+        };
+      }
+    );
+
+    return {
+      ...paginatedDto,
+      data: {
+        ...paginatedDto.data,
+        content: adminPaymentDataContent,
+      },
+    } as PaginatedResponse<AdminPaymentData>;
   },
   manualAdminRefund: async (
     paymentId: number,

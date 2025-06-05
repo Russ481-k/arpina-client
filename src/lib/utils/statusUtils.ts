@@ -1,14 +1,16 @@
-export type PayStatus =
-  | "UNPAID"
-  | "PAID"
-  | "PARTIALLY_REFUNDED"
-  | "CANCELED_UNPAID"
-  | "PAYMENT_TIMEOUT"
-  | "REFUND_PENDING_ADMIN_CANCEL"
-  | "REFUNDED";
+import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes";
+
+// export type PayStatus = // Original PayStatus type is removed
+//   | "UNPAID"
+//   | "PAID"
+//   | "PARTIALLY_REFUNDED"
+//   | "CANCELED_UNPAID"
+//   | "PAYMENT_TIMEOUT"
+//   | "REFUND_PENDING_ADMIN_CANCEL"
+//   | "REFUNDED";
 
 export const payStatusConfig: Record<
-  PayStatus,
+  EnrollmentPaymentLifecycleStatus,
   { label: string; colorPalette: string; badgeVariant?: "solid" | "outline" }
 > = {
   UNPAID: { label: "미결제", colorPalette: "orange", badgeVariant: "outline" },
@@ -36,17 +38,20 @@ export const payStatusConfig: Record<
   REFUNDED: { label: "환불완료", colorPalette: "blue", badgeVariant: "solid" },
 };
 
-export const payStatusOptions: Array<{ value: PayStatus; label: string }> = (
-  Object.keys(payStatusConfig) as PayStatus[]
+export const payStatusOptions: Array<{
+  value: EnrollmentPaymentLifecycleStatus | ""; // Allow empty string for "all"
+  label: string;
+}> = (
+  Object.keys(payStatusConfig) as EnrollmentPaymentLifecycleStatus[]
 ).map((status) => ({
   value: status,
   label: payStatusConfig[status].label,
 }));
 
 // Add an "all" option for filters
-payStatusOptions.unshift({ value: "" as any, label: "전체" });
+payStatusOptions.unshift({ value: "", label: "전체" });
 
-export const getPayStatusDisplay = (status: PayStatus) => {
+export const getPayStatusDisplay = (status: EnrollmentPaymentLifecycleStatus) => {
   return (
     payStatusConfig[status] || { label: "알 수 없음", colorPalette: "gray" }
   );

@@ -18,10 +18,15 @@ import { useColors } from "@/styles/theme";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
 import type {
-  EnrollAdminResponseDto,
+  // EnrollAdminResponseDto, // Not used directly in this file
   CancelRequestAdminDto,
   PaginatedResponse,
 } from "@/types/api";
+import {
+  EnrollmentCancellationProgressStatus,
+  CancellationRequestRecordStatus,
+  EnrollmentPaymentLifecycleStatus,
+} from "@/types/statusTypes"; // Import new status types
 import { toaster } from "@/components/ui/toaster";
 import { AgGridReact } from "ag-grid-react";
 import {
@@ -65,21 +70,9 @@ interface CancelRequestData {
   usesLocker?: boolean;
   paidAmount: UIPaymentDetails;
   calculatedRefund: UICalculatedRefundDetails;
-  status: "PENDING" | "APPROVED" | "DENIED" | undefined;
-  originalCancellationStatus:
-    | "REQ"
-    | "PENDING"
-    | "APPROVED"
-    | "DENIED"
-    | "NONE"
-    | undefined;
-  paymentDisplayStatus:
-    | "UNPAID"
-    | "PAID"
-    | "REFUNDED"
-    | "REFUND_PENDING_ADMIN_CANCEL"
-    | "CANCELED_UNPAID"
-    | undefined;
+  status: CancellationRequestRecordStatus | undefined;
+  originalCancellationStatus: EnrollmentCancellationProgressStatus | undefined;
+  paymentDisplayStatus: EnrollmentPaymentLifecycleStatus | undefined;
   adminMemo?: string;
 }
 
@@ -100,18 +93,23 @@ const StatusCellRenderer: React.FC<
   >
 > = (params) => {
   if (!params.value) return null;
-  const statusConfig: {
-    [key: string]: { colorPalette: string; label: string };
-  } = {
+  const statusValue = params.value as EnrollmentCancellationProgressStatus;
+
+  const statusConfig: Partial<
+    Record<
+      EnrollmentCancellationProgressStatus,
+      { colorPalette: string; label: string }
+    >
+  > = {
     REQ: { colorPalette: "blue", label: "취소 요청" },
     PENDING: { colorPalette: "yellow", label: "처리 대기" },
     APPROVED: { colorPalette: "green", label: "승인 완료" },
     DENIED: { colorPalette: "red", label: "반려됨" },
     NONE: { colorPalette: "gray", label: "해당 없음" },
   };
-  const config = statusConfig[params.value] || {
+  const config = statusConfig[statusValue] || {
     colorPalette: "gray",
-    label: params.value,
+    label: statusValue ? statusValue.toString() : "알 수 없음",
   };
   return (
     <Badge colorPalette={config.colorPalette} variant="solid" size="sm">
@@ -385,15 +383,13 @@ export const CancellationRefundTab = ({
                 0,
             };
             const cancellationStatusFromAPI =
-              dto.cancellationProcessingStatus as CancelRequestData["originalCancellationStatus"];
-            let dialogCompatibleStatus: CancelRequestData["status"] = undefined;
-            if (
-              cancellationStatusFromAPI === "PENDING" ||
-              cancellationStatusFromAPI === "APPROVED" ||
-              cancellationStatusFromAPI === "DENIED"
-            ) {
-              dialogCompatibleStatus = cancellationStatusFromAPI;
-            }
+              dto.cancellationProcessingStatus as
+                | EnrollmentCancellationProgressStatus
+                | undefined;
+
+            const dialogCompatibleStatus = dto.status as
+              | CancellationRequestRecordStatus
+              | undefined;
 
             return {
               id:
@@ -413,8 +409,9 @@ export const CancellationRefundTab = ({
               calculatedRefund: calculatedRefundData,
               status: dialogCompatibleStatus,
               originalCancellationStatus: cancellationStatusFromAPI,
-              paymentDisplayStatus:
-                dto.paymentStatus as CancelRequestData["paymentDisplayStatus"],
+              paymentDisplayStatus: dto.paymentStatus as
+                | EnrollmentPaymentLifecycleStatus
+                | undefined,
               adminMemo: dto.adminComment,
             };
           }

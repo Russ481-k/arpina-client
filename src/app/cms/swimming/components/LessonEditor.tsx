@@ -372,7 +372,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
 
             <Box flex="1">
               <Text mb={1} fontWeight="medium" color={textColor}>
-                가격 *
+                강습료 *
               </Text>
               <Input
                 size="xs"
@@ -381,7 +381,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                 value={formData.price}
                 onChange={handleInputChange}
                 min={0}
-                placeholder="가격을 입력하세요"
+                placeholder="강습료를 입력하세요"
                 borderColor={borderColor}
                 _focus={{
                   borderColor: colors.primary.default,

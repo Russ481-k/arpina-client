@@ -1,160 +1,38 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import {
-  Box,
-  Tabs,
-  Spinner, // For loading state
-  Text, // For error/empty state
-  // Alert, // Temporarily removed due to persistent linting issues
-  // AlertIcon, // Temporarily removed
-} from "@chakra-ui/react";
+import { Box, Tabs, Spinner, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
+
+// Import types from the global API types file
+import type {
+  AdminPaymentData,
+  // AdminRefundData, // Removed: No longer fetching separate refund data
+  PaginatedResponse, // This is the outer wrapper { success, message, data: PaginatedData<T> }
+  PaginatedData, // This is the inner data { content: T[], pageable, ... }
+  // PaymentStatusType and RefundStatusType are already used by AdminPaymentData/AdminRefundData
+  // and will be available if needed directly.
+} from "@/types/api";
+
+// Import the API service
+import { adminApi } from "@/lib/api/adminApi"; // Adjust path if necessary
 
 import { PaymentsView } from "./paymentHistory/PaymentsView";
 import { RefundsView } from "./paymentHistory/RefundsView";
-import { useColorMode } from "@/components/ui/color-mode"; // Assuming this is the correct path
+import { useColorMode } from "@/components/ui/color-mode";
 import "@/styles/ag-grid-custom.css";
 
-// --- Status Enum-like Types ---
-export type PaymentStatusType =
-  | "PAID"
-  | "FAILED"
-  | "CANCELED"
-  | "PARTIAL_REFUNDED"
-  | "REFUND_REQUESTED";
+// Local type definitions (PaymentStatusType, RefundStatusType, PaymentData, RefundData, Page) are REMOVED.
 
-export type RefundStatusType =
-  | "REFUND_REQUESTED" // 환불 요청됨
-  | "REFUND_PROCESSING" // 환불 처리 중
-  | "REFUND_COMPLETED" // 환불 완료
-  | "REFUND_REJECTED"; // 환불 거절
-
-// --- API Service (가상, 실제로는 별도 파일로 분리) ---
-const apiClient = {
-  get: async (url: string, params?: any) => {
-    const queryParams = params
-      ? `?${new URLSearchParams(params).toString()}`
-      : "";
-    const response = await fetch(`/api/v1${url}${queryParams}`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: response.statusText }));
-      throw new Error(errorData.message || `Error fetching data from ${url}`);
-    }
-    return response.json();
-  },
-};
-
-const fetchAdminPayments = async (
-  lessonIdFilter?: number | null,
-  page = 0,
-  size = 100
-) => {
-  const params: any = { page, size };
-  if (lessonIdFilter !== null && lessonIdFilter !== undefined) {
-    params.lessonId = lessonIdFilter.toString();
-  }
-  return apiClient.get("/admin/payments", params);
-};
-
-const fetchAdminRefunds = async (
-  lessonIdFilter?: number | null,
-  page = 0,
-  size = 100
-) => {
-  const params: any = { page, size };
-  if (lessonIdFilter !== null && lessonIdFilter !== undefined) {
-    params.lessonId = lessonIdFilter.toString();
-  }
-  return apiClient.get("/admin/refunds", params);
-};
-// --- END API Service ---
-
-export interface PaymentData {
-  paymentId: number;
-  enrollId: number;
-  lessonId: number;
-  tid: string;
-  userName: string;
-  userPhone?: string;
-  userId?: string;
-  lessonTitle: string;
-  initialAmount: number;
-  paidAmount: number;
-  discountAmount?: number;
-  refundedAmount: number;
-  paymentMethod: string;
-  paymentGateway?: string;
-  status: PaymentStatusType;
-  paidAt: string;
-  lastRefundAt?: string;
-  orderNo?: string;
-  memberType?: string;
-  lockerFee?: number;
-}
-
-export interface RefundData {
-  refundId: number;
-  paymentId: number;
-  enrollId: number;
-  lessonId: number;
-  tid: string;
-  refundTid?: string;
-  userName: string;
-  userPhone?: string;
-  userId?: string;
-  lessonTitle: string;
-  refundAmount: number;
-  refundMethod?: string;
-  refundType: string;
-  status: RefundStatusType;
-  reason?: string;
-  adminName: string;
-  requestedAt: string;
-  refundedAt: string;
-  bankName?: string;
-  accountNumber?: string;
-  accountHolder?: string;
-  adminMemo?: string;
-}
-
-interface Page<T> {
-  content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      sorted: boolean;
-      unsorted: boolean;
-      empty: boolean;
-    };
-    offset: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  last: boolean;
-  totalPages: number;
-  totalElements: number;
-  size: number;
-  number: number;
-  sort: {
-    sorted: boolean;
-    unsorted: boolean;
-    empty: boolean;
-  };
-  first: boolean;
-  numberOfElements: number;
-  empty: boolean;
-}
+// API service functions (fetchAdminPayments, fetchAdminRefunds, apiClient) are REMOVED.
 
 interface PaymentHistoryTabProps {
   lessonIdFilter?: number | null;
+  // Add pagination state if managed here, e.g.:
+  // currentPage: number;
+  // pageSize: number;
+  // onPageChange: (page: number) => void;
+  // onPageSizeChange: (size: number) => void;
 }
 
 export const PaymentHistoryTab = ({
@@ -164,6 +42,9 @@ export const PaymentHistoryTab = ({
   const [activeTab, setActiveTab] = useState<"payments" | "refunds">(
     "payments"
   );
+  // TODO: Implement pagination state and pass to query functions if needed
+  const [paymentsCurrentPage /* setPaymentsCurrentPage */] = useState(0);
+  const [paymentsPageSize /* setPaymentsPageSize */] = useState(100); // Default size
 
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
@@ -172,25 +53,38 @@ export const PaymentHistoryTab = ({
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
   const {
-    data: paymentsPage,
+    data: paymentsApiResponse,
     isLoading: isLoadingPayments,
     error: errorPayments,
-  } = useQuery<Page<PaymentData>, Error>({
-    queryKey: ["adminPayments", lessonIdFilter],
-    queryFn: () => fetchAdminPayments(lessonIdFilter),
+  } = useQuery<PaginatedResponse<AdminPaymentData>, Error>({
+    queryKey: [
+      "adminPaymentHistory",
+      lessonIdFilter,
+      paymentsCurrentPage,
+      paymentsPageSize,
+    ],
+    queryFn: () =>
+      adminApi.getAdminPaymentHistory({
+        lessonId: lessonIdFilter ?? undefined,
+        page: paymentsCurrentPage,
+        size: paymentsPageSize,
+      }),
   });
 
-  const {
-    data: refundsPage,
-    isLoading: isLoadingRefunds,
-    error: errorRefunds,
-  } = useQuery<Page<RefundData>, Error>({
-    queryKey: ["adminRefunds", lessonIdFilter],
-    queryFn: () => fetchAdminRefunds(lessonIdFilter),
-  });
-
-  const payments = useMemo(() => paymentsPage?.content || [], [paymentsPage]);
-  const refunds = useMemo(() => refundsPage?.content || [], [refundsPage]);
+  const payments: AdminPaymentData[] = useMemo(
+    () => paymentsApiResponse?.data.content || [],
+    [paymentsApiResponse]
+  );
+  // Derive refund-related data from the payments list
+  const paymentsForRefundView: AdminPaymentData[] = useMemo(() => {
+    if (!payments) return [];
+    return payments.filter(
+      (payment) =>
+        payment.status === "PARTIAL_REFUNDED" ||
+        payment.status === "CANCELED" || // Assuming CANCELED implies a refund of a previously paid amount
+        (payment.refundedAmount != null && payment.refundedAmount > 0)
+    );
+  }, [payments]);
 
   return (
     <Box h="full" display="flex" flexDirection="column">
@@ -220,7 +114,7 @@ export const PaymentHistoryTab = ({
           )}
           {!isLoadingPayments && !errorPayments && (
             <PaymentsView
-              payments={payments} // Type 'PaymentData[]' from this file might be incompatible with PaymentsView's expected PaymentData type
+              payments={payments}
               lessonIdFilter={lessonIdFilter}
               agGridTheme={agGridTheme}
               bg={bg}
@@ -231,23 +125,23 @@ export const PaymentHistoryTab = ({
         </Tabs.Content>
 
         <Tabs.Content value="refunds">
-          {isLoadingRefunds && (
+          {isLoadingPayments && (
             <Box textAlign="center" p={10}>
               <Spinner size="xl" />
               <Text mt={2}>환불 내역을 불러오는 중...</Text>
             </Box>
           )}
-          {errorRefunds && !isLoadingRefunds && (
+          {errorPayments && !isLoadingPayments && (
             <Box p={4} bg="red.50" borderRadius="md" color="red.700">
               <Text fontWeight="bold">오류 발생</Text>
               <Text>
-                환불 내역을 불러오는데 실패했습니다: {errorRefunds.message}
+                환불 내역을 불러오는데 실패했습니다: {errorPayments.message}
               </Text>
             </Box>
           )}
-          {!isLoadingRefunds && !errorRefunds && (
+          {!isLoadingPayments && !errorPayments && (
             <RefundsView
-              refunds={refunds} // Type 'RefundData[]' from this file might be incompatible with RefundsView's expected RefundData type
+              paymentsForRefundView={paymentsForRefundView}
               lessonIdFilter={lessonIdFilter}
               agGridTheme={agGridTheme}
               bg={bg}

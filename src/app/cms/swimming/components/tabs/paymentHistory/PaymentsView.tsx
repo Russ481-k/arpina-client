@@ -6,14 +6,19 @@ import { CreditCardIcon } from "lucide-react"; // Keep if used by a renderer
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
-// Import types from PaymentHistoryTab.tsx
-import type { PaymentData, PaymentStatusType } from "../PaymentHistoryTab";
+// Import AdminPaymentData as PaymentData and PaymentTransactionStatus from @/types/api and @/types/statusTypes
+import type { AdminPaymentData as PaymentData } from "@/types/api";
+import type { PaymentTransactionStatus } from "@/types/statusTypes";
+import {
+  formatPhoneNumberForKISPG,
+  formatPhoneNumberWithHyphen,
+} from "@/lib/utils/phoneUtils";
 
 // Local PaymentData interface is removed to resolve conflict
 // interface PaymentData { ... } // This local definition is deleted
 
 interface PaymentsViewProps {
-  payments: PaymentData[]; // Uses imported PaymentData
+  payments: PaymentData[]; // Now uses AdminPaymentData aliased as PaymentData, which has status: PaymentTransactionStatus
   lessonIdFilter?: number | null;
   agGridTheme: string;
   bg: string;
@@ -30,37 +35,62 @@ const formatCurrency = (amount: number | undefined | null) => {
 
 const formatDateTime = (dateString: string | undefined | null) => {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const day = date.getDate().toString().padStart(2, "0");
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const seconds = date.getSeconds().toString().padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "-";
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  } catch (e) {
+    return "-";
+  }
+};
+
+// Configuration for PaymentTransactionStatus display
+export const paymentTransactionStatusConfig: Record<
+  PaymentTransactionStatus,
+  { label: string; colorPalette: string; badgeVariant?: "solid" | "outline" }
+> = {
+  PAID: { label: "결제완료", colorPalette: "green", badgeVariant: "solid" },
+  FAILED: { label: "결제실패", colorPalette: "red", badgeVariant: "solid" },
+  CANCELED: {
+    label: "결제취소",
+    colorPalette: "gray",
+    badgeVariant: "outline",
+  },
+  PARTIAL_REFUNDED: {
+    label: "부분환불",
+    colorPalette: "yellow",
+    badgeVariant: "solid",
+  },
+  REFUND_REQUESTED: {
+    label: "환불요청",
+    colorPalette: "blue",
+    badgeVariant: "outline",
+  },
 };
 
 // PaymentMethodCellRenderer (can be part of this file or shared)
 const PaymentMethodCellRenderer: React.FC<
-  ICellRendererParams<PaymentData, string>
+  ICellRendererParams<PaymentData, string | undefined> // paymentMethod is string, but value could be undefined
 > = (params) => {
-  if (!params.value) return null;
-  let paymentMethodText = params.value;
-  // Ensure params.data exists and paymentMethod is available if needed for more complex logic
-  const paymentMethod = (
-    params.data as PaymentData
-  )?.paymentMethod?.toUpperCase();
+  // params.value is paymentMethod. params.data is the full PaymentData object.
+  const paymentMethod = params.data?.paymentMethod?.toUpperCase();
+  if (!paymentMethod) return null;
+
+  let paymentMethodText = params.data?.paymentMethod || ""; // Default to raw value if not mapped
 
   if (paymentMethod === "CARD") {
     paymentMethodText = "카드결제";
   } else if (paymentMethod === "BANK_TRANSFER") {
-    // Assuming BANK_TRANSFER as a possible value
     paymentMethodText = "계좌이체";
   } else if (paymentMethod === "VIRTUAL_ACCOUNT") {
-    // Assuming VIRTUAL_ACCOUNT
     paymentMethodText = "가상계좌";
   }
-  // Add more conditions as needed
 
   return (
     <Flex align="center" h="100%">
@@ -72,27 +102,21 @@ const PaymentMethodCellRenderer: React.FC<
   );
 };
 
-// PaymentStatusCellRenderer updated for PaymentStatusType
+// PaymentStatusCellRenderer updated for PaymentTransactionStatus
 const PaymentStatusCellRenderer: React.FC<
-  ICellRendererParams<PaymentData, PaymentStatusType>
+  ICellRendererParams<PaymentData, PaymentTransactionStatus>
 > = (params) => {
   if (!params.value) return null;
-  const statusConfig: Record<
-    PaymentStatusType,
-    { colorPalette: string; label: string }
-  > = {
-    PAID: { colorPalette: "green", label: "결제완료" },
-    FAILED: { colorPalette: "red", label: "결제실패" },
-    CANCELED: { colorPalette: "gray", label: "취소됨" },
-    PARTIAL_REFUNDED: { colorPalette: "yellow", label: "부분환불" },
-    REFUND_REQUESTED: { colorPalette: "blue", label: "환불요청" },
-  };
-  const config = statusConfig[params.value] || {
+  const config = paymentTransactionStatusConfig[params.value] || {
     colorPalette: "gray",
-    label: params.value, // Fallback to the raw status if not in config
+    label: params.value.toString(),
   };
   return (
-    <Badge colorPalette={config.colorPalette} variant="solid" size="sm">
+    <Badge
+      colorPalette={config.colorPalette}
+      variant={config.badgeVariant || "solid"}
+      size="sm"
+    >
       {config.label}
     </Badge>
   );
@@ -109,20 +133,24 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   const paymentGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [paymentFilters, setPaymentFilters] = useState({
     searchTerm: "",
-    status: "" as PaymentStatusType | "", // Ensure status can be empty string for "all"
+    status: "" as PaymentTransactionStatus | "", // Ensure status can be empty string for "all"
     period: "all", // "all", "today", "week", "month", "custom"
     startDate: "",
     endDate: "",
   });
 
-  // statusOptions updated for PaymentStatusType
-  const statusOptions: { value: PaymentStatusType | ""; label: string }[] = [
+  // statusOptions updated for PaymentTransactionStatus
+  const statusOptions: {
+    value: PaymentTransactionStatus | "";
+    label: string;
+  }[] = [
     { value: "", label: "전체" },
-    { value: "PAID", label: "결제완료" },
-    { value: "FAILED", label: "결제실패" },
-    { value: "CANCELED", label: "취소됨" },
-    { value: "PARTIAL_REFUNDED", label: "부분환불" },
-    { value: "REFUND_REQUESTED", label: "환불요청" },
+    ...Object.keys(paymentTransactionStatusConfig).map((statusKey) => ({
+      value: statusKey as PaymentTransactionStatus,
+      label:
+        paymentTransactionStatusConfig[statusKey as PaymentTransactionStatus]
+          .label,
+    })),
   ];
 
   const periodOptions = [
@@ -139,11 +167,8 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
 
   const filteredPayments = useMemo(() => {
     let data = [...payments]; // Create a new array to avoid mutating the prop
-    if (lessonIdFilter) {
-      data = data.filter((p) => p.lessonId === lessonIdFilter);
-    }
+
     // Apply date filters based on period, startDate, endDate
-    // This part needs careful implementation based on actual date objects
     if (paymentFilters.period !== "all" && paymentFilters.period !== "custom") {
       const now = new Date();
       let pastDate = new Date(now);
@@ -184,40 +209,97 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         !paymentFilters.status || payment.status === paymentFilters.status;
       return matchesSearch && matchesStatus;
     });
-  }, [payments, paymentFilters, lessonIdFilter]);
+  }, [payments, paymentFilters]);
 
   const paymentColDefs = useMemo<ColDef<PaymentData>[]>(
     () => [
-      { headerName: "주문ID", field: "tid", width: 180, sortable: true },
-      { headerName: "이름", field: "userName", flex: 1, minWidth: 120 },
-      { headerName: "핸드폰 번호", field: "userPhone", flex: 1, minWidth: 130 },
-      { headerName: "강습명", field: "lessonTitle", flex: 1.5, minWidth: 250 },
+      {
+        headerName: "주문ID",
+        field: "tid",
+        width: 180,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "강습시간",
+        field: "lessonTitle",
+        flex: 1.5,
+        minWidth: 200,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "회원ID",
+        field: "userId",
+        flex: 1,
+        minWidth: 150,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "이름",
+        field: "userName",
+        flex: 1,
+        minWidth: 100,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "핸드폰 번호",
+        field: "userPhone",
+        flex: 1,
+        minWidth: 130,
+        sortable: true,
+        valueFormatter: (params) => formatPhoneNumberWithHyphen(params.value),
+      },
       {
         headerName: "결제금액",
         field: "paidAmount",
         valueFormatter: (params) => formatCurrency(params.value),
-        width: 120,
+        width: 110,
         cellStyle: { justifyContent: "flex-end" },
+        sortable: true,
+        filter: "agNumberColumnFilter",
       },
       {
         headerName: "환불금액",
         field: "refundedAmount",
         valueFormatter: (params) => formatCurrency(params.value),
-        width: 120,
+        width: 110,
         cellStyle: { justifyContent: "flex-end" },
+        sortable: true,
+        filter: "agNumberColumnFilter",
       },
       {
         headerName: "결제수단",
         field: "paymentMethod",
         cellRenderer: PaymentMethodCellRenderer,
-        width: 120,
+        width: 110,
         cellStyle: { justifyContent: "center" },
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "PG사",
+        field: "paymentGateway",
+        width: 100,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "PG결과코드",
+        field: "pgResultCode",
+        width: 120,
+        sortable: true,
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "결제일시",
         field: "paidAt",
         valueFormatter: (params) => formatDateTime(params.value),
-        width: 180,
+        width: 170,
+        sortable: true,
+        filter: "agDateColumnFilter",
       },
       {
         headerName: "상태",
@@ -225,17 +307,22 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         cellRenderer: PaymentStatusCellRenderer,
         width: 100,
         cellStyle: { justifyContent: "center" },
+        sortable: true,
+        filter: "agTextColumnFilter",
       },
     ],
     []
   );
 
-  const paymentDefaultColDef = useMemo<ColDef>(
+  const defaultColDef = useMemo<ColDef>(
     () => ({
       resizable: true,
-      filter: false,
-      sortable: true,
-      cellStyle: { fontSize: "13px", display: "flex", alignItems: "center" },
+      floatingFilter: false,
+      cellStyle: {
+        fontSize: "13px",
+        display: "flex",
+        alignItems: "center",
+      },
     }),
     []
   );
@@ -249,7 +336,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         }
         searchTermPlaceholder="검색 (이름/번호/주문ID)"
         onExport={handleExportPayments}
-        exportButtonLabel="엑셀 다운로드" // Added label
+        exportButtonLabel="엑셀 다운로드"
         selectFilters={[
           {
             id: "paymentStatusFilter",
@@ -258,7 +345,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             onChange: (e) =>
               setPaymentFilters((prev) => ({
                 ...prev,
-                status: e.target.value as PaymentStatusType | "",
+                status: e.target.value as PaymentTransactionStatus | "",
               })),
             options: statusOptions,
             placeholder: "전체",
@@ -293,15 +380,13 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         showSearchButton={true}
       />
 
-      <Box className={agGridTheme} maxH="480px" w="full">
-        {" "}
-        {/* Adjusted height considering filters might take more space */}
+      <Box className={agGridTheme} h="510px" w="full">
         <AgGridReact<PaymentData>
           ref={paymentGridRef}
           rowData={filteredPayments}
           columnDefs={paymentColDefs}
-          defaultColDef={paymentDefaultColDef}
-          domLayout="normal" // Changed from autoHeight for better performance with fixed height container
+          defaultColDef={defaultColDef}
+          domLayout="normal"
           headerHeight={36}
           rowHeight={40}
           suppressCellFocus={true}

@@ -1,14 +1,21 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
-import { Box, Stack, Badge } from "@chakra-ui/react";
+import { Box, Stack, Badge, Flex, Text } from "@chakra-ui/react";
 import { AgGridReact } from "ag-grid-react";
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import type {
+  ColDef,
+  ICellRendererParams,
+  ValueFormatterParams,
+} from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
-import type { RefundData, RefundStatusType } from "../PaymentHistoryTab";
+import type { AdminPaymentData as PaymentData } from "@/types/api";
+import type { PaymentTransactionStatus } from "@/types/statusTypes";
+import { paymentTransactionStatusConfig } from "./PaymentsView";
+import { CreditCardIcon } from "lucide-react";
 
 interface RefundsViewProps {
-  refunds: RefundData[];
+  paymentsForRefundView: PaymentData[];
   lessonIdFilter?: number | null;
   agGridTheme: string;
   bg: string;
@@ -16,7 +23,6 @@ interface RefundsViewProps {
   borderColor: string;
 }
 
-// Shared utility or helper functions (consider moving to a common file)
 const formatCurrency = (amount: number | undefined | null) => {
   if (amount === undefined || amount === null) return "-";
   return new Intl.NumberFormat("ko-KR").format(amount) + "원";
@@ -26,9 +32,7 @@ const formatDateTime = (dateString: string | undefined | null) => {
   if (!dateString) return "-";
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return "-";
-    }
+    if (isNaN(date.getTime())) return "-";
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
@@ -42,97 +46,120 @@ const formatDateTime = (dateString: string | undefined | null) => {
   }
 };
 
-// RefundStatusCellRenderer updated for RefundStatusType
-const RefundStatusCellRenderer: React.FC<
-  ICellRendererParams<RefundData, RefundStatusType>
+const PaymentStatusCellRenderer: React.FC<
+  ICellRendererParams<PaymentData, PaymentTransactionStatus>
 > = (params) => {
   if (!params.value) return null;
-  const statusConfig: Record<
-    RefundStatusType,
-    { colorPalette: string; label: string }
-  > = {
-    REFUND_REQUESTED: { colorPalette: "blue", label: "환불요청" },
-    REFUND_PROCESSING: { colorPalette: "yellow", label: "처리중" },
-    REFUND_COMPLETED: { colorPalette: "green", label: "환불완료" },
-    REFUND_REJECTED: { colorPalette: "red", label: "환불거절" },
-  };
-  const config = statusConfig[params.value] || {
+  const config = paymentTransactionStatusConfig[params.value] || {
     colorPalette: "gray",
-    label: params.value,
+    label: params.value.toString(),
   };
   return (
-    <Badge colorPalette={config.colorPalette} variant="solid" size="sm">
-      {config.label}
-    </Badge>
+    <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
+      <Badge
+        colorPalette={config.colorPalette}
+        variant={config.badgeVariant || "solid"}
+        size="sm"
+      >
+        {config.label}
+      </Badge>
+    </Flex>
+  );
+};
+
+const PaymentMethodCellRenderer: React.FC<
+  ICellRendererParams<PaymentData, string | undefined>
+> = (params) => {
+  const paymentMethod = params.data?.paymentMethod?.toUpperCase();
+  if (!paymentMethod) return null;
+  let paymentMethodText = params.data?.paymentMethod || "";
+  if (paymentMethod === "CARD") paymentMethodText = "카드결제";
+  else if (paymentMethod === "BANK_TRANSFER") paymentMethodText = "계좌이체";
+  else if (paymentMethod === "VIRTUAL_ACCOUNT") paymentMethodText = "가상계좌";
+
+  return (
+    <Flex align="center" h="100%" justifyContent="center">
+      {paymentMethod === "CARD" && (
+        <CreditCardIcon size={16} style={{ marginRight: "4px" }} />
+      )}
+      <Text fontSize="sm">{paymentMethodText}</Text>
+    </Flex>
   );
 };
 
 export const RefundsView: React.FC<RefundsViewProps> = ({
-  refunds,
+  paymentsForRefundView,
   lessonIdFilter,
   agGridTheme,
   bg,
   textColor,
   borderColor,
 }) => {
-  const refundGridRef = useRef<AgGridReact<RefundData>>(null);
+  const refundGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [refundFilters, setRefundFilters] = useState({
     searchTerm: "",
-    status: "" as RefundStatusType | "",
+    status: "" as PaymentTransactionStatus | "",
     period: "all",
     startDate: "",
     endDate: "",
   });
 
-  const refundStatusOptions: { value: RefundStatusType | ""; label: string }[] =
-    [
-      { value: "", label: "전체" },
-      { value: "REFUND_REQUESTED", label: "환불요청" },
-      { value: "REFUND_PROCESSING", label: "처리중" },
-      { value: "REFUND_COMPLETED", label: "환불완료" },
-      { value: "REFUND_REJECTED", label: "환불거절" },
-    ];
+  const refundStatusOptions: {
+    value: PaymentTransactionStatus | "";
+    label: string;
+  }[] = [
+    { value: "", label: "전체 상태" },
+    {
+      value: "PARTIAL_REFUNDED",
+      label: paymentTransactionStatusConfig.PARTIAL_REFUNDED.label,
+    },
+    { value: "CANCELED", label: paymentTransactionStatusConfig.CANCELED.label },
+  ];
 
   const periodOptions = [
-    { value: "all", label: "전체" },
-    { value: "today", label: "오늘" },
-    { value: "week", label: "최근 7일" },
-    { value: "month", label: "최근 30일" },
-    { value: "custom", label: "기간 선택" },
+    { value: "all", label: "전체 기간" },
+    { value: "today", label: "오늘 (환불일 기준)" },
+    { value: "week", label: "최근 7일 (환불일 기준)" },
+    { value: "month", label: "최근 30일 (환불일 기준)" },
+    { value: "custom", label: "기간 선택 (환불일 기준)" },
   ];
 
   const handleExportRefunds = () => {
     refundGridRef.current?.api.exportDataAsCsv();
   };
 
-  const filteredRefunds = useMemo(() => {
-    let data = [...refunds];
+  const filteredPaymentsForRefundGrid = useMemo(() => {
+    let data = [...paymentsForRefundView];
     if (lessonIdFilter) {
-      data = data.filter((r) => r.lessonId === lessonIdFilter);
+      data = data.filter((p) => p.lessonId === lessonIdFilter);
     }
+
+    const dateFilterField = "lastRefundAt";
+
     if (refundFilters.period !== "all" && refundFilters.period !== "custom") {
       const now = new Date();
       let pastDate = new Date(now);
-      if (refundFilters.period === "today") {
-        pastDate.setHours(0, 0, 0, 0);
-      } else if (refundFilters.period === "week") {
+      if (refundFilters.period === "today") pastDate.setHours(0, 0, 0, 0);
+      else if (refundFilters.period === "week")
         pastDate.setDate(now.getDate() - 7);
-        pastDate.setHours(0, 0, 0, 0);
-      } else if (refundFilters.period === "month") {
+      else if (refundFilters.period === "month")
         pastDate.setMonth(now.getMonth() - 1);
-        pastDate.setHours(0, 0, 0, 0);
-      }
-      data = data.filter((r) => {
+
+      if (refundFilters.period !== "today") pastDate.setHours(0, 0, 0, 0);
+
+      data = data.filter((p) => {
+        const targetDateStr = p[dateFilterField as keyof PaymentData] as
+          | string
+          | undefined;
+        if (!targetDateStr) return false;
         try {
-          if (!r.refundedAt) return false;
-          const refundedDate = new Date(r.refundedAt);
+          const targetDate = new Date(targetDateStr);
           return (
-            !isNaN(refundedDate.getTime()) &&
-            refundedDate >= pastDate &&
-            refundedDate <= now
+            !isNaN(targetDate.getTime()) &&
+            targetDate >= pastDate &&
+            targetDate <= now
           );
         } catch (e) {
-          console.error("Error filtering by refundedAt:", r.refundedAt, e);
           return false;
         }
       });
@@ -145,81 +172,46 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
       start.setHours(0, 0, 0, 0);
       const end = new Date(refundFilters.endDate);
       end.setHours(23, 59, 59, 999);
-      data = data.filter((r) => {
+      data = data.filter((p) => {
+        const targetDateStr = p[dateFilterField as keyof PaymentData] as
+          | string
+          | undefined;
+        if (!targetDateStr) return false;
         try {
-          if (!r.refundedAt) return false;
-          const refundedDate = new Date(r.refundedAt);
+          const targetDate = new Date(targetDateStr);
           return (
-            !isNaN(refundedDate.getTime()) &&
-            refundedDate >= start &&
-            refundedDate <= end
+            !isNaN(targetDate.getTime()) &&
+            targetDate >= start &&
+            targetDate <= end
           );
         } catch (e) {
-          console.error(
-            "Error filtering by custom refundedAt:",
-            r.refundedAt,
-            e
-          );
           return false;
         }
       });
     }
 
-    return data.filter((refund) => {
+    return data.filter((payment) => {
       const searchTermLower = refundFilters.searchTerm.toLowerCase();
       const matchesSearch =
-        (refund.userName?.toLowerCase() || "").includes(searchTermLower) ||
-        (refund.userPhone?.toLowerCase() || "").includes(searchTermLower) ||
-        (refund.tid?.toLowerCase() || "").includes(searchTermLower);
+        payment.userName.toLowerCase().includes(searchTermLower) ||
+        (payment.userPhone && payment.userPhone.includes(searchTermLower)) ||
+        payment.tid.toLowerCase().includes(searchTermLower) ||
+        payment.lessonTitle.toLowerCase().includes(searchTermLower) ||
+        (payment.userId &&
+          payment.userId.toLowerCase().includes(searchTermLower));
+
       const matchesStatus =
-        !refundFilters.status || refund.status === refundFilters.status;
+        !refundFilters.status || payment.status === refundFilters.status;
       return matchesSearch && matchesStatus;
     });
-  }, [refunds, refundFilters, lessonIdFilter]);
+  }, [paymentsForRefundView, refundFilters, lessonIdFilter]);
 
-  const refundColDefs = useMemo<ColDef<RefundData>[]>(
+  const refundColDefs = useMemo<ColDef<PaymentData>[]>(
     () => [
       {
-        headerName: "환불ID",
-        field: "refundId",
-        width: 100,
-        sortable: true,
-        filter: "agNumberColumnFilter",
-      },
-      {
-        headerName: "원본결제ID",
-        field: "paymentId",
-        width: 120,
-        sortable: true,
-        filter: "agNumberColumnFilter",
-      },
-      {
-        headerName: "신청ID",
-        field: "enrollId",
-        width: 100,
-        sortable: true,
-        filter: "agNumberColumnFilter",
-      },
-      {
-        headerName: "주문번호(TID)",
+        headerName: "원본 주문ID",
         field: "tid",
         width: 180,
-        sortable: true,
-        filter: "agTextColumnFilter",
-      },
-      {
-        headerName: "구매자명",
-        field: "userName",
-        flex: 1,
-        minWidth: 100,
-        sortable: true,
-        filter: "agTextColumnFilter",
-      },
-      {
-        headerName: "구매자연락처",
-        field: "userPhone",
-        flex: 1,
-        minWidth: 130,
         sortable: true,
         filter: "agTextColumnFilter",
       },
@@ -232,75 +224,93 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
         filter: "agTextColumnFilter",
       },
       {
-        headerName: "환불금액",
-        field: "refundAmount",
-        valueFormatter: (params) => formatCurrency(params.value),
-        type: "numericColumn",
+        headerName: "회원ID",
+        field: "userId",
+        flex: 1,
+        minWidth: 120,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "회원명",
+        field: "userName",
+        flex: 1,
+        minWidth: 100,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "원 결제금액",
+        field: "paidAmount",
+        valueFormatter: (params: ValueFormatterParams<PaymentData, number>) =>
+          formatCurrency(params.value),
         width: 120,
+        cellStyle: { justifyContent: "flex-end" },
         sortable: true,
         filter: "agNumberColumnFilter",
       },
       {
-        headerName: "환불유형",
-        field: "refundType",
-        width: 100,
+        headerName: "환불금액",
+        field: "refundedAmount",
+        valueFormatter: (
+          params: ValueFormatterParams<PaymentData, number | null>
+        ) => formatCurrency(params.value),
+        width: 120,
+        cellStyle: { justifyContent: "flex-end" },
         sortable: true,
-        filter: "agTextColumnFilter",
+        filter: "agNumberColumnFilter",
       },
       {
-        headerName: "환불사유",
-        field: "reason",
-        flex: 1,
-        minWidth: 150,
-        sortable: true,
-        filter: "agTextColumnFilter",
-      },
-      {
-        headerName: "환불요청일시",
-        field: "requestedAt",
-        valueFormatter: (params) => formatDateTime(params.value),
-        width: 170,
-        sortable: true,
-        filter: "agDateColumnFilter",
-      },
-      {
-        headerName: "환불처리일시",
-        field: "refundedAt",
-        valueFormatter: (params) => formatDateTime(params.value),
-        width: 170,
-        sortable: true,
-        filter: "agDateColumnFilter",
-      },
-      {
-        headerName: "처리관리자",
-        field: "adminName",
-        width: 100,
-        sortable: true,
-        filter: "agTextColumnFilter",
-      },
-      {
-        headerName: "환불상태",
+        headerName: "처리상태",
         field: "status",
-        cellRenderer: RefundStatusCellRenderer,
-        width: 100,
+        cellRenderer: PaymentStatusCellRenderer,
+        width: 110,
         sortable: true,
         filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "원 결제수단",
+        field: "paymentMethod",
+        cellRenderer: PaymentMethodCellRenderer,
+        width: 120,
+        sortable: true,
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "원 결제일시",
+        field: "paidAt",
+        valueFormatter: (params: ValueFormatterParams<PaymentData, string>) =>
+          formatDateTime(params.value),
+        width: 170,
+        sortable: true,
+        filter: "agDateColumnFilter",
+      },
+      {
+        headerName: "최종환불일시",
+        field: "lastRefundAt",
+        valueFormatter: (
+          params: ValueFormatterParams<PaymentData, string | undefined>
+        ) => formatDateTime(params.value),
+        width: 170,
+        sortable: true,
+        filter: "agDateColumnFilter",
       },
     ],
     []
   );
 
-  const refundDefaultColDef = useMemo<ColDef>(
+  const defaultColDef = useMemo<ColDef>(
     () => ({
-      resizable: true,
-      filter: true,
       sortable: true,
-      floatingFilter: true,
-      cellStyle: { fontSize: "13px", display: "flex", alignItems: "center" },
-      filterParams: {
-        buttons: ["reset", "apply"],
-        debounceMs: 200,
+      resizable: true,
+      filter: false,
+      cellStyle: {
+        fontSize: "13px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-start",
       },
+      floatingFilter: false,
     }),
     []
   );
@@ -312,78 +322,71 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
         onSearchTermChange={(e) =>
           setRefundFilters((prev) => ({ ...prev, searchTerm: e.target.value }))
         }
-        searchTermPlaceholder="검색 (이름,연락처,TID,강습명)"
+        searchTermPlaceholder="검색 (주문ID/강습명/회원명/ID)"
         onExport={handleExportRefunds}
-        exportButtonLabel="환불내역 엑셀 다운로드"
+        exportButtonLabel="엑셀 다운로드"
         selectFilters={[
           {
             id: "refundStatusFilter",
-            label: "환불상태",
+            label: "처리상태",
             value: refundFilters.status,
             onChange: (e) =>
               setRefundFilters((prev) => ({
                 ...prev,
-                status: e.target.value as RefundStatusType | "",
+                status: e.target.value as PaymentTransactionStatus | "",
               })),
             options: refundStatusOptions,
-            placeholder: "전체",
+            placeholder: "전체 상태",
           },
           {
             id: "refundPeriodFilter",
-            label: "기간",
+            label: "기간 (환불일)",
             value: refundFilters.period,
-            onChange: (e) => {
-              const newPeriod = e.target.value;
+            onChange: (e) =>
               setRefundFilters((prev) => ({
                 ...prev,
-                period: newPeriod,
-                startDate: newPeriod === "custom" ? prev.startDate : "",
-                endDate: newPeriod === "custom" ? prev.endDate : "",
-              }));
-            },
+                period: e.target.value,
+              })),
             options: periodOptions,
-            placeholder: "기간 전체",
+            placeholder: "전체 기간",
           },
         ]}
-        dateFilters={
-          refundFilters.period === "custom"
-            ? {
-                show: true,
-                startDate: refundFilters.startDate,
-                onStartDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-                  setRefundFilters((prev) => ({
-                    ...prev,
-                    startDate: e.target.value,
-                  })),
-                endDate: refundFilters.endDate,
-                onEndDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-                  setRefundFilters((prev) => ({
-                    ...prev,
-                    endDate: e.target.value,
-                  })),
-              }
-            : undefined
-        }
+        dateFilters={{
+          show: refundFilters.period === "custom",
+          startDate: refundFilters.startDate,
+          onStartDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+            setRefundFilters((prev) => ({
+              ...prev,
+              startDate: e.target.value,
+            })),
+          endDate: refundFilters.endDate,
+          onEndDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+            setRefundFilters((prev) => ({ ...prev, endDate: e.target.value })),
+        }}
+        onSearchButtonClick={() => {
+          console.log("Search refunds with filters:", refundFilters);
+        }}
+        showSearchButton={true}
       />
-      <Box
-        className={agGridTheme}
-        w="100%"
-        h="600px"
-        bg={bg}
-        borderColor={borderColor}
-        borderWidth={1}
-        borderRadius="md"
-        overflow="hidden"
-      >
-        <AgGridReact<RefundData>
+
+      <Box className={agGridTheme} w="full" h="510px">
+        <AgGridReact<PaymentData>
           ref={refundGridRef}
-          rowData={filteredRefunds}
+          rowData={filteredPaymentsForRefundGrid}
           columnDefs={refundColDefs}
-          defaultColDef={refundDefaultColDef}
-          pagination={true}
-          paginationPageSize={100}
-          paginationPageSizeSelector={[10, 50, 100, 500]}
+          defaultColDef={defaultColDef}
+          headerHeight={36}
+          rowHeight={40}
           domLayout="normal"
+          suppressCellFocus={true}
+          getRowStyle={() => ({
+            color: textColor,
+            background: bg,
+            borderBottom: `1px solid ${borderColor}`,
+          })}
+          animateRows={true}
+          enableCellTextSelection={true}
+          ensureDomOrder={true}
         />
       </Box>
     </Stack>

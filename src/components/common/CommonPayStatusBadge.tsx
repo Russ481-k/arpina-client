@@ -1,9 +1,10 @@
 import React from "react";
-import { PayStatus, getPayStatusDisplay } from "@/lib/utils/statusUtils";
+import { getPayStatusDisplay } from "@/lib/utils/statusUtils";
+import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes";
 import { Tag } from "@chakra-ui/react";
 
 interface CommonPayStatusBadgeProps {
-  status?: PayStatus | null;
+  status?: EnrollmentPaymentLifecycleStatus | null;
 }
 
 export const CommonPayStatusBadge: React.FC<CommonPayStatusBadgeProps> = ({

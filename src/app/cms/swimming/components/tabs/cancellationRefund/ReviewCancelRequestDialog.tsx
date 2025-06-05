@@ -32,6 +32,7 @@ import type {
   EnrollAdminResponseDto, // For mutation response types
 } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
+import type { CancellationRequestRecordStatus } from "@/types/statusTypes"; // Added import
 
 // Mirroring the updated structures from CancellationRefundTab.tsx
 interface UICalculatedRefundDetails {
@@ -59,7 +60,7 @@ interface CancelRequestData {
   calculatedRefund: UICalculatedRefundDetails; // Updated to UICalculatedRefundDetails
   reason: string;
   adminMemo?: string;
-  status?: "PENDING" | "APPROVED" | "DENIED";
+  status?: CancellationRequestRecordStatus; // Updated to use imported type
   // payStatus is removed to match parent
 }
 

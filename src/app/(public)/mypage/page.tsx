@@ -25,6 +25,10 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
 import { MypageEnrollDto, MypagePaymentDto } from "@/types/api";
+import {
+  PaymentTransactionStatus,
+  EnrollmentPaymentLifecycleStatus,
+} from "@/types/statusTypes"; // Import new status types
 import { toaster } from "@/components/ui/toaster";
 import {
   PasswordInput,
@@ -41,6 +45,7 @@ import KISPGPaymentFrame, {
 } from "@/components/payment/KISPGPaymentFrame";
 import { EnrollInitiationResponseDto } from "@/types/api";
 import { KISPGPaymentInitResponseDto } from "@/types/api";
+import { getPayStatusDisplay } from "@/lib/utils/statusUtils"; // Import utility for display
 
 // Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
 const formatDate = (dateString: string | undefined | null): string => {
@@ -1075,178 +1080,185 @@ export default function MyPage() {
                 templateColumns="repeat(auto-fill, minmax(500px, 1fr))"
                 gap={6}
               >
-                {payments.map((payment) => (
-                  <Box
-                    key={payment.paymentId}
-                    p={6}
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    bg="white"
-                    shadow="sm"
-                    _hover={{ shadow: "md" }}
-                  >
-                    <VStack align="stretch" gap={4}>
-                      {/* 헤더: 결제 상태와 금액 */}
-                      <Flex justify="space-between" align="center">
-                        <Badge
-                          colorPalette={
-                            payment.status === "PAID"
-                              ? "green"
-                              : payment.status === "CANCELED"
-                              ? "red"
-                              : payment.status === "PARTIAL_REFUNDED"
-                              ? "orange"
-                              : payment.status === "REFUND_REQUESTED"
-                              ? "yellow"
-                              : payment.status === "FAILED"
-                              ? "purple"
-                              : "gray"
-                          }
-                          size="lg"
-                        >
-                          {payment.status === "PAID"
-                            ? "결제완료"
-                            : payment.status === "CANCELED"
-                            ? "취소됨"
-                            : payment.status === "PARTIAL_REFUNDED"
-                            ? "부분환불"
-                            : payment.status === "REFUND_REQUESTED"
-                            ? "환불요청"
-                            : payment.status === "FAILED"
-                            ? "결제실패"
-                            : payment.status}
-                        </Badge>
-                        <Text fontSize="xl" fontWeight="bold" color="blue.600">
-                          {payment.finalAmount.toLocaleString()}원
-                        </Text>
-                      </Flex>
+                {payments.map((payment) => {
+                  // Determine badge color and label based on PaymentTransactionStatus
+                  let statusLabel = payment.status as string;
+                  let statusColorPalette = "gray";
 
-                      {/* 강습 정보 */}
-                      <Box>
-                        <Text fontSize="lg" fontWeight="semibold" mb={2}>
-                          {payment.lessonTitle}
-                        </Text>
-                        <VStack align="stretch" gap={1} fontSize="sm">
-                          <Flex justify="space-between">
-                            <Text color="gray.600">강습 기간:</Text>
-                            <Text>
-                              {formatDate(payment.lessonStartDate)} ~{" "}
-                              {formatDate(payment.lessonEndDate)}
-                            </Text>
-                          </Flex>
-                          <Flex justify="space-between">
-                            <Text color="gray.600">강습 시간:</Text>
-                            <Text>{payment.lessonTime}</Text>
-                          </Flex>
-                          <Flex justify="space-between">
-                            <Text color="gray.600">강사:</Text>
-                            <Text>{payment.instructorName}</Text>
-                          </Flex>
-                          <Flex justify="space-between">
-                            <Text color="gray.600">장소:</Text>
-                            <Text>{payment.locationName}</Text>
-                          </Flex>
-                        </VStack>
-                      </Box>
+                  // It's safer to cast to the specific enum type for comparisons if the backend guarantees these values.
+                  // Otherwise, string comparisons are okay if the `| string` union is used in the DTO.
+                  const typedStatus =
+                    payment.status as PaymentTransactionStatus;
 
-                      {/* 결제 상세 정보 */}
-                      <Box>
-                        <Text fontSize="md" fontWeight="semibold" mb={2}>
-                          결제 내역
-                        </Text>
-                        <VStack align="stretch" gap={1} fontSize="sm">
-                          <Flex justify="space-between">
-                            <Text color="gray.600">강습비:</Text>
-                            <Text>
-                              {payment.lessonPrice.toLocaleString()}원
-                            </Text>
-                          </Flex>
-                          {payment.usesLocker && (
+                  if (typedStatus === "PAID") {
+                    statusLabel = "결제완료";
+                    statusColorPalette = "green";
+                  } else if (typedStatus === "CANCELED") {
+                    statusLabel = "취소됨";
+                    statusColorPalette = "red";
+                  } else if (typedStatus === "PARTIAL_REFUNDED") {
+                    statusLabel = "부분환불";
+                    statusColorPalette = "orange";
+                  } else if (typedStatus === "REFUND_REQUESTED") {
+                    statusLabel = "환불요청";
+                    statusColorPalette = "yellow";
+                  } else if (typedStatus === "FAILED") {
+                    statusLabel = "결제실패";
+                    statusColorPalette = "purple";
+                  }
+
+                  return (
+                    <Box
+                      key={payment.paymentId}
+                      p={6}
+                      borderWidth="1px"
+                      borderRadius="lg"
+                      bg="white"
+                      shadow="sm"
+                      _hover={{ shadow: "md" }}
+                    >
+                      <VStack align="stretch" gap={4}>
+                        {/* 헤더: 결제 상태와 금액 */}
+                        <Flex justify="space-between" align="center">
+                          <Badge colorPalette={statusColorPalette} size="lg">
+                            {statusLabel}
+                          </Badge>
+                          <Text
+                            fontSize="xl"
+                            fontWeight="bold"
+                            color="blue.600"
+                          >
+                            {payment.finalAmount.toLocaleString()}원
+                          </Text>
+                        </Flex>
+
+                        {/* 강습 정보 */}
+                        <Box>
+                          <Text fontSize="lg" fontWeight="semibold" mb={2}>
+                            {payment.lessonTitle}
+                          </Text>
+                          <VStack align="stretch" gap={1} fontSize="sm">
                             <Flex justify="space-between">
-                              <Text color="gray.600">사물함비:</Text>
+                              <Text color="gray.600">강습 기간:</Text>
                               <Text>
-                                {payment.lockerFee.toLocaleString()}원
+                                {formatDate(payment.lessonStartDate)} ~{" "}
+                                {formatDate(payment.lessonEndDate)}
                               </Text>
                             </Flex>
-                          )}
-                          {payment.discountType &&
-                            payment.discountPercentage > 0 && (
+                            <Flex justify="space-between">
+                              <Text color="gray.600">강습 시간:</Text>
+                              <Text>{payment.lessonTime}</Text>
+                            </Flex>
+                            <Flex justify="space-between">
+                              <Text color="gray.600">강사:</Text>
+                              <Text>{payment.instructorName}</Text>
+                            </Flex>
+                            <Flex justify="space-between">
+                              <Text color="gray.600">장소:</Text>
+                              <Text>{payment.locationName}</Text>
+                            </Flex>
+                          </VStack>
+                        </Box>
+
+                        {/* 결제 상세 정보 */}
+                        <Box>
+                          <Text fontSize="md" fontWeight="semibold" mb={2}>
+                            결제 내역
+                          </Text>
+                          <VStack align="stretch" gap={1} fontSize="sm">
+                            <Flex justify="space-between">
+                              <Text color="gray.600">강습비:</Text>
+                              <Text>
+                                {payment.lessonPrice.toLocaleString()}원
+                              </Text>
+                            </Flex>
+                            {payment.usesLocker && (
                               <Flex justify="space-between">
-                                <Text color="gray.600">할인:</Text>
-                                <Text color="red.500">
-                                  -{payment.discountPercentage}% (
-                                  {payment.discountType})
+                                <Text color="gray.600">사물함비:</Text>
+                                <Text>
+                                  {payment.lockerFee.toLocaleString()}원
                                 </Text>
                               </Flex>
                             )}
-                          <Box
-                            borderTop="1px"
-                            borderColor="gray.200"
-                            pt={2}
-                            mt={2}
-                          >
-                            <Flex justify="space-between" fontWeight="bold">
-                              <Text>최종 결제 금액:</Text>
-                              <Text color="blue.600">
-                                {payment.finalAmount.toLocaleString()}원
+                            {payment.discountType &&
+                              payment.discountPercentage > 0 && (
+                                <Flex justify="space-between">
+                                  <Text color="gray.600">할인:</Text>
+                                  <Text color="red.500">
+                                    -{payment.discountPercentage}% (
+                                    {payment.discountType})
+                                  </Text>
+                                </Flex>
+                              )}
+                            <Box
+                              borderTop="1px"
+                              borderColor="gray.200"
+                              pt={2}
+                              mt={2}
+                            >
+                              <Flex justify="space-between" fontWeight="bold">
+                                <Text>최종 결제 금액:</Text>
+                                <Text color="blue.600">
+                                  {payment.finalAmount.toLocaleString()}원
+                                </Text>
+                              </Flex>
+                            </Box>
+                          </VStack>
+                        </Box>
+
+                        {/* 결제 정보 */}
+                        <Box>
+                          <Text fontSize="md" fontWeight="semibold" mb={2}>
+                            결제 정보
+                          </Text>
+                          <VStack align="stretch" gap={1} fontSize="sm">
+                            <Flex justify="space-between">
+                              <Text color="gray.600">결제 ID:</Text>
+                              <Text>{payment.paymentId}</Text>
+                            </Flex>
+                            <Flex justify="space-between">
+                              <Text color="gray.600">신청 ID:</Text>
+                              <Text>{payment.enrollId}</Text>
+                            </Flex>
+                            <Flex justify="space-between">
+                              <Text color="gray.600">결제일:</Text>
+                              <Text>
+                                {payment.paidAt
+                                  ? new Date(payment.paidAt).toLocaleDateString(
+                                      "ko-KR",
+                                      {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      }
+                                    )
+                                  : "-"}
                               </Text>
                             </Flex>
-                          </Box>
-                        </VStack>
-                      </Box>
-
-                      {/* 결제 정보 */}
-                      <Box>
-                        <Text fontSize="md" fontWeight="semibold" mb={2}>
-                          결제 정보
-                        </Text>
-                        <VStack align="stretch" gap={1} fontSize="sm">
-                          <Flex justify="space-between">
-                            <Text color="gray.600">결제 ID:</Text>
-                            <Text>{payment.paymentId}</Text>
-                          </Flex>
-                          <Flex justify="space-between">
-                            <Text color="gray.600">신청 ID:</Text>
-                            <Text>{payment.enrollId}</Text>
-                          </Flex>
-                          <Flex justify="space-between">
-                            <Text color="gray.600">결제일:</Text>
-                            <Text>
-                              {payment.paidAt
-                                ? new Date(payment.paidAt).toLocaleDateString(
-                                    "ko-KR",
-                                    {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    }
-                                  )
-                                : "-"}
-                            </Text>
-                          </Flex>
-                          <Flex justify="space-between">
-                            <Text color="gray.600">회원 유형:</Text>
-                            <Text>
-                              {payment.membershipType === "GENERAL"
-                                ? "일반 회원"
-                                : payment.membershipType}
-                            </Text>
-                          </Flex>
-                          {payment.usesLocker && (
                             <Flex justify="space-between">
-                              <Text color="gray.600">사물함 사용:</Text>
-                              <Badge colorPalette="blue" size="sm">
-                                사용함
-                              </Badge>
+                              <Text color="gray.600">회원 유형:</Text>
+                              <Text>
+                                {payment.membershipType === "GENERAL"
+                                  ? "일반 회원"
+                                  : payment.membershipType}
+                              </Text>
                             </Flex>
-                          )}
-                        </VStack>
-                      </Box>
-                    </VStack>
-                  </Box>
-                ))}
+                            {payment.usesLocker && (
+                              <Flex justify="space-between">
+                                <Text color="gray.600">사물함 사용:</Text>
+                                <Badge colorPalette="blue" size="sm">
+                                  사용함
+                                </Badge>
+                              </Flex>
+                            )}
+                          </VStack>
+                        </Box>
+                      </VStack>
+                    </Box>
+                  );
+                })}
               </Grid>
             </Box>
           ) : (

@@ -47,6 +47,11 @@ import type {
   PaginatedResponse,
   TemporaryEnrollmentRequestDto,
 } from "@/types/api";
+import {
+  EnrollmentPaymentLifecycleStatus,
+  ApprovalStatus,
+  EnrollmentApplicationStatus,
+} from "@/types/statusTypes";
 import { AgGridReact } from "ag-grid-react";
 import {
   type ColDef,
@@ -76,14 +81,7 @@ interface EnrollmentData {
   enrollId: number;
   lessonId: number;
   lessonTitle: string;
-  payStatus:
-    | "PAID"
-    | "UNPAID"
-    | "PAYMENT_TIMEOUT"
-    | "REFUNDED"
-    | "CANCELED_UNPAID"
-    | "PARTIALLY_REFUNDED"
-    | "REFUND_PENDING_ADMIN_CANCEL";
+  payStatus: EnrollmentPaymentLifecycleStatus | string;
   usesLocker: boolean;
   userName: string;
   userGender: string;
@@ -92,12 +90,12 @@ interface EnrollmentData {
   isRenewal?: boolean;
   discountInfo?: {
     type: string;
-    status: "APPROVED" | "DENIED" | "PENDING";
+    status: ApprovalStatus | string;
     approvedAt?: string;
     adminComment?: string;
   };
   userMemo?: string;
-  enrollStatus?: string;
+  enrollStatus?: EnrollmentApplicationStatus | string;
   createdAt?: string;
   membershipType?: string;
 }
@@ -242,14 +240,14 @@ export const EnrollmentManagementTab = ({
           enrollId: dto.enrollId,
           lessonId: dto.lessonId,
           lessonTitle: dto.lessonTitle,
-          payStatus: dto.payStatus as EnrollmentData["payStatus"],
+          payStatus: dto.payStatus as EnrollmentPaymentLifecycleStatus | string,
           usesLocker: dto.usesLocker,
           userName: dto.userName,
           userGender: dto.userGender || "0",
           userLoginId: dto.userLoginId || "",
           userPhone: dto.userPhone || "",
           isRenewal: false,
-          enrollStatus: dto.status,
+          enrollStatus: dto.status as EnrollmentApplicationStatus | string,
           createdAt: dto.createdAt,
           userMemo: (dto as any).userMemo || undefined,
           membershipType: dto.membershipType,
@@ -328,7 +326,9 @@ export const EnrollmentManagementTab = ({
           >
         ) => (
           <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
-            <CommonPayStatusBadge status={params.value} />
+            <CommonPayStatusBadge
+              status={params.value as EnrollmentPaymentLifecycleStatus}
+            />
           </Flex>
         ),
         width: 100,
@@ -349,69 +349,6 @@ export const EnrollmentManagementTab = ({
           justifyContent: "center",
         },
       },
-      // {
-      //   headerName: "할인",
-      //   field: "discountInfo",
-      //   width: 80,
-      //   cellRenderer: (params: ICellRendererParams<EnrollmentData>) => {
-      //     const { data, context } = params;
-      //     if (!data || !data.discountInfo)
-      //       return (
-      //         <Badge colorPalette="gray" variant="outline" size="sm">
-      //           없음
-      //         </Badge>
-      //       );
-
-      //     const statusConfig = {
-      //       APPROVED: { colorPalette: "green", label: "승인" },
-      //       DENIED: { colorPalette: "red", label: "거절" },
-      //       PENDING: { colorPalette: "yellow", label: "대기" },
-      //     };
-      //     const config = statusConfig[data.discountInfo.status];
-
-      //     return (
-      //       <Stack gap={1} h="100%" justifyContent="center" alignItems="center">
-      //         <Text fontSize="xs" color={colors.text.secondary}>
-      //           {data.discountInfo.type}
-      //         </Text>
-      //         <Badge
-      //           colorPalette={config.colorPalette}
-      //           variant="solid"
-      //           size="sm"
-      //         >
-      //           {config.label}
-      //         </Badge>
-      //         {data.discountInfo.status === "PENDING" && context && (
-      //           <HStack mt={1} gap={1}>
-      //             <Button
-      //               size="xs"
-      //               colorPalette="green"
-      //               onClick={() =>
-      //                 context.handleDiscountApproval(data.enrollId, "APPROVED")
-      //               }
-      //             >
-      //               승인
-      //             </Button>
-      //             <Button
-      //               size="xs"
-      //               colorPalette="red"
-      //               onClick={() =>
-      //                 context.handleDiscountApproval(data.enrollId, "DENIED")
-      //               }
-      //             >
-      //               거절
-      //             </Button>
-      //           </HStack>
-      //         )}
-      //       </Stack>
-      //     );
-      //   },
-      //   cellStyle: {
-      //     display: "flex",
-      //     alignItems: "center",
-      //     justifyContent: "center",
-      //   },
-      // },
       {
         headerName: "구분",
         field: "isRenewal",
@@ -446,6 +383,7 @@ export const EnrollmentManagementTab = ({
         fontSize: "13px",
         display: "flex",
         alignItems: "center",
+        justifyContent: "flex-start",
       },
     }),
     []
@@ -618,7 +556,12 @@ export const EnrollmentManagementTab = ({
             label: "결제상태",
             value: filters.payStatus,
             onChange: (e) =>
-              setFilters((prev) => ({ ...prev, payStatus: e.target.value })),
+              setFilters((prev) => ({
+                ...prev,
+                payStatus: e.target.value as
+                  | EnrollmentPaymentLifecycleStatus
+                  | "",
+              })),
             options: payStatusOptions,
             maxWidth: "120px",
             placeholder: "전체",
@@ -628,24 +571,7 @@ export const EnrollmentManagementTab = ({
           console.log("Search button clicked with filters:", filters);
         }}
         showSearchButton={true}
-      >
-        {/* Year/Month filters removed from here as they were also removed from state/query 
-           Re-add if needed: 
-        <Field.Root w="220px">
-          <NativeSelect.Root size="sm">
-            <NativeSelect.Field id="yearFilter" value={filters.year} onChange={(e) => setFilters((prev) => ({ ...prev, year: e.target.value }))} fontSize="xs">
-              <For each={years}>{(year) => <option key={year} value={year}>{year}</option>}</For>
-            </NativeSelect.Field>
-          </NativeSelect.Root>
-        </Field.Root>
-        <Field.Root w="220px">
-          <NativeSelect.Root size="sm">
-            <NativeSelect.Field id="monthFilter" value={filters.month} onChange={(e) => setFilters((prev) => ({ ...prev, month: e.target.value }))} fontSize="xs">
-              <For each={months}>{(month) => <option key={month} value={month}>{month}월</option>}</For>
-            </NativeSelect.Field>
-          </NativeSelect.Root> 
-        */}
-      </CommonGridFilterBar>
+      ></CommonGridFilterBar>
       <Flex my={2} justifyContent="space-between" alignItems="center">
         <Text fontSize="sm" color={colors.text.secondary}>
           총 {filteredEnrollmentsForGrid.length}건의 신청 내역이 표시됩니다.
