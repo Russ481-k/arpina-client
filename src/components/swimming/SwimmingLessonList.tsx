@@ -52,9 +52,6 @@ export const SwimmingLessonList = () => {
     // If filter.status is empty, statusForApi remains undefined, and no status query param is sent.
   }
 
-  const monthForApi =
-    filter.month.length > 0 ? filter.month.join(",") : undefined;
-
   const {
     data: lessonsData,
     isLoading: lessonsLoading,
@@ -62,9 +59,10 @@ export const SwimmingLessonList = () => {
   } = useLessons({
     page: 0,
     size: 50,
-    // Use the determined statusForApi and monthForApi for the query
+    // Use the determined statusForApi for the query.
+    // Month is removed from API query and will be filtered on the client-side
+    // to ensure correctness regardless of backend behavior.
     ...(statusForApi && { status: statusForApi }),
-    ...(monthForApi && { month: monthForApi }),
   });
 
   useEffect(() => {}, [lessonsData]);
@@ -76,26 +74,67 @@ export const SwimmingLessonList = () => {
       return [];
     }
 
+    // --- Start: Client-side date filtering logic ---
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const allowedMonthsByDate = [currentMonth];
+
+    // If it's the 25th or later, allow viewing next month's lessons.
+    if (now.getDate() >= 25) {
+      const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      allowedMonthsByDate.push(nextMonthDate.getMonth() + 1);
+    }
+    // --- End: Client-side date filtering logic ---
+
     const result = lessons.filter((lesson: LessonDTO) => {
-      // Condition 1: Available and Remaining
-      if (showAvailableOnly && lesson.remaining === 0) {
+      // --- Detailed Debugging Logs ---
+      console.log(`--- Checking Lesson ID: ${lesson.id} ---`);
+
+      // Rule 1: Lesson must be in a month allowed by the 25th rule.
+      if (!lesson.startDate) {
+        console.log(`[Lesson ID: ${lesson.id}] HIDING. Reason: No start date.`);
+        return false;
+      }
+      const lessonMonth = new Date(lesson.startDate).getMonth() + 1;
+      if (!allowedMonthsByDate.includes(lessonMonth)) {
+        console.log(
+          `[Lesson ID: ${
+            lesson.id
+          }] HIDING. Reason: Month ${lessonMonth} not in allowed months [${allowedMonthsByDate.join(
+            ", "
+          )}].`
+        );
         return false;
       }
 
-      // Condition 3: Month Match
+      // Rule 2: Show Available and Remaining (user toggle)
+      if (showAvailableOnly && lesson.remaining === 0) {
+        console.log(
+          `[Lesson ID: ${lesson.id}] HIDING. Reason: "Show available only" is on and remaining is 0.`
+        );
+        return false;
+      }
+
+      // Rule 3: Month Match (user filter from UI)
       if (filter.month.length > 0) {
-        if (!lesson.startDate) {
-          return false;
-        }
-        const lessonMonth = new Date(lesson.startDate).getMonth() + 1;
         if (!filter.month.includes(lessonMonth)) {
+          console.log(
+            `[Lesson ID: ${
+              lesson.id
+            }] HIDING. Reason: Month ${lessonMonth} not in user-selected months [${filter.month.join(
+              ", "
+            )}].`
+          );
           return false;
         }
       }
 
-      // Condition 4: Time Type Match
+      // Rule 4: Time Type Match (user filter from UI)
       if (filter.timeType.length > 0) {
         if (!lesson.timePrefix) {
+          console.log(
+            `[Lesson ID: ${lesson.id}] HIDING. Reason: No time prefix for time type filter.`
+          );
           return false;
         }
         const lessonIsMorning = lesson.timePrefix === "오전";
@@ -106,13 +145,19 @@ export const SwimmingLessonList = () => {
             (type === "afternoon" && lessonIsAfternoon)
         );
         if (!typeMatch) {
+          console.log(
+            `[Lesson ID: ${lesson.id}] HIDING. Reason: Time type does not match filter.`
+          );
           return false;
         }
       }
 
-      // Condition 5: Time Slot Match
+      // Rule 5: Time Slot Match
       if (filter.timeSlot.length > 0) {
         if (!lesson.timeSlot) {
+          console.log(
+            `[Lesson ID: ${lesson.id}] HIDING. Reason: No time slot for time slot filter.`
+          );
           return false;
         }
         const lessonTimeSlotInternal = lesson.timeSlot?.replace("~", "-");
@@ -120,10 +165,14 @@ export const SwimmingLessonList = () => {
           !lessonTimeSlotInternal ||
           !filter.timeSlot.includes(lessonTimeSlotInternal)
         ) {
+          console.log(
+            `[Lesson ID: ${lesson.id}] HIDING. Reason: Time slot does not match filter.`
+          );
           return false;
         }
       }
-
+      console.log(`[Lesson ID: ${lesson.id}] SHOWING. Passed all filters.`);
+      // --- End Detailed Debugging ---
       return true;
     });
     return result;
