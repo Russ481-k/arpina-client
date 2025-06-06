@@ -20,6 +20,8 @@ import {
 interface PaymentsViewProps {
   payments: PaymentData[]; // Now uses AdminPaymentData aliased as PaymentData, which has status: PaymentTransactionStatus
   lessonIdFilter?: number | null;
+  selectedYear: string; // Added prop
+  selectedMonth: string; // Added prop
   agGridTheme: string;
   bg: string;
   textColor: string;
@@ -125,6 +127,8 @@ const PaymentStatusCellRenderer: React.FC<
 export const PaymentsView: React.FC<PaymentsViewProps> = ({
   payments,
   lessonIdFilter,
+  selectedYear,
+  selectedMonth,
   agGridTheme,
   bg,
   textColor,
@@ -134,9 +138,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   const [paymentFilters, setPaymentFilters] = useState({
     searchTerm: "",
     status: "" as PaymentTransactionStatus | "", // Ensure status can be empty string for "all"
-    period: "all", // "all", "today", "week", "month", "custom"
-    startDate: "",
-    endDate: "",
   });
 
   // statusOptions updated for PaymentTransactionStatus
@@ -153,51 +154,12 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
     })),
   ];
 
-  const periodOptions = [
-    { value: "all", label: "전체" },
-    { value: "today", label: "오늘" },
-    { value: "week", label: "최근 7일" },
-    { value: "month", label: "최근 30일" },
-    { value: "custom", label: "기간 선택" },
-  ];
-
   const handleExportPayments = () => {
     paymentGridRef.current?.api.exportDataAsCsv();
   };
 
   const filteredPayments = useMemo(() => {
     let data = [...payments]; // Create a new array to avoid mutating the prop
-
-    // Apply date filters based on period, startDate, endDate
-    if (paymentFilters.period !== "all" && paymentFilters.period !== "custom") {
-      const now = new Date();
-      let pastDate = new Date(now);
-      if (paymentFilters.period === "today") {
-        pastDate.setHours(0, 0, 0, 0);
-      } else if (paymentFilters.period === "week") {
-        pastDate.setDate(now.getDate() - 7);
-        pastDate.setHours(0, 0, 0, 0);
-      } else if (paymentFilters.period === "month") {
-        pastDate.setMonth(now.getMonth() - 1);
-        pastDate.setHours(0, 0, 0, 0);
-      }
-      data = data.filter(
-        (p) => new Date(p.paidAt) >= pastDate && new Date(p.paidAt) <= now
-      ); // ensure it's not in future
-    } else if (
-      paymentFilters.period === "custom" &&
-      paymentFilters.startDate &&
-      paymentFilters.endDate
-    ) {
-      const start = new Date(paymentFilters.startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(paymentFilters.endDate);
-      end.setHours(23, 59, 59, 999);
-      data = data.filter((p) => {
-        const paidDate = new Date(p.paidAt);
-        return paidDate >= start && paidDate <= end;
-      });
-    }
 
     return data.filter((payment) => {
       const searchTermLower = paymentFilters.searchTerm.toLowerCase();
@@ -346,30 +308,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             options: statusOptions,
             placeholder: "전체",
           },
-          {
-            id: "paymentPeriodFilter",
-            label: "기간",
-            value: paymentFilters.period,
-            onChange: (e) =>
-              setPaymentFilters((prev) => ({
-                ...prev,
-                period: e.target.value,
-              })),
-            options: periodOptions,
-          },
         ]}
-        dateFilters={{
-          show: paymentFilters.period === "custom",
-          startDate: paymentFilters.startDate,
-          onStartDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-            setPaymentFilters((prev) => ({
-              ...prev,
-              startDate: e.target.value,
-            })),
-          endDate: paymentFilters.endDate,
-          onEndDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-            setPaymentFilters((prev) => ({ ...prev, endDate: e.target.value })),
-        }}
         onSearchButtonClick={() => {
           console.log("Search payments with filters:", paymentFilters);
         }}

@@ -17,6 +17,8 @@ import { CreditCardIcon } from "lucide-react";
 interface RefundsViewProps {
   paymentsForRefundView: PaymentData[];
   lessonIdFilter?: number | null;
+  selectedYear: string;
+  selectedMonth: string;
   agGridTheme: string;
   bg: string;
   textColor: string;
@@ -90,6 +92,8 @@ const PaymentMethodCellRenderer: React.FC<
 export const RefundsView: React.FC<RefundsViewProps> = ({
   paymentsForRefundView,
   lessonIdFilter,
+  selectedYear,
+  selectedMonth,
   agGridTheme,
   bg,
   textColor,
@@ -99,9 +103,6 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
   const [refundFilters, setRefundFilters] = useState({
     searchTerm: "",
     status: "" as PaymentTransactionStatus | "",
-    period: "all",
-    startDate: "",
-    endDate: "",
   });
 
   const refundStatusOptions: {
@@ -116,14 +117,6 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
     { value: "CANCELED", label: paymentTransactionStatusConfig.CANCELED.label },
   ];
 
-  const periodOptions = [
-    { value: "all", label: "전체 기간" },
-    { value: "today", label: "오늘 (환불일 기준)" },
-    { value: "week", label: "최근 7일 (환불일 기준)" },
-    { value: "month", label: "최근 30일 (환불일 기준)" },
-    { value: "custom", label: "기간 선택 (환불일 기준)" },
-  ];
-
   const handleExportRefunds = () => {
     refundGridRef.current?.api.exportDataAsCsv();
   };
@@ -132,62 +125,6 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
     let data = [...paymentsForRefundView];
     if (lessonIdFilter) {
       data = data.filter((p) => p.lessonId === lessonIdFilter);
-    }
-
-    const dateFilterField = "lastRefundAt";
-
-    if (refundFilters.period !== "all" && refundFilters.period !== "custom") {
-      const now = new Date();
-      let pastDate = new Date(now);
-      if (refundFilters.period === "today") pastDate.setHours(0, 0, 0, 0);
-      else if (refundFilters.period === "week")
-        pastDate.setDate(now.getDate() - 7);
-      else if (refundFilters.period === "month")
-        pastDate.setMonth(now.getMonth() - 1);
-
-      if (refundFilters.period !== "today") pastDate.setHours(0, 0, 0, 0);
-
-      data = data.filter((p) => {
-        const targetDateStr = p[dateFilterField as keyof PaymentData] as
-          | string
-          | undefined;
-        if (!targetDateStr) return false;
-        try {
-          const targetDate = new Date(targetDateStr);
-          return (
-            !isNaN(targetDate.getTime()) &&
-            targetDate >= pastDate &&
-            targetDate <= now
-          );
-        } catch (e) {
-          return false;
-        }
-      });
-    } else if (
-      refundFilters.period === "custom" &&
-      refundFilters.startDate &&
-      refundFilters.endDate
-    ) {
-      const start = new Date(refundFilters.startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(refundFilters.endDate);
-      end.setHours(23, 59, 59, 999);
-      data = data.filter((p) => {
-        const targetDateStr = p[dateFilterField as keyof PaymentData] as
-          | string
-          | undefined;
-        if (!targetDateStr) return false;
-        try {
-          const targetDate = new Date(targetDateStr);
-          return (
-            !isNaN(targetDate.getTime()) &&
-            targetDate >= start &&
-            targetDate <= end
-          );
-        } catch (e) {
-          return false;
-        }
-      });
     }
 
     return data.filter((payment) => {
@@ -338,31 +275,7 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
             options: refundStatusOptions,
             placeholder: "전체 상태",
           },
-          {
-            id: "refundPeriodFilter",
-            label: "기간 (환불일)",
-            value: refundFilters.period,
-            onChange: (e) =>
-              setRefundFilters((prev) => ({
-                ...prev,
-                period: e.target.value,
-              })),
-            options: periodOptions,
-            placeholder: "전체 기간",
-          },
         ]}
-        dateFilters={{
-          show: refundFilters.period === "custom",
-          startDate: refundFilters.startDate,
-          onStartDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-            setRefundFilters((prev) => ({
-              ...prev,
-              startDate: e.target.value,
-            })),
-          endDate: refundFilters.endDate,
-          onEndDateChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-            setRefundFilters((prev) => ({ ...prev, endDate: e.target.value })),
-        }}
         onSearchButtonClick={() => {
           console.log("Search refunds with filters:", refundFilters);
         }}

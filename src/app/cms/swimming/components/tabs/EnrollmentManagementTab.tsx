@@ -67,7 +67,7 @@ import { useColorMode } from "@/components/ui/color-mode";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import { toaster } from "@/components/ui/toaster";
 import { AdminCancelReasonDialog } from "./enrollmentManagement/AdminCancelReasonDialog";
-import { payStatusOptions } from "@/lib/utils/statusUtils";
+import { payStatusOptions as defaultPayStatusOptions } from "@/lib/utils/statusUtils";
 import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 // Import the new dialog components
@@ -102,12 +102,18 @@ interface EnrollmentData {
 
 interface EnrollmentManagementTabProps {
   lessonIdFilter?: number | null;
+  selectedYear: string;
+  selectedMonth: string;
 }
 
 const enrollmentQueryKeys = {
   all: ["adminEnrollments"] as const,
-  list: (lessonId?: number | null, params?: any) =>
-    [...enrollmentQueryKeys.all, lessonId, params] as const,
+  list: (
+    lessonId?: number | null,
+    year?: string,
+    month?: string,
+    params?: any
+  ) => [...enrollmentQueryKeys.all, lessonId, year, month, params] as const,
   temporaryCreate: () => [...enrollmentQueryKeys.all, "temporaryCreate"],
   userHistory: (userLoginId?: string) =>
     [...enrollmentQueryKeys.all, "userHistory", userLoginId] as const,
@@ -177,6 +183,8 @@ const ActionCellRenderer: React.FC<ICellRendererParams<EnrollmentData>> = (
 
 export const EnrollmentManagementTab = ({
   lessonIdFilter,
+  selectedYear,
+  selectedMonth,
 }: EnrollmentManagementTabProps) => {
   const colors = useColors();
   const { colorMode } = useColorMode();
@@ -188,6 +196,19 @@ export const EnrollmentManagementTab = ({
     payStatus: "",
   });
 
+  const payStatusOptionsForFilter = useMemo(() => {
+    // Assuming defaultPayStatusOptions[0] is { value: "ALL", label: "전체" }
+    // and we want to replace it with our own "전체" option with value: "".
+    const specificStatusOptions = defaultPayStatusOptions
+      .slice(1) // Skip the first item assumed to be "ALL"
+      .map((opt) => ({
+        value: opt.value as EnrollmentPaymentLifecycleStatus, // After slice(1), value is EnrollmentPaymentLifecycleStatus
+        label: opt.label,
+      }));
+
+    return [{ value: "", label: "전체 납부상태" }, ...specificStatusOptions];
+  }, []);
+
   const {
     data: enrollmentsData,
     isLoading: isLoadingEnrollments,
@@ -198,10 +219,13 @@ export const EnrollmentManagementTab = ({
     Error,
     EnrollmentData[]
   >({
-    queryKey: enrollmentQueryKeys.list(lessonIdFilter, {
-      payStatus: filters.payStatus || undefined,
-    }),
-    queryFn: async (): Promise<PaginatedResponse<EnrollAdminResponseDto>> => {
+    queryKey: enrollmentQueryKeys.list(
+      lessonIdFilter,
+      selectedYear,
+      selectedMonth,
+      { payStatus: filters.payStatus || undefined }
+    ),
+    queryFn: async () => {
       if (!lessonIdFilter) {
         return {
           code: 0,
@@ -227,6 +251,8 @@ export const EnrollmentManagementTab = ({
       }
       return adminApi.getAdminEnrollments({
         lessonId: lessonIdFilter,
+        year: parseInt(selectedYear),
+        month: parseInt(selectedMonth),
         payStatus: filters.payStatus || undefined,
         size: 1000,
         page: 0,
@@ -243,18 +269,19 @@ export const EnrollmentManagementTab = ({
           payStatus: dto.payStatus as EnrollmentPaymentLifecycleStatus | string,
           usesLocker: dto.usesLocker,
           userName: dto.userName,
-          userGender: dto.userGender || "0",
-          userLoginId: dto.userLoginId || "",
-          userPhone: dto.userPhone || "",
+          userGender: dto.userGender || "기타",
+          userLoginId: dto.userLoginId || "N/A",
+          userPhone: dto.userPhone || "N/A",
           isRenewal: false,
+          discountInfo: undefined,
+          userMemo: undefined,
           enrollStatus: dto.status as EnrollmentApplicationStatus | string,
           createdAt: dto.createdAt,
-          userMemo: (dto as any).userMemo || undefined,
           membershipType: dto.membershipType,
         })
       );
     },
-    enabled: !!lessonIdFilter,
+    enabled: !!lessonIdFilter && !!selectedYear && !!selectedMonth,
   });
 
   const rowData = useMemo(() => enrollmentsData || [], [enrollmentsData]);
@@ -402,9 +429,14 @@ export const EnrollmentManagementTab = ({
         description: `신청 ID ${data.enrollId}이(가) 취소되었습니다.`,
       });
       queryClient.invalidateQueries({
-        queryKey: enrollmentQueryKeys.list(lessonIdFilter, {
-          payStatus: filters.payStatus || undefined,
-        }),
+        queryKey: enrollmentQueryKeys.list(
+          lessonIdFilter,
+          selectedYear,
+          selectedMonth,
+          {
+            payStatus: filters.payStatus || undefined,
+          }
+        ),
       });
       queryClient.invalidateQueries({
         queryKey: enrollmentQueryKeys.cancelRequests,
@@ -562,7 +594,7 @@ export const EnrollmentManagementTab = ({
                   | EnrollmentPaymentLifecycleStatus
                   | "",
               })),
-            options: payStatusOptions,
+            options: payStatusOptionsForFilter,
             maxWidth: "120px",
             placeholder: "전체",
           },

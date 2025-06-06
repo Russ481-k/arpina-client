@@ -1,7 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Box, Flex, Heading, Badge } from "@chakra-ui/react";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Box,
+  Flex,
+  Heading,
+  Badge,
+  Portal,
+  createListCollection,
+  Select,
+} from "@chakra-ui/react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
 import type {
@@ -22,11 +30,30 @@ import { StatisticsManager } from "./StatisticsManager";
 const adminLessonKeys = {
   all: ["adminLessons"] as const,
   lists: () => [...adminLessonKeys.all, "list"] as const,
-  list: (params: PaginationParams) =>
+  list: (params: PaginationParams & { year?: number; month?: number }) =>
     [...adminLessonKeys.lists(), params] as const,
   details: () => [...adminLessonKeys.all, "detail"] as const,
   detail: (id: number) => [...adminLessonKeys.details(), id] as const,
 };
+
+const currentYear = new Date().getFullYear();
+let yearsArray = [];
+if (currentYear < 2025) {
+  // If current year is before 2025, only include current year
+  yearsArray.push({ label: `${currentYear}년`, value: currentYear.toString() });
+} else {
+  // Otherwise, generate years from 2025 to current year
+  for (let y = 2025; y <= currentYear; y++) {
+    yearsArray.push({ label: `${y}년`, value: y.toString() });
+  }
+}
+const yearCollection = createListCollection({ items: yearsArray });
+
+const months = Array.from({ length: 12 }, (_, i) => i + 1).map((month) => ({
+  label: `${month}월`,
+  value: month.toString(),
+}));
+const monthCollection = createListCollection({ items: months });
 
 export const LessonManager: React.FC = () => {
   const queryClient = useQueryClient();
@@ -35,29 +62,36 @@ export const LessonManager: React.FC = () => {
   const [selectedAdminLesson, setSelectedAdminLesson] =
     useState<AdminLessonDto | null>(null);
 
-  // Lesson data query
+  const [selectedYear, setSelectedYear] = useState<string>(
+    yearsArray.length > 0 ? yearsArray[yearsArray.length - 1].value : ""
+  );
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    (new Date().getMonth() + 1).toString()
+  );
 
-  const {
-    data: adminLessonsResponse,
-    isLoading: isAdminLessonsLoading,
-    isError: isAdminLessonsError,
-    error: adminLessonsErrorData,
-  } = useQuery<
-    PaginatedResponse<AdminLessonDto>,
-    Error,
-    PaginatedResponse<AdminLessonDto>,
-    any
-  >({
-    queryKey: adminLessonKeys.list({
-      page: 0,
-      size: 50,
-    }),
-    queryFn: () =>
-      adminApi.getAdminLessons({
+  // Lesson data query
+  const { data: adminLessonsResponse, isLoading: isAdminLessonsLoading } =
+    useQuery<
+      PaginatedResponse<AdminLessonDto>,
+      Error,
+      PaginatedResponse<AdminLessonDto>
+    >({
+      queryKey: adminLessonKeys.list({
         page: 0,
         size: 50,
+        year: parseInt(selectedYear),
+        month: parseInt(selectedMonth),
       }),
-  });
+      queryFn: () =>
+        adminApi.getAdminLessons({
+          page: 0,
+          size: 50,
+          year: parseInt(selectedYear),
+          month: parseInt(selectedMonth),
+        }),
+      enabled:
+        !!selectedYear && !!selectedMonth && yearCollection.items.length > 0,
+    });
 
   const adminLessons = adminLessonsResponse?.data?.content || [];
 
@@ -79,7 +113,6 @@ export const LessonManager: React.FC = () => {
     }
   }, [adminLessonsResponse, selectedAdminLesson, setSelectedAdminLesson]);
 
-  // Mutations
   const createAdminLessonMutation = useMutation<
     AdminLessonDto,
     Error,
@@ -87,7 +120,7 @@ export const LessonManager: React.FC = () => {
   >({
     mutationFn: (newData: AdminLessonDto) =>
       adminApi.createAdminLesson(newData),
-    onSuccess: (createdLesson) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
       toaster.create({
         title: "성공",
@@ -95,15 +128,13 @@ export const LessonManager: React.FC = () => {
         type: "success",
       });
     },
-    onError: (error) => {
+    onError: (error) =>
       toaster.create({
         title: "오류",
         description: `강습 생성 실패: ${error.message}`,
         type: "error",
-      });
-    },
+      }),
   });
-
   const updateAdminLessonMutation = useMutation<
     AdminLessonDto,
     Error,
@@ -113,99 +144,69 @@ export const LessonManager: React.FC = () => {
       adminApi.updateAdminLesson(lessonId, data),
     onSuccess: (updatedLesson) => {
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
-      if (updatedLesson.lessonId) {
+      if (updatedLesson.lessonId)
         queryClient.setQueryData(
           adminLessonKeys.detail(updatedLesson.lessonId),
           updatedLesson
         );
-      }
       toaster.create({
         title: "성공",
         description: "강습이 수정되었습니다.",
         type: "success",
       });
     },
-    onError: (error) => {
+    onError: (error) =>
       toaster.create({
         title: "오류",
         description: `강습 수정 실패: ${error.message}`,
         type: "error",
-      });
-    },
+      }),
   });
-
   const deleteAdminLessonMutation = useMutation<void, Error, number>({
     mutationFn: (lessonId: number) => adminApi.deleteAdminLesson(lessonId),
-    onSuccess: (data, deletedLessonId) => {
+    onSuccess: (_, deletedLessonId) => {
       toaster.create({
         title: "성공",
         description: "강습이 삭제되었습니다.",
         type: "success",
       });
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
-      if (selectedAdminLesson?.lessonId === deletedLessonId) {
+      if (selectedAdminLesson?.lessonId === deletedLessonId)
         setSelectedAdminLesson(null);
-      }
     },
-    onError: (error) => {
+    onError: (error) =>
       toaster.create({
         title: "오류",
         description: `강습 삭제 실패: ${error.message}`,
         type: "error",
-      });
-    },
+      }),
   });
 
-  // Event handlers
-  const handleAddLesson = () => {
-    setSelectedAdminLesson(null);
-  };
-
-  const handleEditLesson = (lesson: AdminLessonDto) => {
+  const handleAddLesson = () => setSelectedAdminLesson(null);
+  const handleEditLesson = (lesson: AdminLessonDto) =>
     setSelectedAdminLesson(lesson);
-  };
-
-  const handleDeleteLesson = async (lessonId: number) => {
-    await deleteAdminLessonMutation.mutateAsync(lessonId);
-  };
-
+  const handleDeleteLesson = async (lessonId: number) =>
+    deleteAdminLessonMutation.mutateAsync(lessonId);
   const handleSaveLesson = async (data: AdminLessonDto) => {
-    if (selectedAdminLesson && selectedAdminLesson.lessonId) {
-      const updatedLesson = await updateAdminLessonMutation.mutateAsync({
+    if (selectedAdminLesson?.lessonId) {
+      const u = await updateAdminLessonMutation.mutateAsync({
         lessonId: selectedAdminLesson.lessonId,
         data,
       });
-      if (updatedLesson) {
-        setSelectedAdminLesson(updatedLesson);
-      }
+      if (u) setSelectedAdminLesson(u);
     } else {
-      const createdLesson = await createAdminLessonMutation.mutateAsync(data);
-      if (createdLesson) {
-        setSelectedAdminLesson(createdLesson);
-      }
+      const c = await createAdminLessonMutation.mutateAsync(data);
+      if (c) setSelectedAdminLesson(c);
     }
   };
-
   const handleRemoveLesson = async () => {
-    if (selectedAdminLesson?.lessonId) {
+    if (selectedAdminLesson?.lessonId)
       await deleteAdminLessonMutation.mutateAsync(selectedAdminLesson.lessonId);
-    }
   };
-
-  const handleAddLessonClick = () => {
-    setSelectedAdminLesson(null);
-  };
+  const handleAddLessonClick = () => setSelectedAdminLesson(null);
 
   const swimmingLayout = [
-    {
-      id: "header",
-      x: 0,
-      y: 0,
-      w: 12,
-      h: 1,
-      isStatic: true,
-      isHeader: true,
-    },
+    { id: "header", x: 0, y: 0, w: 12, h: 1, isStatic: true, isHeader: true },
     {
       id: "lessonList",
       x: 0,
@@ -239,8 +240,8 @@ export const LessonManager: React.FC = () => {
       y: 1,
       w: 3,
       h: 5,
-      title: "사물함 재고 관리",
-      subtitle: "성별별 사물함 재고를 관리합니다.",
+      title: "실시간 사물함 재고 관리",
+      subtitle: "실시간 성별별 사물함 재고를 관리합니다.",
     },
     {
       id: "statisticsManager",
@@ -253,7 +254,12 @@ export const LessonManager: React.FC = () => {
     },
   ];
 
-  if (isAdminLessonsLoading) {
+  if (
+    isAdminLessonsLoading &&
+    yearCollection.items.length > 0 &&
+    selectedYear &&
+    selectedMonth
+  ) {
     return (
       <Box
         p={4}
@@ -279,8 +285,77 @@ export const LessonManager: React.FC = () => {
     <Box bg={colors.bg} minH="100vh" w="full" position="relative">
       <Box w="full">
         <GridSection initialLayout={swimmingLayout}>
-          <Flex justify="space-between" align="center" h="36px">
-            <Flex align="center" gap={2} px={2}>
+          <Flex justify="flex-start" align="center" h="full" px={2} gap={2}>
+            <Flex align="center" gap={1}>
+              <Select.Root
+                collection={yearCollection}
+                value={selectedYear ? [selectedYear] : []}
+                onValueChange={(details: { value: string[] }) =>
+                  details.value[0] && setSelectedYear(details.value[0])
+                }
+                size="sm"
+                width="90px"
+                disabled={yearCollection.items.length === 0}
+              >
+                <Select.HiddenSelect />
+                <Select.Label srOnly>년도 선택</Select.Label>
+                <Select.Control>
+                  <Select.Trigger>
+                    <Select.ValueText placeholder="년도" />
+                  </Select.Trigger>
+                  <Select.IndicatorGroup>
+                    <Select.Indicator />
+                  </Select.IndicatorGroup>
+                </Select.Control>
+                <Portal>
+                  <Select.Positioner>
+                    <Select.Content>
+                      {yearCollection.items.map((item) => (
+                        <Select.Item item={item} key={item.value}>
+                          {item.label}
+                          <Select.ItemIndicator />
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select.Positioner>
+                </Portal>
+              </Select.Root>
+
+              <Select.Root
+                collection={monthCollection}
+                value={selectedMonth ? [selectedMonth] : []}
+                onValueChange={(details: { value: string[] }) =>
+                  details.value[0] && setSelectedMonth(details.value[0])
+                }
+                size="sm"
+                width="70px"
+                disabled={yearCollection.items.length === 0} // Also disable month if no year can be selected
+              >
+                <Select.HiddenSelect />
+                <Select.Label srOnly>월 선택</Select.Label>
+                <Select.Control>
+                  <Select.Trigger>
+                    <Select.ValueText placeholder="월" />
+                  </Select.Trigger>
+                  <Select.IndicatorGroup>
+                    <Select.Indicator />
+                  </Select.IndicatorGroup>
+                </Select.Control>
+                <Portal>
+                  <Select.Positioner>
+                    <Select.Content>
+                      {monthCollection.items.map((item) => (
+                        <Select.Item item={item} key={item.value}>
+                          {item.label}
+                          <Select.ItemIndicator />
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select.Positioner>
+                </Portal>
+              </Select.Root>
+            </Flex>
+            <Flex align="center" gap={2}>
               <Heading
                 size="lg"
                 color={colors.text.primary}
@@ -336,7 +411,11 @@ export const LessonManager: React.FC = () => {
 
           {/* Admin Tabs Manager */}
           <Box id="adminTabs" position="relative">
-            <AdminTabsManager activeLessonId={selectedAdminLesson?.lessonId} />
+            <AdminTabsManager
+              activeLessonId={selectedAdminLesson?.lessonId}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+            />
           </Box>
 
           {/* Locker Manager */}

@@ -8,9 +8,15 @@ import { PaymentHistoryTab } from "./tabs/PaymentHistoryTab";
 
 interface AdminTabsManagerProps {
   activeLessonId?: number | null;
+  selectedYear: string;
+  selectedMonth: string;
 }
 
-export function AdminTabsManager({ activeLessonId }: AdminTabsManagerProps) {
+export function AdminTabsManager({
+  activeLessonId,
+  selectedYear,
+  selectedMonth,
+}: AdminTabsManagerProps) {
   return (
     <Box position="relative" h="full" display="flex" flexDirection="column">
       <Tabs.Root defaultValue="enrollments" h="full">
@@ -38,13 +44,25 @@ export function AdminTabsManager({ activeLessonId }: AdminTabsManagerProps) {
 
         <Box flex="1" overflow="auto">
           <Tabs.Content value="enrollments">
-            <EnrollmentManagementTab lessonIdFilter={activeLessonId} />
+            <EnrollmentManagementTab
+              lessonIdFilter={activeLessonId}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+            />
           </Tabs.Content>
           <Tabs.Content value="cancellations">
-            <CancellationRefundTab lessonIdFilter={activeLessonId} />
+            <CancellationRefundTab
+              lessonIdFilter={activeLessonId}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+            />
           </Tabs.Content>
           <Tabs.Content value="payments">
-            <PaymentHistoryTab lessonIdFilter={activeLessonId} />
+            <PaymentHistoryTab
+              lessonIdFilter={activeLessonId}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+            />
           </Tabs.Content>
         </Box>
       </Tabs.Root>

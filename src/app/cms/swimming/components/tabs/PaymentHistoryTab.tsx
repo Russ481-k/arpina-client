@@ -28,15 +28,14 @@ import "@/styles/ag-grid-custom.css";
 
 interface PaymentHistoryTabProps {
   lessonIdFilter?: number | null;
-  // Add pagination state if managed here, e.g.:
-  // currentPage: number;
-  // pageSize: number;
-  // onPageChange: (page: number) => void;
-  // onPageSizeChange: (size: number) => void;
+  selectedYear: string;
+  selectedMonth: string;
 }
 
 export const PaymentHistoryTab = ({
   lessonIdFilter,
+  selectedYear,
+  selectedMonth,
 }: PaymentHistoryTabProps) => {
   const { colorMode } = useColorMode();
   const [activeTab, setActiveTab] = useState<"payments" | "refunds">(
@@ -60,15 +59,20 @@ export const PaymentHistoryTab = ({
     queryKey: [
       "adminPaymentHistory",
       lessonIdFilter,
+      selectedYear,
+      selectedMonth,
       paymentsCurrentPage,
       paymentsPageSize,
     ],
     queryFn: () =>
       adminApi.getAdminPaymentHistory({
         lessonId: lessonIdFilter ?? undefined,
+        year: parseInt(selectedYear),
+        month: parseInt(selectedMonth),
         page: paymentsCurrentPage,
         size: paymentsPageSize,
       }),
+    enabled: !!selectedYear && !!selectedMonth,
   });
 
   const payments: AdminPaymentData[] = useMemo(
@@ -116,6 +120,8 @@ export const PaymentHistoryTab = ({
             <PaymentsView
               payments={payments}
               lessonIdFilter={lessonIdFilter}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
               agGridTheme={agGridTheme}
               bg={bg}
               textColor={textColor}
@@ -143,6 +149,8 @@ export const PaymentHistoryTab = ({
             <RefundsView
               paymentsForRefundView={paymentsForRefundView}
               lessonIdFilter={lessonIdFilter}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
               agGridTheme={agGridTheme}
               bg={bg}
               textColor={textColor}

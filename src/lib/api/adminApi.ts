@@ -171,7 +171,12 @@ export const adminApi = {
 
   // Cancel/Refund Management
   getAdminCancelRequests: async (
-    params?: PaginationParams & { status?: string }
+    params?: PaginationParams & {
+      status?: string;
+      year?: number;
+      month?: number;
+      lessonId?: number;
+    }
   ): Promise<PaginatedResponse<CancelRequestAdminDto>> => {
     const response = await privateApi.get<
       PaginatedResponse<CancelRequestAdminDto>
@@ -216,7 +221,11 @@ export const adminApi = {
     return response.data;
   },
   getAdminPaymentHistory: async (
-    params: PaginationParams & { lessonId?: number }
+    params: PaginationParams & {
+      lessonId?: number;
+      year?: number;
+      month?: number;
+    }
   ): Promise<PaginatedResponse<AdminPaymentData>> => {
     const response = await privateApi.get<PaginatedResponse<PaymentAdminDto>>(
       `${CMS_API_BASE}/payments`,

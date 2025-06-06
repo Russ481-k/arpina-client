@@ -58,7 +58,7 @@ interface CancelRequestData {
   usesLocker?: boolean; // Made optional to match parent
   paidAmount: UIPaymentDetails; // Updated to UIPaymentDetails
   calculatedRefund: UICalculatedRefundDetails; // Updated to UICalculatedRefundDetails
-  reason: string;
+  reason?: string;
   adminMemo?: string;
   status?: CancellationRequestRecordStatus; // Updated to use imported type
   // payStatus is removed to match parent
