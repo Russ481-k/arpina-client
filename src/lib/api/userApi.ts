@@ -66,6 +66,14 @@ export interface CheckUsernameResponse {
   stackTrace?: string | null;
 }
 
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  errorCode?: string | null;
+  stackTrace?: string | null;
+}
+
 const USER_API_BASE_URL = "/auth"; // Or your actual user API base path
 
 export const userApi = {
@@ -97,6 +105,27 @@ export const userApi = {
   checkUsername: async (username: string): Promise<CheckUsernameResponse> => {
     const response = await publicApi.get<CheckUsernameResponse>(
       `${USER_API_BASE_URL}/check-username/${encodeURIComponent(username)}`
+    );
+    return response.data;
+  },
+
+  sendEmailVerificationCode: async (
+    email: string
+  ): Promise<ApiResponse<null>> => {
+    const response = await publicApi.post<ApiResponse<null>>(
+      `${USER_API_BASE_URL}/send-verification-email`,
+      { email }
+    );
+    return response.data;
+  },
+
+  verifyEmailCode: async (
+    email: string,
+    code: string
+  ): Promise<ApiResponse<null>> => {
+    const response = await publicApi.post<ApiResponse<null>>(
+      `${USER_API_BASE_URL}/verify-email-code`,
+      { email, code }
     );
     return response.data;
   },

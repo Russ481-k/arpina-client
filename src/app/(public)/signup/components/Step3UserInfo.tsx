@@ -68,7 +68,7 @@ const validateUsername = (username: string): string => {
   const trimmedUsername = username.trim();
   if (!trimmedUsername) return "사용자 ID를 입력해주세요.";
   if (trimmedUsername.length < 4) return "사용자 ID는 4자 이상이어야 합니다.";
-  if (trimmedUsername.length > 50) return "사용자 ID는 50자 이하여야 합니다.";
+  if (trimmedUsername.length > 16) return "사용자 ID는 50자 이하여야 합니다.";
   return "";
 };
 
@@ -145,6 +145,14 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
 
     const [email, setEmail] = useState("");
     const [emailError, setEmailError] = useState("");
+    const [isVerificationCodeSent, setIsVerificationCodeSent] = useState(false);
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [emailInputDisabled, setEmailInputDisabled] = useState(false);
+    const [verificationCode, setVerificationCode] = useState("");
+    const [verificationError, setVerificationError] = useState("");
+    const [verificationTimer, setVerificationTimer] = useState(180); // 3분
+    const [isTimerRunning, setIsTimerRunning] = useState(false);
+
     const [carNumber, setCarNumber] = useState("");
     const [carNumberError, setCarNumberError] = useState("");
 
@@ -166,6 +174,65 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
     const [passwordStrength, setPasswordStrength] = useState(0);
     const [isPasswordTooltipVisible, setIsPasswordTooltipVisible] =
       useState(false);
+
+    const sendVerificationCodeMutation = useMutation({
+      mutationFn: userApi.sendEmailVerificationCode,
+      onSuccess: (data) => {
+        if (data.success) {
+          toaster.create({
+            title: "성공",
+            description: data.message,
+            type: "success",
+          });
+          setIsVerificationCodeSent(true);
+          setEmailInputDisabled(true);
+          setIsTimerRunning(true);
+          setVerificationTimer(180);
+          setVerificationError("");
+        } else {
+          toaster.create({
+            title: "오류",
+            description: data.message || "알 수 없는 오류가 발생했습니다.",
+            type: "error",
+          });
+          setEmailError(data.message || "알 수 없는 오류가 발생했습니다.");
+        }
+      },
+      onError: (error: Error) => {
+        toaster.create({
+          title: "오류",
+          description: error.message || "알 수 없는 오류가 발생했습니다.",
+          type: "error",
+        });
+      },
+    });
+
+    const verifyCodeMutation = useMutation({
+      mutationFn: (vars: { email: string; code: string }) =>
+        userApi.verifyEmailCode(vars.email, vars.code),
+      onSuccess: (data) => {
+        if (data.success) {
+          toaster.create({
+            title: "성공",
+            description: data.message,
+            type: "success",
+          });
+          setIsEmailVerified(true);
+          setIsTimerRunning(false);
+          setVerificationError("");
+          setIsVerificationCodeSent(false); // 인증 UI 숨기기
+        } else {
+          setVerificationError(
+            data.message || "인증 코드가 올바르지 않습니다."
+          );
+        }
+      },
+      onError: (error: Error) => {
+        setVerificationError(
+          error.message || "알 수 없는 오류가 발생했습니다."
+        );
+      },
+    });
 
     const checkUsernameMutation = useMutation<
       CheckUsernameResponse,
@@ -281,6 +348,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
         const newEmail = e.target.value;
         setEmail(newEmail);
         setEmailError(validateEmail(newEmail));
+        setIsEmailVerified(false); // 이메일 변경 시 인증 상태 초기화
       },
       []
     );
@@ -418,6 +486,23 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
 
       const currentEmailError = validateEmail(email);
       setEmailError(currentEmailError);
+      if (currentEmailError) {
+        toaster.create({
+          title: "입력 오류",
+          description: currentEmailError,
+          type: "error",
+        });
+        document.getElementsByName("email")[0]?.focus();
+        hasError = true;
+      } else if (!isEmailVerified) {
+        toaster.create({
+          title: "인증 필요",
+          description: "이메일 인증을 완료해주세요.",
+          type: "warning",
+        });
+        document.getElementsByName("email")[0]?.focus();
+        hasError = true;
+      }
 
       const currentCarNumberError = validateCarNumber(carNumber);
       setCarNumberError(currentCarNumberError);
@@ -441,6 +526,16 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
         toaster.create({
           title: "입력 오류",
           description: currentEmailError,
+          type: "error",
+        });
+        document.getElementsByName("email")[0]?.focus();
+        return;
+      }
+
+      if (!isEmailVerified) {
+        toaster.create({
+          title: "이메일 인증 필요",
+          description: "이메일 인증을 완료해주세요.",
           type: "error",
         });
         document.getElementsByName("email")[0]?.focus();
@@ -533,6 +628,25 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
       }
     }, [initialAuthData, authKey, currentProgressValue]);
 
+    useEffect(() => {
+      let intervalId: NodeJS.Timeout;
+      if (isTimerRunning && verificationTimer > 0) {
+        intervalId = setInterval(() => {
+          setVerificationTimer((prev) => prev - 1);
+        }, 1000);
+      } else if (isTimerRunning && verificationTimer === 0) {
+        setIsTimerRunning(false);
+        setVerificationError("인증 시간이 만료되었습니다. 다시 시도해주세요.");
+        toaster.create({
+          title: "시간 만료",
+          description:
+            "인증 시간이 만료되었습니다. 인증번호를 다시 요청해주세요.",
+          type: "warning",
+        });
+      }
+      return () => clearInterval(intervalId);
+    }, [isTimerRunning, verificationTimer]);
+
     const handleComplete = (data: any) => {
       let fullAddress = data.address;
       let extraAddress = "";
@@ -567,6 +681,33 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
     const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       performSubmitActions();
+    };
+
+    const handleSendVerificationCode = () => {
+      const error = validateEmail(email);
+      if (error) {
+        setEmailError(error);
+        return;
+      }
+      sendVerificationCodeMutation.mutate(email);
+    };
+
+    const handleChangeEmail = () => {
+      setEmailInputDisabled(false);
+      setIsVerificationCodeSent(false);
+      setIsEmailVerified(false);
+      setIsTimerRunning(false);
+      setVerificationCode("");
+      setVerificationError("");
+    };
+
+    const handleVerifyCode = () => {
+      if (verificationCode.length !== 6) {
+        setVerificationError("인증번호 6자리를 입력해주세요.");
+        return;
+      }
+      setVerificationError("");
+      verifyCodeMutation.mutate({ email, code: verificationCode });
     };
 
     const passwordTooltipContent = useMemo(
@@ -650,7 +791,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                   <Field.Label fontWeight="semibold">사용자 ID</Field.Label>
                   <Input
                     type="text"
-                    placeholder="4~50자 영문, 숫자 (입력 후 자동으로 중복 확인됩니다)"
+                    placeholder="4~16자 영문, 숫자"
                     name="username"
                     value={usernameInput}
                     onChange={handleUsernameChange}
@@ -810,19 +951,97 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                   />
                 </Field.Root>
 
-                <Field.Root id="email" invalid={!!emailError}>
+                <Field.Root
+                  id="email"
+                  invalid={!!emailError && !isEmailVerified}
+                >
                   <Field.Label fontWeight="semibold">이메일</Field.Label>
-                  <Input
-                    type="email"
-                    placeholder="이메일을 입력해주세요."
-                    name="email"
-                    value={email}
-                    onChange={handleEmailChange}
-                  />
-                  {emailError && (
+                  <HStack>
+                    <Input
+                      type="email"
+                      placeholder="이메일을 입력해주세요."
+                      name="email"
+                      value={email}
+                      onChange={handleEmailChange}
+                      readOnly={emailInputDisabled || isEmailVerified}
+                    />
+                    {isEmailVerified ? (
+                      <HStack>
+                        <CheckCircleIcon color="green.500" />
+                        <Text
+                          fontSize="sm"
+                          color="green.500"
+                          whiteSpace="nowrap"
+                        >
+                          인증완료
+                        </Text>
+                      </HStack>
+                    ) : emailInputDisabled ? (
+                      <Button
+                        onClick={handleChangeEmail}
+                        variant="outline"
+                        whiteSpace="nowrap"
+                      >
+                        수정
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleSendVerificationCode}
+                        loading={sendVerificationCodeMutation.isPending}
+                        disabled={!!emailError || email.trim() === ""}
+                        whiteSpace="nowrap"
+                      >
+                        인증번호 발송
+                      </Button>
+                    )}
+                  </HStack>
+                  {emailError && !isEmailVerified && (
                     <Field.ErrorText>{emailError}</Field.ErrorText>
                   )}
                 </Field.Root>
+
+                {isVerificationCodeSent && !isEmailVerified && (
+                  <Field.Root
+                    id="emailVerification"
+                    invalid={!!verificationError}
+                  >
+                    <Field.Label hidden>인증번호</Field.Label>
+                    <HStack>
+                      <Input
+                        placeholder="인증번호 6자리"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        maxLength={6}
+                      />
+                      {isTimerRunning && (
+                        <Text
+                          color="blue.500"
+                          fontSize="sm"
+                          whiteSpace="nowrap"
+                        >
+                          {String(Math.floor(verificationTimer / 60)).padStart(
+                            2,
+                            "0"
+                          )}
+                          :{String(verificationTimer % 60).padStart(2, "0")}
+                        </Text>
+                      )}
+                      <Button
+                        onClick={handleVerifyCode}
+                        loading={verifyCodeMutation.isPending}
+                        disabled={
+                          verificationCode.length !== 6 || !isTimerRunning
+                        }
+                        whiteSpace="nowrap"
+                      >
+                        확인
+                      </Button>
+                    </HStack>
+                    {verificationError && (
+                      <Field.ErrorText>{verificationError}</Field.ErrorText>
+                    )}
+                  </Field.Root>
+                )}
 
                 <Field.Root id="carNumber" invalid={!!carNumberError}>
                   <Field.Label fontWeight="semibold">차량번호</Field.Label>

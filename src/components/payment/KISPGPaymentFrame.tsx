@@ -28,6 +28,12 @@ export interface KISPGPaymentFrameRef {
   triggerPayment: () => void;
 }
 
+const isValidEmail = (email: string | null | undefined): boolean => {
+  if (!email) return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 const KISPGPaymentFrame = forwardRef<
   KISPGPaymentFrameRef,
   KISPGPaymentFrameProps
@@ -514,6 +520,15 @@ const KISPGPaymentFrame = forwardRef<
       return;
     }
 
+    if (!isValidEmail(paymentData.buyerEmail)) {
+      toaster.create({
+        title: "유효하지 않은 이메일",
+        description: "결제 정보에 올바른 이메일 주소가 포함되어야 합니다.",
+        type: "error",
+      });
+      return;
+    }
+
     try {
       setIsPaymentInProgress(true);
       setShowPaymentFrame(true);
@@ -614,11 +629,11 @@ const KISPGPaymentFrame = forwardRef<
         <input
           type="hidden"
           name="mbsUsrId"
-          value={
+          value={(
             paymentData.mbsUsrId ||
             paymentData.buyerEmail?.split("@")[0] ||
             String(enrollId || "temp")
-          }
+          ).substring(0, 16)}
         />
         <input type="hidden" name="ordGuardEmail" value="" />
         <input type="hidden" name="rcvrAddr" value="" />
