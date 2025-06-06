@@ -50,6 +50,7 @@ interface Step3UserInfoProps {
   authKey: string | null;
   onSignupSuccess: (username: string) => void;
   onSubmittingChange?: (isSubmitting: boolean) => void;
+  onEmailVerificationChange?: (isVerified: boolean) => void;
 }
 
 export interface Step3UserInfoRef {
@@ -133,6 +134,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
       authKey,
       onSignupSuccess,
       onSubmittingChange,
+      onEmailVerificationChange,
     },
     ref
   ) => {
@@ -437,6 +439,12 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
         onSubmittingChange(mutationIsPending);
       }
     }, [mutationIsPending, onSubmittingChange]);
+
+    useEffect(() => {
+      if (onEmailVerificationChange) {
+        onEmailVerificationChange(isEmailVerified);
+      }
+    }, [isEmailVerified, onEmailVerificationChange]);
 
     const performSubmitActions = () => {
       // Validate all fields before submission
