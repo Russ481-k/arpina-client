@@ -6,29 +6,24 @@
 //   { label: "수강종료", value: "CLOSED" },
 // ];
 
+import dayjs from "dayjs";
+
 export const monthOptions = (() => {
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
+  const today = dayjs();
+  const currentMonth = today.month() + 1;
+  const currentYear = today.year();
 
   const months = [];
   months.push({ label: "월별 전체선택", value: "all" });
 
   for (let i = -1; i <= 1; i++) {
-    let monthIndex = currentMonth + i;
-    let year = currentYear;
-
-    if (monthIndex < 0) {
-      monthIndex += 12;
-      year -= 1;
-    } else if (monthIndex > 11) {
-      monthIndex -= 12;
-      year += 1;
-    }
+    const targetDate = today.add(i, 'month');
+    const monthIndex = targetDate.month() + 1;
+    const year = targetDate.year();
 
     months.push({
-      label: `${year}년 ${String(monthIndex + 1).padStart(2, "0")}월`,
-      value: monthIndex + 1,
+      label: `${year}년 ${String(monthIndex).padStart(2, "0")}월`,
+      value: monthIndex,
     });
   }
 

@@ -1,21 +1,24 @@
 import { ko } from "date-fns/locale";
 import { Schedule, ScheduleStatus } from "./types";
 import { format, isAfter, isBefore, isValid, isWithinInterval } from "date-fns";
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isBetween);
 
 export const calculateScheduleStatus = (schedule: Schedule): ScheduleStatus => {
-  const now = new Date();
-  const startTime = new Date(schedule.startDateTime);
-  const endTime = new Date(schedule.endDateTime);
+  const now = dayjs();
+  const startTime = dayjs(schedule.startDateTime);
+  const endTime = dayjs(schedule.endDateTime);
 
   if (!schedule.displayYn) return "HIDDEN";
-  if (isBefore(now, startTime)) return "UPCOMING";
-  if (isWithinInterval(now, { start: startTime, end: endTime }))
-    return "ONGOING";
+  if (now.isBefore(startTime)) return "UPCOMING";
+  if (now.isBetween(startTime, endTime, null, '[]')) return "ONGOING";
   return "ENDED";
 };
 
 export const formatDateTime = (date: string) => {
-  return format(new Date(date), "yyyy-MM-dd HH:mm");
+  return dayjs(date).format("YYYY-MM-DD HH:mm");
 };
 
 export const getStatusColor = (status: ScheduleStatus): string => {
@@ -62,13 +65,11 @@ export const groupSchedulesByDate = (schedules: Schedule[]) => {
 export const sortSchedulesByTime = (schedules: Schedule[]) => {
   return [...schedules].sort(
     (a, b) =>
-      new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime()
+      dayjs(a.startDateTime).valueOf() - dayjs(b.startDateTime).valueOf()
   );
 };
 
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return isValid(date)
-    ? format(date, "MM.dd HH:mm", { locale: ko })
-    : dateString;
+  const date = dayjs(dateString);
+  return date.isValid() ? date.format("MM.DD HH:mm") : dateString;
 };

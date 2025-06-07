@@ -6,6 +6,7 @@ import {
   EnrollmentPaymentLifecycleStatus,
   EnrollmentCancellationProgressStatus,
 } from "@/types/statusTypes";
+import dayjs from "dayjs";
 
 // Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
 // and return a Date object.
@@ -21,49 +22,20 @@ const parseKSTDateString = (
     .trim();
   parsableDateStr = parsableDateStr.replace(/\./g, "-"); // e.g., "YYYY-MM-DD HH:MM" or "YYYY-MM-DD"
 
-  // Ensure it's in a format that new Date() can parse reliably with timezone
-  // YYYY-MM-DD HH:MM:SS or YYYY-MM-DDTHH:MM:SS
-  if (parsableDateStr.includes(" ")) {
-    parsableDateStr = parsableDateStr.replace(" ", "T");
-  }
-
-  // Add seconds if missing and time is present (e.g., "YYYY-MM-DDTHH:MM")
-  if (parsableDateStr.length === 16 && parsableDateStr.includes("T")) {
-    parsableDateStr += ":00"; // "YYYY-MM-DDTHH:MM:SS"
-  } else if (
-    parsableDateStr.length === 10 &&
-    parsableDateStr.match(/^\d{4}-\d{2}-\d{2}$/)
-  ) {
-    // Date-only "YYYY-MM-DD"
-    parsableDateStr += "T00:00:00"; // Assume start of the day
-  } else if (
-    !(parsableDateStr.length === 19 && parsableDateStr.includes("T"))
-  ) {
-    // If not a full YYYY-MM-DDTHH:MM:SS or recognized date-only, log and return null
+  const date = dayjs(parsableDateStr);
+  if (!date.isValid()) {
     return null;
   }
-
-  // Append KST offset if not already specified by Z or +/-HH:MM
-  const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
-  if (!hasTimezoneRegex.test(parsableDateStr)) {
-    parsableDateStr += "+09:00"; // Explicitly KST
-  }
-
-  const dateObj = new Date(parsableDateStr);
-
-  if (isNaN(dateObj.getTime())) {
-    return null;
-  }
-  return dateObj;
+  return date.toDate();
 };
 
 // Helper function to calculate time difference from a target Date object
 const calculateTimeDifference = (targetDateObj: Date | null) => {
   if (!targetDateObj) return null;
 
-  const now = new Date().getTime(); // Current time in UTC milliseconds
-  const targetTime = targetDateObj.getTime(); // Target time in UTC milliseconds
-  const difference = targetTime - now;
+  const now = dayjs();
+  const targetTime = dayjs(targetDateObj);
+  const difference = targetTime.diff(now);
 
   if (difference <= 0) {
     return null;

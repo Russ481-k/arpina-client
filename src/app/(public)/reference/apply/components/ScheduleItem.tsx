@@ -2,6 +2,7 @@
 
 import { Box, Text } from "@chakra-ui/react";
 import { Schedule } from "@/app/cms/schedule/types";
+import dayjs from "dayjs";
 
 interface ScheduleItemProps {
   schedule: Schedule;
@@ -11,34 +12,30 @@ interface ScheduleItemProps {
 export function ScheduleItem({ schedule }: ScheduleItemProps) {
   // Helper to format date as YYYY.MM.DD(요일)
   const formatDatePart = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+    const d = dayjs(date);
     const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-    const weekday = weekdays[date.getDay()];
-    return `${year}.${month}.${day}(${weekday})`;
+    const weekday = weekdays[d.day()];
+    return `${d.format("YYYY.MM.DD")}(${weekday})`;
   };
 
   // Helper to format time as HH:MM
   const formatTimePart = (date: Date): string => {
-    const hour = String(date.getHours()).padStart(2, "0");
-    const minute = String(date.getMinutes()).padStart(2, "0");
-    return `${hour}:${minute}`;
+    return dayjs(date).format("HH:mm");
   };
 
   // Format the full start and end date/time strings
   const formatDetailedDateTime = (dateTimeString: string): string => {
-    const date = new Date(dateTimeString);
-    return `${formatDatePart(date)} ${formatTimePart(date)}`;
+    const date = dayjs(dateTimeString);
+    return `${formatDatePart(date.toDate())} ${formatTimePart(date.toDate())}`;
   };
 
-  const startDateObj = new Date(schedule.startDateTime);
-  const endDateObj = new Date(schedule.endDateTime);
+  const startDateObj = dayjs(schedule.startDateTime).toDate();
+  const endDateObj = dayjs(schedule.endDateTime).toDate();
 
   // Determine the text for the blue time slot header
   const getTimeSlotHeaderText = (): string => {
-    const startCalDate = startDateObj.toISOString().split("T")[0];
-    const endCalDate = endDateObj.toISOString().split("T")[0];
+    const startCalDate = dayjs(schedule.startDateTime).format("YYYY-MM-DD");
+    const endCalDate = dayjs(schedule.endDateTime).format("YYYY-MM-DD");
 
     const startTime = formatTimePart(startDateObj);
 

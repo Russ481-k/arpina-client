@@ -43,6 +43,7 @@ import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
 import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config";
 import { env } from "process";
+import dayjs from "dayjs";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -73,11 +74,7 @@ const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
 
 const dateFormatter = (params: ValueFormatterParams<Post>) => {
   if (!params.value) return "";
-  return new Date(params.value).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return dayjs(params.value).format("YYYY.MM.DD");
 };
 
 const getFileIcon = (fileName: string) => {

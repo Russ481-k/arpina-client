@@ -26,6 +26,7 @@ import {
   PaymentApprovalResponseDto,
 } from "@/types/api";
 import { withAuthRedirect } from "./withAuthRedirect";
+import dayjs from "dayjs";
 
 // React Query 키 정의
 export const swimmingKeys = {
@@ -69,13 +70,9 @@ interface BackendLessonDTO {
 const formatDisplayDateTime = (dateTimeString: string): string => {
   if (!dateTimeString) return "정보 없음";
   try {
-    const [date, time] = dateTimeString.split(" ");
-    if (!date || !time) return dateTimeString;
-    const dateParts = date.split("-");
-    const timeParts = time.split(":");
-    if (dateParts.length !== 3 || timeParts.length < 2) return dateTimeString;
-
-    return `${dateParts.join(".")} ${timeParts[0]}:${timeParts[1]}`;
+    const date = dayjs(dateTimeString);
+    if (!date.isValid()) return dateTimeString;
+    return date.format("YYYY.MM.DD HH:mm");
   } catch (error) {
     console.error("Error formatting dateTimeString:", dateTimeString, error);
     return dateTimeString; // Fallback to original string on error

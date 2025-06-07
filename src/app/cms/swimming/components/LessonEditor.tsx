@@ -18,13 +18,11 @@ import { useColorModeValue } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
 import type { AdminLessonDto } from "@/types/api";
 import { CheckIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import dayjs from "dayjs";
 
 // Helper function to format date to YYYY-MM-DD
 const formatDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const day = date.getDate().toString().padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return dayjs(date).format("YYYY-MM-DD");
 };
 
 // RESTORED INTERFACE DEFINITION
@@ -80,30 +78,18 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       });
     } else {
       // Reset form for new lesson with dynamic date defaults and specific time
-      const today = new Date();
-      const firstDayOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        1
-      );
-      const lastDayOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth() + 1,
-        0
-      );
-      const lastDayOflastMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        0
-      );
+      const today = dayjs();
+      const firstDayOfMonth = today.startOf('month');
+      const lastDayOfMonth = today.endOf('month');
+      const lastDayOfLastMonth = today.subtract(1, 'month').endOf('month');
 
       setFormData({
         title: "",
         instructorName: "",
         lessonTime: "09:00~10:00",
-        startDate: formatDate(firstDayOfMonth),
-        endDate: formatDate(lastDayOfMonth),
-        registrationEndDateTime: formatDate(lastDayOflastMonth),
+        startDate: formatDate(firstDayOfMonth.toDate()),
+        endDate: formatDate(lastDayOfMonth.toDate()),
+        registrationEndDateTime: formatDate(lastDayOfLastMonth.toDate()),
         capacity: 0,
         price: 0,
         status: "OPEN",

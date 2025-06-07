@@ -53,10 +53,10 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
     onCategoryToggle,
   }) => {
     const [filter, setFilter] = useState<FilterState>(() => ({
-      status: [],
-      month: [],
-      timeType: [],
-      timeSlot: [],
+        status: [],
+        month: [],
+        timeType: [],
+        timeSlot: [],
     }));
 
     // Effect to update parent (SwimmingLessonList) when internal filter state changes

@@ -20,6 +20,7 @@ import { Schedule, ScheduleListResponse } from "@/app/cms/schedule/types";
 import { scheduleApi } from "@/lib/api/schedule";
 import { useQuery } from "@tanstack/react-query";
 import { ScheduleItem } from "./components/ScheduleItem";
+import dayjs from "dayjs";
 
 export default function GuidePage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -58,11 +59,9 @@ export default function GuidePage() {
     setSelectedDate(date);
 
     // Find all schedules for the selected date
-    const formattedDate = date.toISOString().split("T")[0]; // YYYY-MM-DD format
+    const formattedDate = dayjs(date).format("YYYY-MM-DD");
     const filteredSchedules = schedules.filter((schedule) => {
-      const scheduleDate = new Date(schedule.startDateTime)
-        .toISOString()
-        .split("T")[0];
+      const scheduleDate = dayjs(schedule.startDateTime).format("YYYY-MM-DD");
       return scheduleDate === formattedDate;
     });
 
@@ -82,11 +81,7 @@ export default function GuidePage() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
+    const date = dayjs(dateString);
     const weekdays = [
       "일요일",
       "월요일",
@@ -96,21 +91,14 @@ export default function GuidePage() {
       "금요일",
       "토요일",
     ];
-    const weekday = weekdays[date.getDay()];
-
-    return `${year}.${month}.${day} ${weekday}`;
+    const weekday = weekdays[date.day()];
+    return `${date.format("YYYY.MM.DD")} ${weekday}`;
   };
 
   const formatTimeRange = (startTime: string, endTime: string) => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-
-    const startHour = String(start.getHours()).padStart(2, "0");
-    const startMinute = String(start.getMinutes()).padStart(2, "0");
-    const endHour = String(end.getHours()).padStart(2, "0");
-    const endMinute = String(end.getMinutes()).padStart(2, "0");
-
-    return `${startHour}:${startMinute} ~ ${endHour}:${endMinute}`;
+    const start = dayjs(startTime);
+    const end = dayjs(endTime);
+    return `${start.format("HH:mm")} ~ ${end.format("HH:mm")}`;
   };
 
   useEffect(() => {

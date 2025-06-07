@@ -25,6 +25,7 @@ import {
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config";
+import dayjs from "dayjs";
 
 import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api";
@@ -106,11 +107,7 @@ const ViewsRenderer = (params: ICellRendererParams<Post>) => (
 
 const dateFormatter = (params: ValueFormatterParams<Post>) => {
   if (!params.value) return "";
-  return new Date(params.value).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return dayjs(params.value).format("YYYY.MM.DD");
 };
 
 const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({

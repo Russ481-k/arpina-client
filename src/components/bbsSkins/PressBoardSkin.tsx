@@ -37,6 +37,7 @@ import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config";
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapPostToCommonCardData } from "@/lib/card-utils";
 import { useColors } from "@/styles/theme";
+import dayjs from "dayjs";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -140,14 +141,7 @@ const SharedPressTitleRenderer: React.FC<ICellRendererParams<Post>> = (
 
 const dateFormatter = (params: ValueFormatterParams<Post, string>) => {
   if (!params.value) return "";
-  return new Date(params.value)
-    .toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
-    .replace(/\.$/, "")
-    .replace(/\s/g, "");
+  return dayjs(params.value).format("YYYY.MM.DD");
 };
 
 const AVAILABLE_PAGE_SIZES_PRESS = [10, 20, 30];
