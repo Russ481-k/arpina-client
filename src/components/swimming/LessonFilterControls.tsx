@@ -52,46 +52,20 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
     categoryOpen,
     onCategoryToggle,
   }) => {
-    console.log("LessonFilterControls: Rendering. Props:", {
-      onFilterChange,
-      selectedFilters,
-      onSelectedFiltersChange,
-      categoryOpen,
-      onCategoryToggle,
-    });
-
-    const [filter, setFilter] = useState<FilterState>(() => {
-      console.log("LessonFilterControls: Initializing internal filter state");
-      return {
-        status: [],
-        month: [],
-        timeType: [],
-        timeSlot: [],
-      };
-    });
-
-    useEffect(() => {
-      console.log(
-        "LessonFilterControls: Internal filter state changed",
-        filter
-      );
-    }, [filter]);
+    const [filter, setFilter] = useState<FilterState>(() => ({
+      status: [],
+      month: [],
+      timeType: [],
+      timeSlot: [],
+    }));
 
     // Effect to update parent (SwimmingLessonList) when internal filter state changes
     useEffect(() => {
-      console.log(
-        "LessonFilterControls: useEffect calling onFilterChange (to parent) with filter:",
-        filter
-      );
       onFilterChange(filter);
     }, [filter, onFilterChange]);
 
     // Effect to update selectedFilter LABELS whenever the filter state changes
     useEffect(() => {
-      console.log(
-        "LessonFilterControls: useEffect calculating selectedFilterLabels. Internal filter:",
-        filter
-      );
       const newSelectedFilterLabels: string[] = [];
 
       filter.month.forEach((val) => {
@@ -108,10 +82,6 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
         const option = timeSlots.find((opt) => opt.value === val);
         if (option) newSelectedFilterLabels.push(option.label);
       });
-      console.log(
-        "LessonFilterControls: Calling onSelectedFiltersChange with newLabels:",
-        newSelectedFilterLabels
-      );
       onSelectedFiltersChange(newSelectedFilterLabels);
     }, [filter, onSelectedFiltersChange]);
 
@@ -120,14 +90,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
         category: keyof FilterState,
         valueClicked: string | number | "ALL_CLICKED"
       ) => {
-        console.log(
-          `LessonFilterControls: handleFilterChangeInternal called. Category: ${category}, Value: ${valueClicked}`
-        );
         setFilter((prevFilter) => {
-          console.log(
-            "LessonFilterControls: setFilter (internal) updater. Prev filter:",
-            prevFilter
-          );
           const newFilterState = { ...prevFilter };
           let currentCategoryValues = [...prevFilter[category]] as (
             | string
@@ -187,21 +150,14 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
               newFilterState.timeSlot = Array.from(new Set(updatedTimeSlots));
             }
           }
-          console.log(
-            "LessonFilterControls: setFilter (internal) updater. New filter state:",
-            newFilterState
-          );
           return newFilterState;
         });
       },
       [setFilter]
-    ); // Added dependencies for useCallback
+    );
 
     const removeFilterInternal = useCallback(
       (filterLabel: string) => {
-        console.log(
-          `LessonFilterControls: removeFilterInternal called. Label: ${filterLabel}`
-        );
         let categoryToUpdate: keyof FilterState | null = null;
         let valueToRemove: string | number | null = null;
         {
@@ -232,12 +188,6 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
 
         if (categoryToUpdate && valueToRemove !== null) {
           setFilter((prevFilter) => {
-            console.log(
-              "LessonFilterControls: removeFilterInternal setFilter. Prev:",
-              prevFilter,
-              "Removing:",
-              { categoryToUpdate, valueToRemove }
-            );
             const newFilterState = { ...prevFilter };
             const currentCategoryValues = [
               ...prevFilter[categoryToUpdate!],
@@ -264,25 +214,16 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
                 });
                 newFilterState.timeSlot = Array.from(new Set(updatedTimeSlots));
               }
-              console.log(
-                "LessonFilterControls: removeFilterInternal setFilter. New:",
-                newFilterState
-              );
               return newFilterState;
             }
-            console.log(
-              "LessonFilterControls: removeFilterInternal setFilter. No change."
-            );
             return prevFilter;
           });
         }
       },
       [setFilter]
-    ); // Added dependencies for useCallback
+    );
 
-    // Renamed and updated to reset filters to an empty state
     const resetFiltersToEmpty = useCallback(() => {
-      console.log("LessonFilterControls: resetFiltersToEmpty called");
       const emptyState = {
         status: [],
         month: [],
@@ -290,8 +231,7 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
         timeSlot: [],
       };
       setFilter(emptyState);
-      // onFilterChange will be triggered by the useEffect watching 'filter'
-    }, [setFilter]); // Added setFilter as dependency
+    }, [setFilter]);
 
     const titleFontSize = useBreakpointValue({
       base: "18px",
@@ -305,24 +245,12 @@ export const LessonFilterControls: React.FC<LessonFilterControlsProps> = memo(
     });
     const iconSize = useBreakpointValue({ base: "20px", md: "23px" });
 
-    console.log(
-      "LessonFilterControls: Rendering main content. Internal filter:",
-      filter,
-      "CategoryOpen:",
-      categoryOpen
-    );
     return (
       <>
         <Accordion.Root
           collapsible
           value={categoryOpen ? [ACCORDION_ITEM_VALUE] : []}
           onValueChange={(details) => {
-            console.log(
-              "LessonFilterControls: Accordion onValueChange. Details:",
-              details,
-              "Current categoryOpen:",
-              categoryOpen
-            );
             onCategoryToggle(details.value.includes(ACCORDION_ITEM_VALUE));
           }}
           maxW="100%"

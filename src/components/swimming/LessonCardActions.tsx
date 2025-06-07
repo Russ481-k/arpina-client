@@ -142,16 +142,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         const remainingInInterval = calculateTimeDifference(
           targetApplicationStartDate
         );
-        // const nowForInterval = new Date().getTime();
-        // const targetTimeForInterval = targetApplicationStartDate.getTime();
-        // const differenceInInterval = targetTimeForInterval - nowForInterval;
-
-        if (lesson.id === 18) {
-          // Specific log for lesson 18 per second
-          console.log(
-            `[Lesson ID: ${lesson.id}] Tick Countdown: ${remainingInInterval?.days}d ${remainingInInterval?.hours}h ${remainingInInterval?.minutes}m ${remainingInInterval?.seconds}s`
-          );
-        }
 
         setTimeRemaining(remainingInInterval);
 
