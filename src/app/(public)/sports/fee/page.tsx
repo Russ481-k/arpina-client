@@ -2,11 +2,11 @@
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import ApTable03 from "@/components/contents/ApTable03";
-import { Box } from "@chakra-ui/react";
+import { Box, Heading } from "@chakra-ui/react";
 import InfoBoxList01 from "@/components/contents/InfoBoxList01";
 
 export default function FeePage() {
-  const tableRows = [
+  const tableRows01 = [
     // Header rows
     {
       isHeader: true,
@@ -80,6 +80,74 @@ export default function FeePage() {
       ],
     },
   ];
+  const tableRows02 = [
+    {
+      isHeader: true,
+      columns: [{ header: "자유수영", colSpan: 3 }],
+    },
+    {
+      isHeader: true,
+      columns: [{ header: "성인" }, { header: "초·중·고" }, { header: "-" }],
+    },
+    {
+      isHeader: false,
+      columns: [{ content: "8,000" }, { content: "6,000" }, { content: "-" }],
+    },
+  ];
+  const tableRows03 = [
+    {
+      isHeader: true,
+      columns: [{ header: "골프" }, { header: "70분" }, { header: "90분" }],
+    },
+    {
+      isHeader: false,
+      columns: [
+        { content: "성인" },
+        { content: "17,000" },
+        { content: "20,000" },
+      ],
+    },
+    {
+      isHeader: false,
+      columns: [
+        { content: "초,중,고" },
+        { content: "12,000" },
+        { content: "-" },
+      ],
+    },
+  ];
+
+  const tableRows04 = [
+    {
+      isHeader: true,
+      columns: [
+        { header: "구분" },
+        { header: "자유수영" },
+        { header: "골프(70분)" },
+      ],
+    },
+    {
+      isHeader: false,
+      columns: [
+        { content: "성인" },
+        { content: "5,000" },
+        { content: "13,000" },
+      ],
+    },
+    {
+      isHeader: false,
+      columns: [
+        { content: "초·중·고" },
+        { content: "4,000" },
+        { content: "10,000" },
+      ],
+    },
+    {
+      isHeader: false,
+      columns: [{ content: "유아" }, { content: "-" }, { content: "-" }],
+    },
+  ];
+
   const infoItems01 = [
     "할인율의 경우 단일종목 골프(연습장)는 3개월 5%, 6개월 10%, 12개월 15%의 할인이 적용됩니다.",
     "환불은 탈회신청서 제출일을 기준으로 환불 처리되며, 위약금은 이용 개시일 전후 회원의 귀책 사유로 계약 해지시 총 결제금액(전체금액)의 10% 및 고객께서 이용하신 일 수에 해당하는 금액을 공제한 후 환불 처리됩니다.",
@@ -89,11 +157,64 @@ export default function FeePage() {
     <PageContainer>
       <Box>
         <ApTable03
-          rows={tableRows}
+          rows={tableRows01}
           className="ap-table03"
           visuallyHiddenText="스포츠 요금표로 구분,종목,이용기간(1개월,3개월(10% DC),6개월(15% DC),12개월(20% DC)),비고 정보제공"
         />
         <InfoBoxList01 items={infoItems01} />
+      </Box>
+      <Box mt={"100px"}>
+        <Heading
+          as="h4"
+          border="1px solid #2E3192"
+          borderRadius={"100px"}
+          mb={5}
+          p={5}
+          color="#2E3192"
+          fontSize="3xl"
+          fontWeight="bold"
+          lineHeight="1"
+          textAlign="center"
+        >
+          1회 입장 이용요금표
+        </Heading>
+
+        <ApTable03
+          rows={tableRows02}
+          className="ap-table03"
+          visuallyHiddenText="1회 입장 이용요금표로 자유수영,사우나 정보제공"
+        />
+
+        <Box mt="50px">
+          <ApTable03
+            rows={tableRows03}
+            className="ap-table03"
+            visuallyHiddenText="골프 이용요금표로 골프, 70분, 90분 정보제공"
+          />
+        </Box>
+      </Box>
+
+      <Box mt={"100px"}>
+        <Heading
+          as="h4"
+          border="1px solid #2E3192"
+          borderRadius={"100px"}
+          mb={5}
+          p={5}
+          color="#2E3192"
+          fontSize="3xl"
+          fontWeight="bold"
+          lineHeight="1"
+          textAlign="center"
+        >
+          객실투숙객 1회 입장 이용요금표
+        </Heading>
+
+        <ApTable03
+          rows={tableRows04}
+          className="ap-table03"
+          visuallyHiddenText="객실투숙객 1회 입장 이용요금표로 구분, 자유수영, 헬스, 사우나, 골프(70분), 정보제공"
+        />
       </Box>
     </PageContainer>
   );
