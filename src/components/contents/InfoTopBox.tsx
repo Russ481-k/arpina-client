@@ -102,9 +102,8 @@ export default function InfoTopBox({
               fontWeight: "semibold",
               lineHeight: "1.2",
             }}
-          >
-            {description}
-          </Text>
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
           {showReservation && (
             <Box className="info-res-box">
               <Text

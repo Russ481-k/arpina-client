@@ -17,7 +17,7 @@ interface MeetingFloorInfoProps {
 }
 
 export default function MeetingFloorInfo({
-  title = "그랜드 볼룸 평면도",
+  title,
   floorImage,
   infoItems,
 }: MeetingFloorInfoProps) {
@@ -31,7 +31,7 @@ export default function MeetingFloorInfo({
         fontWeight="bold"
         lineHeight="1"
       >
-        {title}
+        {title || floorImage.alt}
       </Heading>
       <Flex justifyContent="space-between" gap="10px">
         <Image src={floorImage.src} alt={floorImage.alt} />
