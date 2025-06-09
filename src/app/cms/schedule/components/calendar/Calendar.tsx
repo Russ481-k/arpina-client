@@ -33,6 +33,14 @@ import { ko } from "date-fns/locale";
 import { Schedule } from "../../types";
 import { useColors } from "@/styles/theme";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isBetween);
 
 interface CalendarProps {
   currentDate: Date;
@@ -64,29 +72,30 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // 날짜 유효성 검사
   const validateDate = (date: Date): boolean => {
-    if (!isValid(date)) return false;
-    if (minDate && differenceInDays(date, minDate) < 0) return false;
-    if (maxDate && differenceInDays(date, maxDate) > 0) return false;
+    const d = dayjs(date);
+    if (!d.isValid()) return false;
+    if (minDate && d.isBefore(dayjs(minDate))) return false;
+    if (maxDate && d.isAfter(dayjs(maxDate))) return false;
     return true;
   };
 
-  const currentMonth = getMonth(currentDate); // 0-indexed
+  const currentMonth = dayjs(currentDate).month(); // 0-indexed
 
   // 현재 달의 시작일과 마지막일 계산
-  const startDate = useMemo(() => startOfMonth(currentDate), [currentDate]);
-  const endDate = useMemo(() => endOfMonth(currentDate), [currentDate]);
+  const startDate = useMemo(() => dayjs(currentDate).startOf('month').toDate(), [currentDate]);
+  const endDate = useMemo(() => dayjs(currentDate).endOf('month').toDate(), [currentDate]);
 
   // 달력에 표시할 모든 날짜 계산
   const days = useMemo(() => {
-    const firstDayOfMonth = getDay(startDate);
-    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDayOfMonth = dayjs(startDate).day();
+    const daysInMonth = dayjs(currentDate).daysInMonth();
 
     const prevMonthDaysArray = Array.from({ length: firstDayOfMonth }, (_, i) =>
-      subDays(startDate, firstDayOfMonth - i)
+      dayjs(startDate).subtract(firstDayOfMonth - i, 'day').toDate()
     );
 
     const currentMonthDaysArray = Array.from({ length: daysInMonth }, (_, i) =>
-      addDays(startDate, i)
+      dayjs(startDate).add(i, 'day').toDate()
     );
 
     const totalCells = 35; // 7 days * 5 weeks
@@ -96,10 +105,9 @@ export const Calendar: React.FC<CalendarProps> = ({
     const nextMonthDaysArray = Array.from(
       { length: Math.max(0, remainingCells) }, // Ensure length is not negative
       (_, i) =>
-        addDays(
-          currentMonthDaysArray[currentMonthDaysArray.length - 1] || endDate,
-          i + 1
-        )
+        dayjs(currentMonthDaysArray[currentMonthDaysArray.length - 1] || endDate)
+          .add(i + 1, 'day')
+          .toDate()
     );
 
     return [

@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Button, Text, Box, Flex } from "@chakra-ui/react";
 import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
+import {
+  EnrollmentPaymentLifecycleStatus,
+  EnrollmentCancellationProgressStatus,
+} from "@/types/statusTypes";
+import dayjs from "dayjs";
 
 // Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
 // and return a Date object.
@@ -17,49 +22,20 @@ const parseKSTDateString = (
     .trim();
   parsableDateStr = parsableDateStr.replace(/\./g, "-"); // e.g., "YYYY-MM-DD HH:MM" or "YYYY-MM-DD"
 
-  // Ensure it's in a format that new Date() can parse reliably with timezone
-  // YYYY-MM-DD HH:MM:SS or YYYY-MM-DDTHH:MM:SS
-  if (parsableDateStr.includes(" ")) {
-    parsableDateStr = parsableDateStr.replace(" ", "T");
-  }
-
-  // Add seconds if missing and time is present (e.g., "YYYY-MM-DDTHH:MM")
-  if (parsableDateStr.length === 16 && parsableDateStr.includes("T")) {
-    parsableDateStr += ":00"; // "YYYY-MM-DDTHH:MM:SS"
-  } else if (
-    parsableDateStr.length === 10 &&
-    parsableDateStr.match(/^\d{4}-\d{2}-\d{2}$/)
-  ) {
-    // Date-only "YYYY-MM-DD"
-    parsableDateStr += "T00:00:00"; // Assume start of the day
-  } else if (
-    !(parsableDateStr.length === 19 && parsableDateStr.includes("T"))
-  ) {
-    // If not a full YYYY-MM-DDTHH:MM:SS or recognized date-only, log and return null
+  const date = dayjs(parsableDateStr);
+  if (!date.isValid()) {
     return null;
   }
-
-  // Append KST offset if not already specified by Z or +/-HH:MM
-  const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
-  if (!hasTimezoneRegex.test(parsableDateStr)) {
-    parsableDateStr += "+09:00"; // Explicitly KST
-  }
-
-  const dateObj = new Date(parsableDateStr);
-
-  if (isNaN(dateObj.getTime())) {
-    return null;
-  }
-  return dateObj;
+  return date.toDate();
 };
 
 // Helper function to calculate time difference from a target Date object
 const calculateTimeDifference = (targetDateObj: Date | null) => {
   if (!targetDateObj) return null;
 
-  const now = new Date().getTime(); // Current time in UTC milliseconds
-  const targetTime = targetDateObj.getTime(); // Target time in UTC milliseconds
-  const difference = targetTime - now;
+  const now = dayjs();
+  const targetTime = dayjs(targetDateObj);
+  const difference = targetTime.diff(now);
 
   if (difference <= 0) {
     return null;
@@ -138,16 +114,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         const remainingInInterval = calculateTimeDifference(
           targetApplicationStartDate
         );
-        // const nowForInterval = new Date().getTime();
-        // const targetTimeForInterval = targetApplicationStartDate.getTime();
-        // const differenceInInterval = targetTimeForInterval - nowForInterval;
-
-        if (lesson.id === 18) {
-          // Specific log for lesson 18 per second
-          console.log(
-            `[Lesson ID: ${lesson.id}] Tick Countdown: ${remainingInInterval?.days}d ${remainingInInterval?.hours}h ${remainingInInterval?.minutes}m ${remainingInInterval?.seconds}s`
-          );
-        }
 
         setTimeRemaining(remainingInInterval);
 
@@ -173,7 +139,10 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   }, [lesson.id, lesson.reservationId, enrollment, isCountingDown]);
 
   if (enrollment) {
-    const { status: enrollStatus, cancelStatus, enrollId } = enrollment;
+    const enrollStatus = enrollment.status as EnrollmentPaymentLifecycleStatus;
+    const cancelStatus =
+      enrollment.cancelStatus as EnrollmentCancellationProgressStatus;
+    const { enrollId } = enrollment;
 
     if (
       enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
@@ -201,43 +170,67 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         </Flex>
       );
     }
-    return (
-      <Flex align="center" gap={3} w="100%">
-        {/* UNPAID 상태: 결제 신청 + 취소 신청 버튼 */}
-        {enrollment.status === "UNPAID" && (
-          <>
-            <Flex direction="column" align="center" gap={2} w="50%">
-              <Button
-                colorPalette="teal"
-                w="100%"
-                onClick={() => {
-                  // enrollId로 결제 시작
-                  if (onGoToPayment && enrollment?.enrollId) {
-                    onGoToPayment(enrollment.enrollId);
-                  } else {
-                    console.warn(
-                      "결제 핸들러가 설정되지 않았거나 enrollId가 없습니다."
-                    );
-                  }
-                }}
-              >
-                <Text fontSize="sm">결제 신청</Text>
-              </Button>
-            </Flex>
-            {onRequestCancel && (
-              <Button
-                colorPalette="red"
-                w="50%"
-                onClick={() => onRequestCancel(enrollId)}
-              >
-                취소 신청
-              </Button>
-            )}
-          </>
-        )}
 
-        {/* PAID 상태: 취소 신청 버튼만 전체 너비 */}
-        {enrollment.status === "PAID" && onRequestCancel && (
+    if (enrollStatus === "UNPAID") {
+      return (
+        <Flex align="center" gap={3} w="100%">
+          <Flex direction="column" align="center" gap={2} w="50%">
+            <Button
+              colorPalette="teal"
+              w="100%"
+              onClick={() => {
+                if (onGoToPayment && enrollment?.enrollId) {
+                  onGoToPayment(enrollment.enrollId);
+                } else {
+                  console.warn(
+                    "결제 핸들러가 설정되지 않았거나 enrollId가 없습니다."
+                  );
+                }
+              }}
+            >
+              <Text fontSize="sm">결제 신청</Text>
+            </Button>
+          </Flex>
+          {onRequestCancel && (
+            <Button
+              colorPalette="red"
+              w="50%"
+              onClick={() => onRequestCancel(enrollId)}
+            >
+              취소 신청
+            </Button>
+          )}
+        </Flex>
+      );
+    }
+
+    if (enrollStatus === "PAID") {
+      return (
+        <Flex align="center" gap={3} w="100%">
+          {onRequestCancel && (
+            <Button
+              colorPalette="red"
+              w="100%"
+              onClick={() => onRequestCancel(enrollId)}
+            >
+              취소 신청
+            </Button>
+          )}
+        </Flex>
+      );
+    }
+
+    // Handle other statuses: PAYMENT_TIMEOUT, PARTIALLY_REFUNDED, REFUNDED
+    // REFUND_PENDING_ADMIN_CANCEL and CANCELED_UNPAID are handled above.
+    // UNPAID and PAID are handled above.
+    return (
+      <Flex direction="column" align="center" gap={2} w="100%">
+        <Text fontSize="sm" color="gray.500" textAlign="center">
+          상태: {enrollment.status}{" "}
+          {/* Display original string or map to label */}
+        </Text>
+        {/* Show cancel button only for PARTIALLY_REFUNDED in this "other" block */}
+        {onRequestCancel && enrollStatus === "PARTIALLY_REFUNDED" && (
           <Button
             colorPalette="red"
             w="100%"
@@ -245,24 +238,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           >
             취소 신청
           </Button>
-        )}
-
-        {/* 기타 상태나 특수한 경우 처리 */}
-        {enrollment.status !== "UNPAID" && enrollment.status !== "PAID" && (
-          <Flex direction="column" align="center" gap={2} w="100%">
-            <Text fontSize="sm" color="gray.500" textAlign="center">
-              상태: {enrollment.status}
-            </Text>
-            {onRequestCancel && enrollment.status !== "CANCELED_UNPAID" && (
-              <Button
-                colorPalette="red"
-                w="100%"
-                onClick={() => onRequestCancel(enrollId)}
-              >
-                취소 신청
-              </Button>
-            )}
-          </Flex>
         )}
       </Flex>
     );

@@ -10,6 +10,7 @@ import LessonCardActions from "./LessonCardActions";
 import { getMembershipLabel } from "@/lib/utils/displayUtils";
 import { useAuth } from "@/lib/AuthContext";
 import { UserContextState } from "@/lib/AuthContext";
+import dayjs from "dayjs";
 
 interface LessonCardProps {
   lesson: LessonDTO & { applicationStartDate?: string };
@@ -27,31 +28,10 @@ const parseDisplayKSTDate = (
   if (!dateStringWithSuffix) return null;
   try {
     let parsableStr = dateStringWithSuffix.replace(/부터|까지/g, "").trim(); // "YYYY.MM.DD HH:MM"
-
     parsableStr = parsableStr.replace(/\./g, "-"); // "YYYY-MM-DD HH:MM"
 
-    if (
-      parsableStr.length === 19 &&
-      parsableStr.includes(" ") &&
-      parsableStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
-    ) {
-      // Handle "YYYY-MM-DD HH:MM:SS" (length 19 with space)
-      parsableStr = parsableStr.replace(" ", "T");
-    } else if (
-      parsableStr.length === 16 &&
-      parsableStr.includes(" ") &&
-      parsableStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)
-    ) {
-      // YYYY-MM-DD HH:MM (length 16 with space)
-      parsableStr = parsableStr.replace(" ", "T") + ":00"; // YYYY-MM-DDTHH:MM:SS
-    } else if (
-      parsableStr.length === 10 &&
-      parsableStr.match(/^\d{4}-\d{2}-\d{2}$/)
-    ) {
-      // YYYY-MM-DD
-      parsableStr += "T00:00:00"; // Assume start of day for date-only strings
-    } else if (!(parsableStr.length === 19 && parsableStr.includes("T"))) {
-      // Not YYYY-MM-DDTHH:MM:SS and not handled above
+    const date = dayjs(parsableStr);
+    if (!date.isValid()) {
       console.warn(
         "[LessonCard] Unrecognized date format for display status calc:",
         dateStringWithSuffix,
@@ -62,14 +42,7 @@ const parseDisplayKSTDate = (
       return null;
     }
 
-    // Append KST offset if not already specified
-    const hasTimezoneRegex = /Z|[+-]\d{2}(:\d{2})?$/;
-    if (!hasTimezoneRegex.test(parsableStr)) {
-      parsableStr += "+09:00"; // Assume KST
-    }
-    const date = new Date(parsableStr);
-    const isInvalidDate = isNaN(date.getTime());
-    return isInvalidDate ? null : date;
+    return date.toDate();
   } catch (error) {
     console.error(
       "[LessonCard] Error parsing date for display status:",

@@ -18,6 +18,7 @@ import { PaginationData } from "@/types/common";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { CustomPagination } from "@/components/common/CustomPagination";
+import dayjs from "dayjs";
 
 // AG Grid imports
 import { AgGridReact } from "ag-grid-react";
@@ -104,11 +105,7 @@ const ViewsRenderer = (params: ICellRendererParams<Post>) => (
 
 const dateFormatter = (params: ValueFormatterParams<Post>) => {
   if (!params.value) return "";
-  return new Date(params.value).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return dayjs(params.value).format("YYYY.MM.DD");
 };
 
 // New StatusRenderer for Q&A

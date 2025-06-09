@@ -18,13 +18,11 @@ import { useColorModeValue } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
 import type { AdminLessonDto } from "@/types/api";
 import { CheckIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import dayjs from "dayjs";
 
 // Helper function to format date to YYYY-MM-DD
 const formatDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const day = date.getDate().toString().padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return dayjs(date).format("YYYY-MM-DD");
 };
 
 // RESTORED INTERFACE DEFINITION
@@ -50,7 +48,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     lessonTime: "",
     startDate: "",
     endDate: "",
-    registrationEndDate: "",
+    registrationEndDateTime: "",
     capacity: 0,
     price: 0,
     status: "OPEN",
@@ -60,13 +58,8 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const textColor = useColorModeValue("gray.700", "white");
-  const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const errorColor = useColorModeValue("red.500", "red.300");
-  const buttonBg = useColorModeValue(
-    colors.primary.default,
-    colors.primary.default
-  );
 
   // Reset the form when a new lesson is selected or set to null for new lesson
   useEffect(() => {
@@ -78,37 +71,25 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         lessonTime: lesson.lessonTime || "",
         startDate: lesson.startDate,
         endDate: lesson.endDate,
-        registrationEndDate: lesson.registrationEndDate || "",
+        registrationEndDateTime: lesson.registrationEndDateTime || "",
         capacity: lesson.capacity,
         price: lesson.price,
         status: lesson.status,
       });
     } else {
       // Reset form for new lesson with dynamic date defaults and specific time
-      const today = new Date();
-      const firstDayOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        1
-      );
-      const lastDayOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth() + 1,
-        0
-      );
-      const lastDayOflastMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        0
-      );
+      const today = dayjs();
+      const firstDayOfMonth = today.startOf('month');
+      const lastDayOfMonth = today.endOf('month');
+      const lastDayOfLastMonth = today.subtract(1, 'month').endOf('month');
 
       setFormData({
         title: "",
         instructorName: "",
         lessonTime: "09:00~10:00",
-        startDate: formatDate(firstDayOfMonth),
-        endDate: formatDate(lastDayOfMonth),
-        registrationEndDate: formatDate(lastDayOflastMonth),
+        startDate: formatDate(firstDayOfMonth.toDate()),
+        endDate: formatDate(lastDayOfMonth.toDate()),
+        registrationEndDateTime: formatDate(lastDayOfLastMonth.toDate()),
         capacity: 0,
         price: 0,
         status: "OPEN",
@@ -155,15 +136,15 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         return;
       }
 
-      if (!formData.registrationEndDate) {
+      if (!formData.registrationEndDateTime) {
         setError("등록 마감일은 필수 입력 항목입니다.");
         return;
       }
 
       if (
-        formData.registrationEndDate &&
+        formData.registrationEndDateTime &&
         formData.startDate &&
-        formData.registrationEndDate > formData.startDate
+        formData.registrationEndDateTime > formData.startDate
       ) {
         setError("등록 마감일은 시작일보다 이전이거나 같아야 합니다.");
         return;
@@ -342,9 +323,9 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
             </Text>
             <Input
               size="xs"
-              type="date"
-              name="registrationEndDate"
-              value={formData.registrationEndDate}
+              type="datetime-local"
+              name="registrationEndDateTime"
+              value={formData.registrationEndDateTime}
               onChange={handleInputChange}
               borderColor={borderColor}
               _focus={{
@@ -377,7 +358,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
 
             <Box flex="1">
               <Text mb={1} fontWeight="medium" color={textColor}>
-                가격 *
+                강습료 *
               </Text>
               <Input
                 size="xs"
@@ -386,7 +367,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
                 value={formData.price}
                 onChange={handleInputChange}
                 min={0}
-                placeholder="가격을 입력하세요"
+                placeholder="강습료를 입력하세요"
                 borderColor={borderColor}
                 _focus={{
                   borderColor: colors.primary.default,

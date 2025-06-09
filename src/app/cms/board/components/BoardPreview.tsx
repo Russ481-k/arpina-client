@@ -55,6 +55,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { LucideEdit } from "lucide-react";
 import CustomPagination from "@/components/common/CustomPagination";
 import { toaster } from "@/components/ui/toaster";
+import dayjs from "dayjs";
 
 // Import GenericArticleCard and the mapping function
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
@@ -144,11 +145,7 @@ const ViewsRenderer = (params: ICellRendererParams) => (
 // Date formatter
 const dateFormatter = (params: ValueFormatterParams) => {
   if (!params.value) return "";
-  return new Date(params.value).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return dayjs(params.value).format("YYYY.MM.DD");
 };
 
 // --- IMPORT/DEFINE PressTitleRenderer and its dateFormatter ---
@@ -233,14 +230,7 @@ const PressTitleRenderer_Preview: React.FC<ICellRendererParams<Article>> = (
 // Re-use existing dateFormatter or ensure one is available for Press columns
 const pressDateFormatter = (params: ValueFormatterParams<Article, string>) => {
   if (!params.value) return "";
-  return new Date(params.value)
-    .toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
-    .replace(/\.$/, "")
-    .replace(/\s/g, "");
+  return dayjs(params.value).format("YYYY.MM.DD");
 };
 
 export interface BoardPreviewProps {

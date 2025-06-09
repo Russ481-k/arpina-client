@@ -13,6 +13,11 @@ import { useLessons } from "@/lib/hooks/useSwimming";
 import { LessonDTO } from "@/types/swimming";
 import { LessonFilterControls } from "./LessonFilterControls";
 import { LessonCard } from "./LessonCard";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+// dayjs 커스텀 파싱 플러그인 추가
+dayjs.extend(customParseFormat);
 
 // Updated FilterState to support multi-select (array-based)
 interface FilterState {
@@ -52,9 +57,6 @@ export const SwimmingLessonList = () => {
     // If filter.status is empty, statusForApi remains undefined, and no status query param is sent.
   }
 
-  const monthForApi =
-    filter.month.length > 0 ? filter.month.join(",") : undefined;
-
   const {
     data: lessonsData,
     isLoading: lessonsLoading,
@@ -62,9 +64,10 @@ export const SwimmingLessonList = () => {
   } = useLessons({
     page: 0,
     size: 50,
-    // Use the determined statusForApi and monthForApi for the query
+    // Use the determined statusForApi for the query.
+    // Month is removed from API query and will be filtered on the client-side
+    // to ensure correctness regardless of backend behavior.
     ...(statusForApi && { status: statusForApi }),
-    ...(monthForApi && { month: monthForApi }),
   });
 
   useEffect(() => {}, [lessonsData]);
@@ -76,24 +79,58 @@ export const SwimmingLessonList = () => {
       return [];
     }
 
+    // --- Start: Client-side date filtering logic ---
+    const now = dayjs();
+    const currentMonth = now.month() + 1;
+    const allowedMonthsByDate = [currentMonth];
+
+    // If it's the 25th or later, allow viewing next month's lessons.
+    if (now.date() >= 25) {
+      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+      allowedMonthsByDate.push(nextMonth);
+    }
+    // --- End: Client-side date filtering logic ---
+
     const result = lessons.filter((lesson: LessonDTO) => {
-      // Condition 1: Available and Remaining
+      // Rule 1: Lesson must be in a month allowed by the 25th rule.
+      if (!lesson.startDate) {
+        return false;
+      }
+
+      // 한글 날짜 형식 파싱 (예: "25년06월09일" -> "2025-06-09")
+      const koreanDateRegex = /(\d{2})년(\d{2})월(\d{2})일/;
+      const match = lesson.startDate.match(koreanDateRegex);
+      
+      if (!match) {
+        return false;
+      }
+
+      const [_, year, month, day] = match;
+      const formattedDate = `20${year}-${month}-${day}`;
+      const lessonDate = dayjs(formattedDate, "YYYY-MM-DD");
+
+      if (!lessonDate.isValid()) {
+        return false;
+      }
+
+      const lessonMonth = lessonDate.month() + 1;
+      if (!allowedMonthsByDate.includes(lessonMonth)) {
+        return false;
+      }
+
+      // Rule 2: Show Available and Remaining (user toggle)
       if (showAvailableOnly && lesson.remaining === 0) {
         return false;
       }
 
-      // Condition 3: Month Match
+      // Rule 3: Month Match (user filter from UI)
       if (filter.month.length > 0) {
-        if (!lesson.startDate) {
-          return false;
-        }
-        const lessonMonth = new Date(lesson.startDate).getMonth() + 1;
         if (!filter.month.includes(lessonMonth)) {
           return false;
         }
       }
 
-      // Condition 4: Time Type Match
+      // Rule 4: Time Type Match (user filter from UI)
       if (filter.timeType.length > 0) {
         if (!lesson.timePrefix) {
           return false;
@@ -110,7 +147,7 @@ export const SwimmingLessonList = () => {
         }
       }
 
-      // Condition 5: Time Slot Match
+      // Rule 5: Time Slot Match
       if (filter.timeSlot.length > 0) {
         if (!lesson.timeSlot) {
           return false;

@@ -29,6 +29,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
 import { toaster } from "@/components/ui/toaster";
 import { StatisticDisplayCard } from "./statistics/StatisticDisplayCard";
+import dayjs from "dayjs";
 
 interface MonthlyStatsDto {
   year: number;
@@ -78,12 +79,12 @@ export const StatisticsTab: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [selectedYear, setSelectedYear] = useState(
-    new Date().getFullYear().toString()
+    dayjs().year().toString()
   );
   const [selectedMonth, setSelectedMonth] = useState("all");
 
   const years = useMemo(() => {
-    const currentYear = new Date().getFullYear();
+    const currentYear = dayjs().year();
     return [
       currentYear.toString(),
       (currentYear - 1).toString(),

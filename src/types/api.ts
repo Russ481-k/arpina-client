@@ -1,5 +1,14 @@
 import { AuthType, SkinType, YesNoType } from "./common";
 import { File } from "@/app/cms/file/types"; // Ensure File type is imported
+import {
+  PaymentTransactionStatus,
+  EnrollmentPaymentLifecycleStatus,
+  EnrollmentApplicationStatus,
+  EnrollmentCancellationProgressStatus,
+  CancellationRequestRecordStatus,
+  ApprovalStatus,
+  LessonStatus,
+} from "./statusTypes";
 
 export type MenuType =
   | "LINK"
@@ -507,24 +516,18 @@ export interface MypageEnrollDto {
     capacity: number;
     remaining: number;
     price: number;
-    status: string;
+    status: string; // Assuming this is lesson's general status like OPEN/CLOSED, not LessonStatus type from statusTypes.ts yet.
     instructor: string;
     location: string;
     reservationId: string;
     receiptId: string;
   };
-  status:
-    | "UNPAID"
-    | "PAID"
-    | "PAYMENT_TIMEOUT"
-    | "CANCELED_UNPAID"
-    | "PARTIALLY_REFUNDED"
-    | string;
+  status: EnrollmentPaymentLifecycleStatus | string; // Allow string for potential backend values not yet in enum
   applicationDate: string;
   paymentExpireDt: string | null;
   usesLocker: boolean;
   isRenewal: boolean;
-  cancelStatus: "NONE" | "REQ" | "APPROVED" | "DENIED" | string;
+  cancelStatus: EnrollmentCancellationProgressStatus | string; // Allow string
   cancelReason: string | null;
   renewalWindow?: {
     open: string;
@@ -556,13 +559,7 @@ export interface MypagePaymentDto {
   refundedAmount?: number; // Optional - total refunded amount if any
   paidAt: string | null;
   refundedAt?: string | null; // Optional - refund date if any
-  status:
-    | "PAID"
-    | "CANCELED"
-    | "PARTIAL_REFUNDED"
-    | "REFUND_REQUESTED"
-    | "FAILED"
-    | string;
+  status: PaymentTransactionStatus | string; // Allow string
 
   // Lesson details
   lessonTitle: string; // 강습 제목
@@ -607,15 +604,9 @@ export interface EnrollAdminResponseDto {
   enrollId: number;
   userId: string; // Assuming user's UUID or username
   userName: string;
-  status: "APPLIED" | "CANCELED" | string; // Main enrollment status
+  status: EnrollmentApplicationStatus | string; // Main enrollment status // Allow string
   // payStatus from enroll table: UNPAID, PAID, PARTIALLY_REFUNDED, PAYMENT_TIMEOUT, CANCELED_UNPAID
-  payStatus:
-    | "UNPAID"
-    | "PAID"
-    | "PARTIALLY_REFUNDED"
-    | "PAYMENT_TIMEOUT"
-    | "CANCELED_UNPAID"
-    | string;
+  payStatus: EnrollmentPaymentLifecycleStatus | string; // Allow string
   usesLocker: boolean;
   userGender?: "MALE" | "FEMALE" | "OTHER"; // From user profile
   createdAt: string; // ISO DateTime
@@ -649,14 +640,19 @@ export interface CancelRequestDto {
 export interface PaymentAdminDto {
   paymentId: number;
   enrollId: number;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  lessonTitle: string;
   tid: string; // KISPG TID
-  paid_amt: number;
-  refunded_amt: number;
-  // status maps to payment.status
-  status: "PAID" | "CANCELED" | "PARTIALLY_REFUNDED" | "FAILED" | string; // "PAID" here usually means original successful payment
-  paid_at: string | null; // ISO DateTime
-  last_refund_dt?: string | null; // ISO DateTime of the last refund transaction
-  pgProvider: "KISPG" | string;
+  paidAmt: number; // Corrected to camelCase from paid_amt
+  refundedAmt: number | null; // Corrected to camelCase from refunded_amt
+  status: PaymentTransactionStatus;
+  paidAt: string | null; // Corrected to camelCase from paid_at
+  lastRefundDt?: string | null; // API sends lastRefundDt, ensure DTO matches (or map if different)
+  pgProvider: string | null;
+  payMethod?: string;
+  pgResultCode?: string;
 }
 
 // SummaryDto for GET /admin/stats/summary (example)
@@ -686,7 +682,7 @@ export interface LessonDto {
   endDate: string; // "YYYY-MM-DD"
   capacity: number;
   price: number;
-  status: "OPEN" | "CLOSED" | "ONGOING" | "COMPLETED"; // from swim-admin.md
+  status: LessonStatus | string; // from swim-admin.md // Allow string
   // male_locker_cap and female_locker_cap are REMOVED as per swim-admin.md and swim-user.md
   // Additional fields from user-facing LessonCard.tsx, if needed for display
   timeSlot?: string; // e.g., "06:00~06:50"
@@ -720,10 +716,10 @@ export interface AdminLessonDto {
   lessonTime?: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
-  registrationEndDate?: string; // YYYY-MM-DD -- ADDED FIELD
+  registrationEndDateTime?: string; // YYYY-MM-DD -- ADDED FIELD
   capacity: number;
   price: number;
-  status: "OPEN" | "CLOSED" | "ONGOING" | "COMPLETED";
+  status: LessonStatus | string; // Allow string
 }
 
 // Added based on adminApi.ts and linter errors
@@ -752,7 +748,7 @@ export interface TemporaryEnrollmentRequestDto {
 }
 
 export interface UpdateDiscountStatusRequestDto {
-  status: "APPROVED" | "DENIED";
+  status: ApprovalStatus; // Changed from "APPROVED" | "DENIED"
   adminComment?: string;
 }
 
@@ -798,9 +794,11 @@ export interface CancelRequestAdminDto {
   requestedAt: string; // API uses 'requestedAt'
   userReason: string; // API uses 'userReason' for the reason provided by the user
   adminComment?: string; // API uses 'adminComment'
-  status: "PENDING" | "APPROVED" | "DENIED"; // Assumed based on frontend usage & API query params
+  status: CancellationRequestRecordStatus | string; // Assumed based on frontend usage & API query params // Allow string
+  paymentStatus: EnrollmentPaymentLifecycleStatus | "REFUNDED" | string; // Allow string. "REFUNDED" added based on analysis.
   lessonStartDate?: string; // Kept as optional, ensure backend provides if used for display/logic
   usesLocker?: boolean; // Kept as optional, ensure backend provides if used
+  cancellationProcessingStatus?: EnrollmentCancellationProgressStatus | string; // Added new field // Allow string
   // Fields like paid_amt, calculated_refund_amt, kispg_tid, reason are now mapped from nested objects or renamed.
 }
 
@@ -823,7 +821,7 @@ export interface ManualRefundRequestDto {
 export interface CronLogDto {
   logId: number;
   jobName: string;
-  status: "SUCCESS" | "FAILED" | "RUNNING";
+  status: "SUCCESS" | "FAILED" | "RUNNING"; // This seems specific enough, not using ApprovalStatus
   startTime: string; // ISO DateTime string
   endTime?: string | null; // ISO DateTime string
   duration?: number | null; // in seconds
@@ -986,4 +984,79 @@ export interface PaymentApprovalResponseDto {
       paidAt: string;
     };
   };
+}
+
+// --- Status Enum-like Types (Moved from PaymentHistoryTab) ---
+// export type PaymentStatusType = // Original definition REMOVED
+//   | "PAID"
+//   | "FAILED"
+//   | "CANCELED"
+//   | "PARTIAL_REFUNDED"
+//   | "REFUND_REQUESTED";
+
+// export type RefundStatusType = // Original definition REMOVED
+//   | "REFUND_REQUESTED" // 환불 요청됨
+//   | "REFUND_PROCESSING" // 환불 처리 중
+//   | "REFUND_COMPLETED" // 환불 완료
+//   | "REFUND_REJECTED"; // 환불 거절
+
+// Interface for the actual data structure within PaginatedResponse.data
+// This matches the 'Page<T>' interface previously in PaymentHistoryTab.tsx
+export interface PaginatedData<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      sorted: boolean;
+      unsorted: boolean;
+      empty: boolean;
+    };
+    offset: number; // May or may not be present depending on backend
+    paged: boolean; // May or may not be present
+    unpaged: boolean; // May or may not be present
+  };
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number; // current page number (0-indexed)
+  sort: { // This sort is for the whole page, pageable.sort is for individual items
+    sorted: boolean;
+    unsorted: boolean;
+    empty: boolean;
+  };
+  first: boolean;
+  numberOfElements: number; // Number of elements in the current page
+  empty: boolean;
+}
+
+// Redefine PaginatedResponse to use PaginatedData for its 'data' field
+// if the existing PaginatedResponse (L377) doesn't exactly match this structure for its 'data' field.
+// For now, we assume the existing PaginatedResponse.data is compatible with PaginatedData<T>.
+// If PaginatedResponse is { success, message, data: PaginatedData<T> }, that's fine.
+
+// --- Admin Payment and Refund Data Types (Based on PaymentHistoryTab) ---
+export interface AdminPaymentData {
+  paymentId: number;
+  enrollId: number;
+  lessonId?: number; // Keep as optional, might be added via enrichment later or from enroll data
+  tid: string;
+  userName: string; // Now directly from PaymentAdminDto
+  userPhone?: string; // Keep as optional, might be added via enrichment later
+  userId: string; // Now directly from PaymentAdminDto
+  lessonTitle: string; // Now directly from PaymentAdminDto
+  initialAmount: number; // Calculated: paid_amt + (refunded_amt || 0)
+  paidAmount: number; // From paid_amt
+  discountAmount?: number; // Keep as optional, for potential future use or other data sources
+  refundedAmount: number | null; // Matches PaymentAdminDto.refunded_amt
+  paymentMethod: string; // From PaymentAdminDto.payMethod
+  paymentGateway?: string | null; // From PaymentAdminDto.pgProvider
+  status: PaymentTransactionStatus;
+  paidAt: string; // ISO DateTime string (assuming non-null from API for successful payments)
+  lastRefundAt?: string; // ISO DateTime string
+  orderNo?: string; // Keep as optional
+  memberType?: string; // Keep as optional
+  lockerFee?: number; // Keep as optional
+  pgResultCode?: string; // Added from PaymentAdminDto
 }

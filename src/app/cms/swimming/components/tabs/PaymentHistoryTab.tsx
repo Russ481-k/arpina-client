@@ -1,171 +1,49 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import {
-  Box,
-  // Text, Stack, Badge, Flex, - These are likely used within sub-components now or not at all at this level
-  Tabs,
-} from "@chakra-ui/react";
-// import { CreditCardIcon } from "lucide-react"; // Moved to PaymentsView
-import { useColors } from "@/styles/theme";
-// import { AgGridReact } from "ag-grid-react"; // Moved to sub-components
-// import type { ColDef, ModuleRegistry, AllCommunityModule, ICellRendererParams } from "ag-grid-community"; // Moved
+import { Box, Tabs, Spinner, Text } from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
 
-import "@/styles/ag-grid-custom.css";
-import { useColorMode } from "@/components/ui/color-mode";
-// import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar"; // Moved to sub-components
+// Import types from the global API types file
+import type {
+  AdminPaymentData,
+  // AdminRefundData, // Removed: No longer fetching separate refund data
+  PaginatedResponse, // This is the outer wrapper { success, message, data: PaginatedData<T> }
+  PaginatedData, // This is the inner data { content: T[], pageable, ... }
+  // PaymentStatusType and RefundStatusType are already used by AdminPaymentData/AdminRefundData
+  // and will be available if needed directly.
+} from "@/types/api";
 
-// Import the new view components
+// Import the API service
+import { adminApi } from "@/lib/api/adminApi"; // Adjust path if necessary
+
 import { PaymentsView } from "./paymentHistory/PaymentsView";
 import { RefundsView } from "./paymentHistory/RefundsView";
+import { useColorMode } from "@/components/ui/color-mode";
+import "@/styles/ag-grid-custom.css";
 
-// ModuleRegistry.registerModules([AllCommunityModule]); // Only register once, perhaps in a global setup or root layout
+// Local type definitions (PaymentStatusType, RefundStatusType, PaymentData, RefundData, Page) are REMOVED.
 
-// Define types locally or import from a shared location (e.g., @/types/api or @/types/models)
-interface PaymentData {
-  paymentId: number;
-  enrollId: number;
-  lessonId: number;
-  tid: string;
-  userName: string;
-  userPhone?: string;
-  lessonTitle: string;
-  paidAmount: number;
-  refundedAmount: number;
-  paymentMethod: string;
-  paidAt: string;
-  refundAt?: string;
-  status: "PAID" | "PARTIALLY_REFUNDED" | "FULLY_REFUNDED" | "CANCELED";
-}
-
-interface RefundData {
-  refundId: number;
-  paymentId: number;
-  enrollId: number;
-  lessonId: number;
-  tid: string;
-  userName: string;
-  userPhone?: string;
-  lessonTitle: string;
-  refundAmount: number;
-  refundType: string;
-  refundedAt: string;
-  adminName: string;
-  refundReason?: string;
-  status: "COMPLETED" | "PENDING" | "FAILED";
-}
+// API service functions (fetchAdminPayments, fetchAdminRefunds, apiClient) are REMOVED.
 
 interface PaymentHistoryTabProps {
   lessonIdFilter?: number | null;
-  // Potentially pass down fetched data if this component is responsible for fetching
-  // mockPaymentsData?: PaymentData[];
-  // mockRefundsData?: RefundData[];
+  selectedYear: string;
+  selectedMonth: string;
 }
 
 export const PaymentHistoryTab = ({
   lessonIdFilter,
+  selectedYear,
+  selectedMonth,
 }: PaymentHistoryTabProps) => {
-  const colors = useColors(); // Keep if needed for styling common elements, otherwise can be removed
   const { colorMode } = useColorMode();
   const [activeTab, setActiveTab] = useState<"payments" | "refunds">(
     "payments"
   );
-
-  // Mock data - In a real app, this would come from props or a TanStack Query hook here
-  const mockPayments: PaymentData[] = useMemo(
-    () => [
-      {
-        paymentId: 1,
-        enrollId: 101,
-        lessonId: 1,
-        tid: "T1234567890",
-        userName: "김결제",
-        userPhone: "010-1111-2222",
-        lessonTitle: "초급반 A (월수금 09:00)",
-        paidAmount: 70000,
-        refundedAmount: 0,
-        paymentMethod: "CARD",
-        paidAt: "2023-11-10 09:30:15",
-        status: "PAID",
-      },
-      {
-        paymentId: 2,
-        enrollId: 102,
-        lessonId: 2,
-        tid: "T0987654321",
-        userName: "이납부",
-        userPhone: "010-3333-4444",
-        lessonTitle: "중급반 B (화목 10:00)",
-        paidAmount: 85000,
-        refundedAmount: 20000,
-        paymentMethod: "CARD",
-        paidAt: "2023-11-12 14:05:40",
-        status: "PARTIALLY_REFUNDED",
-      },
-      {
-        paymentId: 3,
-        enrollId: 103,
-        lessonId: 1,
-        tid: "T1122334455",
-        userName: "박송금",
-        userPhone: undefined,
-        lessonTitle: "초급반 A (월수금 09:00)",
-        paidAmount: 65000,
-        refundedAmount: 65000,
-        paymentMethod: "CARD",
-        paidAt: "2023-10-20 11:15:00",
-        refundAt: "2023-10-25 10:00:00",
-        status: "FULLY_REFUNDED",
-      },
-    ],
-    []
-  );
-
-  const mockRefunds: RefundData[] = useMemo(
-    () => [
-      {
-        refundId: 1,
-        paymentId: 2,
-        enrollId: 102,
-        lessonId: 2,
-        tid: "T0987654321",
-        userName: "이납부",
-        userPhone: "010-3333-4444",
-        lessonTitle: "중급반 B (화목 10:00)",
-        refundAmount: 20000,
-        refundType: "PARTIAL",
-        refundedAt: "2023-11-18 10:00:00",
-        adminName: "관리자A",
-        refundReason: "일부 강습 취소",
-        status: "COMPLETED",
-      },
-      {
-        refundId: 2,
-        paymentId: 3,
-        enrollId: 103,
-        lessonId: 1,
-        tid: "T1122334455",
-        userName: "박송금",
-        userPhone: undefined,
-        lessonTitle: "초급반 A (월수금 09:00)",
-        refundAmount: 65000,
-        refundType: "FULL",
-        refundedAt: "2023-10-25 10:00:00",
-        adminName: "관리자B",
-        refundReason: "전체 강습 취소",
-        status: "COMPLETED",
-      },
-    ],
-    []
-  );
-
-  // State for actual data (if fetched here)
-  // const [payments, setPayments] = useState<PaymentData[]>(mockPayments);
-  // const [refunds, setRefunds] = useState<RefundData[]>(mockRefunds);
-  // Replace useState with useQuery if fetching data within this component
-  // Example:
-  // const { data: paymentsData } = useQuery({ queryKey: ['payments', lessonIdFilter], queryFn: fetchPayments });
-  // const { data: refundsData } = useQuery({ queryKey: ['refunds', lessonIdFilter], queryFn: fetchRefunds });
+  // TODO: Implement pagination state and pass to query functions if needed
+  const [paymentsCurrentPage /* setPaymentsCurrentPage */] = useState(0);
+  const [paymentsPageSize /* setPaymentsPageSize */] = useState(100); // Default size
 
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
@@ -173,19 +51,50 @@ export const PaymentHistoryTab = ({
   const agGridTheme =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
-  // Removed formatCurrency, formatDateTime, cell renderers, colDefs, defaultColDefs as they are in sub-components
-  // Removed paymentFilters, refundFilters states as they are in sub-components
-  // Removed handleExportPayments, handleExportRefunds, filteredPayments, filteredRefunds as they are in sub-components
+  const {
+    data: paymentsApiResponse,
+    isLoading: isLoadingPayments,
+    error: errorPayments,
+  } = useQuery<PaginatedResponse<AdminPaymentData>, Error>({
+    queryKey: [
+      "adminPaymentHistory",
+      lessonIdFilter,
+      selectedYear,
+      selectedMonth,
+      paymentsCurrentPage,
+      paymentsPageSize,
+    ],
+    queryFn: () =>
+      adminApi.getAdminPaymentHistory({
+        lessonId: lessonIdFilter ?? undefined,
+        year: parseInt(selectedYear),
+        month: parseInt(selectedMonth),
+        page: paymentsCurrentPage,
+        size: paymentsPageSize,
+      }),
+    enabled: !!selectedYear && !!selectedMonth,
+  });
 
-  // 통계 계산 can be moved to sub-components if they only use their respective data,
-  // or kept here if it needs combined data (though current example doesn't show that)
-  // const paymentStats = useMemo(() => { ... });
+  const payments: AdminPaymentData[] = useMemo(
+    () => paymentsApiResponse?.data.content || [],
+    [paymentsApiResponse]
+  );
+  // Derive refund-related data from the payments list
+  const paymentsForRefundView: AdminPaymentData[] = useMemo(() => {
+    if (!payments) return [];
+    return payments.filter(
+      (payment) =>
+        payment.status === "PARTIAL_REFUNDED" ||
+        payment.status === "CANCELED" || // Assuming CANCELED implies a refund of a previously paid amount
+        (payment.refundedAmount != null && payment.refundedAmount > 0)
+    );
+  }, [payments]);
 
   return (
     <Box h="full" display="flex" flexDirection="column">
       <Tabs.Root
         value={activeTab}
-        onValueChange={(e) => setActiveTab(e.value as any)}
+        onValueChange={(e) => setActiveTab(e.value as "payments" | "refunds")}
       >
         <Tabs.List>
           <Tabs.Trigger value="payments">결제 내역</Tabs.Trigger>
@@ -193,25 +102,61 @@ export const PaymentHistoryTab = ({
         </Tabs.List>
 
         <Tabs.Content value="payments">
-          <PaymentsView
-            payments={mockPayments} // Pass actual payments data here
-            lessonIdFilter={lessonIdFilter}
-            agGridTheme={agGridTheme}
-            bg={bg}
-            textColor={textColor}
-            borderColor={borderColor}
-          />
+          {isLoadingPayments && (
+            <Box textAlign="center" p={10}>
+              <Spinner size="xl" />
+              <Text mt={2}>결제 내역을 불러오는 중...</Text>
+            </Box>
+          )}
+          {errorPayments && !isLoadingPayments && (
+            <Box p={4} bg="red.50" borderRadius="md" color="red.700">
+              <Text fontWeight="bold">오류 발생</Text>
+              <Text>
+                결제 내역을 불러오는데 실패했습니다: {errorPayments.message}
+              </Text>
+            </Box>
+          )}
+          {!isLoadingPayments && !errorPayments && (
+            <PaymentsView
+              payments={payments}
+              lessonIdFilter={lessonIdFilter}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              agGridTheme={agGridTheme}
+              bg={bg}
+              textColor={textColor}
+              borderColor={borderColor}
+            />
+          )}
         </Tabs.Content>
 
         <Tabs.Content value="refunds">
-          <RefundsView
-            refunds={mockRefunds} // Pass actual refunds data here
-            lessonIdFilter={lessonIdFilter}
-            agGridTheme={agGridTheme}
-            bg={bg}
-            textColor={textColor}
-            borderColor={borderColor}
-          />
+          {isLoadingPayments && (
+            <Box textAlign="center" p={10}>
+              <Spinner size="xl" />
+              <Text mt={2}>환불 내역을 불러오는 중...</Text>
+            </Box>
+          )}
+          {errorPayments && !isLoadingPayments && (
+            <Box p={4} bg="red.50" borderRadius="md" color="red.700">
+              <Text fontWeight="bold">오류 발생</Text>
+              <Text>
+                환불 내역을 불러오는데 실패했습니다: {errorPayments.message}
+              </Text>
+            </Box>
+          )}
+          {!isLoadingPayments && !errorPayments && (
+            <RefundsView
+              paymentsForRefundView={paymentsForRefundView}
+              lessonIdFilter={lessonIdFilter}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              agGridTheme={agGridTheme}
+              bg={bg}
+              textColor={textColor}
+              borderColor={borderColor}
+            />
+          )}
         </Tabs.Content>
       </Tabs.Root>
     </Box>

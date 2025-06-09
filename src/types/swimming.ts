@@ -1,5 +1,13 @@
 // 수영장 강습 관련 타입 정의
 
+import {
+  PaymentTransactionStatus,
+  EnrollmentPaymentLifecycleStatus,
+  EnrollmentCancellationProgressStatus,
+  // LessonStatus, // LessonDTO here doesn't use this level of detail for its own status field
+} from "./statusTypes";
+import type { ApiResponse as GenericApiResponse } from "./api"; // For the generic wrapper example
+
 // 강습 DTO
 export interface LessonDTO {
   id: number;
@@ -39,8 +47,8 @@ export interface EnrollResponseDto {
   enrollId: number;
   lessonId: number;
   lockerId?: number;
-  status: string;
-  payStatus: string;
+  status: string; // This is likely EnrollmentApplicationStatus or similar, but API might send generic string.
+  payStatus: EnrollmentPaymentLifecycleStatus | string; // Allow string for flexibility
   expireDt: string;
   userName: string;
   lessonTitle: string;
@@ -63,8 +71,8 @@ export interface EnrollDTO {
   enrollId: number;
   lessonId: number;
   lockerId?: number;
-  status: string;
-  payStatus: string; // UNPAID, PAID, CANCELED_UNPAID
+  status: string; // General status of the enrollment, could be EnrollmentApplicationStatus
+  payStatus: EnrollmentPaymentLifecycleStatus | string; // UNPAID, PAID, CANCELED_UNPAID // Allow string
   expireDt: string;
   userName: string;
   lessonTitle: string;
@@ -226,13 +234,16 @@ export interface MypageEnrollDto {
     period: string; // e.g., "2025-05-01 ~ 2025-05-30"
     time: string; // e.g., "(월,화,수,목,금) 오전 07:00 ~ 07:50"
     price: number;
+    // lesson.status field from api.ts MypageEnrollDto.lesson has 'string', not specific LessonStatus yet.
+    // If this needs to be more specific, it should align with LessonStatus from statusTypes.ts
+    status: string; 
   };
-  status: "UNPAID" | "PAID" | "PAYMENT_TIMEOUT" | "CANCELED_UNPAID" | string; // pay_status from enroll table
+  status: EnrollmentPaymentLifecycleStatus | string; // pay_status from enroll table // Allow string
   applicationDate: string; // ISO 8601 datetime string
   paymentExpireDt: string | null; // enroll.expire_dt (KISPG 결제 페이지 만료 시간)
   usesLocker: boolean;
   isRenewal: boolean;
-  cancelStatus: "NONE" | "REQ" | "APPROVED" | "DENIED" | string; // from enroll.cancel_status
+  cancelStatus: EnrollmentCancellationProgressStatus | string; // from enroll.cancel_status // Allow string
   cancelReason: string | null;
   renewalWindow?: {
     // Optional
@@ -266,13 +277,7 @@ export interface MypagePaymentDto {
   refunded_amt: number; // 누적 환불액
   paidAt: string | null; // 결제일시 ISO 8601
   refund_dt: string | null; // 마지막 환불 시각 ISO 8601
-  status:
-    | "SUCCESS"
-    | "CANCELED"
-    | "PARTIAL_REFUNDED"
-    | "REFUND_REQUESTED"
-    | "FAILED"
-    | string;
+  status: PaymentTransactionStatus | string; // Allow string
 }
 
 // It's good practice to also have a generic API response type,
@@ -284,13 +289,7 @@ export interface MypagePaymentDto {
 // which has `success`, `message`, `code` at the top level,
 // non-paginated successful responses might look like:
 
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  code?: number; // or errorCode string from other examples
-  // stackTrace?: string | null; // Only for dev/debug
-}
+export interface ApiResponse<T> extends GenericApiResponse<T> {}
 
 // Example usage for a single item response:
 // getPaymentDetails(enrollId: number): Promise<ApiResponse<PaymentPageDetailsDto>>

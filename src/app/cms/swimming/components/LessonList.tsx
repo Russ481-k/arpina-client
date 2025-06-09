@@ -7,6 +7,7 @@ import { useColorModeValue } from "@/components/ui/color-mode";
 import type { AdminLessonDto } from "@/types/api";
 import { LuBook, LuTrash2 } from "react-icons/lu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import dayjs from "dayjs";
 
 interface LessonListProps {
   lessons: AdminLessonDto[];
@@ -21,19 +22,9 @@ interface LessonListProps {
 // Helper to parse YYYY-MM-DD strings to Date objects (ignoring time, comparing dates only)
 const parseAdminDate = (dateString?: string): Date | null => {
   if (!dateString) return null;
-  const parts = dateString.split("-");
-  if (parts.length === 3) {
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-    const day = parseInt(parts[2], 10);
-    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-      const date = new Date(year, month, day);
-      // Set hours to 0 to compare dates accurately if time components are implicitly added by new Date()
-      date.setHours(0, 0, 0, 0);
-      return date;
-    }
-  }
-  return null;
+  const date = dayjs(dateString);
+  if (!date.isValid()) return null;
+  return date.startOf('day').toDate();
 };
 
 const LessonList = React.memo(function LessonList({
@@ -76,7 +67,9 @@ const LessonList = React.memo(function LessonList({
 
     const startDate = parseAdminDate(lesson.startDate);
     const endDate = parseAdminDate(lesson.endDate);
-    const registrationEndDate = parseAdminDate(lesson.registrationEndDate);
+    const registrationEndDateTime = parseAdminDate(
+      lesson.registrationEndDateTime
+    );
 
     if (!startDate || !endDate) {
       return { label: "- 날짜오류 -", colorScheme: "red" };
@@ -89,8 +82,8 @@ const LessonList = React.memo(function LessonList({
       return { label: "진행중", colorScheme: "blue" };
     }
     // If now < startDate (before lesson starts)
-    if (registrationEndDate) {
-      if (now <= registrationEndDate) {
+    if (registrationEndDateTime) {
+      if (now <= registrationEndDateTime) {
         return { label: "모집중", colorScheme: "green" };
       } else {
         return { label: "모집마감", colorScheme: "gray" }; // Was "마감"

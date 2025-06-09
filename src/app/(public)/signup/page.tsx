@@ -81,6 +81,7 @@ export default function SignupPage() {
   const [registeredUsername, setRegisteredUsername] = useState<string | null>(
     null
   );
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const router = useRouter();
 
   // Define handlers before useEffect that depends on them
@@ -108,6 +109,10 @@ export default function SignupPage() {
     },
     [setCurrentStep, setIsSubmitting]
   );
+
+  const handleEmailVerificationChange = useCallback((isVerified: boolean) => {
+    setIsEmailVerified(isVerified);
+  }, []);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -405,12 +410,13 @@ export default function SignupPage() {
               {currentStep === MAIN_FLOW_STEPS && (
                 <Step3UserInfo
                   ref={step3FormRef}
-                  mainFlowSteps={MAIN_FLOW_STEPS}
-                  currentProgressValue={currentStep}
                   initialAuthData={niceAuthData}
                   authKey={niceAuthKey}
                   onSignupSuccess={handleSignupSuccess}
                   onSubmittingChange={setIsSubmitting}
+                  mainFlowSteps={MAIN_FLOW_STEPS}
+                  currentProgressValue={currentStep}
+                  onEmailVerificationChange={handleEmailVerificationChange}
                 />
               )}
               {currentStep === COMPLETION_STEP && (
