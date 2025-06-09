@@ -153,7 +153,8 @@ const ActionCellRenderer: React.FC<
         variant="outline"
         onClick={() => context.openReviewDialog(data)}
       >
-        환불 처리
+        환불 처리{" "}
+        {cancellationProcessingStatus === "ADMIN_CANCELED" && "(관리자 취소)"}
       </Button>
     );
   }
