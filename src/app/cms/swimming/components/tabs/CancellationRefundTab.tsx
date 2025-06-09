@@ -127,28 +127,42 @@ const ActionCellRenderer: React.FC<
     return null;
   }
 
-  // 백엔드 문서에 따르면 환불 요청 상태는 UI에서만 사용하는 확장 상태임
-  // API 응답의 paymentStatus가 'REFUND_REQUESTED'일 때 검토 버튼 표시
+  const { paymentStatus, cancellationProcessingStatus } = data;
 
-  if (data.paymentStatus === "REFUND_REQUESTED") {
+  // 사용자의 취소 요청 건 ("환불 검토" 버튼)
+  if (paymentStatus === "REFUND_REQUESTED") {
     return (
       <Button
         size="xs"
         colorPalette="teal"
         variant="outline"
-        disabled={data.cancellationProcessingStatus !== "REQ"}
+        disabled={cancellationProcessingStatus !== "REQ"}
         onClick={() => context.openReviewDialog(data)}
       >
-        {data.cancellationProcessingStatus === "REQ"
-          ? "환불 검토"
-          : "검토 완료"}
+        {cancellationProcessingStatus === "REQ" ? "환불 검토" : "검토 완료"}
       </Button>
     );
   }
 
-  const statusInfo = getDisplayStatusInfo(
-    data.paymentStatus as UiDisplayStatus
-  );
+  // 관리자 직권 취소 건 (환불 필요 시 "환불 처리" 버튼)
+  if (
+    cancellationProcessingStatus === "ADMIN_CANCELED" &&
+    paymentStatus === "REFUND_PENDING_ADMIN_CANCEL"
+  ) {
+    return (
+      <Button
+        size="xs"
+        colorPalette="red"
+        variant="outline"
+        onClick={() => context.openReviewDialog(data)}
+      >
+        환불 처리
+      </Button>
+    );
+  }
+
+  // 그 외의 경우는 상태에 맞는 비활성 버튼 표시
+  const statusInfo = getDisplayStatusInfo(paymentStatus as UiDisplayStatus);
 
   return (
     <Button size="xs" variant="ghost" colorPalette="gray" disabled>
