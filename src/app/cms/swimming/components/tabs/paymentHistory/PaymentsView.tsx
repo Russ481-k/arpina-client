@@ -268,21 +268,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         cellStyle: { textAlign: "center" },
         sortable: true,
       },
-      {
-        headerName: "PG 처리 상태",
-        field: "pgResultMsg" as any,
-        width: 150,
-        sortable: true,
-      },
-      {
-        headerName: "PG 조회",
-        cellRenderer: PgQueryCellRenderer,
-        cellRendererParams: {
-          onQueryPg: onQueryPg,
-        },
-        width: 100,
-        cellStyle: { textAlign: "center" },
-      },
     ],
     [onQueryPg]
   );
