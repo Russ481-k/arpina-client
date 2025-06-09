@@ -59,34 +59,20 @@ const PaymentLifecycleStatusCellRenderer: React.FC<
   const processingStatus = data.cancellationProcessingStatus;
   const paymentStatus = data.paymentStatus;
 
-  // 1. cancellationProcessingStatus를 우선적으로 표시
-  if (processingStatus && processingStatus !== "NONE") {
-    const configMap: Partial<
-      Record<
-        string,
-        { label: string; colorPalette: string; variant?: "solid" | "outline" }
-      >
-    > = {
-      REQ: { label: "환불처리요청", colorPalette: "blue", variant: "outline" },
-      PENDING: {
-        label: "환불처리중",
-        colorPalette: "yellow",
-        variant: "outline",
-      },
-      APPROVED: {
-        label: "환불처리승인",
-        colorPalette: "green",
-        variant: "solid",
-      },
-      DENIED: { label: "환불처리반려", colorPalette: "red", variant: "solid" },
-    };
-
-    const config = configMap[processingStatus] || {
-      label: processingStatus.toString(),
-      colorPalette: "gray",
-      variant: "outline",
-    };
-
+  // New logic based on the guide
+  if (processingStatus === "ADMIN_CANCELED") {
+    const config =
+      paymentStatus === "REFUND_PENDING_ADMIN_CANCEL"
+        ? {
+            label: "관리자 취소 (환불필요)",
+            colorPalette: "red",
+            variant: "solid",
+          }
+        : {
+            label: "관리자 취소 (미결제)",
+            colorPalette: "gray",
+            variant: "outline",
+          };
     return (
       <Badge
         colorPalette={config.colorPalette as any}
@@ -97,7 +83,22 @@ const PaymentLifecycleStatusCellRenderer: React.FC<
     );
   }
 
-  // 2. paymentStatus를 차선으로 표시
+  // Use centralized status util for other statuses
+  if (processingStatus && processingStatus !== "NONE") {
+    const statusInfo = getDisplayStatusInfo(
+      processingStatus as UiDisplayStatus
+    );
+    return (
+      <Badge
+        colorPalette={statusInfo.color as any}
+        variant={statusInfo.variant as any}
+      >
+        {statusInfo.label}
+      </Badge>
+    );
+  }
+
+  // Fallback to paymentStatus
   if (paymentStatus) {
     const statusInfo = getDisplayStatusInfo(paymentStatus as UiDisplayStatus);
     return (

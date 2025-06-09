@@ -152,6 +152,18 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       );
     }
 
+    if (enrollStatus === "ADMIN_CANCELED") {
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button variant="outline" colorPalette="red" w="100%" disabled>
+            <Text color="red.500" fontSize="sm">
+              관리자 취소
+            </Text>
+          </Button>
+        </Flex>
+      );
+    }
+
     if (enrollStatus === "REFUND_REQUESTED") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
