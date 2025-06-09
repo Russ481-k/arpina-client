@@ -138,9 +138,9 @@ const ActionCellRenderer: React.FC<
         disabled={data.cancellationProcessingStatus !== "REQ"}
         onClick={() => context.openReviewDialog(data)}
       >
-        {data.cancellationProcessingStatus !== "REQ"
-          ? "검토 완료"
-          : "환불 검토"}
+        {data.cancellationProcessingStatus === "REQ"
+          ? "환불 검토"
+          : "검토 완료"}
       </Button>
     );
   }
@@ -314,6 +314,7 @@ export const CancellationRefundTab = ({
         field: "status",
         cellRenderer: ActionCellRenderer,
         width: 100,
+        pinned: "right",
         cellStyle: { justifyContent: "center" },
         onCellClicked: (event: CellClickedEvent<CancelRequestAdminDto>) => {
           if (event.data?.paymentStatus === "REFUND_REQUESTED") {
