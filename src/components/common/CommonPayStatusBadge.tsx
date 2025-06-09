@@ -1,32 +1,32 @@
 import React from "react";
-import { getPayStatusDisplay } from "@/lib/utils/statusUtils";
-import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes";
-import { Tag } from "@chakra-ui/react";
+import { Badge } from "@chakra-ui/react";
+import { UiDisplayStatus } from "@/types/statusTypes";
+import { displayStatusConfig } from "@/lib/utils/statusUtils";
 
 interface CommonPayStatusBadgeProps {
-  status?: EnrollmentPaymentLifecycleStatus | null;
+  status?: UiDisplayStatus | string | null;
 }
 
-export const CommonPayStatusBadge: React.FC<CommonPayStatusBadgeProps> = ({
-  status,
-}) => {
+export const CommonPayStatusBadge = ({ status }: CommonPayStatusBadgeProps) => {
   if (!status) {
     return (
-      <Tag.Root size="sm" colorPalette="gray" variant="outline">
-        <Tag.Label>알 수 없음</Tag.Label>
-      </Tag.Root>
+      <Badge colorPalette="gray" variant="outline" size="sm">
+        N/A
+      </Badge>
     );
   }
 
-  const displayConfig = getPayStatusDisplay(status);
+  const config =
+    displayStatusConfig[status as UiDisplayStatus] ||
+    displayStatusConfig["FAILED"]; // Fallback to a default for unknown statuses
 
   return (
-    <Tag.Root
+    <Badge
+      colorPalette={config.colorPalette}
+      variant={config.badgeVariant || "solid"}
       size="sm"
-      colorPalette={displayConfig.colorPalette}
-      variant={displayConfig.badgeVariant || "solid"}
     >
-      <Tag.Label>{displayConfig.label}</Tag.Label>
-    </Tag.Root>
+      {config.label}
+    </Badge>
   );
 };

@@ -63,7 +63,6 @@ export const LockerCard: React.FC<LockerCardProps> = ({
 
   const usagePercentage =
     data.totalQuantity > 0 ? (data.usedQuantity / data.totalQuantity) * 100 : 0;
-  console.log(data);
   return (
     <Card.Root p={2} size="sm">
       <Card.Body p={0}>

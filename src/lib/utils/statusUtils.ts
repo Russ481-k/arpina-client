@@ -1,4 +1,4 @@
-import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes";
+import { UiDisplayStatus } from "@/types/statusTypes";
 
 // export type PayStatus = // Original PayStatus type is removed
 //   | "UNPAID"
@@ -9,50 +9,69 @@ import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes";
 //   | "REFUND_PENDING_ADMIN_CANCEL"
 //   | "REFUNDED";
 
-export const payStatusConfig: Record<
-  EnrollmentPaymentLifecycleStatus,
+/**
+ * 결제 및 수강신청 상태에 대한 표시 속성을 정의하는 중앙 설정 객체입니다.
+ * 이 객체는 애플리케이션 전체에서 상태를 일관되게 표시하는 데 사용됩니다.
+ * 백엔드 `PaymentStatus.java` 및 관련 엔티티 상태를 기반으로 합니다.
+ *
+ * @property {string} label - UI에 표시될 한글 상태명
+ * @property {string} colorPalette - Chakra UI Badge 컴포넌트의 colorScheme 속성에 사용될 색상 팔레트
+ * @property {'solid' | 'outline'} [badgeVariant] - Chakra UI Badge 컴포넌트의 variant 속성
+ */
+export const displayStatusConfig: Record<
+  UiDisplayStatus,
   { label: string; colorPalette: string; badgeVariant?: "solid" | "outline" }
 > = {
-  UNPAID: { label: "미결제", colorPalette: "orange", badgeVariant: "outline" },
-  PAID: { label: "결제완료", colorPalette: "green", badgeVariant: "solid" },
-  PARTIALLY_REFUNDED: {
-    label: "부분환불",
-    colorPalette: "purple",
+  // --- PaymentStatus 시작 ---
+  PAID: {
+    label: "결제완료",
+    colorPalette: "green",
     badgeVariant: "solid",
   },
-  CANCELED_UNPAID: {
-    label: "미결제취소",
+  FAILED: {
+    label: "결제실패",
+    colorPalette: "red",
+    badgeVariant: "solid",
+  },
+  CANCELED: {
+    label: "전액환불",
     colorPalette: "gray",
     badgeVariant: "outline",
   },
-  PAYMENT_TIMEOUT: {
-    label: "결제시간초과",
-    colorPalette: "red",
+  PARTIAL_REFUNDED: {
+    label: "부분환불",
+    colorPalette: "orange",
+    badgeVariant: "solid",
+  },
+  // --- PaymentStatus 끝 ---
+
+  // --- Enrollment 등 다른 엔티티 상태 ---
+  REFUND_REQUESTED: {
+    label: "환불요청",
+    colorPalette: "blue",
     badgeVariant: "outline",
   },
-  REFUND_PENDING_ADMIN_CANCEL: {
-    label: "환불대기(관리자취소)",
+  PAYMENT_PENDING: {
+    label: "결제대기",
     colorPalette: "yellow",
     badgeVariant: "outline",
   },
-  REFUNDED: { label: "환불완료", colorPalette: "blue", badgeVariant: "solid" },
 };
 
-export const payStatusOptions: Array<{
-  value: EnrollmentPaymentLifecycleStatus | ""; // Allow empty string for "all"
-  label: string;
-}> = (
-  Object.keys(payStatusConfig) as EnrollmentPaymentLifecycleStatus[]
-).map((status) => ({
-  value: status,
-  label: payStatusConfig[status].label,
-}));
-
-// Add an "all" option for filters
-payStatusOptions.unshift({ value: "", label: "전체" });
-
-export const getPayStatusDisplay = (status: EnrollmentPaymentLifecycleStatus) => {
-  return (
-    payStatusConfig[status] || { label: "알 수 없음", colorPalette: "gray" }
-  );
+/**
+ * 상태(UiDisplayStatus)를 한글 레이블과 색상 정보로 변환합니다.
+ * @param status - 변환할 상태
+ * @returns - UI에 표시될 정보. 상태가 유효하지 않으면 기본값을 반환합니다.
+ */
+export const getDisplayStatusInfo = (status: UiDisplayStatus | string) => {
+  const config = displayStatusConfig[status as UiDisplayStatus];
+  if (config) {
+    return {
+      label: config.label,
+      color: config.colorPalette,
+      variant: config.badgeVariant || "solid",
+    };
+  }
+  return { label: "알 수 없음", color: "gray", variant: "outline" }; // Default for unknown statuses
 };
+

@@ -17,6 +17,8 @@ import type {
   CronLogDto,
   WebhookLogDto,
   ApiResponse,
+  RefundCalculationPreviewRequestDto,
+  RefundCalculationPreviewDto,
   // Assuming these are defined in @/types/api or a common place
   PaginationParams,
   PaginatedResponse,
@@ -201,6 +203,16 @@ export const adminApi = {
       `${CMS_API_BASE}/enrollments/${enrollId}/deny-cancel`,
       data
     );
+    return response.data;
+  },
+
+  calculateRefundPreview: async (
+    enrollId: number,
+    data: RefundCalculationPreviewRequestDto
+  ): Promise<ApiResponse<RefundCalculationPreviewDto>> => {
+    const response = await privateApi.post<
+      ApiResponse<RefundCalculationPreviewDto>
+    >(`${CMS_API_BASE}/enrollments/${enrollId}/calculate-refund-preview`, data);
     return response.data;
   },
 

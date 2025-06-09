@@ -45,7 +45,8 @@ import KISPGPaymentFrame, {
 } from "@/components/payment/KISPGPaymentFrame";
 import { EnrollInitiationResponseDto } from "@/types/api";
 import { KISPGPaymentInitResponseDto } from "@/types/api";
-import { getPayStatusDisplay } from "@/lib/utils/statusUtils"; // Import utility for display
+import { displayStatusConfig } from "@/lib/utils/statusUtils"; // Import the centralized config
+import { UiDisplayStatus } from "@/types/statusTypes";
 
 // Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
 const formatDate = (dateString: string | undefined | null): string => {
@@ -1081,31 +1082,10 @@ export default function MyPage() {
                 gap={6}
               >
                 {payments.map((payment) => {
-                  // Determine badge color and label based on PaymentTransactionStatus
-                  let statusLabel = payment.status as string;
-                  let statusColorPalette = "gray";
-
-                  // It's safer to cast to the specific enum type for comparisons if the backend guarantees these values.
-                  // Otherwise, string comparisons are okay if the `| string` union is used in the DTO.
-                  const typedStatus =
-                    payment.status as PaymentTransactionStatus;
-
-                  if (typedStatus === "PAID") {
-                    statusLabel = "결제완료";
-                    statusColorPalette = "green";
-                  } else if (typedStatus === "CANCELED") {
-                    statusLabel = "취소됨";
-                    statusColorPalette = "red";
-                  } else if (typedStatus === "PARTIAL_REFUNDED") {
-                    statusLabel = "부분환불";
-                    statusColorPalette = "orange";
-                  } else if (typedStatus === "REFUND_REQUESTED") {
-                    statusLabel = "환불요청";
-                    statusColorPalette = "yellow";
-                  } else if (typedStatus === "FAILED") {
-                    statusLabel = "결제실패";
-                    statusColorPalette = "purple";
-                  }
+                  // Determine badge color and label using the centralized config
+                  const statusInfo =
+                    displayStatusConfig[payment.status as UiDisplayStatus] ||
+                    displayStatusConfig["FAILED"]; // Fallback to a default
 
                   return (
                     <Box
@@ -1120,8 +1100,12 @@ export default function MyPage() {
                       <VStack align="stretch" gap={4}>
                         {/* 헤더: 결제 상태와 금액 */}
                         <Flex justify="space-between" align="center">
-                          <Badge colorPalette={statusColorPalette} size="lg">
-                            {statusLabel}
+                          <Badge
+                            colorPalette={statusInfo.colorPalette}
+                            variant={statusInfo.badgeVariant}
+                            size="lg"
+                          >
+                            {statusInfo.label}
                           </Badge>
                           <Text
                             fontSize="xl"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Text,
@@ -22,6 +22,7 @@ import {
   Textarea,
   Spinner,
   Portal,
+  Grid,
 } from "@chakra-ui/react";
 import { CheckIcon, XIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -29,39 +30,63 @@ import { adminApi } from "@/lib/api/adminApi";
 import type {
   ApproveCancelRequestDto,
   DenyCancelRequestDto,
-  EnrollAdminResponseDto, // For mutation response types
+  EnrollAdminResponseDto,
+  RefundCalculationPreviewDto,
+  RefundCalculationPreviewRequestDto,
+  ApiResponse,
 } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
-import type { CancellationRequestRecordStatus } from "@/types/statusTypes"; // Added import
+import type { CancellationRequestRecordStatus } from "@/types/statusTypes";
+import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes";
+import { AxiosError } from "axios";
 
-// Mirroring the updated structures from CancellationRefundTab.tsx
+// API 응답 구조에 맞게 인터페이스 수정
 interface UICalculatedRefundDetails {
   usedDays: number;
-  manualUsedDays?: number;
-  lessonUsageAmount?: number;
+  manualUsedDays?: number | null;
+  lessonUsageAmount: number;
   finalRefundAmount: number;
+  originalLessonPrice: number;
+  paidLessonAmount: number;
+  paidLockerAmount: number;
 }
 
-interface UIPaymentDetails {
-  lesson: number;
-  locker?: number;
-  total: number;
+interface UIPaymentInfo {
+  tid: string | null;
+  paidAmt?: number;
+  lessonPaidAmt: number;
+  lockerPaidAmt: number;
 }
 
-interface CancelRequestData {
-  // Should match CancelRequestData in CancellationRefundTab.tsx
-  id: string;
+export interface CancelRequestData {
+  // Dialog fields
   enrollId: number;
   userName: string;
+  userLoginId: string;
+  userPhone: string;
   lessonTitle: string;
-  lessonStartDate?: string; // Made optional to match parent
-  usesLocker?: boolean; // Made optional to match parent
-  paidAmount: UIPaymentDetails; // Updated to UIPaymentDetails
-  calculatedRefund: UICalculatedRefundDetails; // Updated to UICalculatedRefundDetails
-  reason?: string;
-  adminMemo?: string;
-  status?: CancellationRequestRecordStatus; // Updated to use imported type
-  // payStatus is removed to match parent
+  lessonId: number;
+  requestedAt: string;
+  userReason: string | null;
+  paymentInfo: UIPaymentInfo;
+  calculatedRefundDetails: {
+    systemCalculatedUsedDays: number;
+    manualUsedDays: number | null;
+    effectiveUsedDays: number;
+    originalLessonPrice: number;
+    paidLessonAmount: number;
+    paidLockerAmount: number;
+    lessonUsageDeduction: number;
+    finalRefundAmount: number;
+  };
+  calculatedRefundAmtByNewPolicy: number;
+  cancellationProcessingStatus: string;
+  paymentStatus: string;
+  adminComment?: string;
+
+  // Additional fields for the grid in CancellationRefundTab
+  id?: string;
+  paymentDisplayStatus?: EnrollmentPaymentLifecycleStatus;
 }
 
 // Define query keys if specific invalidations are needed from this dialog
@@ -92,136 +117,44 @@ const formatCurrency = (
 export const ReviewCancelRequestDialog: React.FC<
   ReviewCancelRequestDialogProps
 > = ({ isOpen, onClose, selectedRequest }) => {
-  const queryClient = useQueryClient(); // Get instance for invalidations
+  const queryClient = useQueryClient();
   const [manualUsedDaysInput, setManualUsedDaysInput] = useState<number>(0);
   const [adminComment, setAdminComment] = useState("");
   const [currentRefundDetails, setCurrentRefundDetails] =
     useState<UICalculatedRefundDetails | null>(null);
 
-  // Placeholder Mutation for Refund Preview
-  const previewRefundMutation = useMutation<
-    any, // Should be RefundCalculationPreviewResponseDto
-    Error,
-    { enrollId: number; manualUsedDays?: number } // Should be RefundCalculationPreviewRequestDto
-  >({
-    mutationFn: async ({ enrollId, manualUsedDays }) => {
-      // This is a MOCK. Replace with adminApi.calculateRefundPreview or similar
-      console.log(
-        `Mocking API call to calculateRefundPreview for enrollId: ${enrollId} with manualUsedDays: ${manualUsedDays}`
-      );
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const lessonPaidAmount = selectedRequest?.paidAmount.lesson || 0;
-      const effectiveUsedDays =
-        manualUsedDays ?? selectedRequest?.calculatedRefund.usedDays ?? 0;
-
-      const calculatedLessonUsageAmount = effectiveUsedDays * 3500;
-
-      const calculatedFinalRefundAmount = Math.max(
-        0,
-        lessonPaidAmount - calculatedLessonUsageAmount
-      );
-
-      const mockPreviewResponse: UICalculatedRefundDetails = {
-        usedDays: selectedRequest?.calculatedRefund.usedDays || 0,
-        manualUsedDays: manualUsedDays,
-        lessonUsageAmount: calculatedLessonUsageAmount,
-        finalRefundAmount: calculatedFinalRefundAmount,
-      };
-      return {
-        success: true,
-        message: "Refund preview calculated (mocked)",
-        data: { calculatedRefundDetails: mockPreviewResponse },
-      };
-    },
-    onSuccess: (responseData) => {
-      const refundDetailsPreview =
-        responseData?.data?.calculatedRefundDetails ||
-        responseData?.calculatedRefundDetails ||
-        responseData?.data ||
-        responseData;
-      if (
-        refundDetailsPreview &&
-        typeof refundDetailsPreview.finalRefundAmount === "number"
-      ) {
-        setCurrentRefundDetails(
-          refundDetailsPreview as UICalculatedRefundDetails
-        );
-        toaster.info({ title: "환불액 미리보기 업데이트됨", duration: 2000 });
-      } else {
-        toaster.error({
-          title: "미리보기 응답 오류",
-          description: "환불액 미리보기 정보를 가져오지 못했습니다.",
-        });
-      }
-    },
-    onError: (error) => {
-      toaster.error({
-        title: "미리보기 실패",
-        description: error.message || "환불액 미리보기를 가져오는 중 오류 발생",
-      });
-    },
-  });
-
-  const approveMutation = useMutation<
-    EnrollAdminResponseDto, // Or a more specific response for approval
-    Error,
-    { enrollId: number; data: ApproveCancelRequestDto }
-  >({
-    mutationFn: ({ enrollId, data }) =>
-      adminApi.approveAdminCancelRequest(enrollId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] }); // Broad invalidation
-      // queryClient.invalidateQueries(cancelTabQueryKeys.cancelRequests()); // More specific
-      // queryClient.invalidateQueries(cancelTabQueryKeys.refundPreview(selectedRequest!.enrollId));
-      toaster.success({ title: "승인 처리 완료", closable: true });
-      onClose();
-    },
-    onError: (error) => {
-      toaster.error({
-        title: "승인 처리 실패",
-        description: error.message,
-      });
-    },
-  });
-
-  const denyMutation = useMutation<
-    EnrollAdminResponseDto, // Or a more specific response for denial
-    Error,
-    { enrollId: number; data: DenyCancelRequestDto }
-  >({
-    mutationFn: ({ enrollId, data }) =>
-      adminApi.denyAdminCancelRequest(enrollId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] });
-      toaster.success({ title: "거부 처리 완료" });
-      onClose();
-    },
-    onError: (error) => {
-      toaster.error({
-        title: "거부 처리 실패",
-        description: error.message,
-      });
-    },
-  });
-
+  // 다이얼로그가 열릴 때 초기값 설정 및 API 호출
   useEffect(() => {
-    if (selectedRequest) {
-      const initialDialogUsedDays =
-        selectedRequest.calculatedRefund.manualUsedDays ??
-        selectedRequest.calculatedRefund.usedDays;
-      setManualUsedDaysInput(initialDialogUsedDays);
-      setCurrentRefundDetails(selectedRequest.calculatedRefund); // Set initial details
-      setAdminComment(selectedRequest.adminMemo || "");
-      // Trigger initial preview if needed, or rely on manualUsedDaysInput change effect
-      if (initialDialogUsedDays !== undefined) {
-        previewRefundMutation.mutate({
-          enrollId: selectedRequest.enrollId,
-          manualUsedDays: initialDialogUsedDays,
-        });
-      }
+    if (selectedRequest && isOpen) {
+      const initialDays =
+        selectedRequest.calculatedRefundDetails?.manualUsedDays ??
+        selectedRequest.calculatedRefundDetails?.systemCalculatedUsedDays;
+
+      setManualUsedDaysInput(initialDays);
+      // API 응답 구조에 맞게 데이터 매핑
+      setCurrentRefundDetails({
+        usedDays:
+          selectedRequest.calculatedRefundDetails?.systemCalculatedUsedDays,
+        manualUsedDays: selectedRequest.calculatedRefundDetails?.manualUsedDays,
+        lessonUsageAmount:
+          selectedRequest.calculatedRefundDetails?.lessonUsageDeduction,
+        finalRefundAmount:
+          selectedRequest.calculatedRefundDetails?.finalRefundAmount,
+        originalLessonPrice:
+          selectedRequest.calculatedRefundDetails?.originalLessonPrice,
+        paidLessonAmount:
+          selectedRequest.calculatedRefundDetails?.paidLessonAmount,
+        paidLockerAmount:
+          selectedRequest.calculatedRefundDetails?.paidLockerAmount,
+      });
+      setAdminComment("");
+
+      // 초기 API 호출
+      previewRefundMutation.mutate({
+        enrollId: selectedRequest.enrollId,
+        data: { manualUsedDays: initialDays },
+      });
     } else {
-      // Reset states when dialog is closed or no user selected
       setManualUsedDaysInput(0);
       setAdminComment("");
       setCurrentRefundDetails(null);
@@ -229,26 +162,128 @@ export const ReviewCancelRequestDialog: React.FC<
       approveMutation.reset();
       denyMutation.reset();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRequest]); // Rerun when selectedRequest changes
+  }, [selectedRequest, isOpen]);
 
-  // Effect to trigger preview when manualUsedDaysInput changes by the user
-  useEffect(() => {
-    if (selectedRequest && manualUsedDaysInput !== undefined && isOpen) {
-      // Only trigger if different from what currentRefundDetails shows or if current is null
-      if (
-        !currentRefundDetails ||
-        currentRefundDetails.manualUsedDays !== manualUsedDaysInput ||
-        currentRefundDetails.usedDays !== manualUsedDaysInput
-      ) {
-        previewRefundMutation.mutate({
-          enrollId: selectedRequest.enrollId,
-          manualUsedDays: manualUsedDaysInput,
+  const handleUsedDaysChange = (value: string) => {
+    const days = value === "" ? 0 : Math.max(0, parseInt(value, 10));
+    setManualUsedDaysInput(days);
+
+    if (!selectedRequest) return;
+
+    previewRefundMutation.mutate({
+      enrollId: selectedRequest.enrollId,
+      data: { manualUsedDays: days },
+    });
+  };
+
+  const previewRefundMutation = useMutation<
+    ApiResponse<RefundCalculationPreviewDto>,
+    Error,
+    { enrollId: number; data: RefundCalculationPreviewRequestDto }
+  >({
+    mutationFn: ({ enrollId, data }) =>
+      adminApi.calculateRefundPreview(enrollId, data),
+    onSuccess: (responseData) => {
+      if (!responseData.success) {
+        toaster.create({
+          title: "미리보기 실패",
+          description:
+            responseData.message ||
+            "환불 미리보기 계산 중 오류가 발생했습니다.",
+          type: "error",
+        });
+        return;
+      }
+
+      const refundDetailsPreview = responseData.data;
+      if (refundDetailsPreview) {
+        const newRefundDetails: UICalculatedRefundDetails = {
+          usedDays: refundDetailsPreview.systemCalculatedUsedDays,
+          manualUsedDays: refundDetailsPreview.manualUsedDays,
+          lessonUsageAmount: refundDetailsPreview.lessonUsageDeduction,
+          finalRefundAmount: refundDetailsPreview.finalRefundAmount,
+          originalLessonPrice: refundDetailsPreview.originalLessonPrice,
+          paidLessonAmount: refundDetailsPreview.paidLessonAmount,
+          paidLockerAmount: refundDetailsPreview.lockerPaidAmt,
+        };
+        setCurrentRefundDetails(newRefundDetails);
+        toaster.create({
+          title: "환불액 미리보기 업데이트됨",
+          description: `환불 예정액: ${formatCurrency(
+            newRefundDetails.finalRefundAmount
+          )}`,
+          type: "info",
+          duration: 2000,
         });
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [manualUsedDaysInput, selectedRequest?.enrollId, isOpen]); // selectedRequest also added to re-trigger if it changes while open
+    },
+    onError: (error: Error) => {
+      toaster.create({
+        title: "미리보기 실패",
+        description:
+          error.message || "환불 미리보기 계산 중 오류가 발생했습니다.",
+        type: "error",
+      });
+    },
+  });
+
+  const approveMutation = useMutation<
+    EnrollAdminResponseDto,
+    AxiosError<ApiResponse<null>>,
+    { enrollId: number; data: ApproveCancelRequestDto }
+  >({
+    mutationFn: ({ enrollId, data }) =>
+      adminApi.approveAdminCancelRequest(enrollId, data),
+    onSuccess: () => {
+      toaster.create({
+        title: "성공",
+        description: "승인 처리가 완료되었습니다.",
+        type: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] });
+      onClose();
+    },
+    onError: (error) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "승인 처리 중 오류가 발생했습니다.";
+      toaster.create({
+        title: "승인 처리 실패",
+        description: message,
+        type: "error",
+      });
+    },
+  });
+
+  const denyMutation = useMutation<
+    EnrollAdminResponseDto,
+    AxiosError<ApiResponse<null>>,
+    { enrollId: number; data: DenyCancelRequestDto }
+  >({
+    mutationFn: ({ enrollId, data }) =>
+      adminApi.denyAdminCancelRequest(enrollId, data),
+    onSuccess: () => {
+      toaster.create({
+        title: "성공",
+        description: "거부 처리가 완료되었습니다.",
+        type: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] });
+      onClose();
+    },
+    onError: (error) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "거부 처리 중 오류가 발생했습니다.";
+      toaster.create({
+        title: "거부 처리 실패",
+        description: message,
+        type: "error",
+      });
+    },
+  });
 
   const handleApprove = () => {
     if (!selectedRequest || !currentRefundDetails) return;
@@ -282,154 +317,160 @@ export const ReviewCancelRequestDialog: React.FC<
       <Portal>
         <DialogBackdrop />
         <DialogPositioner>
-          <DialogContent maxW="2xl">
+          <DialogContent maxW="xl">
             <DialogHeader>
               <DialogTitle>
                 취소/환불 검토 - {selectedRequest.userName}
               </DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <Stack gap={6}>
+              <Stack gap={3}>
                 <Fieldset.Root>
-                  <Fieldset.Legend>신청 정보</Fieldset.Legend>
                   <Fieldset.Content>
-                    <Flex gap={4} wrap="wrap">
-                      <Field.Root minW="150px" flexGrow={1}>
+                    <Grid templateColumns="repeat(2, 1fr)" gap={2}>
+                      <Field.Root>
                         <Field.Label>강습명</Field.Label>
-                        <Input value={selectedRequest.lessonTitle} readOnly />
+                        <Input value={selectedRequest?.lessonTitle} readOnly />
                       </Field.Root>
-                      <Field.Root minW="150px" flexGrow={1}>
-                        <Field.Label>강습 시작일</Field.Label>
-                        <Input
-                          value={
-                            selectedRequest.lessonStartDate
-                              ? new Date(
-                                  selectedRequest.lessonStartDate
-                                ).toLocaleDateString()
-                              : "-"
-                          }
-                          readOnly
-                        />
+                      <Field.Root>
+                        <Field.Label>회원명</Field.Label>
+                        <Input value={selectedRequest?.userName} readOnly />
                       </Field.Root>
-                      <Field.Root minW="150px" flexGrow={1}>
+                      <Field.Root>
+                        <Field.Label>회원ID</Field.Label>
+                        <Input value={selectedRequest?.userLoginId} readOnly />
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>연락처</Field.Label>
+                        <Input value={selectedRequest?.userPhone} readOnly />
+                      </Field.Root>
+                      <Field.Root>
                         <Field.Label>결제 총액</Field.Label>
                         <Input
                           value={formatCurrency(
-                            selectedRequest.paidAmount.total
+                            selectedRequest?.paymentInfo?.paidAmt
                           )}
                           readOnly
                         />
                       </Field.Root>
-                      <Field.Root minW="150px" flexGrow={1}>
+                      <Field.Root>
                         <Field.Label>강습료 결제액</Field.Label>
                         <Input
                           value={formatCurrency(
-                            selectedRequest.paidAmount.lesson
+                            selectedRequest?.paymentInfo?.lessonPaidAmt
                           )}
                           readOnly
                         />
                       </Field.Root>
-                      {selectedRequest.usesLocker &&
-                        selectedRequest.paidAmount.locker !== undefined && (
-                          <Field.Root minW="150px" flexGrow={1}>
-                            <Field.Label>사물함 결제액</Field.Label>
-                            <Input
-                              value={formatCurrency(
-                                selectedRequest.paidAmount.locker
-                              )}
-                              readOnly
-                            />
-                          </Field.Root>
-                        )}
-                    </Flex>
-                  </Fieldset.Content>
-                </Fieldset.Root>
-
-                <Field.Root>
-                  <Field.Label>취소 사유</Field.Label>
-                  <Textarea value={selectedRequest.reason} readOnly rows={3} />
-                </Field.Root>
-
-                <Fieldset.Root>
-                  <Fieldset.Legend>환불 계산</Fieldset.Legend>
-                  <Fieldset.Content>
-                    <Stack gap={4}>
+                      {selectedRequest?.paymentInfo?.lockerPaidAmt > 0 && (
+                        <Field.Root>
+                          <Field.Label>사물함 결제액</Field.Label>
+                          <Input
+                            value={formatCurrency(
+                              selectedRequest.paymentInfo.lockerPaidAmt
+                            )}
+                            readOnly
+                          />
+                        </Field.Root>
+                      )}{" "}
                       <Field.Root>
-                        <Field.Label>
-                          실사용일수 (수정 시 미리보기 업데이트)
-                        </Field.Label>
+                        <Field.Label>실사용일수</Field.Label>
                         <Input
                           type="number"
-                          value={manualUsedDaysInput.toString()} // Ensure value is string for input
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setManualUsedDaysInput(
-                              val === "" ? 0 : Math.max(0, parseInt(val, 10))
-                            );
-                          }}
+                          value={manualUsedDaysInput?.toString()}
+                          onChange={(e) => handleUsedDaysChange(e.target.value)}
                           min={0}
                           disabled={previewRefundMutation.isPending}
                         />
                         <Field.HelperText>
                           최초 시스템 계산일:{" "}
-                          {selectedRequest.calculatedRefund.usedDays}일.
-                          {selectedRequest.calculatedRefund.manualUsedDays !==
-                            undefined &&
-                            selectedRequest.calculatedRefund.manualUsedDays !==
-                              selectedRequest.calculatedRefund.usedDays &&
-                            ` (이전 관리자 설정: ${selectedRequest.calculatedRefund.manualUsedDays}일)`}
+                          {
+                            selectedRequest?.calculatedRefundDetails
+                              ?.systemCalculatedUsedDays
+                          }
+                          일
+                          {selectedRequest?.calculatedRefundDetails
+                            ?.manualUsedDays !== null &&
+                            selectedRequest?.calculatedRefundDetails
+                              ?.manualUsedDays !==
+                              selectedRequest?.calculatedRefundDetails
+                                ?.systemCalculatedUsedDays &&
+                            ` (이전 관리자 설정: ${selectedRequest?.calculatedRefundDetails?.manualUsedDays}일)`}
                         </Field.HelperText>
                       </Field.Root>
+                    </Grid>
+                  </Fieldset.Content>
+                </Fieldset.Root>
 
-                      {previewRefundMutation.isPending && <Spinner size="md" />}
-                      {previewRefundMutation.isError && (
-                        <Text color="red.500">미리보기 오류</Text>
-                      )}
-
-                      {displayRefundDetails && (
+                <Fieldset.Root>
+                  <Fieldset.Content>
+                    <Stack gap={4}>
+                      {currentRefundDetails && (
                         <Box
                           p={4}
                           bg="gray.50"
                           _dark={{ bg: "gray.700" }}
                           borderRadius="md"
                         >
-                          <Text fontWeight="bold" mb={3}>
-                            환불 계산 내역 (기준 사용일:{" "}
-                            {displayRefundDetails.manualUsedDays ??
-                              displayRefundDetails.usedDays}
-                            일)
-                          </Text>
-                          <Stack gap={2} fontSize="sm">
-                            <Flex justify="space-between">
-                              <Text>강습료 사용액</Text>
-                              <Text>
-                                -
-                                {formatCurrency(
-                                  displayRefundDetails.lessonUsageAmount
-                                )}
-                              </Text>
-                            </Flex>
-                            <Box
-                              borderTop="1px"
-                              borderColor="gray.300"
-                              _dark={{ borderColor: "gray.600" }}
-                              pt={2}
-                              mt={2}
+                          {" "}
+                          {previewRefundMutation.isPending ? (
+                            <Flex
+                              justify="center"
+                              align="center"
+                              height="120px"
                             >
-                              <Flex
-                                justify="space-between"
-                                fontWeight="bold"
-                                fontSize="md"
-                              >
-                                <Text>최종 환불액</Text>
-                                <Text color="red.500">
-                                  {formatCurrency(
-                                    displayRefundDetails.finalRefundAmount
-                                  )}
-                                </Text>
-                              </Flex>
+                              <Spinner size="md" />
+                            </Flex>
+                          ) : (
+                            <Box height="120px">
+                              {" "}
+                              <Text fontWeight="bold" mb={3}>
+                                환불 계산 내역 (기준 사용일:{" "}
+                                {currentRefundDetails?.manualUsedDays ??
+                                  currentRefundDetails?.usedDays}
+                                일)
+                              </Text>
+                              <Stack gap={2} fontSize="sm">
+                                <Flex justify="space-between">
+                                  <Text>강습료 결제액</Text>
+                                  <Text>
+                                    {formatCurrency(
+                                      currentRefundDetails?.paidLessonAmount
+                                    )}
+                                  </Text>
+                                </Flex>
+                                <Flex justify="space-between">
+                                  <Text>강습료 사용액</Text>
+                                  <Text>
+                                    -
+                                    {formatCurrency(
+                                      currentRefundDetails?.lessonUsageAmount
+                                    )}
+                                  </Text>
+                                </Flex>
+                                <Box
+                                  borderTop="1px"
+                                  borderColor="gray.300"
+                                  _dark={{ borderColor: "gray.600" }}
+                                  pt={2}
+                                  mt={2}
+                                >
+                                  <Flex
+                                    justify="space-between"
+                                    fontWeight="bold"
+                                    fontSize="md"
+                                  >
+                                    <Text>최종 환불액</Text>
+                                    <Text color="red.500">
+                                      {formatCurrency(
+                                        currentRefundDetails?.finalRefundAmount
+                                      )}
+                                    </Text>
+                                  </Flex>
+                                </Box>
+                              </Stack>
                             </Box>
-                          </Stack>
+                          )}
                         </Box>
                       )}
                     </Stack>

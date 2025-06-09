@@ -45,6 +45,8 @@ const KISPGPaymentFrame = forwardRef<
   const messageHandlerRef = useRef<((event: MessageEvent) => void) | null>(
     null
   );
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
+  const [isPaymentSubmitted, setIsPaymentSubmitted] = useState(false);
 
   // 범용 enrollId 추출 함수 - temp_ 및 enroll_ 접두사 모두 처리
   const extractEnrollIdFromResponse = (
@@ -592,11 +594,12 @@ const KISPGPaymentFrame = forwardRef<
       {/* 결제 폼 - JSP의 payInit 폼과 동일 */}
       <form
         ref={formRef}
+        id="kispg_payment_form"
+        name="kispg_payment_form"
         method="POST"
         target="kispg_payment_frame"
         action={
-          process.env.NEXT_PUBLIC_KISPG_URL ||
-          "https://testapi.kispg.co.kr/v2/auth"
+          process.env.NEXT_PUBLIC_KISPG_URL || "https://api.kispg.co.kr/v2/auth"
         }
         acceptCharset="UTF-8"
         style={{ display: "none" }}
@@ -716,7 +719,7 @@ const KISPGPaymentFrame = forwardRef<
                 height: "100%",
                 border: "none",
               }}
-              src=""
+              src={iframeUrl || undefined}
             />
           </Box>
         </Box>

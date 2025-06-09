@@ -774,15 +774,19 @@ interface CancelRequestCalculatedRefundDetails {
   systemCalculatedUsedDays: number;
   manualUsedDays: number | null;
   effectiveUsedDays: number; // Assuming this is part of the details
-  lessonUsageAmount?: number;
-  // lockerUsageAmount?: number; // Removed as locker fee is non-refundable and not part of refund calculation display
-  finalRefundAmount?: number;
+  lessonUsageAmount: number;
+  finalRefundAmount: number;
+  originalLessonPrice: number;
+  paidLessonAmount: number;
+  paidLockerAmount: number;
+  lessonUsageDeduction: number;
 }
 
 export interface CancelRequestAdminDto {
   // Reflects an item from API: /api/v1/cms/enrollments/cancel-requests
   requestId: number; // Assumed based on frontend usage for 'id'
   enrollId: number;
+  lessonId: number;
   userName: string;
   userLoginId?: string; // Kept as optional, ensure backend provides if used
   userPhone?: string; // Kept as optional, ensure backend provides if used
@@ -792,7 +796,7 @@ export interface CancelRequestAdminDto {
   calculatedRefundAmtByNewPolicy?: number; // The top-level refund amount from snippet
   calculatedRefundDetails: CancelRequestCalculatedRefundDetails;
   requestedAt: string; // API uses 'requestedAt'
-  userReason: string; // API uses 'userReason' for the reason provided by the user
+  userReason: string | null;
   adminComment?: string; // API uses 'adminComment'
   status: CancellationRequestRecordStatus | string; // Assumed based on frontend usage & API query params // Allow string
   paymentStatus: EnrollmentPaymentLifecycleStatus | "REFUNDED" | string; // Allow string. "REFUNDED" added based on analysis.
@@ -810,6 +814,21 @@ export interface ApproveCancelRequestDto {
 
 export interface DenyCancelRequestDto {
   adminComment?: string;
+}
+
+export interface RefundCalculationPreviewRequestDto {
+  manualUsedDays?: number;
+}
+
+export interface RefundCalculationPreviewDto {
+  systemCalculatedUsedDays: number;
+  effectiveUsedDays: number;
+  manualUsedDays?: number;
+  lessonUsageDeduction: number;
+  finalRefundAmount: number;
+  paidLessonAmount: number;
+  lockerPaidAmt: number;
+  originalLessonPrice: number;
 }
 
 export interface ManualRefundRequestDto {

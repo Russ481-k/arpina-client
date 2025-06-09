@@ -369,7 +369,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         bg={colors.bg}
       >
         <Spinner size="xl" color="blue.500" />
-        <Text ml={4}>인증 정보를 확인 중입니다...</Text>
       </Box>
     );
   }

@@ -48,7 +48,7 @@ import type {
   TemporaryEnrollmentRequestDto,
 } from "@/types/api";
 import {
-  EnrollmentPaymentLifecycleStatus,
+  UiDisplayStatus,
   ApprovalStatus,
   EnrollmentApplicationStatus,
 } from "@/types/statusTypes";
@@ -67,7 +67,7 @@ import { useColorMode } from "@/components/ui/color-mode";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import { toaster } from "@/components/ui/toaster";
 import { AdminCancelReasonDialog } from "./enrollmentManagement/AdminCancelReasonDialog";
-import { payStatusOptions as defaultPayStatusOptions } from "@/lib/utils/statusUtils";
+import { displayStatusConfig } from "@/lib/utils/statusUtils";
 import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 // Import the new dialog components
@@ -81,7 +81,7 @@ interface EnrollmentData {
   enrollId: number;
   lessonId: number;
   lessonTitle: string;
-  payStatus: EnrollmentPaymentLifecycleStatus | string;
+  payStatus: UiDisplayStatus | string;
   usesLocker: boolean;
   userName: string;
   userGender: string;
@@ -197,14 +197,12 @@ export const EnrollmentManagementTab = ({
   });
 
   const payStatusOptionsForFilter = useMemo(() => {
-    // Assuming defaultPayStatusOptions[0] is { value: "ALL", label: "전체" }
-    // and we want to replace it with our own "전체" option with value: "".
-    const specificStatusOptions = defaultPayStatusOptions
-      .slice(1) // Skip the first item assumed to be "ALL"
-      .map((opt) => ({
-        value: opt.value as EnrollmentPaymentLifecycleStatus, // After slice(1), value is EnrollmentPaymentLifecycleStatus
-        label: opt.label,
-      }));
+    const specificStatusOptions = Object.keys(displayStatusConfig).map(
+      (statusKey) => ({
+        value: statusKey as UiDisplayStatus,
+        label: displayStatusConfig[statusKey as UiDisplayStatus].label,
+      })
+    );
 
     return [{ value: "", label: "전체 납부상태" }, ...specificStatusOptions];
   }, []);
@@ -266,7 +264,7 @@ export const EnrollmentManagementTab = ({
           enrollId: dto.enrollId,
           lessonId: dto.lessonId,
           lessonTitle: dto.lessonTitle,
-          payStatus: dto.payStatus as EnrollmentPaymentLifecycleStatus | string,
+          payStatus: dto.payStatus as UiDisplayStatus | string,
           usesLocker: dto.usesLocker,
           userName: dto.userName,
           userGender: dto.userGender || "기타",
@@ -353,9 +351,7 @@ export const EnrollmentManagementTab = ({
           >
         ) => (
           <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
-            <CommonPayStatusBadge
-              status={params.value as EnrollmentPaymentLifecycleStatus}
-            />
+            <CommonPayStatusBadge status={params.value as UiDisplayStatus} />
           </Flex>
         ),
         cellStyle: {
@@ -590,9 +586,7 @@ export const EnrollmentManagementTab = ({
             onChange: (e) =>
               setFilters((prev) => ({
                 ...prev,
-                payStatus: e.target.value as
-                  | EnrollmentPaymentLifecycleStatus
-                  | "",
+                payStatus: e.target.value as UiDisplayStatus | "",
               })),
             options: payStatusOptionsForFilter,
             maxWidth: "120px",

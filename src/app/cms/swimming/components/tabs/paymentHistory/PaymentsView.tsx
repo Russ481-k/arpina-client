@@ -6,9 +6,10 @@ import { CreditCardIcon } from "lucide-react"; // Keep if used by a renderer
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
-// Import AdminPaymentData as PaymentData and PaymentTransactionStatus from @/types/api and @/types/statusTypes
+// Import AdminPaymentData as PaymentData and the new PaymentStatus
 import type { AdminPaymentData as PaymentData } from "@/types/api";
-import type { PaymentTransactionStatus } from "@/types/statusTypes";
+import type { PaymentStatus, UiDisplayStatus } from "@/types/statusTypes";
+import { displayStatusConfig } from "@/lib/utils/statusUtils"; // Import the centralized config
 import {
   formatPhoneNumberForKISPG,
   formatPhoneNumberWithHyphen,
@@ -19,7 +20,7 @@ import dayjs from "dayjs";
 // interface PaymentData { ... } // This local definition is deleted
 
 interface PaymentsViewProps {
-  payments: PaymentData[]; // Now uses AdminPaymentData aliased as PaymentData, which has status: PaymentTransactionStatus
+  payments: PaymentData[]; // Now uses AdminPaymentData aliased as PaymentData, which should have status: PaymentStatus
   lessonIdFilter?: number | null;
   selectedYear: string; // Added prop
   selectedMonth: string; // Added prop
@@ -47,29 +48,7 @@ const formatDateTime = (dateString: string | undefined | null) => {
   }
 };
 
-// Configuration for PaymentTransactionStatus display
-export const paymentTransactionStatusConfig: Record<
-  PaymentTransactionStatus,
-  { label: string; colorPalette: string; badgeVariant?: "solid" | "outline" }
-> = {
-  PAID: { label: "결제완료", colorPalette: "green", badgeVariant: "solid" },
-  FAILED: { label: "결제실패", colorPalette: "red", badgeVariant: "solid" },
-  CANCELED: {
-    label: "결제취소",
-    colorPalette: "gray",
-    badgeVariant: "outline",
-  },
-  PARTIAL_REFUNDED: {
-    label: "부분환불",
-    colorPalette: "yellow",
-    badgeVariant: "solid",
-  },
-  REFUND_REQUESTED: {
-    label: "환불요청",
-    colorPalette: "blue",
-    badgeVariant: "outline",
-  },
-};
+// Configuration for PaymentTransactionStatus display is now removed.
 
 // PaymentMethodCellRenderer (can be part of this file or shared)
 const PaymentMethodCellRenderer: React.FC<
@@ -99,15 +78,14 @@ const PaymentMethodCellRenderer: React.FC<
   );
 };
 
-// PaymentStatusCellRenderer updated for PaymentTransactionStatus
+// PaymentStatusCellRenderer updated for PaymentStatus
 const PaymentStatusCellRenderer: React.FC<
-  ICellRendererParams<PaymentData, PaymentTransactionStatus>
+  ICellRendererParams<PaymentData, PaymentStatus>
 > = (params) => {
   if (!params.value) return null;
-  const config = paymentTransactionStatusConfig[params.value] || {
-    colorPalette: "gray",
-    label: params.value.toString(),
-  };
+  const config =
+    displayStatusConfig[params.value as UiDisplayStatus] ||
+    displayStatusConfig["FAILED"];
   return (
     <Badge
       colorPalette={config.colorPalette}
@@ -132,21 +110,22 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   const paymentGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [paymentFilters, setPaymentFilters] = useState({
     searchTerm: "",
-    status: "" as PaymentTransactionStatus | "", // Ensure status can be empty string for "all"
+    status: "" as PaymentStatus | "", // Ensure status can be empty string for "all"
   });
 
-  // statusOptions updated for PaymentTransactionStatus
+  // statusOptions updated for PaymentStatus
   const statusOptions: {
-    value: PaymentTransactionStatus | "";
+    value: PaymentStatus | "";
     label: string;
   }[] = [
     { value: "", label: "전체" },
-    ...Object.keys(paymentTransactionStatusConfig).map((statusKey) => ({
-      value: statusKey as PaymentTransactionStatus,
-      label:
-        paymentTransactionStatusConfig[statusKey as PaymentTransactionStatus]
-          .label,
-    })),
+    { value: "PAID", label: displayStatusConfig.PAID.label },
+    { value: "FAILED", label: displayStatusConfig.FAILED.label },
+    { value: "CANCELED", label: displayStatusConfig.CANCELED.label },
+    {
+      value: "PARTIAL_REFUNDED",
+      label: displayStatusConfig.PARTIAL_REFUNDED.label,
+    },
   ];
 
   const handleExportPayments = () => {
@@ -298,7 +277,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             onChange: (e) =>
               setPaymentFilters((prev) => ({
                 ...prev,
-                status: e.target.value as PaymentTransactionStatus | "",
+                status: e.target.value as PaymentStatus | "",
               })),
             options: statusOptions,
             placeholder: "전체",

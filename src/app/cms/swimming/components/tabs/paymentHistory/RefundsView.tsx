@@ -10,8 +10,8 @@ import type {
 } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import type { AdminPaymentData as PaymentData } from "@/types/api";
-import type { PaymentTransactionStatus } from "@/types/statusTypes";
-import { paymentTransactionStatusConfig } from "./PaymentsView";
+import type { PaymentStatus, UiDisplayStatus } from "@/types/statusTypes";
+import { displayStatusConfig } from "@/lib/utils/statusUtils";
 import { CreditCardIcon } from "lucide-react";
 import dayjs from "dayjs";
 
@@ -44,13 +44,12 @@ const formatDateTime = (dateString: string | undefined | null) => {
 };
 
 const PaymentStatusCellRenderer: React.FC<
-  ICellRendererParams<PaymentData, PaymentTransactionStatus>
+  ICellRendererParams<PaymentData, PaymentStatus>
 > = (params) => {
   if (!params.value) return null;
-  const config = paymentTransactionStatusConfig[params.value] || {
-    colorPalette: "gray",
-    label: params.value.toString(),
-  };
+  const config =
+    displayStatusConfig[params.value as UiDisplayStatus] ||
+    displayStatusConfig["FAILED"]; // Use a valid fallback
   return (
     <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
       <Badge
@@ -97,19 +96,19 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
   const refundGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [refundFilters, setRefundFilters] = useState({
     searchTerm: "",
-    status: "" as PaymentTransactionStatus | "",
+    status: "" as PaymentStatus | "",
   });
 
   const refundStatusOptions: {
-    value: PaymentTransactionStatus | "";
+    value: PaymentStatus | "";
     label: string;
   }[] = [
     { value: "", label: "전체 상태" },
+    { value: "CANCELED", label: displayStatusConfig.CANCELED.label },
     {
       value: "PARTIAL_REFUNDED",
-      label: paymentTransactionStatusConfig.PARTIAL_REFUNDED.label,
+      label: displayStatusConfig.PARTIAL_REFUNDED.label,
     },
-    { value: "CANCELED", label: paymentTransactionStatusConfig.CANCELED.label },
   ];
 
   const handleExportRefunds = () => {
@@ -265,7 +264,7 @@ export const RefundsView: React.FC<RefundsViewProps> = ({
             onChange: (e) =>
               setRefundFilters((prev) => ({
                 ...prev,
-                status: e.target.value as PaymentTransactionStatus | "",
+                status: e.target.value as PaymentStatus | "",
               })),
             options: refundStatusOptions,
             placeholder: "전체 상태",
