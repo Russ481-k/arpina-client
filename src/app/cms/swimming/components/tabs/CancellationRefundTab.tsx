@@ -145,10 +145,7 @@ const ActionCellRenderer: React.FC<
   }
 
   // 관리자 직권 취소 건 (환불 필요 시 "환불 처리" 버튼)
-  if (
-    cancellationProcessingStatus === "ADMIN_CANCELED" &&
-    paymentStatus === "REFUND_PENDING_ADMIN_CANCEL"
-  ) {
+  if (paymentStatus === "REFUND_PENDING_ADMIN_CANCEL") {
     return (
       <Button
         size="xs"
