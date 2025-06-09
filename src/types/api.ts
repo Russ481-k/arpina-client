@@ -832,6 +832,7 @@ export interface RefundCalculationPreviewDto {
 }
 
 export interface ManualRefundRequestDto {
+  enrollmentId: number;
   refundAmount: number;
   reason: string;
   // Potentially other details required for KISPG manual refund logging
@@ -1070,12 +1071,14 @@ export interface AdminPaymentData {
   discountAmount?: number; // Keep as optional, for potential future use or other data sources
   refundedAmount: number | null; // Matches PaymentAdminDto.refunded_amt
   paymentMethod: string; // From PaymentAdminDto.payMethod
-  paymentGateway?: string | null; // From PaymentAdminDto.pgProvider
+  paymentGateway: string | null;
   status: PaymentTransactionStatus;
-  paidAt: string; // ISO DateTime string (assuming non-null from API for successful payments)
-  lastRefundAt?: string; // ISO DateTime string
-  orderNo?: string; // Keep as optional
-  memberType?: string; // Keep as optional
-  lockerFee?: number; // Keep as optional
-  pgResultCode?: string; // Added from PaymentAdminDto
+  paidAt: string | null;
+  refundedAt: string | null;
+  cancellationReason: string | null;
+  pgResultCode: string | null;
+
+  // For UI state management, not from backend directly
+  pgResultMsg?: string;
+  pgQueryResult?: any;
 }

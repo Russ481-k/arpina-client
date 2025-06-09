@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
-import { Box, Text, Stack, Badge, Flex } from "@chakra-ui/react";
+import { Box, Text, Stack, Badge, Flex, Button } from "@chakra-ui/react";
 import { CreditCardIcon } from "lucide-react"; // Keep if used by a renderer
 import { AgGridReact } from "ag-grid-react";
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import type { ColDef, ICellRendererParams, GridApi } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 // Import AdminPaymentData as PaymentData and the new PaymentStatus
 import type { AdminPaymentData as PaymentData } from "@/types/api";
@@ -20,15 +20,13 @@ import dayjs from "dayjs";
 // interface PaymentData { ... } // This local definition is deleted
 
 interface PaymentsViewProps {
-  payments: PaymentData[]; // Now uses AdminPaymentData aliased as PaymentData, which should have status: PaymentStatus
-  lessonIdFilter?: number | null;
-  selectedYear: string; // Added prop
-  selectedMonth: string; // Added prop
+  payments: PaymentData[];
   agGridTheme: string;
   bg: string;
   textColor: string;
   borderColor: string;
-  // Pass any other shared props like colors if needed by renderers
+  onQueryPg: (tid: string, amt: number) => void;
+  setGridApi: (api: GridApi<PaymentData>) => void;
 }
 
 // Shared utility or helper functions (consider moving to a common file)
@@ -97,15 +95,43 @@ const PaymentStatusCellRenderer: React.FC<
   );
 };
 
+const PgQueryCellRenderer: React.FC<
+  ICellRendererParams<PaymentData> & {
+    onQueryPg: (tid: string, amt: number) => void;
+  }
+> = (params) => {
+  const { data, onQueryPg } = params;
+
+  const handleClick = () => {
+    if (data?.tid && data.paidAmount) {
+      onQueryPg(data.tid, data.paidAmount);
+    }
+  };
+
+  const buttonDisabled = !data?.tid || data.paidAmount === undefined;
+
+  return (
+    <Flex align="center" h="100%">
+      <Button
+        size="xs"
+        colorScheme="teal"
+        onClick={handleClick}
+        disabled={buttonDisabled}
+      >
+        PG조회
+      </Button>
+    </Flex>
+  );
+};
+
 export const PaymentsView: React.FC<PaymentsViewProps> = ({
   payments,
-  lessonIdFilter,
-  selectedYear,
-  selectedMonth,
   agGridTheme,
   bg,
   textColor,
   borderColor,
+  onQueryPg,
+  setGridApi,
 }) => {
   const paymentGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [paymentFilters, setPaymentFilters] = useState({
@@ -194,7 +220,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "paidAmount",
         valueFormatter: (params) => formatCurrency(params.value),
         width: 110,
-        cellStyle: { justifyContent: "flex-end" },
+        cellStyle: { textAlign: "right" },
         sortable: true,
         filter: "agNumberColumnFilter",
       },
@@ -203,7 +229,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "refundedAmount",
         valueFormatter: (params) => formatCurrency(params.value),
         width: 110,
-        cellStyle: { justifyContent: "flex-end" },
+        cellStyle: { textAlign: "right" },
         sortable: true,
         filter: "agNumberColumnFilter",
       },
@@ -212,7 +238,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "paymentMethod",
         cellRenderer: PaymentMethodCellRenderer,
         width: 110,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: { textAlign: "center" },
         sortable: true,
       },
       {
@@ -239,11 +265,26 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "status",
         cellRenderer: PaymentStatusCellRenderer,
         width: 100,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: { textAlign: "center" },
         sortable: true,
       },
+      {
+        headerName: "PG 처리 상태",
+        field: "pgResultMsg" as any,
+        width: 150,
+        sortable: true,
+      },
+      {
+        headerName: "PG 조회",
+        cellRenderer: PgQueryCellRenderer,
+        cellRendererParams: {
+          onQueryPg: onQueryPg,
+        },
+        width: 100,
+        cellStyle: { textAlign: "center" },
+      },
     ],
-    []
+    [onQueryPg]
   );
 
   const defaultColDef = useMemo<ColDef>(
@@ -289,7 +330,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         showSearchButton={true}
       />
 
-      <Box className={agGridTheme} h="510px" w="full">
+      <Box className={agGridTheme} h="568px" w="full">
         <AgGridReact<PaymentData>
           ref={paymentGridRef}
           rowData={filteredPayments}
@@ -305,6 +346,8 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             borderBottom: `1px solid ${borderColor}`,
           })}
           animateRows={true}
+          onGridReady={(params) => setGridApi(params.api)}
+          getRowId={(params) => params.data.tid}
         />
       </Box>
     </Stack>
