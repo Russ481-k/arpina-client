@@ -135,10 +135,12 @@ const ActionCellRenderer: React.FC<
         size="xs"
         colorPalette="teal"
         variant="outline"
-        disabled={data.cancellationProcessingStatus !== null}
+        disabled={data.cancellationProcessingStatus !== "REQ"}
         onClick={() => context.openReviewDialog(data)}
       >
-        {data.cancellationProcessingStatus !== null ? "검토 완료" : "환불 검토"}
+        {data.cancellationProcessingStatus !== "REQ"
+          ? "검토 완료"
+          : "환불 검토"}
       </Button>
     );
   }
