@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Text, Box, Flex } from "@chakra-ui/react";
 import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
-import {
-  EnrollmentPaymentLifecycleStatus,
-  EnrollmentCancellationProgressStatus,
-} from "@/types/statusTypes";
+import { UiDisplayStatus } from "@/types/statusTypes";
 import dayjs from "dayjs";
 
 // Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
@@ -139,39 +136,35 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   }, [lesson.id, lesson.reservationId, enrollment, isCountingDown]);
 
   if (enrollment) {
-    const enrollStatus = enrollment.status as EnrollmentPaymentLifecycleStatus;
-    const cancelStatus =
-      enrollment.cancelStatus as EnrollmentCancellationProgressStatus;
+    const enrollStatus = enrollment.status as UiDisplayStatus;
     const { enrollId } = enrollment;
 
-    if (
-      enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
-      cancelStatus === "APPROVED"
-    ) {
+    // '취소' 관련 상태들을 우선적으로 처리합니다.
+    if (enrollStatus === "CANCELED") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
           <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
-              관리자 확인 취소
+              취소 완료
             </Text>
           </Button>
         </Flex>
       );
     }
 
-    if (enrollStatus === "CANCELED_UNPAID") {
+    if (enrollStatus === "REFUND_REQUESTED") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              취소 완료 (미결제)
+          <Button variant="outline" colorPalette="blue" w="100%" disabled>
+            <Text color="blue.500" fontSize="sm">
+              환불 요청됨
             </Text>
           </Button>
         </Flex>
       );
     }
 
-    if (enrollStatus === "UNPAID") {
+    if (enrollStatus === "PAYMENT_PENDING") {
       return (
         <Flex align="center" gap={3} w="100%">
           <Flex direction="column" align="center" gap={2} w="50%">
@@ -220,23 +213,20 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       );
     }
 
-    // Handle other statuses: PAYMENT_TIMEOUT, PARTIALLY_REFUNDED, REFUNDED
-    // REFUND_PENDING_ADMIN_CANCEL and CANCELED_UNPAID are handled above.
-    // UNPAID and PAID are handled above.
+    // Handle other statuses: FAILED, PARTIAL_REFUNDED
     return (
       <Flex direction="column" align="center" gap={2} w="100%">
         <Text fontSize="sm" color="gray.500" textAlign="center">
-          상태: {enrollment.status}{" "}
-          {/* Display original string or map to label */}
+          상태: {enrollment.status}
         </Text>
-        {/* Show cancel button only for PARTIALLY_REFUNDED in this "other" block */}
-        {onRequestCancel && enrollStatus === "PARTIALLY_REFUNDED" && (
+        {/* '부분 환불' 상태일 때만 추가적인 취소/환불 요청 버튼을 보여줍니다. */}
+        {onRequestCancel && enrollStatus === "PARTIAL_REFUNDED" && (
           <Button
             colorPalette="red"
             w="100%"
             onClick={() => onRequestCancel(enrollId)}
           >
-            취소 신청
+            추가 환불 요청
           </Button>
         )}
       </Flex>
