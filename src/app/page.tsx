@@ -299,10 +299,17 @@ export default function Home() {
                 <Box w="100%" h="100%">
                   <Image
                     src="/images/main/main_0.png"
-                    alt="새로운 여정의 시작"
+                    alt="호텔 실시간 예약"
                     w="100%"
                     h="100%"
                     objectFit="cover"
+                    cursor="pointer"
+                    onClick={() => {
+                      window.open(
+                        "https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA",
+                        "_blank"
+                      );
+                    }}
                   />
                 </Box>
               </Box>
