@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, List, Heading, VStack } from "@chakra-ui/react";
+import { Box, List, Heading, VStack, Text } from "@chakra-ui/react";
 
 interface InfoBoxList01Props {
   items: string[];
@@ -23,13 +23,14 @@ export default function InfoBoxList01({
         padding: "20px",
       }}
     >
-      <VStack align="stretch">
+      <Box>
         {title && (
           <Heading
             as="h3"
             fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
             fontWeight="500"
             color="#373636"
+            mb={subtitle ? 2 : 0}
           >
             - {title}
           </Heading>
@@ -65,7 +66,7 @@ export default function InfoBoxList01({
             </List.Item>
           ))}
         </List.Root>
-      </VStack>
+      </Box>
     </Box>
   );
 }
