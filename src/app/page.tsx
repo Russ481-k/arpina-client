@@ -297,7 +297,13 @@ export default function Home() {
                 overflow="hidden"
               >
                 <Box w="100%" h="100%">
-                  이미지 영역
+                  <Image
+                    src="/images/main/main_0.png"
+                    alt="새로운 여정의 시작"
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                  />
                 </Box>
               </Box>
             </Flex>
