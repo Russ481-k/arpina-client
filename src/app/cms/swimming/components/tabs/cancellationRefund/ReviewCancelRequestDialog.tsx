@@ -115,6 +115,12 @@ const formatCurrency = (
   return showWon ? formatted + "원" : formatted;
 };
 
+const formatNumberWithCommas = (value: string | number): string => {
+  const num = String(value).replace(/[^0-9]/g, "");
+  if (num === "") return "";
+  return new Intl.NumberFormat("ko-KR").format(Number(num));
+};
+
 export const ReviewCancelRequestDialog: React.FC<
   ReviewCancelRequestDialogProps
 > = ({ isOpen, onClose, selectedRequest }) => {
@@ -155,7 +161,9 @@ export const ReviewCancelRequestDialog: React.FC<
       setIsFullRefund(false); // Reset checkbox on open
       setIsOverrideMode(false);
       setFinalRefundAmountInput(
-        String(selectedRequest.calculatedRefundDetails?.finalRefundAmount || 0)
+        formatNumberWithCommas(
+          selectedRequest.calculatedRefundDetails?.finalRefundAmount || 0
+        )
       );
 
       // 초기 API 호출
@@ -179,7 +187,9 @@ export const ReviewCancelRequestDialog: React.FC<
   // Update final refund input when preview details change, but only if not in override mode
   useEffect(() => {
     if (currentRefundDetails && !isOverrideMode && !isFullRefund) {
-      setFinalRefundAmountInput(String(currentRefundDetails.finalRefundAmount));
+      setFinalRefundAmountInput(
+        formatNumberWithCommas(currentRefundDetails.finalRefundAmount)
+      );
     }
   }, [currentRefundDetails, isOverrideMode, isFullRefund]);
 
@@ -188,21 +198,22 @@ export const ReviewCancelRequestDialog: React.FC<
     setIsFullRefund(checked);
     if (checked) {
       const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
-      setFinalRefundAmountInput(String(totalPaid));
+      setFinalRefundAmountInput(formatNumberWithCommas(totalPaid));
     } else {
       // Revert to calculated amount. The useEffect hook will handle the update.
       setFinalRefundAmountInput(
-        String(currentRefundDetails?.finalRefundAmount ?? 0)
+        formatNumberWithCommas(currentRefundDetails?.finalRefundAmount ?? 0)
       );
     }
   };
 
   const handleFinalRefundAmountChange = (value: string) => {
     setIsOverrideMode(true); // Enter override mode
-    setFinalRefundAmountInput(value);
+    const formattedValue = formatNumberWithCommas(value);
+    setFinalRefundAmountInput(formattedValue);
 
     const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
-    const numericValue = parseInt(value, 10);
+    const numericValue = parseInt(value.replace(/[^0-9]/g, ""), 10);
     if (!isNaN(numericValue) && numericValue === totalPaid) {
       setIsFullRefund(true);
     } else {
@@ -258,7 +269,7 @@ export const ReviewCancelRequestDialog: React.FC<
         // API 응답의 isFullRefund 값을 사용하여 UI 상태 업데이트
         if (refundDetailsPreview.isFullRefund) {
           const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
-          setFinalRefundAmountInput(String(totalPaid));
+          setFinalRefundAmountInput(formatNumberWithCommas(totalPaid));
         }
 
         setIsFullRefund(refundDetailsPreview.isFullRefund);
@@ -344,7 +355,10 @@ export const ReviewCancelRequestDialog: React.FC<
 
   const handleApprove = () => {
     if (!selectedRequest) return;
-    const finalAmount = parseInt(finalRefundAmountInput, 10);
+    const finalAmount = parseInt(
+      finalRefundAmountInput.replace(/[^0-9]/g, ""),
+      10
+    );
     if (isNaN(finalAmount) || finalAmount < 0) {
       toaster.create({
         title: "입력 오류",
@@ -484,12 +498,12 @@ export const ReviewCancelRequestDialog: React.FC<
                             <Flex
                               justify="center"
                               align="center"
-                              height="120px"
+                              height="150px"
                             >
                               <Spinner size="md" />
                             </Flex>
                           ) : (
-                            <Box height="120px">
+                            <Box height="150px">
                               {" "}
                               <Text fontWeight="bold" mb={3}>
                                 환불 계산 내역 (기준 사용일:{" "}
@@ -515,13 +529,7 @@ export const ReviewCancelRequestDialog: React.FC<
                                     )}
                                   </Text>
                                 </Flex>
-                                <Box
-                                  borderTop="1px"
-                                  borderColor="gray.300"
-                                  _dark={{ borderColor: "gray.600" }}
-                                  pt={2}
-                                  mt={2}
-                                >
+                                <Box>
                                   <Flex
                                     justify="space-between"
                                     fontWeight="bold"
@@ -529,23 +537,37 @@ export const ReviewCancelRequestDialog: React.FC<
                                     align="center"
                                   >
                                     <Text>최종 환불액</Text>
-                                    <Input
-                                      type="number"
+                                    <Flex
                                       w="150px"
-                                      textAlign="right"
-                                      color="red.500"
-                                      value={finalRefundAmountInput}
-                                      onChange={(e) =>
-                                        handleFinalRefundAmountChange(
-                                          e.target.value
-                                        )
-                                      }
-                                      disabled={
-                                        isFullRefund ||
-                                        previewRefundMutation.isPending
-                                      }
-                                      min={0}
-                                    />
+                                      align="center"
+                                      pos="relative"
+                                    >
+                                      <Input
+                                        textAlign="right"
+                                        color="red.500"
+                                        value={finalRefundAmountInput}
+                                        onChange={(e) =>
+                                          handleFinalRefundAmountChange(
+                                            e.target.value
+                                          )
+                                        }
+                                        disabled={
+                                          isFullRefund ||
+                                          previewRefundMutation.isPending
+                                        }
+                                        pr="2.5rem"
+                                        inputMode="numeric"
+                                      />
+                                      <Box
+                                        pos="absolute"
+                                        right="0.75rem"
+                                        zIndex="docked"
+                                      >
+                                        <Text as="span" color="red.500">
+                                          원
+                                        </Text>
+                                      </Box>
+                                    </Flex>
                                   </Flex>
                                 </Box>
                               </Stack>
