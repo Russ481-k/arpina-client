@@ -156,8 +156,9 @@ const ActionCellRenderer: React.FC<
             context.openReviewDialog(data);
         }}
       >
-        취소 처리{" "}
-        {cancellationProcessingStatus === "ADMIN_CANCELED" && "(관리자 취소)"}
+        {cancellationProcessingStatus === "ADMIN_CANCELED"
+          ? "환불 처리"
+          : "취소 처리"}
       </Button>
     );
   }
