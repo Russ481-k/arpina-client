@@ -161,8 +161,9 @@ export const ReviewCancelRequestDialog: React.FC<
       setIsFullRefund(false); // Reset checkbox on open
       setIsOverrideMode(false);
       setFinalRefundAmountInput(
-        formatNumberWithCommas(
-          selectedRequest.calculatedRefundDetails?.finalRefundAmount || 0
+        formatCurrency(
+          selectedRequest.calculatedRefundDetails?.finalRefundAmount || 0,
+          false
         )
       );
 
@@ -188,7 +189,7 @@ export const ReviewCancelRequestDialog: React.FC<
   useEffect(() => {
     if (currentRefundDetails && !isOverrideMode && !isFullRefund) {
       setFinalRefundAmountInput(
-        formatNumberWithCommas(currentRefundDetails.finalRefundAmount)
+        formatCurrency(currentRefundDetails.finalRefundAmount, false)
       );
     }
   }, [currentRefundDetails, isOverrideMode, isFullRefund]);
@@ -198,22 +199,24 @@ export const ReviewCancelRequestDialog: React.FC<
     setIsFullRefund(checked);
     if (checked) {
       const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
-      setFinalRefundAmountInput(formatNumberWithCommas(totalPaid));
+      setFinalRefundAmountInput(formatCurrency(totalPaid, false));
     } else {
       // Revert to calculated amount. The useEffect hook will handle the update.
       setFinalRefundAmountInput(
-        formatNumberWithCommas(currentRefundDetails?.finalRefundAmount ?? 0)
+        formatCurrency(currentRefundDetails?.finalRefundAmount ?? 0, false)
       );
     }
   };
 
   const handleFinalRefundAmountChange = (value: string) => {
     setIsOverrideMode(true); // Enter override mode
-    const formattedValue = formatNumberWithCommas(value);
+    const numericString = value.replace(/[^0-9]/g, "");
+    const numericValue = parseInt(numericString, 10);
+    const formattedValue =
+      numericString === "" ? "" : formatCurrency(numericValue, false);
     setFinalRefundAmountInput(formattedValue);
 
     const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
-    const numericValue = parseInt(value.replace(/[^0-9]/g, ""), 10);
     if (!isNaN(numericValue) && numericValue === totalPaid) {
       setIsFullRefund(true);
     } else {
@@ -269,7 +272,7 @@ export const ReviewCancelRequestDialog: React.FC<
         // API 응답의 isFullRefund 값을 사용하여 UI 상태 업데이트
         if (refundDetailsPreview.isFullRefund) {
           const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
-          setFinalRefundAmountInput(formatNumberWithCommas(totalPaid));
+          setFinalRefundAmountInput(formatCurrency(totalPaid, false));
         }
 
         setIsFullRefund(refundDetailsPreview.isFullRefund);
@@ -355,26 +358,39 @@ export const ReviewCancelRequestDialog: React.FC<
 
   const handleApprove = () => {
     if (!selectedRequest) return;
-    const finalAmount = parseInt(
-      finalRefundAmountInput.replace(/[^0-9]/g, ""),
-      10
-    );
-    if (isNaN(finalAmount) || finalAmount < 0) {
-      toaster.create({
-        title: "입력 오류",
-        description: "유효한 환불 금액을 입력해주세요.",
-        type: "error",
-      });
-      return;
+
+    let requestData: ApproveCancelRequestDto = {
+      adminComment: adminComment || undefined,
+    };
+
+    if (isOverrideMode) {
+      const finalAmount = parseInt(
+        finalRefundAmountInput.replace(/[^0-9]/g, ""),
+        10
+      );
+      if (isNaN(finalAmount) || finalAmount < 0) {
+        toaster.create({
+          title: "입력 오류",
+          description: "유효한 환불 금액을 입력해주세요.",
+          type: "error",
+        });
+        return;
+      }
+      requestData = {
+        ...requestData,
+        finalRefundAmount: finalAmount,
+        isFullRefund: isFullRefund,
+      };
+    } else {
+      requestData = {
+        ...requestData,
+        manualUsedDays: manualUsedDaysInput,
+      };
     }
 
     approveMutation.mutate({
       enrollId: selectedRequest.enrollId,
-      data: {
-        adminComment: adminComment,
-        refundAmount: finalAmount, // Use the state value
-        manualUsedDays: manualUsedDaysInput,
-      },
+      data: requestData,
     });
   };
 

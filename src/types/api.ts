@@ -807,9 +807,10 @@ export interface CancelRequestAdminDto {
 }
 
 export interface ApproveCancelRequestDto {
-  manualUsedDays?: number;
   adminComment?: string;
-  refundAmount: number;
+  manualUsedDays?: number;
+  finalRefundAmount?: number;
+  isFullRefund?: boolean;
 }
 
 export interface DenyCancelRequestDto {
