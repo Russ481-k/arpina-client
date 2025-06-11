@@ -7,7 +7,7 @@ import InfoBoxList01 from "@/components/contents/InfoBoxList01";
 import InfoBoxList02 from "@/components/contents/InfoBoxList02";
 import HeadingH401 from "@/components/contents/HeadingH401";
 
-export default function FeePage() {
+export default function SportsFeePage() {
   const tableRows01 = [
     // Header rows
     {
@@ -118,7 +118,6 @@ export default function FeePage() {
       ],
     },
   ];
-
   const tableRows04 = [
     {
       isHeader: true,

@@ -68,7 +68,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7586]-레저스포츠체험-초등-일정표.pdf"
+              href="/public/files/[7586]-레저스포츠체험-초등-일정표.pdf"
               title="레저스포츠 체험활동 일정표"
             />
           ),
@@ -88,7 +88,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7525]-레저스포츠체험-중등-일정표.pdf"
+              href="/public/files/[7525]-레저스포츠체험-중등-일정표.pdf"
               title="레저스포츠 체험활동 일정표"
             />
           ),
@@ -108,7 +108,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[9302]-R고보면-우리는-친구-일정표.pdf"
+              href="/public/files/[9302]-R고보면-우리는-친구-일정표.pdf"
               title="R고보면 우리는 친구 일정표"
             />
           ),
@@ -128,7 +128,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[9685]-꿈을-향해-도전!-도전!-일정표.pdf"
+              href="/public/files/[9685]-꿈을-향해-도전!-도전!-일정표.pdf"
               title="꿈을 향해 도전! 도전! 일정표"
             />
           ),
@@ -148,7 +148,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[9301]-안녕!-친구야-일정표.pdf"
+              href="/public/files/[9301]-안녕!-친구야-일정표.pdf"
               title="안녕! 친구야 일정표"
             />
           ),
@@ -168,7 +168,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[9452]-주인공은-나야~나!-일정표.pdf"
+              href="/public/files/[9452]-주인공은-나야~나!-일정표.pdf"
               title="주인공은 나야~나! 일정표"
             />
           ),
@@ -188,7 +188,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[8693]-함께가자-친구야-일정표.pdf"
+              href="/public/files/[8693]-함께가자-친구야-일정표.pdf"
               title="함께가자 친구야 일정표"
             />
           ),
@@ -208,7 +208,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[8617]-창의력-날개달기-일정표.pdf"
+              href="/public/files/[8617]-창의력-날개달기-일정표.pdf"
               title="창의력 날개달기 일정표"
             />
           ),
@@ -230,7 +230,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7794]-도전하는-리더(초등)-일정표.pdf"
+              href="/public/files/[7794]-도전하는-리더(초등)-일정표.pdf"
               title="도전하는리더 일정표"
             />
           ),
@@ -250,7 +250,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7585]-도전하는-리더(중등)-일정표.pdf"
+              href="/public/files/[7585]-도전하는-리더(중등)-일정표.pdf"
               title="도전하는리더 일정표"
             />
           ),
@@ -270,7 +270,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7663]-도전하는-리더(고등)-일정표.pdf"
+              href="/public/files/[7663]-도전하는-리더(고등)-일정표.pdf"
               title="도전하는리더 일정표"
             />
           ),
@@ -290,7 +290,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[9204]-리더가-리더에게-일정표.pdf"
+              href="/public/files/[9204]-리더가-리더에게-일정표.pdf"
               title="리더가 리더에게 일정표"
             />
           ),
@@ -310,7 +310,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[9341]-리더의-품격-일정표.pdf"
+              href="/public/files/[9341]-리더의-품격-일정표.pdf"
               title="리더의 품격 일정표"
             />
           ),
@@ -330,7 +330,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[9154]-자신감UP-인성UP-리더십-일정표.pdf"
+              href="/public/files/[9154]-자신감UP-인성UP-리더십-일정표.pdf"
               title="자신감 UP 인성Up 리더십 일정표"
             />
           ),
@@ -350,7 +350,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7021]-친구야-함께가자-일정표.pdf"
+              href="/public/files/[7021]-친구야-함께가자-일정표.pdf"
               title="친구야 함께가자 일정표"
             />
           ),
@@ -370,7 +370,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[8571]-하나되는-우리-일정표.pdf"
+              href="/public/files/[8571]-하나되는-우리-일정표.pdf"
               title="하나되는 우리 일정표"
             />
           ),
@@ -390,7 +390,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[8631]-하나된-열정,-하나된-우리-일정표.pdf"
+              href="/public/files/[8631]-하나된-열정,-하나된-우리-일정표.pdf"
               title="하나된 열정, 하나된 우리 일정표"
             />
           ),
@@ -410,7 +410,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[8572]-함께가는-우리-일정표.pdf"
+              href="/public/files/[8572]-함께가는-우리-일정표.pdf"
               title="함께가는 우리 일정표"
             />
           ),
@@ -432,7 +432,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7020]-반갑다-친구야-일정표.pdf"
+              href="/public/files/[7020]-반갑다-친구야-일정표.pdf"
               title="반갑다친구야 일정표"
             />
           ),
@@ -452,7 +452,7 @@ export default function YouthActivityPage() {
         {
           content: (
             <DownloadLink
-              href="/resources/homepage/kor/_Img/Content/[7618]-위아더-프렌드-일정표.pdf"
+              href="/public/files/[7618]-위아더-프렌드-일정표.pdf"
               title="위아더프렌드 일정표"
             />
           ),
@@ -464,7 +464,7 @@ export default function YouthActivityPage() {
   return (
     <PageContainer>
       <Box>
-        <InfoBoxList01 title="청소년수련 활동인증제" items={infoItems01} />
+        <InfoBoxList01 title="청소년 수련활동동" items={infoItems01} />
       </Box>
       <Box mt={10}>
         <InfoBoxList02

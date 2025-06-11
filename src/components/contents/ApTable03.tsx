@@ -40,6 +40,9 @@ export default function ApTable03({
 
   return (
     <Box className="ap-table-box">
+      {visuallyHiddenText && (
+        <VisuallyHidden>{visuallyHiddenText}</VisuallyHidden>
+      )}
       <Table.Root
         className={className}
         style={{
@@ -48,9 +51,6 @@ export default function ApTable03({
           ...tableStyle,
         }}
       >
-        {visuallyHiddenText && (
-          <VisuallyHidden>{visuallyHiddenText}</VisuallyHidden>
-        )}
         <Table.Header>
           {headerRows.map((row, rowIndex) => (
             <Table.Row key={`header-row-${rowIndex}`} style={row.style}>
