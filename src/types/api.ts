@@ -807,9 +807,9 @@ export interface CancelRequestAdminDto {
 }
 
 export interface ApproveCancelRequestDto {
-  manualUsedDays?: number; // Optional, if admin adjusts used days
+  manualUsedDays?: number;
   adminComment?: string;
-  // KISPG refund parameters might be needed here if refund is triggered by this call
+  refundAmount: number;
 }
 
 export interface DenyCancelRequestDto {
@@ -822,13 +822,14 @@ export interface RefundCalculationPreviewRequestDto {
 
 export interface RefundCalculationPreviewDto {
   systemCalculatedUsedDays: number;
+  manualUsedDays: number | null;
   effectiveUsedDays: number;
-  manualUsedDays?: number;
+  originalLessonPrice: number;
+  paidLessonAmount: number;
+  lockerPaidAmt: number; // API 응답 필드 이름이 lockerPaidAmt일 경우. paidLockerAmount가 맞다면 그것으로 사용
   lessonUsageDeduction: number;
   finalRefundAmount: number;
-  paidLessonAmount: number;
-  lockerPaidAmt: number;
-  originalLessonPrice: number;
+  isFullRefund: boolean;
 }
 
 export interface ManualRefundRequestDto {

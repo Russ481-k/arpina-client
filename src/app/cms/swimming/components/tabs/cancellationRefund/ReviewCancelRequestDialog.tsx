@@ -23,6 +23,7 @@ import {
   Spinner,
   Portal,
   Grid,
+  Checkbox,
 } from "@chakra-ui/react";
 import { CheckIcon, XIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -122,6 +123,8 @@ export const ReviewCancelRequestDialog: React.FC<
   const [adminComment, setAdminComment] = useState("");
   const [currentRefundDetails, setCurrentRefundDetails] =
     useState<UICalculatedRefundDetails | null>(null);
+  const [isFullRefund, setIsFullRefund] = useState(false);
+  const [finalRefundAmountInput, setFinalRefundAmountInput] = useState("0");
 
   // 다이얼로그가 열릴 때 초기값 설정 및 API 호출
   useEffect(() => {
@@ -148,6 +151,10 @@ export const ReviewCancelRequestDialog: React.FC<
           selectedRequest.calculatedRefundDetails?.paidLockerAmount,
       });
       setAdminComment("");
+      setIsFullRefund(false); // Reset checkbox on open
+      setFinalRefundAmountInput(
+        String(selectedRequest.calculatedRefundDetails?.finalRefundAmount || 0)
+      );
 
       // 초기 API 호출
       previewRefundMutation.mutate({
@@ -158,11 +165,33 @@ export const ReviewCancelRequestDialog: React.FC<
       setManualUsedDaysInput(0);
       setAdminComment("");
       setCurrentRefundDetails(null);
+      setIsFullRefund(false);
+      setFinalRefundAmountInput("0");
       previewRefundMutation.reset();
       approveMutation.reset();
       denyMutation.reset();
     }
   }, [selectedRequest, isOpen]);
+
+  // Update final refund input when preview details change
+  useEffect(() => {
+    if (currentRefundDetails && !isFullRefund) {
+      setFinalRefundAmountInput(String(currentRefundDetails.finalRefundAmount));
+    }
+  }, [currentRefundDetails, isFullRefund]);
+
+  const handleFullRefundChange = (checked: boolean) => {
+    setIsFullRefund(checked);
+    if (checked) {
+      const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
+      setFinalRefundAmountInput(String(totalPaid));
+    } else {
+      // Revert to calculated amount
+      setFinalRefundAmountInput(
+        String(currentRefundDetails?.finalRefundAmount ?? 0)
+      );
+    }
+  };
 
   const handleUsedDaysChange = (value: string) => {
     const days = value === "" ? 0 : Math.max(0, parseInt(value, 10));
@@ -207,6 +236,10 @@ export const ReviewCancelRequestDialog: React.FC<
           paidLockerAmount: refundDetailsPreview.lockerPaidAmt,
         };
         setCurrentRefundDetails(newRefundDetails);
+
+        // API 응답의 isFullRefund 값을 사용하여 UI 상태 업데이트
+        handleFullRefundChange(refundDetailsPreview.isFullRefund);
+
         toaster.create({
           title: "환불액 미리보기 업데이트됨",
           description: `환불 예정액: ${formatCurrency(
@@ -286,14 +319,24 @@ export const ReviewCancelRequestDialog: React.FC<
   });
 
   const handleApprove = () => {
-    if (!selectedRequest || !currentRefundDetails) return;
-    const approvalData: ApproveCancelRequestDto = {
-      manualUsedDays: manualUsedDaysInput,
-      adminComment: adminComment || undefined,
-    };
+    if (!selectedRequest) return;
+    const finalAmount = parseInt(finalRefundAmountInput, 10);
+    if (isNaN(finalAmount) || finalAmount < 0) {
+      toaster.create({
+        title: "입력 오류",
+        description: "유효한 환불 금액을 입력해주세요.",
+        type: "error",
+      });
+      return;
+    }
+
     approveMutation.mutate({
       enrollId: selectedRequest.enrollId,
-      data: approvalData,
+      data: {
+        adminComment: adminComment,
+        refundAmount: finalAmount, // Use the state value
+        manualUsedDays: manualUsedDaysInput,
+      },
     });
   };
 
@@ -476,6 +519,34 @@ export const ReviewCancelRequestDialog: React.FC<
                     </Stack>
                   </Fieldset.Content>
                 </Fieldset.Root>
+
+                <Stack direction="column" gap={4} my={4}>
+                  <Checkbox.Root
+                    checked={isFullRefund}
+                    onCheckedChange={(details) =>
+                      handleFullRefundChange(details.checked === true)
+                    }
+                  >
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control />
+                    <Checkbox.Label>전액환불</Checkbox.Label>
+                  </Checkbox.Root>
+                  <Field.Root>
+                    <Field.Label>최종 환불액 (원)</Field.Label>
+                    <Input
+                      type="number"
+                      value={finalRefundAmountInput}
+                      onChange={(e) =>
+                        setFinalRefundAmountInput(e.target.value)
+                      }
+                      disabled={isFullRefund}
+                      min={0}
+                    />
+                    <Field.HelperText>
+                      PG사를 통해 실제 환불될 금액을 입력하세요.
+                    </Field.HelperText>
+                  </Field.Root>
+                </Stack>
 
                 <Field.Root>
                   <Field.Label>관리자 메모</Field.Label>
