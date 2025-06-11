@@ -176,7 +176,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       );
     }
 
-    if (enrollStatus === "PAYMENT_PENDING") {
+    if (enrollStatus === "PAYMENT_PENDING" || enrollStatus === "UNPAID") {
       return (
         <Flex align="center" gap={3} w="100%">
           <Flex direction="column" align="center" gap={2} w="50%">

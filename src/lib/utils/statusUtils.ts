@@ -28,8 +28,13 @@ export const displayStatusConfig: Record<
     colorPalette: "green",
     badgeVariant: "solid",
   },
-  FAILED: {
+  UNPAID: {
     label: "미결제",
+    colorPalette: "red",
+    badgeVariant: "solid",
+  },
+  FAILED: {
+    label: "결제실패",
     colorPalette: "red",
     badgeVariant: "solid",
   },

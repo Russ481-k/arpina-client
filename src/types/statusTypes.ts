@@ -5,6 +5,7 @@
  */
 export type PaymentStatus =
   | "PAID" // 결제 완료
+  | "UNPAID" // 미결제
   | "FAILED" // 결제 실패
   | "CANCELED" // 전액 환불 완료
   | "PARTIAL_REFUNDED"; // 부분 환불 완료
@@ -17,6 +18,7 @@ export type PaymentStatus =
 export type UiDisplayStatus =
   | PaymentTransactionStatus
   | EnrollmentPaymentLifecycleStatus
+  | "UNPAID"
   | "REFUND_REQUESTED"
   | "PAYMENT_PENDING"
   | "ADMIN_CANCELED";
