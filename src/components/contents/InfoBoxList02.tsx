@@ -1,23 +1,23 @@
 "use client";
 
-import { Box, List, Heading, VStack, Text } from "@chakra-ui/react";
+import { Box, List, Heading, Text } from "@chakra-ui/react";
 
-interface InfoBoxList01Props {
+interface InfoBoxList02Props {
   items: string[];
   title?: string;
   subtitle?: string;
 }
 
-export default function InfoBoxList01({
+export default function InfoBoxList02({
   items,
   title,
   subtitle,
-}: InfoBoxList01Props) {
+}: InfoBoxList02Props) {
   return (
     <Box
-      className="info-list-box01"
+      className="info-list-box02"
       style={{
-        backgroundColor: "#F7F8FB",
+        border: "1px solid #F2F2FF",
         borderRadius: "20px",
         marginTop: "60px",
         padding: "20px",
@@ -25,24 +25,27 @@ export default function InfoBoxList01({
     >
       <Box>
         {title && (
-          <Heading
-            as="h3"
-            fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
-            fontWeight="500"
-            color="#373636"
-            mb={subtitle ? 2 : 0}
-          >
-            - {title}
-          </Heading>
-        )}
-        {subtitle && (
-          <Text
-            color="#393939"
-            fontSize={{ base: "sm", md: "md", lg: "lg" }}
-            fontWeight="400"
-          >
-            {subtitle}
-          </Text>
+          <Box>
+            <Heading
+              as="h3"
+              fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
+              fontWeight="500"
+              color="#373636"
+              mb={subtitle ? 2 : 0}
+            >
+              - {title}
+            </Heading>
+            {subtitle && (
+              <Text
+                color="#393939"
+                fontSize={{ base: "sm", md: "md", lg: "lg" }}
+                fontWeight="400"
+                pl={3}
+              >
+                {subtitle}
+              </Text>
+            )}
+          </Box>
         )}
         <List.Root>
           {items.map((item, index) => (
