@@ -2,19 +2,15 @@
 
 import React, { useState, useMemo, useRef } from "react";
 import { Box, Text, Stack, Badge, Flex, Button } from "@chakra-ui/react";
-import { CreditCardIcon } from "lucide-react"; // Keep if used by a renderer
+import { CreditCardIcon } from "lucide-react";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef, ICellRendererParams, GridApi } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
-// Import AdminPaymentData as PaymentData and the new PaymentStatus
 import type { AdminPaymentData as PaymentData } from "@/types/api";
 import type { PaymentStatus, UiDisplayStatus } from "@/types/statusTypes";
-import { displayStatusConfig } from "@/lib/utils/statusUtils"; // Import the centralized config
+import { displayStatusConfig } from "@/lib/utils/statusUtils";
 import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 import dayjs from "dayjs";
-
-// Local PaymentData interface is removed to resolve conflict
-// interface PaymentData { ... } // This local definition is deleted
 
 interface PaymentsViewProps {
   payments: PaymentData[];
@@ -26,7 +22,6 @@ interface PaymentsViewProps {
   setGridApi: (api: GridApi<PaymentData>) => void;
 }
 
-// Shared utility or helper functions (consider moving to a common file)
 const formatCurrency = (amount: number | undefined | null) => {
   if (amount === undefined || amount === null) return "-";
   return new Intl.NumberFormat("ko-KR").format(amount) + "원";
@@ -43,17 +38,13 @@ const formatDateTime = (dateString: string | undefined | null) => {
   }
 };
 
-// Configuration for PaymentTransactionStatus display is now removed.
-
-// PaymentMethodCellRenderer (can be part of this file or shared)
 const PaymentMethodCellRenderer: React.FC<
-  ICellRendererParams<PaymentData, string | undefined> // paymentMethod is string, but value could be undefined
+  ICellRendererParams<PaymentData, string | undefined>
 > = (params) => {
-  // params.value is paymentMethod. params.data is the full PaymentData object.
   const paymentMethod = params.data?.paymentMethod?.toUpperCase();
   if (!paymentMethod) return null;
 
-  let paymentMethodText = params.data?.paymentMethod || ""; // Default to raw value if not mapped
+  let paymentMethodText = params.data?.paymentMethod || "";
 
   if (paymentMethod === "CARD") {
     paymentMethodText = "카드결제";
@@ -73,7 +64,6 @@ const PaymentMethodCellRenderer: React.FC<
   );
 };
 
-// PaymentStatusCellRenderer updated for PaymentStatus
 const PaymentStatusCellRenderer: React.FC<
   ICellRendererParams<PaymentData, PaymentStatus>
 > = (params) => {
@@ -92,35 +82,6 @@ const PaymentStatusCellRenderer: React.FC<
   );
 };
 
-const PgQueryCellRenderer: React.FC<
-  ICellRendererParams<PaymentData> & {
-    onQueryPg: (tid: string, amt: number) => void;
-  }
-> = (params) => {
-  const { data, onQueryPg } = params;
-
-  const handleClick = () => {
-    if (data?.tid && data.paidAmount) {
-      onQueryPg(data.tid, data.paidAmount);
-    }
-  };
-
-  const buttonDisabled = !data?.tid || data.paidAmount === undefined;
-
-  return (
-    <Flex align="center" h="100%">
-      <Button
-        size="xs"
-        colorScheme="teal"
-        onClick={handleClick}
-        disabled={buttonDisabled}
-      >
-        PG조회
-      </Button>
-    </Flex>
-  );
-};
-
 export const PaymentsView: React.FC<PaymentsViewProps> = ({
   payments,
   agGridTheme,
@@ -133,10 +94,9 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   const paymentGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [paymentFilters, setPaymentFilters] = useState({
     searchTerm: "",
-    status: "" as PaymentStatus | "", // Ensure status can be empty string for "all"
+    status: "" as PaymentStatus | "",
   });
 
-  // statusOptions updated for PaymentStatus
   const statusOptions: {
     value: PaymentStatus | "";
     label: string;
@@ -156,7 +116,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   };
 
   const filteredPayments = useMemo(() => {
-    let data = [...payments]; // Create a new array to avoid mutating the prop
+    let data = [...payments];
 
     return data.filter((payment) => {
       const searchTermLower = paymentFilters.searchTerm.toLowerCase();
