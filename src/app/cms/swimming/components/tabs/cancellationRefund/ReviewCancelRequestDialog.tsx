@@ -125,6 +125,7 @@ export const ReviewCancelRequestDialog: React.FC<
     useState<UICalculatedRefundDetails | null>(null);
   const [isFullRefund, setIsFullRefund] = useState(false);
   const [finalRefundAmountInput, setFinalRefundAmountInput] = useState("0");
+  const [isOverrideMode, setIsOverrideMode] = useState(false);
 
   // 다이얼로그가 열릴 때 초기값 설정 및 API 호출
   useEffect(() => {
@@ -152,6 +153,7 @@ export const ReviewCancelRequestDialog: React.FC<
       });
       setAdminComment("");
       setIsFullRefund(false); // Reset checkbox on open
+      setIsOverrideMode(false);
       setFinalRefundAmountInput(
         String(selectedRequest.calculatedRefundDetails?.finalRefundAmount || 0)
       );
@@ -166,6 +168,7 @@ export const ReviewCancelRequestDialog: React.FC<
       setAdminComment("");
       setCurrentRefundDetails(null);
       setIsFullRefund(false);
+      setIsOverrideMode(false);
       setFinalRefundAmountInput("0");
       previewRefundMutation.reset();
       approveMutation.reset();
@@ -173,27 +176,42 @@ export const ReviewCancelRequestDialog: React.FC<
     }
   }, [selectedRequest, isOpen]);
 
-  // Update final refund input when preview details change
+  // Update final refund input when preview details change, but only if not in override mode
   useEffect(() => {
-    if (currentRefundDetails && !isFullRefund) {
+    if (currentRefundDetails && !isOverrideMode && !isFullRefund) {
       setFinalRefundAmountInput(String(currentRefundDetails.finalRefundAmount));
     }
-  }, [currentRefundDetails, isFullRefund]);
+  }, [currentRefundDetails, isOverrideMode, isFullRefund]);
 
   const handleFullRefundChange = (checked: boolean) => {
+    setIsOverrideMode(false); // Exit override mode
     setIsFullRefund(checked);
     if (checked) {
       const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
       setFinalRefundAmountInput(String(totalPaid));
     } else {
-      // Revert to calculated amount
+      // Revert to calculated amount. The useEffect hook will handle the update.
       setFinalRefundAmountInput(
         String(currentRefundDetails?.finalRefundAmount ?? 0)
       );
     }
   };
 
+  const handleFinalRefundAmountChange = (value: string) => {
+    setIsOverrideMode(true); // Enter override mode
+    setFinalRefundAmountInput(value);
+
+    const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
+    const numericValue = parseInt(value, 10);
+    if (!isNaN(numericValue) && numericValue === totalPaid) {
+      setIsFullRefund(true);
+    } else {
+      setIsFullRefund(false);
+    }
+  };
+
   const handleUsedDaysChange = (value: string) => {
+    setIsOverrideMode(false); // Exit override mode
     const days = value === "" ? 0 : Math.max(0, parseInt(value, 10));
     setManualUsedDaysInput(days);
 
@@ -238,7 +256,13 @@ export const ReviewCancelRequestDialog: React.FC<
         setCurrentRefundDetails(newRefundDetails);
 
         // API 응답의 isFullRefund 값을 사용하여 UI 상태 업데이트
-        handleFullRefundChange(refundDetailsPreview.isFullRefund);
+        if (refundDetailsPreview.isFullRefund) {
+          const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
+          setFinalRefundAmountInput(String(totalPaid));
+        }
+
+        setIsFullRefund(refundDetailsPreview.isFullRefund);
+        setIsOverrideMode(false); // 계산결과 반영 모드로 설정
 
         toaster.create({
           title: "환불액 미리보기 업데이트됨",
@@ -502,13 +526,26 @@ export const ReviewCancelRequestDialog: React.FC<
                                     justify="space-between"
                                     fontWeight="bold"
                                     fontSize="md"
+                                    align="center"
                                   >
                                     <Text>최종 환불액</Text>
-                                    <Text color="red.500">
-                                      {formatCurrency(
-                                        currentRefundDetails?.finalRefundAmount
-                                      )}
-                                    </Text>
+                                    <Input
+                                      type="number"
+                                      w="150px"
+                                      textAlign="right"
+                                      color="red.500"
+                                      value={finalRefundAmountInput}
+                                      onChange={(e) =>
+                                        handleFinalRefundAmountChange(
+                                          e.target.value
+                                        )
+                                      }
+                                      disabled={
+                                        isFullRefund ||
+                                        previewRefundMutation.isPending
+                                      }
+                                      min={0}
+                                    />
                                   </Flex>
                                 </Box>
                               </Stack>
@@ -531,21 +568,6 @@ export const ReviewCancelRequestDialog: React.FC<
                     <Checkbox.Control />
                     <Checkbox.Label>전액환불</Checkbox.Label>
                   </Checkbox.Root>
-                  <Field.Root>
-                    <Field.Label>최종 환불액 (원)</Field.Label>
-                    <Input
-                      type="number"
-                      value={finalRefundAmountInput}
-                      onChange={(e) =>
-                        setFinalRefundAmountInput(e.target.value)
-                      }
-                      disabled={isFullRefund}
-                      min={0}
-                    />
-                    <Field.HelperText>
-                      PG사를 통해 실제 환불될 금액을 입력하세요.
-                    </Field.HelperText>
-                  </Field.Root>
                 </Stack>
 
                 <Field.Root>
