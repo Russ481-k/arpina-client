@@ -259,12 +259,12 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         }}
         showSearchButton={true}
       />
-      <Box my={2}>
+      <Box>
         <Text fontSize="sm">
           총 {filteredPayments.length}개의 결제 내역이 있습니다.
         </Text>
       </Box>
-      <Box className={agGridTheme} h="568px" w="full">
+      <Box className={agGridTheme} h="540px" w="full">
         <AgGridReact<PaymentData>
           ref={paymentGridRef}
           rowData={filteredPayments}
