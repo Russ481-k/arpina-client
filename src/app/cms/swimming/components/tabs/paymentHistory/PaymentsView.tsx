@@ -10,10 +10,7 @@ import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import type { AdminPaymentData as PaymentData } from "@/types/api";
 import type { PaymentStatus, UiDisplayStatus } from "@/types/statusTypes";
 import { displayStatusConfig } from "@/lib/utils/statusUtils"; // Import the centralized config
-import {
-  formatPhoneNumberForKISPG,
-  formatPhoneNumberWithHyphen,
-} from "@/lib/utils/phoneUtils";
+import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 import dayjs from "dayjs";
 
 // Local PaymentData interface is removed to resolve conflict
@@ -242,18 +239,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         sortable: true,
       },
       {
-        headerName: "PG사",
-        field: "paymentGateway",
-        width: 100,
-        sortable: true,
-      },
-      {
-        headerName: "PG결과코드",
-        field: "pgResultCode",
-        width: 120,
-        sortable: true,
-      },
-      {
         headerName: "결제일시",
         field: "paidAt",
         valueFormatter: (params) => formatDateTime(params.value),
@@ -314,7 +299,11 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         }}
         showSearchButton={true}
       />
-
+      <Box my={2}>
+        <Text fontSize="sm">
+          총 {filteredPayments.length}개의 결제 내역이 있습니다.
+        </Text>
+      </Box>
       <Box className={agGridTheme} h="568px" w="full">
         <AgGridReact<PaymentData>
           ref={paymentGridRef}

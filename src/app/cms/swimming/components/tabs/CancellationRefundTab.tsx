@@ -372,7 +372,7 @@ export const CancellationRefundTab = ({
           },
         ]}
       />
-      <Box>
+      <Box my={2}>
         <Text fontSize="sm">
           총 {filteredCancelRequests.length}개의 요청이 있습니다.
         </Text>
