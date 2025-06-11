@@ -29,7 +29,7 @@ export const displayStatusConfig: Record<
     badgeVariant: "solid",
   },
   FAILED: {
-    label: "결제실패",
+    label: "미결제",
     colorPalette: "red",
     badgeVariant: "solid",
   },
