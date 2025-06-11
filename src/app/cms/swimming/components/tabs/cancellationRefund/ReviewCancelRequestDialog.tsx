@@ -195,13 +195,15 @@ export const ReviewCancelRequestDialog: React.FC<
   }, [currentRefundDetails, isOverrideMode, isFullRefund]);
 
   const handleFullRefundChange = (checked: boolean) => {
-    setIsOverrideMode(false); // Exit override mode
     setIsFullRefund(checked);
     if (checked) {
+      // "Full Refund" is a manual override.
+      setIsOverrideMode(true);
       const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
       setFinalRefundAmountInput(formatCurrency(totalPaid, false));
     } else {
-      // Revert to calculated amount. The useEffect hook will handle the update.
+      // Unchecking reverts to calculation mode based on used days.
+      setIsOverrideMode(false);
       setFinalRefundAmountInput(
         formatCurrency(currentRefundDetails?.finalRefundAmount ?? 0, false)
       );
