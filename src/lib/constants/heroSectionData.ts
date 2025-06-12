@@ -38,54 +38,74 @@ export const heroSectionData: Record<
       { label: "스포츠", url: "/sports/swimming/lesson" },
     ],
   },
-  "/bbs/faq": {
-    header: "종합게시판",
-    title: "자주하는질문",
+  "/bbs/notices": {
+    header: "알림",
+    title: "공지사항",
     image: "/images/bbs/sub_visual.png",
     breadcrumbBorderColor: "#353535",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "종합게시판", url: "/bbs/faq" },
+      { label: "알림", url: "/bbs/notices" },
     ],
   },
-  "/bbs/notice": {
-    header: "종합게시판",
-    title: "센터소식",
+  "/bbs/gallery": {
+    header: "알림",
+    title: "공지사항",
     image: "/images/bbs/sub_visual.png",
     breadcrumbBorderColor: "#353535",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "종합게시판", url: "/bbs/notice" },
+      { label: "알림", url: "/bbs/gallery" },
     ],
   },
   "/bbs/public-notice": {
-    header: "종합게시판",
+    header: "알림",
     title: "고시공고",
     image: "/images/bbs/sub_visual.png",
     breadcrumbBorderColor: "#353535",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "종합게시판", url: "/bbs/public-notice" },
+      { label: "알림", url: "/bbs/public-notice" },
     ],
   },
-  "/bbs/qna": {
-    header: "종합게시판",
-    title: "답변게시판",
+  "/bbs/resources": {
+    header: "알림",
+    title: "자료실",
     image: "/images/bbs/sub_visual.png",
     breadcrumbBorderColor: "#353535",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "종합게시판", url: "/bbs/qna" },
+      { label: "알림", url: "/bbs/resources" },
     ],
   },
-  "/reference/press": {
-    header: "자료실",
-    title: "보도자료",
-    image: "/images/reference/sub_visual.png",
+  "/bbs/faq": {
+    header: "알림",
+    title: "자주하는질문",
+    image: "/images/bbs/sub_visual.png",
     breadcrumbBorderColor: "#353535",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "자료실", url: "/reference/press" },
+      { label: "알림", url: "/bbs/faq" },
+    ],
+  },
+  "/bbs/bdc": {
+    header: "알림",
+    title: "부산도시공사",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "알림", url: "/bbs/bdc" },
+    ],
+  },
+  "/bbs/voice": {
+    header: "알림",
+    title: "고객의소리",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "알림", url: "/bbs/voice" },
     ],
   },
   "/reference/form": {

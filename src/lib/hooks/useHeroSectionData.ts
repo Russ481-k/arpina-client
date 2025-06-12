@@ -18,7 +18,7 @@ export function useHeroSectionData(boardUrl?: string) {
   const [data, setData] = useState(() => {
     const originalPath = boardUrl || pathname;
     const keyPath = getBasePath(originalPath);
-
+    
     const initialData = heroSectionData[keyPath] || {
       header: "기본 헤더",
       title: "기본 타이틀",

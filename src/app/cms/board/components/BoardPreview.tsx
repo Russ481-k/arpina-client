@@ -409,7 +409,6 @@ const BoardPreview = React.memo(function BoardPreview({
     [articlesApiResponse?.data?.content]
   );
   const heroData = useHeroSectionData(menu?.url ?? "");
-
   useEffect(() => {
     if (selectedArticleForDetail && articles.length > 0) {
       const currentIndex = articles.findIndex(

@@ -249,6 +249,7 @@ export default function BoardPage({
       }
       setIsLoading(true);
       const menu = await findMenuByPath(currentMenuPath); // currentMenuPath is checked above
+      console.log("menu", menu);
       if (!menu || !menu.id) {
         console.warn(`[BoardPage] Menu not found for path: ${currentMenuPath}`);
         setBoardData(null); // No menu found
@@ -262,6 +263,7 @@ export default function BoardPage({
         requestedPageSizeFromUrl, // Use value from URL for fetching
         currentKeyword
       );
+      console.log("data", data);
       if (!data) {
         console.warn(
           `[BoardPage] No board data found for menuId: ${menuIdToUse} at path ${currentMenuPath}`
@@ -346,7 +348,7 @@ export default function BoardPage({
   }
 
   const { pageDetails, posts, pagination } = boardData;
-
+  console.log("boardData", boardData);
   // 기존 렌더링 로직 (Switch 문 등)
   return (
     <PageContainer>
