@@ -21,14 +21,14 @@ interface PopupGridProps {
   onEditPopup: (popup: Popup) => void;
   onDeletePopup: (id: number) => void;
   onRowSelected: (popup: Popup) => void;
-  onVisibilityChange: (params: { id: number; is_visible: boolean }) => void;
+  onVisibilityChange: (params: { id: number; visible: boolean }) => void;
   onOrderChange: (payload: PopupOrderUpdatePayload) => void;
   isLoading: boolean;
 }
 
 const VisibilityCellRenderer = (
   props: ICellRendererParams<Popup> & {
-    onVisibilityChange: (params: { id: number; is_visible: boolean }) => void;
+    onVisibilityChange: (params: { id: number; visible: boolean }) => void;
   }
 ) => {
   const { data, onVisibilityChange } = props;
@@ -37,11 +37,10 @@ const VisibilityCellRenderer = (
   return (
     <Switch.Root
       size="sm"
-      checked={data.is_visible}
+      checked={data.visible}
       onCheckedChange={(details) => {
         if (props.api.getRenderedNodes().length) {
-          // Check if grid is ready
-          onVisibilityChange({ id: data.id, is_visible: !!details.checked });
+          onVisibilityChange({ id: data.id, visible: !!details.checked });
         }
       }}
     >
@@ -87,22 +86,30 @@ export const PopupGrid = ({
       },
       {
         headerName: "노출",
-        field: "is_visible",
+        field: "visible",
         width: 80,
         cellRenderer: VisibilityCellRenderer,
         cellRendererParams: { onVisibilityChange },
+        onCellClicked: (params) => {
+          if (params.data) {
+            onVisibilityChange({
+              id: params.data.id,
+              visible: !params.data.visible,
+            });
+          }
+        },
       },
       { headerName: "ID", field: "id", width: 80 },
       { headerName: "제목", field: "title", flex: 1, minWidth: 200 },
       {
         headerName: "노출 시작일",
-        field: "start_date",
+        field: "startDate",
         width: 180,
         valueFormatter: (p) => new Date(p.value).toLocaleString(),
       },
       {
         headerName: "노출 종료일",
-        field: "end_date",
+        field: "endDate",
         width: 180,
         valueFormatter: (p) => new Date(p.value).toLocaleString(),
       },
@@ -110,6 +117,7 @@ export const PopupGrid = ({
         headerName: "관리",
         field: "id",
         width: 120,
+        pinned: "right",
         cellRenderer: (params: ICellRendererParams<Popup>) => {
           if (!params.data) return null;
           return (

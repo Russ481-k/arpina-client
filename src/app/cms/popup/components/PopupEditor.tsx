@@ -14,6 +14,7 @@ import {
 import type { Popup } from "@/types/api";
 import { LexicalEditor } from "@/components/common/LexicalEditor";
 import { usePopupForm } from "@/lib/hooks/usePopupForm";
+import { toaster } from "@/components/ui/toaster";
 
 interface PopupEditorProps {
   initialData: Partial<Popup> | null;
@@ -21,7 +22,7 @@ interface PopupEditorProps {
   formId: string;
 }
 
-export const PopupEditor = React.memo(function PopupEditor({
+export function PopupEditor({
   initialData,
   onSubmitSuccess,
   formId,
@@ -29,17 +30,25 @@ export const PopupEditor = React.memo(function PopupEditor({
   const {
     formData,
     updateFormField,
-    content,
-    setContent,
+    updateContent,
     handleSubmit,
     handleMediaAdded,
-  } = usePopupForm({ initialData });
+  } = usePopupForm(initialData);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await handleSubmit();
     if (result.success) {
+      toaster.success({
+        title: "성공",
+        description: result.message || "팝업이 성공적으로 저장되었습니다.",
+      });
       onSubmitSuccess();
+    } else {
+      toaster.error({
+        title: "저장 실패",
+        description: result.message || "오류가 발생했습니다.",
+      });
     }
   };
 
@@ -90,10 +99,10 @@ export const PopupEditor = React.memo(function PopupEditor({
             </Text>
             <Input
               size="sm"
-              name="start_date"
+              name="startDate"
               type="datetime-local"
-              value={formData.start_date || ""}
-              onChange={(e) => updateFormField("start_date", e.target.value)}
+              value={formData.startDate || ""}
+              onChange={(e) => updateFormField("startDate", e.target.value)}
               required
             />
           </Box>
@@ -109,10 +118,10 @@ export const PopupEditor = React.memo(function PopupEditor({
             </Text>
             <Input
               size="sm"
-              name="end_date"
+              name="endDate"
               type="datetime-local"
-              value={formData.end_date || ""}
-              onChange={(e) => updateFormField("end_date", e.target.value)}
+              value={formData.endDate || ""}
+              onChange={(e) => updateFormField("endDate", e.target.value)}
               required
             />
           </Box>
@@ -127,10 +136,10 @@ export const PopupEditor = React.memo(function PopupEditor({
               노출 여부
             </Text>
             <Switch.Root
-              name="is_visible"
-              checked={formData.is_visible}
+              name="visible"
+              checked={formData.visible}
               onCheckedChange={({ checked }) =>
-                updateFormField("is_visible", !!checked)
+                updateFormField("visible", !!checked)
               }
             >
               <Switch.HiddenInput />
@@ -152,8 +161,8 @@ export const PopupEditor = React.memo(function PopupEditor({
             HTML 콘텐츠
           </Text>
           <LexicalEditor
-            onChange={setContent}
-            initialContent={content}
+            onChange={updateContent}
+            initialContent={formData.content}
             placeholder="팝업 내용을 입력해주세요."
             contextMenu="BBS"
             onMediaAdded={handleMediaAdded}
@@ -162,4 +171,4 @@ export const PopupEditor = React.memo(function PopupEditor({
       </VStack>
     </form>
   );
-});
+}

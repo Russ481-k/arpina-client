@@ -405,7 +405,6 @@ export const CancellationRefundTab = ({
               context={agGridContext}
               headerHeight={36}
               rowHeight={40}
-              suppressCellFocus
               animateRows
             />
           </Box>

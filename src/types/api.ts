@@ -1088,12 +1088,13 @@ export interface AdminPaymentData {
 export interface Popup {
   id: number;
   title: string;
-  content_value: string;
-  start_date: string;
-  end_date: string;
-  is_visible: boolean;
-  created_at: string;
-  updated_at: string;
+  content: string;
+  startDate: string;
+  endDate: string;
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+  displayOrder?: number;
 }
 
 export interface PopupOrderUpdatePayload {

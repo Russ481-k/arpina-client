@@ -17,8 +17,13 @@ export type PopupListResponse = {
 const API_URL = "/cms/popups";
 
 export const popupApi = {
-  getPopups: async (): Promise<ApiResponse<PopupListResponse>> => {
-    const response = await privateApi.get<ApiResponse<PopupListResponse>>(API_URL);
+  getPopups: async (): Promise<ApiResponse<Popup[]>> => {
+    const response = await privateApi.get<ApiResponse<Popup[]>>(API_URL);
+    return response.data;
+  },
+
+  getPopup: async (id: number): Promise<ApiResponse<Popup>> => {
+    const response = await privateApi.get<ApiResponse<Popup>>(`${API_URL}/${id}`);
     return response.data;
   },
 
@@ -41,8 +46,8 @@ export const popupApi = {
     return response.data;
   },
   
-  updatePopupVisibility: async (id: number, is_visible: boolean): Promise<ApiResponse<void>> => {
-    const response = await privateApi.patch<ApiResponse<void>>(`${API_URL}/${id}/visibility`, { is_visible });
+  updatePopupVisibility: async (id: number, visible: boolean): Promise<ApiResponse<void>> => {
+    const response = await privateApi.patch<ApiResponse<void>>(`${API_URL}/${id}/visibility`, { isVisible: visible });
     return response.data;
   },
   
