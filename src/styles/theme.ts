@@ -441,7 +441,7 @@ export function useColors(): Colors {
       lg: useColorModeValue(COLORS.light.shadow.lg, COLORS.dark.shadow.lg),
     },
     gradient: {
-      primary: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+      primary: "linear-gradient(135deg,rgb(33, 127, 214),rgb(83, 144, 236))",
       secondary: "linear-gradient(135deg, #0ea5e9, #6366f1)",
       accent: "linear-gradient(135deg, #8b5cf6, #ec4899)",
     },
