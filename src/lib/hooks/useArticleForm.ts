@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { boardApi } from "@/lib/api/board";
 import { Article, articleApi, type AttachmentInfoDto } from "@/lib/api/article";
 import { fileApi } from "@/lib/api/file";
-import { BoardMaster } from "@/types/api";
+import { BoardMaster, ApiResponse } from "@/types/api";
 import { useAuth } from "@/lib/AuthContext";
 import { toaster } from "@/components/ui/toaster";
 
@@ -86,33 +86,32 @@ export function useArticleForm({
   // 게시판 정보 조회
   useEffect(() => {
     async function fetchBoardInfo() {
-      // Only fetch if bbsId is present AND disableAttachments prop is NOT explicitly provided
-      // (i.e., parent is not handling attachment config directly)
       const isAdminPage = window.location.pathname.includes("/cms/");
       setIsAdminPageContext(isAdminPage);
-
-      // If on a public page AND attachment settings are being directly provided by props,
-      // skip fetching boardInfo from within this hook.
-      if (!isAdminPage && typeof disableAttachments === "boolean") {
-        setIsLoading(false); // Ensure loading is set to false if we skip
-        return;
-      }
 
       if (!bbsId) {
         setIsLoading(false);
         return;
       }
 
-      // Proceed with fetching if on admin page OR (on public page AND disableAttachments prop is undefined)
+      if (!isAdminPage && typeof disableAttachments === "boolean") {
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
         setError(null);
 
-        let boardData: BoardMaster;
-        if (isAdminPage) {
-          const response = await boardApi.getBoard(bbsId);
-          boardData = response as BoardMaster;
-          if (user?.name) {
+        const response = isAdminPage
+          ? await boardApi.getBoard(bbsId)
+          : await boardApi.getPublicBoardInfo(bbsId);
+
+        if (response && response.data && response.data.success && response.data.data) {
+          const boardData: BoardMaster = response.data.data;
+          setBoardInfo(boardData);
+
+          if (isAdminPage && user?.name) {
             setFormData((prev) =>
               !prev.author || prev.author !== user.name
                 ? { ...prev, author: user.name }
@@ -120,14 +119,13 @@ export function useArticleForm({
             );
           }
         } else {
-          const response = await boardApi.getPublicBoardInfo(bbsId);
-          boardData = response as BoardMaster;
+          console.error(`Failed to fetch valid board info for bbsId ${bbsId}. Received:`, response);
+          setError("게시판 정보를 불러오는데 실패했습니다.");
+          setBoardInfo(null);
         }
-
-        setBoardInfo(boardData);
       } catch (err) {
-        // console.error("게시판 정보 로딩 실패:", err); // No error logging here
-        setError("게시판 정보를 불러오는데 실패했습니다.");
+        setError("게시판 정보를 불러오는 중 오류가 발생했습니다.");
+        setBoardInfo(null);
       } finally {
         setIsLoading(false);
       }
@@ -399,20 +397,21 @@ export function useArticleForm({
     // Consider revoking object URLs later, e.g., on unmount or when form is submitted/cleared
   }, []);
 
-  // Calculate effective limits for FileUploader
-  const effectiveMaxFiles = isNaN(Number(maxFileAttachments))
-    ? 3
-    : Number(maxFileAttachments);
-  const effectiveMaxSize = isNaN(Number(maxFileSizeMB))
-    ? 5
-    : Number(maxFileSizeMB);
-  // Corrected logic for isAttachmentEnabled:
-  // Prioritize disableAttachments prop if it is explicitly passed (boolean).
-  // Otherwise, fall back to boardInfo.
+  // Calculate effective limits and enabled status for FileUploader
   const isAttachmentEnabled =
     typeof disableAttachments === "boolean"
-      ? !disableAttachments // If true, not enabled; if false, enabled.
-      : boardInfo?.attachmentYn === "Y"; // Fallback if prop not provided
+      ? !disableAttachments // If prop is explicitly passed, it takes precedence.
+      : boardInfo?.attachmentYn === "Y"; // Otherwise, fall back to boardInfo.
+
+  const effectiveMaxFiles =
+    typeof maxFileAttachments === "number"
+      ? maxFileAttachments // If prop is explicitly passed, use it.
+      : Number(boardInfo?.attachmentLimit) || 0; // Otherwise, use boardInfo, defaulting to 0.
+
+  const effectiveMaxSize =
+    typeof maxFileSizeMB === "number"
+      ? maxFileSizeMB // If prop is explicitly passed, use it.
+      : Number(boardInfo?.attachmentSize) || 0; // Otherwise, use boardInfo, defaulting to 0.
 
   // Validation function for FileUploader
   const validateFile = (file: File): { valid: boolean; error?: string } => {
@@ -427,34 +426,6 @@ export function useArticleForm({
   };
 
   // --- Effects ---
-
-  // Fetch board info when bbsId changes
-  useEffect(() => {
-    const fetchBoardInfo = async () => {
-      if (bbsId) {
-        try {
-          // Assuming getBoard(bbsId) directly returns BoardMaster data
-          const boardData = (await boardApi.getBoard(bbsId)) as BoardMaster; // Type assertion directly to BoardMaster
-
-          // Check if the returned data looks like BoardMaster (e.g., has bbsId)
-          if (boardData && typeof boardData.bbsId === "number") {
-            setBoardInfo(boardData);
-          } else {
-            // Handle cases where the response is not the expected BoardMaster object
-            console.error(
-              `Failed to fetch valid board info for bbsId ${bbsId}. Received:`,
-              boardData
-            );
-            setBoardInfo(null);
-          }
-        } catch (err) {
-          console.error("Error fetching board info:", err);
-          setBoardInfo(null);
-        }
-      }
-    };
-    fetchBoardInfo();
-  }, [bbsId]);
 
   // Set initial author if user is authenticated and it's an admin page context
   useEffect(() => {

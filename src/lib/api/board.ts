@@ -1,4 +1,9 @@
-import { Post, BoardMasterApiResponse, BoardMaster } from "@/types/api";
+import {
+  Post,
+  BoardMasterApiResponse,
+  BoardMaster,
+  ApiResponse,
+} from "@/types/api";
 
 import { privateApi, publicApi } from "./client";
 
@@ -21,26 +26,12 @@ export const boardApi = {
   },
 
   getBoard: (id: number) => {
-    return privateApi
-      .get<BoardMaster>(`/cms/bbs/master/${id}`)
-      .then((response) => {
-        // 응답이 {success, data} 구조인 경우 data 필드 반환
-        if (response && typeof response === "object" && "data" in response) {
-          return response.data;
-        }
-        return response;
-      });
+    return privateApi.get<ApiResponse<BoardMaster>>(`/cms/bbs/master/${id}`);
   },
 
   // 공개 게시판 정보 조회 API (일반 사용자용)
   getPublicBoardInfo: (bbsId: number) => {
-    return publicApi.get<BoardMaster>(`/bbs/${bbsId}/info`).then((response) => {
-      // 응답이 {success, data} 구조인 경우 data 필드 반환
-      if (response && typeof response === "object" && "data" in response) {
-        return response.data;
-      }
-      return response;
-    });
+    return publicApi.get<ApiResponse<BoardMaster>>(`/bbs/${bbsId}/info`);
   },
 
   saveBoard: ({ id, boardData }: { id?: number; boardData: BoardMaster }) => {
