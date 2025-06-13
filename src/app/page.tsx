@@ -15,7 +15,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
-import { useRouter } from "next/navigation";
+import { PopupManager } from "@/components/common/PopupManager";
 
 export default function Home() {
   const { colorMode } = useColorMode();
@@ -24,7 +24,6 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
-  const router = useRouter();
   const treeMenus = useMemo(() => {
     try {
       // API 응답이 성공했는지 확인
@@ -51,6 +50,7 @@ export default function Home() {
   return (
     <Layout menus={treeMenus} currentPage="홈">
       <Global styles={getScrollbarStyle(isDark)} />
+      <PopupManager />
       <Global
         styles={{
           "@font-face": {

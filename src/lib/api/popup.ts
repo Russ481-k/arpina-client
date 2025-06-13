@@ -1,4 +1,4 @@
-import { privateApi } from "./client";
+import { privateApi, publicApi } from "./client";
 import { Popup, PopupOrderUpdatePayload } from "@/types/api";
 
 export interface ApiResponse<T> {
@@ -17,6 +17,10 @@ export type PopupListResponse = {
 const API_URL = "/cms/popups";
 
 export const popupApi = {
+  getActivePopups: async (): Promise<ApiResponse<Popup[]>> => {
+    const response = await publicApi.get<ApiResponse<Popup[]>>(API_URL+'/active');
+    return response.data;
+  },
   getPopups: async (): Promise<ApiResponse<Popup[]>> => {
     const response = await privateApi.get<ApiResponse<Popup[]>>(API_URL);
     return response.data;
