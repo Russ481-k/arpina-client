@@ -98,7 +98,7 @@ export function useArticleForm({
         setIsLoading(false);
         return;
       }
-      
+
       try {
         setIsLoading(true);
         setError(null);

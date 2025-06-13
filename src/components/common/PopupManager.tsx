@@ -13,22 +13,21 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { baseInitialConfig } from "@/lib/lexicalConfig";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
+import { EffectCoverflow, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
+import "swiper/css/effect-coverflow";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Icon } from "@chakra-ui/react";
-import { CloseIcon } from "@chakra-ui/icons";
 import { XIcon } from "lucide-react";
 
 const MotionBox = motion(Box);
 
 interface PopupItemProps {
   popup: Popup;
-  isActive?: boolean;
 }
 
-function PopupItem({ popup, isActive = false }: PopupItemProps) {
+function PopupItem({ popup }: PopupItemProps) {
   const initialConfig = {
     ...baseInitialConfig,
     namespace: `Popup-${popup.id}`,
@@ -37,70 +36,53 @@ function PopupItem({ popup, isActive = false }: PopupItemProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{
-        opacity: 1,
-        scale: isActive ? 1 : 0.95,
-      }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.3 }}
+    <Box
       style={{
-        position: "relative",
         width: "100%",
-        maxWidth: "800px",
-        margin: "20px auto",
+        maxWidth: "500px",
+        height: "auto",
+        minHeight: "520px",
+        maxHeight: "60vh",
+        margin: "0 auto",
         backgroundColor: "white",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
         overflow: "hidden",
-        transform: isActive ? "scale(1)" : "scale(0.95)",
-        transition: "transform 0.3s ease",
-        height: "520px",
       }}
     >
-      <Box position="relative" p={6}>
-        <Box
-          className="popup-content"
-          style={{
-            margin: 0,
-            padding: 0,
-          }}
-        >
-          <LexicalComposer initialConfig={initialConfig}>
-            <RichTextPlugin
-              contentEditable={
-                <ContentEditable
-                  style={{
-                    outline: "none",
-                    minHeight: isActive ? "300px" : "150px",
-                    padding: "1rem",
-                    backgroundColor: "white",
-                    borderRadius: "0.5rem",
-                  }}
-                />
-              }
-              placeholder={null}
-              ErrorBoundary={LexicalErrorBoundary}
-            />
-            <ListPlugin />
-            <LinkPlugin />
-          </LexicalComposer>
-        </Box>
+      <Box position="relative" p={2} h="100%">
+        <LexicalComposer initialConfig={initialConfig}>
+          <RichTextPlugin
+            contentEditable={
+              <ContentEditable
+                style={{
+                  outline: "none",
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "white",
+                }}
+              />
+            }
+            placeholder={null}
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+          <ListPlugin />
+          <LinkPlugin />
+        </LexicalComposer>
       </Box>
-    </motion.div>
+    </Box>
   );
 }
 
-// Simple Error Boundary for Lexical
 function LexicalErrorBoundary({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
+
+const HIDE_STORAGE_KEY = "popup_hide_until";
 
 export function PopupManager() {
   const [visiblePopups, setVisiblePopups] = useState<Popup[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // 팝업 목록 조회
   const { data: popups, isLoading } = useQuery({
     queryKey: popupKeys.lists(),
     queryFn: () => popupApi.getActivePopups(),
@@ -108,119 +90,71 @@ export function PopupManager() {
   });
 
   useEffect(() => {
-    console.log("=== Popup Filtering Start ===");
-    console.log("Popup data:", popups);
-
-    if (!popups) return;
-
-    const now = new Date();
-    console.log("Current time:", now.toISOString());
-
-    const activePopups = popups.filter((popup) => {
-      const hideUntil = localStorage.getItem(`popup_hide_${popup.id}`);
-      console.log(`Filtering popup ${popup.id}:`, {
-        visible: popup.visible,
-        startDate: popup.startDate,
-        endDate: popup.endDate,
-        hideUntil,
-        isHidden: hideUntil ? now < new Date(hideUntil) : false,
-      });
-
-      if (popup.visible === false) {
-        console.log(`Popup ${popup.id} is not visible`);
-        return false;
-      }
-
-      if (!popup.startDate || !popup.endDate) {
-        console.log(`Popup ${popup.id} has no date restrictions`);
-        return true;
-      }
-
-      const startDate = new Date(popup.startDate);
-      const endDate = new Date(popup.endDate);
-
-      if (hideUntil) {
-        const hideUntilDate = new Date(hideUntil);
-        if (now < hideUntilDate) {
-          console.log(`Popup ${popup.id} is hidden until ${hideUntilDate}`);
-          return false;
-        }
-      }
-
-      const isInDateRange = now >= startDate && now <= endDate;
-      console.log(`Popup ${popup.id} is in date range:`, isInDateRange);
-      return isInDateRange;
-    });
-
-    console.log("Active popups:", activePopups);
-    console.log("=== Popup Filtering End ===");
-    setVisiblePopups(activePopups);
+    if (popups) {
+      setVisiblePopups(popups);
+    } else {
+      setVisiblePopups([]);
+    }
   }, [popups]);
 
-  // 팝업이 열릴 때 스크롤 방지
   useEffect(() => {
     if (visiblePopups.length > 0) {
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "auto";
     };
   }, [visiblePopups.length]);
+
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleCloseAll = () => {
     setVisiblePopups([]);
   };
 
-  const handleHideAllForToday = () => {
+  const [isHidden, setIsHidden] = useState(false);
+  const handleHideForToday = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-
-    console.log("=== Hide All For Today Start ===");
-    console.log("Current time:", new Date().toISOString());
-    console.log("Hide until:", tomorrow.toISOString());
-
-    visiblePopups.forEach((popup) => {
-      const hideUntil = tomorrow.toISOString();
-      localStorage.setItem(`popup_hide_${popup.id}`, hideUntil);
-      console.log(`Setting hide for popup ${popup.id} until ${hideUntil}`);
-    });
-
-    setVisiblePopups([]);
-
-    const updatedPopups = popups?.filter((popup) => {
-      const hideUntil = localStorage.getItem(`popup_hide_${popup.id}`);
-      console.log(`Checking popup ${popup.id}:`, {
-        hideUntil,
-        currentTime: new Date().toISOString(),
-        shouldShow: hideUntil ? new Date() >= new Date(hideUntil) : true,
-      });
-
-      if (hideUntil) {
-        const hideUntilDate = new Date(hideUntil);
-        return new Date() >= hideUntilDate;
-      }
-      return true;
-    });
-
-    console.log("Updated popups:", updatedPopups);
-    console.log("=== Hide All For Today End ===");
-
-    if (updatedPopups) {
-      setVisiblePopups(updatedPopups);
-    }
+    localStorage.setItem(HIDE_STORAGE_KEY, tomorrow.getTime().toString());
+    setIsHidden(true); // Force UI to hide immediately
   };
 
-  if (isLoading) {
+  const shouldShowPopups = () => {
+    if (!isClient || isHidden) return false;
+    const hideUntil = localStorage.getItem(HIDE_STORAGE_KEY);
+    if (hideUntil && new Date().getTime() < parseInt(hideUntil, 10)) {
+      return false;
+    }
+    return visiblePopups.length > 0;
+  };
+
+  if (isLoading || !shouldShowPopups()) {
     return null;
   }
 
-  if (!popups || visiblePopups.length === 0) {
-    return null;
-  }
+  const popupsCount = visiblePopups.length;
+  const useSwiper = popupsCount >= 3;
+  const useLoop = popupsCount > 3;
+
+  const getMaxWidth = () => {
+    if (useSwiper) return "1200px";
+    switch (popupsCount) {
+      case 2:
+        return "1600px";
+      case 1:
+        return "600px";
+      default:
+        return "0px";
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -230,89 +164,92 @@ export function PopupManager() {
         left={0}
         right={0}
         bottom={0}
-        bg="rgba(0, 0, 0, 0.5)"
+        bg="rgba(0, 0, 0, 0.6)"
         zIndex={9999}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <Box
+        <Flex
           position="absolute"
           top="50%"
           left="50%"
           transform="translate(-50%, -50%)"
           w="100%"
-          maxW="1200px"
+          maxW={getMaxWidth()}
+          align="center"
+          justify="center"
+        >
+          {useSwiper ? (
+            <Swiper
+              effect={"coverflow"}
+              grabCursor={true}
+              centeredSlides={true}
+              slidesPerView={"auto"}
+              loop={useLoop}
+              loopAdditionalSlides={1}
+              coverflowEffect={{
+                rotate: 5,
+                stretch: 0,
+                depth: 100,
+                modifier: 2,
+                slideShadows: true,
+              }}
+              navigation={true}
+              pagination={{ clickable: true }}
+              modules={[EffectCoverflow, Pagination, Navigation]}
+              onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
+              className="popup-swiper"
+              style={{ width: "100%", padding: "10px 0" }}
+            >
+              {visiblePopups.map((popup) => (
+                <SwiperSlide key={popup.id} style={{ width: "500px" }}>
+                  {({ isActive }) => (
+                    <motion.div
+                      animate={{
+                        opacity: isActive ? 1 : 0.95,
+                      }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <PopupItem popup={popup} />
+                    </motion.div>
+                  )}
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <Flex gap={4} justify="center" align="center">
+              {visiblePopups.map((popup) => (
+                <PopupItem key={popup.id} popup={popup} />
+              ))}
+            </Flex>
+          )}
+        </Flex>
+
+        <Flex
+          position="absolute"
+          bottom="50px"
+          left="50%"
+          transform="translateX(-50%)"
+          align="center"
+          gap={2}
+          zIndex={10000}
         >
           <Button
-            aria-label="Close all popups"
-            position="absolute"
-            top={-12}
-            right={-12}
-            zIndex={1000}
-            onClick={handleCloseAll}
-            bg="transparent"
+            onClick={handleHideForToday}
+            variant="outline"
             colorPalette="gray"
-            p={2}
-            minW="auto"
-            h="auto"
+            color="white"
+            size="lg"
+            opacity={0.7}
+            _hover={{ opacity: 1, bg: "transparent" }}
           >
-            <XIcon size={16} />
+            오늘 하루 보지 않기
           </Button>
-
-          <Swiper
-            modules={[Navigation, Pagination]}
-            spaceBetween={50}
-            slidesPerView={Math.min(visiblePopups.length, 3)}
-            centeredSlides={visiblePopups.length <= 3}
-            initialSlide={1}
-            navigation={visiblePopups.length > 3}
-            pagination={{
-              clickable: true,
-            }}
-            style={{ padding: "40px 0" }}
-            onSlideChange={(swiper) => {
-              const currentPopup = visiblePopups[swiper.realIndex];
-              console.log("Current popup:", currentPopup);
-              setActiveIndex(swiper.realIndex);
-            }}
-            loop={visiblePopups.length > 3}
-            speed={300}
-            allowTouchMove={visiblePopups.length > 2}
-            className="popup-swiper"
-          >
-            {visiblePopups.map((popup, index) => (
-              <SwiperSlide key={popup.id}>
-                <PopupItem popup={popup} isActive={index === activeIndex} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          <Flex
-            justify="center"
-            gap={4}
-            mt={4}
-            position="absolute"
-            bottom={-20}
-            left="50%"
-            transform="translateX(-50%)"
-          >
-            <Button
-              variant="outline"
-              onClick={handleHideAllForToday}
-              colorPalette="gray"
-              color="white"
-              size="lg"
-              opacity={0.7}
-              _hover={{ opacity: 1, bg: "transparent" }}
-            >
-              오늘 하루 보지 않기
-            </Button>
-            <Button onClick={handleCloseAll} colorPalette="blue" size="lg">
-              닫기
-            </Button>
-          </Flex>
-        </Box>
+          <Button onClick={handleCloseAll} colorPalette="blue" size="lg">
+            닫기
+          </Button>
+        </Flex>
       </MotionBox>
     </AnimatePresence>
   );
