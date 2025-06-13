@@ -485,7 +485,6 @@ export const EnrollmentManagementTab = ({
 
   const handleExportEnrollments = () => {
     gridRef.current?.api.exportDataAsCsv();
-    console.log("신청자 목록 CSV 다운로드 (AG Grid)");
   };
 
   const agGridContext = useMemo(
@@ -593,9 +592,6 @@ export const EnrollmentManagementTab = ({
             placeholder: "전체",
           },
         ]}
-        onSearchButtonClick={() => {
-          console.log("Search button clicked with filters:", filters);
-        }}
         showSearchButton={true}
       ></CommonGridFilterBar>
       <Flex my={2} justifyContent="space-between" alignItems="center">

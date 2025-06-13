@@ -56,9 +56,6 @@ export default function PopupManagementPage() {
     select: (response) => response.data,
   });
 
-  console.log("현재 선택된 팝업 ID:", selectedPopupId);
-  console.log("현재 선택된 팝업 데이터:", selectedPopup);
-
   const deletePopupMutation = useMutation({
     mutationFn: popupApi.deletePopup,
     onSuccess: (data, popupId) => {
@@ -153,10 +150,6 @@ export default function PopupManagementPage() {
   }, []);
 
   const handleEditorSubmitSuccess = async () => {
-    console.log("팝업 수정 성공 - 시작");
-    console.log("수정된 팝업 ID:", editingPopup?.id);
-    console.log("현재 선택된 팝업 ID:", selectedPopupId);
-
     setIsEditorOpen(false);
     if (editingPopup?.id) {
       await queryClient.invalidateQueries({
@@ -178,8 +171,6 @@ export default function PopupManagementPage() {
       queryKey: popupKeys.lists(),
       refetchType: "all",
     });
-
-    console.log("팝업 수정 성공 - 종료");
   };
 
   const handleCloseDialog = () => {

@@ -186,12 +186,6 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
   const handleUserMemoSave = () => {
     if (!selectedUser) return;
     // TODO: Implement actual memo save mutation
-    console.log(
-      "메모 저장 (UserMemoDialog):",
-      selectedUser.userLoginId,
-      selectedUser.userName,
-      userMemoText
-    );
     // Example: mutation.mutate({ userId: selectedUser.userLoginId, memo: userMemoText });
     onClose();
   };

@@ -269,13 +269,6 @@ export function useArticleForm({
         dataToSend.append(`attachments`, file, file.name);
       });
 
-      console.log('Sending article data:', {
-        articleData: articleDtoPart,
-        mediaFiles: Array.from(pendingMedia.values()).map(f => f.name),
-        mediaLocalIds: allMediaLocalIds,
-        attachments: newlyAddedFiles.map(f => f.name)
-      });
-
       // --- API Call ---
       let nttIdToUpdate: number | undefined = initialData?.nttId;
 
@@ -384,7 +377,6 @@ export function useArticleForm({
 
   // Function to manually set content (e.g., from LexicalEditor)
   const setContent = useCallback((newContent: string) => {
-    console.log("setContent called with:", newContent);
     setFormData((prev) => ({
       ...prev,
       content: newContent,
