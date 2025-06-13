@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Box,
   Flex,
@@ -21,6 +21,7 @@ import { toaster, Toaster } from "@/components/ui/toaster";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { popupApi, popupKeys, PopupListResponse } from "@/lib/api/popup";
 import type { Popup } from "@/types/api";
+import React from "react";
 
 export default function PopupManagementPage() {
   const colors = useColors();
@@ -42,12 +43,21 @@ export default function PopupManagementPage() {
     select: (response) => response.data,
   });
 
+  useEffect(() => {
+    if (popups && popups.length > 0 && !selectedPopupId) {
+      setSelectedPopupId(popups[0].id);
+    }
+  }, [popups, selectedPopupId]);
+
   const { data: selectedPopup } = useQuery({
     queryKey: popupKeys.detail(selectedPopupId!),
     queryFn: () => popupApi.getPopup(selectedPopupId!),
     enabled: !!selectedPopupId,
     select: (response) => response.data,
   });
+
+  console.log("현재 선택된 팝업 ID:", selectedPopupId);
+  console.log("현재 선택된 팝업 데이터:", selectedPopup);
 
   const deletePopupMutation = useMutation({
     mutationFn: popupApi.deletePopup,
@@ -80,7 +90,6 @@ export default function PopupManagementPage() {
         title: "상태 변경 실패",
         description: error.message || "오류가 발생했습니다.",
       });
-      // Re-fetch to revert optimistic update if any, or just to be safe
       queryClient.invalidateQueries({ queryKey: popupKeys.lists() });
     },
   });
@@ -143,15 +152,34 @@ export default function PopupManagementPage() {
     setSelectedPopupId(popup.id);
   }, []);
 
-  const handleEditorSubmitSuccess = () => {
+  const handleEditorSubmitSuccess = async () => {
+    console.log("팝업 수정 성공 - 시작");
+    console.log("수정된 팝업 ID:", editingPopup?.id);
+    console.log("현재 선택된 팝업 ID:", selectedPopupId);
+
     setIsEditorOpen(false);
     if (editingPopup?.id) {
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: popupKeys.detail(editingPopup.id),
+        refetchType: "all",
       });
+
+      if (selectedPopupId === editingPopup.id) {
+        await queryClient.removeQueries({
+          queryKey: popupKeys.detail(selectedPopupId),
+        });
+        const newData = await popupApi.getPopup(selectedPopupId);
+        queryClient.setQueryData(popupKeys.detail(selectedPopupId), newData);
+      }
     }
     setEditingPopup(null);
-    queryClient.invalidateQueries({ queryKey: popupKeys.lists() });
+
+    await queryClient.invalidateQueries({
+      queryKey: popupKeys.lists(),
+      refetchType: "all",
+    });
+
+    console.log("팝업 수정 성공 - 종료");
   };
 
   const handleCloseDialog = () => {
