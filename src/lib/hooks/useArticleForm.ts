@@ -12,6 +12,12 @@ export interface ArticleFormData {
   content: string;
   externalLink?: string;
   captcha?: string;
+  noticeState: string;
+  noticeStartDt: string | null;
+  noticeEndDt: string | null;
+  publishState: string;
+  publishStartDt: string | null;
+  publishEndDt: string | null;
 }
 
 export interface UseArticleFormProps {
@@ -45,6 +51,12 @@ export function useArticleForm({
     content: initialData?.content || "",
     externalLink: initialData?.externalLink || "",
     captcha: "",
+    noticeState: initialData?.noticeState || "N",
+    noticeStartDt: initialData?.noticeStartDt || null,
+    noticeEndDt: initialData?.noticeEndDt || null,
+    publishState: initialData?.publishState || "Y",
+    publishStartDt: initialData?.publishStartDt || null,
+    publishEndDt: initialData?.publishEndDt || null
   }));
 
   const [newlyAddedFiles, setNewlyAddedFiles] = useState<File[]>([]);
@@ -221,46 +233,49 @@ export function useArticleForm({
       // 1. Prepare the object for the 'articleData' part (matching backend BbsArticleDto, excluding content)
       const articleDtoPart = {
         bbsId: bbsId,
-        menuId: menuId, // Ensure menuId is available and correct
+        menuId: menuId,
         title: formData.title,
-        writer: formData.author, // Assuming frontend author maps to backend writer
-        externalLink: formData.externalLink || null,
-        // Add other necessary fields from BbsArticleDto if required by backend for this part
-        // e.g., noticeState, publishState etc., if they are managed in formData
+        writer: formData.author,
+        content: formData.content,
+        noticeState: formData.noticeState,
+        noticeStartDt: formData.noticeStartDt,
+        noticeEndDt: formData.noticeEndDt,
+        publishState: formData.publishState,
+        publishStartDt: formData.publishStartDt,
+        publishEndDt: formData.publishEndDt,
+        externalLink: formData.externalLink || null
       };
 
       // 2. Create FormData
       const dataToSend = new FormData();
 
-      // 3. Append 'articleData' part as a JSON Blob
-      dataToSend.append(
-        "articleData",
-        new Blob([JSON.stringify(articleDtoPart)], { type: "application/json" })
-      );
+      // 3. Append 'articleData' part as a Blob with application/json type
+      const articleDtoBlob = new Blob([JSON.stringify(articleDtoPart)], {
+        type: "application/json",
+      });
+      dataToSend.append("articleData", articleDtoBlob);
 
-      // 4. Append 'editorContentJson' part
-      // Make sure formData.content contains the full JSON string from Lexical with blob: URLs
-      dataToSend.append("editorContentJson", formData.content);
-
-      // 5. Append 'mediaFiles' parts for pending media
+      // 4. Append 'mediaFiles' parts for pending media
       for (const [, file] of pendingMedia.entries()) {
-        dataToSend.append(`mediaFiles`, file, file.name); // Key: "mediaFiles"
+        dataToSend.append(`mediaFiles`, file, file.name);
       }
 
-      // NEW: Append 'mediaLocalIds' as a single JSON array string part
+      // 5. Append 'mediaLocalIds' for each item
       const allMediaLocalIds = Array.from(pendingMedia.keys());
-      if (allMediaLocalIds.length > 0) {
-        dataToSend.append(
-          `mediaLocalIds`,
-          new Blob([JSON.stringify(allMediaLocalIds)], {
-            type: "application/json",
-          })
-        );
-      }
+      allMediaLocalIds.forEach(id => {
+        dataToSend.append("mediaLocalIds", id);
+      });
 
-      // 6. Append 'attachments' part for general attachments (ONLY NEW FILES)
+      // 6. Append 'attachments' part for general attachments
       newlyAddedFiles.forEach((file) => {
         dataToSend.append(`attachments`, file, file.name);
+      });
+
+      console.log('Sending article data:', {
+        articleData: articleDtoPart,
+        mediaFiles: Array.from(pendingMedia.values()).map(f => f.name),
+        mediaLocalIds: allMediaLocalIds,
+        attachments: newlyAddedFiles.map(f => f.name)
       });
 
       // --- API Call ---
@@ -371,6 +386,7 @@ export function useArticleForm({
 
   // Function to manually set content (e.g., from LexicalEditor)
   const setContent = useCallback((newContent: string) => {
+    console.log("setContent called with:", newContent);
     setFormData((prev) => ({
       ...prev,
       content: newContent,
