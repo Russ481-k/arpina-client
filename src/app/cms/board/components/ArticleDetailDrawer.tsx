@@ -16,7 +16,8 @@ import { Article } from "@/lib/api/article";
 
 import { ArticleDisplay } from "@/components/articles/ArticleDisplay";
 import { toaster } from "@/components/ui/toaster";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 
 interface ArticleDetailDrawerProps {
   open: boolean;
@@ -53,7 +54,7 @@ export const ArticleDetailDrawer = ({
   canEdit = false,
   canDelete = false,
 }: ArticleDetailDrawerProps) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user } = useRecoilValue(authState);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handlePrevClick = () => {

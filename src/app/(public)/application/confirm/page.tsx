@@ -26,7 +26,7 @@ import { toaster } from "@/components/ui/toaster";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
 import KISPGPaymentPopup from "@/components/payment/KISPGPaymentFrame";
-import { AuthGuard } from "@/components/guard/AuthGuard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 
 interface MembershipOption {

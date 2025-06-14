@@ -3,7 +3,8 @@ import { boardApi } from "@/lib/api/board";
 import { Article, articleApi, type AttachmentInfoDto } from "@/lib/api/article";
 import { fileApi } from "@/lib/api/file";
 import { BoardMaster, ApiResponse } from "@/types/api";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 import { toaster } from "@/components/ui/toaster";
 
 export interface ArticleFormData {
@@ -73,7 +74,7 @@ export function useArticleForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAdminPageContext, setIsAdminPageContext] = useState(false);
-  const { user } = useAuth();
+  const { user } = useRecoilValue(authState);
 
   // Memoize updateFormField with useCallback
   const updateFormField = useCallback(

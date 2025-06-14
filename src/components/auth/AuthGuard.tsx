@@ -1,12 +1,15 @@
-import { useAuth, UserContextState } from "@/lib/AuthContext";
+"use client";
+
+import React, { useEffect, ReactNode } from "react";
+import { useRecoilValue } from "recoil";
+import { authState, AppUser } from "@/stores/auth";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, ReactNode } from "react";
+import { Spinner, Flex, Text, Box } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
-import { Center, Spinner, Text, Box, Flex } from "@chakra-ui/react";
 
 interface AuthGuardProps {
   children: ReactNode;
-  allowedRoles?: Array<UserContextState["role"]>;
+  allowedRoles?: Array<AppUser["role"]>;
   checkPasswordChange?: boolean;
   redirectTo?: string;
   authenticationNeededMessage?: {
@@ -33,7 +36,7 @@ export const AuthGuard = ({
     description: "이 페이지에 접근할 권한이 없습니다.",
   },
 }: AuthGuardProps) => {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading } = useRecoilValue(authState);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -45,6 +48,7 @@ export const AuthGuard = ({
     if (!isAuthenticated) {
       const publicPaths = [
         "/login",
+        "/cms/login",
         "/signup",
         "/find-credentials/id",
         "/find-credentials/password",
@@ -61,6 +65,7 @@ export const AuthGuard = ({
     }
 
     if (!user) {
+      // This case should ideally not happen if isAuthenticated is true, but as a safeguard:
       if (pathname !== redirectTo) router.push(redirectTo);
       return;
     }
@@ -84,23 +89,43 @@ export const AuthGuard = ({
     if (allowedRoles && allowedRoles.length > 0) {
       const userRole = user.role;
       if (!allowedRoles.includes(userRole)) {
+        let title = authorizationFailedMessage.title;
+        let description = authorizationFailedMessage.description;
+
+        // 관리자 권한이 필요한 페이지에 접근 시 더 구체적인 메시지 표시
+        const requiresAdmin = allowedRoles.some(
+          (role) => role === "ADMIN" || role === "SYSTEM_ADMIN"
+        );
+        if (requiresAdmin) {
+          title = "관리자 전용 페이지";
+          description = "이 페이지에 접근하려면 관리자 권한이 필요합니다.";
+        }
+
         toaster.create({
-          title: authorizationFailedMessage.title,
-          description: authorizationFailedMessage.description,
+          title,
+          description,
           type: "error",
         });
-        router.push(userRole === "ADMIN" ? "/admin/dashboard" : "/");
+
+        let redirectPath = "/";
+        if (userRole === "ADMIN" || userRole === "SYSTEM_ADMIN") {
+          redirectPath = "/cms/menu";
+        }
+        router.push(redirectPath);
         return;
       }
     }
 
-    if (user.role === "ADMIN" && pathname.startsWith("/application/confirm")) {
+    if (
+      (user.role === "ADMIN" || user.role === "SYSTEM_ADMIN") &&
+      pathname.startsWith("/application/confirm")
+    ) {
       toaster.create({
         title: "접근 불가 (관리자)",
         description: "관리자 계정은 해당 페이지에 직접 접근할 수 없습니다.",
         type: "error",
       });
-      router.push("/admin/dashboard");
+      router.push("/");
       return;
     }
   }, [
@@ -119,17 +144,19 @@ export const AuthGuard = ({
 
   if (isLoading) {
     return (
-      <Flex
-        justify="center"
-        align="center"
-        minH={{ base: "calc(100vh - 160px)", md: "300px" }}
-      >
+      <Flex justify="center" align="center" minH={"100vh"}>
         <Box textAlign="center">
           <Spinner size="xl" color="blue.500" mb={4} />
           <Text>사용자 정보를 확인 중입니다...</Text>
         </Box>
       </Flex>
     );
+  }
+
+  // 로딩이 끝났고, 인증되지 않았지만, 아직 리디렉션이 실행되기 전이라면
+  // children을 렌더링하지 않기 위해 null을 반환하여 깜빡임을 방지합니다.
+  if (!isLoading && !isAuthenticated) {
+    return null;
   }
 
   return <>{children}</>;

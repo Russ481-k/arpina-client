@@ -1,7 +1,6 @@
 "use client";
 
 import { RecoilRoot } from "recoil";
-import { AuthProvider } from "@/lib/AuthContext";
 import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { ColorModeProvider } from "@/components/ui/color-mode";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,6 +8,7 @@ import { ReactNode } from "react";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 import { MenuProvider } from "@/lib/contexts/MenuContext";
+import { AuthInitializer } from "@/components/auth/AuthInitializer";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -29,11 +29,10 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <RecoilRoot>
       <QueryClientProvider client={queryClient}>
+        <AuthInitializer />
         <ChakraProvider value={defaultSystem}>
           <ColorModeProvider>
-            <AuthProvider>
-              <MenuProvider>{children}</MenuProvider>
-            </AuthProvider>
+            <MenuProvider>{children}</MenuProvider>
           </ColorModeProvider>
         </ChakraProvider>
         <ReactQueryDevtools initialIsOpen={false} />

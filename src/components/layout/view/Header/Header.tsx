@@ -14,7 +14,7 @@ import NextLink from "next/link";
 import { Menu } from "@/types/api";
 import { usePathname } from "next/navigation";
 import DesktopNav from "../DesktopNav";
-import UtilityIcons from "./UtilityIcons";
+import { UtilityIcons } from "./UtilityIcons";
 import MobileMenuDrawer from "./MobileMenuDrawer";
 import SitemapDrawer from "./SitemapDrawer";
 

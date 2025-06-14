@@ -51,7 +51,8 @@ import {
 import React from "react";
 import { ArticleDetailDrawer } from "./ArticleDetailDrawer";
 import { ArticleWriteDrawer } from "./ArticleWriteDrawer";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 import { LucideEdit } from "lucide-react";
 import CustomPagination from "@/components/common/CustomPagination";
 import { toaster } from "@/components/ui/toaster";
@@ -302,7 +303,7 @@ const BoardPreview = React.memo(function BoardPreview({
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedArticleForDetail, setSelectedArticleForDetail] =
     useState<Article | null>(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useRecoilValue(authState);
   const queryClient = useQueryClient();
   const [previousArticleInDrawer, setPreviousArticleInDrawer] =
     useState<Article | null>(null);
