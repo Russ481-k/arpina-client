@@ -516,7 +516,9 @@ export const ReviewCancelRequestDialog: React.FC<
                               {" "}
                               <Text fontWeight="bold" mb={3}>
                                 환불 계산 내역 (기준 사용일:{" "}
-                                {isOverrideMode
+                                {isFullRefund
+                                  ? 0
+                                  : isOverrideMode
                                   ? "수동"
                                   : currentRefundDetails?.manualUsedDays ??
                                     currentRefundDetails?.usedDays}
@@ -536,16 +538,18 @@ export const ReviewCancelRequestDialog: React.FC<
                                   <Text>
                                     -
                                     {formatCurrency(
-                                      isOverrideMode
+                                      isFullRefund
+                                        ? 0
+                                        : isOverrideMode
                                         ? (currentRefundDetails.paidLessonAmount ??
                                             0) -
-                                            (parseInt(
-                                              finalRefundAmountInput.replace(
-                                                /[^0-9]/g,
-                                                ""
-                                              ),
-                                              10
-                                            ) || 0)
+                                          (parseInt(
+                                            finalRefundAmountInput.replace(
+                                              /[^0-9]/g,
+                                              ""
+                                            ),
+                                            10
+                                          ) || 0)
                                         : currentRefundDetails?.lessonUsageAmount
                                     )}
                                   </Text>
