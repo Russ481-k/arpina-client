@@ -138,6 +138,7 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
             variant="outline"
             aria-label="Search"
             onClick={onSearchButtonClick}
+            type="button"
           >
             <SearchIcon size={14} />
           </IconButton>

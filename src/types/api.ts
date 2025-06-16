@@ -1100,3 +1100,41 @@ export interface Popup {
 export interface PopupOrderUpdatePayload {
   orderedIds: number[];
 }
+
+export interface GroupReservationInquiry {
+  id: number;
+  status: "PENDING" | "CONFIRMED" | "CANCELED";
+  eventType?: string;
+  eventName?: string;
+  seatingArrangement?: string;
+  adultAttendees?: number;
+  childAttendees?: number;
+  diningServiceUsage?: boolean;
+  otherRequests?: string;
+  customerGroupName: string;
+  customerRegion?: string;
+  contactPersonName: string;
+  contactPersonDpt?: string;
+  contactPersonPhone: string;
+  contactPersonEmail: string;
+  privacyAgreed: boolean;
+  marketingAgreed: boolean;
+  adminMemo?: string;
+  createdBy?: string;
+  createdIp?: string;
+  createdDate: string;
+  updatedBy?: string;
+  updatedIp?: string;
+  updatedDate: string;
+  roomReservations: InquiryRoomReservation[];
+}
+
+export interface InquiryRoomReservation {
+  id: number;
+  inquiryId: number;
+  roomSizeDesc?: string;
+  roomTypeDesc?: string;
+  startDate?: string;
+  endDate?: string;
+  usageTimeDesc?: string;
+}
