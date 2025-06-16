@@ -37,8 +37,7 @@ import type {
   ApiResponse,
 } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
-import type { CancellationRequestRecordStatus } from "@/types/statusTypes";
-import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes";
+import type { EnrollmentPayStatus } from "@/types/statusTypes";
 import { AxiosError } from "axios";
 
 // API 응답 구조에 맞게 인터페이스 수정
@@ -87,22 +86,13 @@ export interface CancelRequestData {
 
   // Additional fields for the grid in CancellationRefundTab
   id?: string;
-  paymentDisplayStatus?: EnrollmentPaymentLifecycleStatus;
+  paymentDisplayStatus?: EnrollmentPayStatus;
 }
-
-// Define query keys if specific invalidations are needed from this dialog
-// const cancelTabQueryKeys = {
-//   cancelRequests: (status?: string) => ["adminCancelRequests", status] as const,
-//   refundPreview: (enrollId: number, manualUsedDays?: number) => ["refundPreview", enrollId, manualUsedDays] as const,
-// };
 
 interface ReviewCancelRequestDialogProps {
   isOpen: boolean;
   onClose: () => void;
   selectedRequest: CancelRequestData | null;
-  // It's often better to pass specific data rather than the whole queryClient
-  // but if complex invalidations are needed, it can be an option.
-  // queryClient: ReturnType<typeof useQueryClient>;
 }
 
 // Helper functions (consider moving to a shared utility file)
@@ -113,12 +103,6 @@ const formatCurrency = (
   if (amount === undefined || amount === null) return "-";
   const formatted = new Intl.NumberFormat("ko-KR").format(Math.round(amount));
   return showWon ? formatted + "원" : formatted;
-};
-
-const formatNumberWithCommas = (value: string | number): string => {
-  const num = String(value).replace(/[^0-9]/g, "");
-  if (num === "") return "";
-  return new Intl.NumberFormat("ko-KR").format(Number(num));
 };
 
 export const ReviewCancelRequestDialog: React.FC<
@@ -158,7 +142,7 @@ export const ReviewCancelRequestDialog: React.FC<
           selectedRequest.calculatedRefundDetails?.paidLockerAmount,
       });
       setAdminComment("");
-      setIsFullRefund(false); // Reset checkbox on open
+      setIsFullRefund(false);
       setIsOverrideMode(false);
       setFinalRefundAmountInput(
         formatCurrency(
@@ -199,7 +183,9 @@ export const ReviewCancelRequestDialog: React.FC<
     if (checked) {
       // "Full Refund" is a manual override.
       setIsOverrideMode(true);
-      const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
+      const totalPaid =
+        (selectedRequest?.paymentInfo.lessonPaidAmt ?? 0) +
+        (selectedRequest?.paymentInfo.lockerPaidAmt ?? 0);
       setFinalRefundAmountInput(formatCurrency(totalPaid, false));
     } else {
       // Unchecking reverts to calculation mode based on used days.
@@ -218,7 +204,9 @@ export const ReviewCancelRequestDialog: React.FC<
       numericString === "" ? "" : formatCurrency(numericValue, false);
     setFinalRefundAmountInput(formattedValue);
 
-    const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
+    const totalPaid =
+      (selectedRequest?.paymentInfo.lessonPaidAmt ?? 0) +
+      (selectedRequest?.paymentInfo.lockerPaidAmt ?? 0);
     if (!isNaN(numericValue) && numericValue === totalPaid) {
       setIsFullRefund(true);
     } else {
@@ -273,7 +261,9 @@ export const ReviewCancelRequestDialog: React.FC<
 
         // API 응답의 isFullRefund 값을 사용하여 UI 상태 업데이트
         if (refundDetailsPreview.isFullRefund) {
-          const totalPaid = selectedRequest?.paymentInfo.paidAmt ?? 0;
+          const totalPaid =
+            (selectedRequest?.paymentInfo.lessonPaidAmt ?? 0) +
+            (selectedRequest?.paymentInfo.lockerPaidAmt ?? 0);
           setFinalRefundAmountInput(formatCurrency(totalPaid, false));
         }
 
@@ -361,7 +351,7 @@ export const ReviewCancelRequestDialog: React.FC<
   const handleApprove = () => {
     if (!selectedRequest) return;
 
-    let requestData: ApproveCancelRequestDto = {
+    let requestData: Partial<ApproveCancelRequestDto> = {
       adminComment: adminComment || undefined,
     };
 
@@ -392,7 +382,7 @@ export const ReviewCancelRequestDialog: React.FC<
 
     approveMutation.mutate({
       enrollId: selectedRequest.enrollId,
-      data: requestData,
+      data: requestData as ApproveCancelRequestDto,
     });
   };
 
@@ -406,8 +396,6 @@ export const ReviewCancelRequestDialog: React.FC<
       data: denialData,
     });
   };
-
-  const displayRefundDetails = currentRefundDetails; // Always use the state that gets updated by preview
 
   if (!selectedRequest) return null;
 
@@ -447,7 +435,8 @@ export const ReviewCancelRequestDialog: React.FC<
                         <Field.Label>결제 총액</Field.Label>
                         <Input
                           value={formatCurrency(
-                            selectedRequest?.paymentInfo?.paidAmt
+                            (selectedRequest?.paymentInfo.lessonPaidAmt ?? 0) +
+                              (selectedRequest?.paymentInfo.lockerPaidAmt ?? 0)
                           )}
                           readOnly
                         />
@@ -479,7 +468,9 @@ export const ReviewCancelRequestDialog: React.FC<
                           value={manualUsedDaysInput?.toString()}
                           onChange={(e) => handleUsedDaysChange(e.target.value)}
                           min={0}
-                          disabled={previewRefundMutation.isPending}
+                          disabled={
+                            previewRefundMutation.isPending || isOverrideMode
+                          }
                         />
                         <Field.HelperText>
                           최초 시스템 계산일:{" "}
@@ -525,8 +516,10 @@ export const ReviewCancelRequestDialog: React.FC<
                               {" "}
                               <Text fontWeight="bold" mb={3}>
                                 환불 계산 내역 (기준 사용일:{" "}
-                                {currentRefundDetails?.manualUsedDays ??
-                                  currentRefundDetails?.usedDays}
+                                {isOverrideMode
+                                  ? "수동"
+                                  : currentRefundDetails?.manualUsedDays ??
+                                    currentRefundDetails?.usedDays}
                                 일)
                               </Text>
                               <Stack gap={2} fontSize="sm">
@@ -543,7 +536,17 @@ export const ReviewCancelRequestDialog: React.FC<
                                   <Text>
                                     -
                                     {formatCurrency(
-                                      currentRefundDetails?.lessonUsageAmount
+                                      isOverrideMode
+                                        ? (currentRefundDetails.paidLessonAmount ??
+                                            0) -
+                                            (parseInt(
+                                              finalRefundAmountInput.replace(
+                                                /[^0-9]/g,
+                                                ""
+                                              ),
+                                              10
+                                            ) || 0)
+                                        : currentRefundDetails?.lessonUsageAmount
                                     )}
                                   </Text>
                                 </Flex>
@@ -570,7 +573,6 @@ export const ReviewCancelRequestDialog: React.FC<
                                           )
                                         }
                                         disabled={
-                                          isFullRefund ||
                                           previewRefundMutation.isPending
                                         }
                                         pr="2.5rem"
@@ -597,8 +599,9 @@ export const ReviewCancelRequestDialog: React.FC<
                   </Fieldset.Content>
                 </Fieldset.Root>
 
-                <Stack direction="column" gap={4} my={4}>
+                <Stack direction="row" gap={4} my={2} align="center">
                   <Checkbox.Root
+                    id="full-refund-override"
                     checked={isFullRefund}
                     onCheckedChange={(details) =>
                       handleFullRefundChange(details.checked === true)
