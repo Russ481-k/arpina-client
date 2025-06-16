@@ -70,4 +70,11 @@ export const reservationApi = {
     );
     return response.data;
   },
+
+  updateGroupReservationInquiryStatus: (
+    id: number,
+    payload: { status: string; memo?: string }
+  ) => {
+    return privateApi.patch(`/cms/group-reservations/${id}`, payload);
+  },
 }; 

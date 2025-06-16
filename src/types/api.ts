@@ -1127,6 +1127,7 @@ export interface GroupReservationInquiry {
   updatedIp?: string;
   updatedDate: string;
   roomReservations: InquiryRoomReservation[];
+  memo?: string;
 }
 
 export interface InquiryRoomReservation {

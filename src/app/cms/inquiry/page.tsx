@@ -9,6 +9,7 @@ import {
   ModuleRegistry,
   AllCommunityModule,
   ICellRendererParams,
+  RowClickedEvent,
 } from "ag-grid-community";
 
 import { reservationApi, reservationKeys } from "@/lib/api/reservation";
@@ -18,8 +19,24 @@ import { GridSection } from "@/components/ui/grid-section";
 import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
 import { CustomPagination } from "@/components/common/CustomPagination";
+import { ArticleDetailDialog } from "./components/ArticleDetailDialog";
+import { STATUS_MAP } from "./lib/constants";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const StatusRenderer = (props: ICellRendererParams) => {
+  const value = props.value as string;
+  const statusInfo = STATUS_MAP[value as keyof typeof STATUS_MAP] || {
+    label: value,
+    colorPalette: "gray",
+  };
+
+  return (
+    <Badge colorPalette={statusInfo.colorPalette} variant="outline">
+      {statusInfo.label}
+    </Badge>
+  );
+};
 
 export default function InquiryManagementPage() {
   const [gridApi, setGridApi] = useState<any>(null);
@@ -36,6 +53,10 @@ export default function InquiryManagementPage() {
     eventType: "",
   });
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedInquiry, setSelectedInquiry] =
+    useState<GroupReservationInquiry | null>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: reservationKeys.list(queryParams),
     queryFn: () => reservationApi.getGroupReservationInquiries(queryParams),
@@ -50,9 +71,22 @@ export default function InquiryManagementPage() {
   const { colorMode } = useColorMode();
   const agGridTheme =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
+
+  const handleRowClick = (event: RowClickedEvent<GroupReservationInquiry>) => {
+    if (event.data) {
+      setSelectedInquiry(event.data);
+      setIsDialogOpen(true);
+    }
+  };
+
   const { rowData, columnDefs } = useMemo(() => {
     const baseColDefs: ColDef<GroupReservationInquiry>[] = [
-      { headerName: "상태", field: "status", minWidth: 100 },
+      {
+        headerName: "상태",
+        field: "status",
+        minWidth: 100,
+        cellRenderer: StatusRenderer,
+      },
       { headerName: "행사 구분", field: "eventType", minWidth: 120 },
       { headerName: "행사명", field: "eventName", minWidth: 200, flex: 1 },
       { headerName: "단체명", field: "customerGroupName", minWidth: 200 },
@@ -277,6 +311,7 @@ export default function InquiryManagementPage() {
               rowData={rowData}
               columnDefs={columnDefs}
               onGridReady={onGridReady}
+              onRowClicked={handleRowClick}
               defaultColDef={{
                 sortable: true,
                 filter: true,
@@ -304,6 +339,11 @@ export default function InquiryManagementPage() {
           </Flex>
         </Flex>
       </GridSection>
+      <ArticleDetailDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        inquiry={selectedInquiry}
+      />
     </Box>
   );
 }
