@@ -58,31 +58,6 @@ export const displayStatusConfig: Record<
     colorPalette: "gray",
     badgeVariant: "solid",
   },
-  AWAITING_PAYMENT: {
-    label: "결제대기",
-    colorPalette: "yellow",
-    badgeVariant: "solid",
-  },
-  PAYMENT_COMPLETED: {
-    label: "결제완료",
-    colorPalette: "green",
-    badgeVariant: "solid",
-  },
-  NOT_APPLICABLE: {
-    label: "해당없음",
-    colorPalette: "gray",
-    badgeVariant: "outline",
-  },
-  REFUND_PENDING: {
-    label: "환불대기",
-    colorPalette: "blue",
-    badgeVariant: "outline",
-  },
-  PAYMENT_FAILED: {
-    label: "결제실패",
-    colorPalette: "red",
-    badgeVariant: "solid",
-  },
   // --- PaymentStatus 끝 ---
 
   // --- Enrollment 등 다른 엔티티 상태 ---
@@ -105,6 +80,16 @@ export const displayStatusConfig: Record<
     label: "관리자 취소(환불필요)",
     colorPalette: "red",
     badgeVariant: "solid",
+  },
+  EXPIRED: {
+    label: "만료",
+    colorPalette: "gray",
+    badgeVariant: "outline",
+  },
+  CANCELED_UNPAID: {
+    label: "미결제 취소",
+    colorPalette: "gray",
+    badgeVariant: "outline",
   },
 };
 

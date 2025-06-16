@@ -700,7 +700,7 @@ export default function MyPage() {
     try {
       const renewalResponse = await swimmingPaymentService.renewalLesson({
         lessonId,
-        carryLocker: false, // Or allow user to choose
+        wantsLocker: false, // Or allow user to choose
       });
 
       if (renewalResponse) {
