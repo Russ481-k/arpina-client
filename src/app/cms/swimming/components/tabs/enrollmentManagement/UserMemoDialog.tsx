@@ -31,7 +31,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge"; // Import the common badge
-import type { EnrollmentPaymentLifecycleStatus } from "@/types/statusTypes"; // Added import
+import type { EnrollmentPayStatus } from "@/types/statusTypes"; // Added import
 
 // Re-define or import EnrollmentData if it's not too complex, or pass as generic
 // For simplicity, let's redefine a minimal version here or expect it from props.
@@ -40,7 +40,7 @@ interface EnrollmentData {
   enrollId: number;
   lessonId: number;
   lessonTitle: string;
-  payStatus: EnrollmentPaymentLifecycleStatus | string; // MODIFIED: Was PaymentTransactionStatus
+  payStatus: EnrollmentPayStatus | string; // MODIFIED: Was PaymentTransactionStatus
   usesLocker: boolean;
   userName: string;
   userLoginId: string;
@@ -153,9 +153,9 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
           > // MODIFIED for clarity
         ) => (
           <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
-            {/* CommonPayStatusBadge now expects EnrollmentPaymentLifecycleStatus | string */}
+            {/* CommonPayStatusBadge now expects EnrollmentPayStatus | string */}
             <CommonPayStatusBadge
-              status={params.value as EnrollmentPaymentLifecycleStatus}
+              status={params.value as EnrollmentPayStatus}
             />
           </Flex>
         ), // Use CommonPayStatusBadge

@@ -1,4 +1,4 @@
-import { PaymentTransactionStatus } from "@/types/statusTypes";
+import { PaymentStatus } from "@/types/statusTypes";
 import { privateApi } from "./client"; // Assuming CMS uses the same authenticated client
 import type {
   AdminLessonDto,
@@ -247,7 +247,7 @@ export const adminApi = {
 
     const adminPaymentDataContent = paginatedDto.data.content.map(
       (dto: PaymentAdminDto): AdminPaymentData => {
-        const mappedStatus: PaymentTransactionStatus = dto.status;
+        const mappedStatus: PaymentStatus = dto.status;
 
         return {
           paymentId: dto.paymentId,

@@ -16,10 +16,8 @@ export type PaymentStatus =
  * (예: `Enrollment` 엔티티는 `REFUND_REQUESTED` 상태를 가질 수 있습니다.)
  */
 export type UiDisplayStatus =
-  | PaymentTransactionStatus
-  | EnrollmentPaymentLifecycleStatus
-  | "UNPAID"
-  | "REFUND_REQUESTED"
+  | PaymentStatus
+  | EnrollmentPayStatus
   | "PAYMENT_PENDING"
   | "ADMIN_CANCELED";
 
@@ -57,34 +55,8 @@ export type EnrollmentPayStatus =
   | "REFUNDED" // 전액 환불 완료
   | "CANCELED_UNPAID"; // 미결제 취소
 
-/**
- * 수강 신청의 생명주기 상태입니다.
- * 참고: 이 타입은 결제 상태와는 별개로, 수강 신청 자체의 상태를 나타냅니다.
- *
- * @deprecated 2024-05-24 부로 백엔드의 실제 상태값과 일치하는 `EnrollmentPayStatus`로 대체되었습니다. 이 타입은 더 이상 사용하지 않습니다.
- */
-export type EnrollmentPaymentLifecycleStatus =
-  | "NOT_APPLICABLE"
-  | "PAYMENT_PENDING"
-  | "PAYMENT_COMPLETED"
-  | "PAYMENT_FAILED"
-  | "PARTIALLY_REFUNDED"
-  | "REFUNDED"
-  | "REFUND_REQUESTED"
-  | "REFUND_PENDING_ADMIN_CANCEL";
 
-/**
- * @deprecated `PaymentStatus`로 통합되었습니다.
- */
-export type PaymentTransactionStatus =
-  | "PAID"
-  | "FAILED"
-  | "CANCELED"
-  | "PARTIAL_REFUNDED"
-  | "AWAITING_PAYMENT"
-  | "REFUND_PENDING"
-  | "REFUND_PENDING_ADMIN_CANCEL"
-  | "PAYMENT_FAILED";
+
 
 // Status of the enrollment application itself, separate from payment.
 export type EnrollmentApplicationStatus =

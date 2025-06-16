@@ -25,10 +25,6 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
 import { MypageEnrollDto, MypagePaymentDto } from "@/types/api";
-import {
-  PaymentTransactionStatus,
-  EnrollmentPaymentLifecycleStatus,
-} from "@/types/statusTypes"; // Import new status types
 import { toaster } from "@/components/ui/toaster";
 import {
   PasswordInput,
