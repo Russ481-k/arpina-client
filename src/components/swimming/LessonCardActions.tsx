@@ -3,7 +3,7 @@ import { Button, Text, Box, Flex } from "@chakra-ui/react";
 import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
 import {
-  EnrollmentPaymentLifecycleStatus,
+  EnrollmentPayStatus,
   EnrollmentCancellationProgressStatus,
 } from "@/types/statusTypes";
 import dayjs from "dayjs";
@@ -139,10 +139,34 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   }, [lesson.id, lesson.reservationId, enrollment, isCountingDown]);
 
   if (enrollment) {
-    const enrollStatus = enrollment.status as EnrollmentPaymentLifecycleStatus;
+    const enrollStatus = enrollment.status as EnrollmentPayStatus;
     const cancelStatus =
       enrollment.cancelStatus as EnrollmentCancellationProgressStatus;
     const { enrollId } = enrollment;
+
+    if (enrollStatus === "EXPIRED") {
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
+            <Text color="gray.500" fontSize="sm">
+              결제 시간 만료
+            </Text>
+          </Button>
+        </Flex>
+      );
+    }
+
+    if (enrollStatus === "REFUND_REQUESTED") {
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
+            <Text color="gray.500" fontSize="sm">
+              환불 처리중
+            </Text>
+          </Button>
+        </Flex>
+      );
+    }
 
     if (
       enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
@@ -153,6 +177,18 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
               관리자 확인 취소
+            </Text>
+          </Button>
+        </Flex>
+      );
+    }
+
+    if (enrollStatus === "REFUNDED") {
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
+            <Text color="gray.500" fontSize="sm">
+              환불 완료
             </Text>
           </Button>
         </Flex>

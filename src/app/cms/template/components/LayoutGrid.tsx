@@ -21,7 +21,7 @@ export const LayoutGrid: React.FC<LayoutGridProps> = ({
   layout,
   onLayoutChange,
 }) => {
-  const gridRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef(null) as React.MutableRefObject<HTMLDivElement | null>;
   const [gridSize, setGridSize] = useState({ width: 800, height: 600 }); // 고정된 크기로 설정
 
   const [{ isOver }, drop] = useDrop<DragItem, void, { isOver: boolean }>({
@@ -75,9 +75,7 @@ export const LayoutGrid: React.FC<LayoutGridProps> = ({
     <Box
       ref={(node: HTMLDivElement | null) => {
         drop(node);
-        if (node) {
-          gridRef.current = node;
-        }
+        gridRef.current = node;
       }}
       position="relative"
       width="800px"

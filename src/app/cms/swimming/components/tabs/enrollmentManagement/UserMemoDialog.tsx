@@ -46,7 +46,6 @@ interface EnrollmentData {
   userLoginId: string;
   userPhone: string;
   isRenewal?: boolean;
-  enrollStatus?: string;
   createdAt?: string;
   userMemo?: string;
 }
@@ -144,7 +143,7 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
         ) => (params.value ? new Date(params.value).toLocaleDateString() : ""),
       },
       {
-        headerName: "결제상태",
+        headerName: "신청/결제 상태",
         field: "payStatus",
         // cellRenderer: PayStatusCellRenderer, // Remove this
         cellRenderer: (
@@ -167,7 +166,6 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
           justifyContent: "center",
         },
       },
-      { headerName: "신청상태", field: "enrollStatus", width: 90 },
       {
         headerName: "사물함",
         field: "usesLocker",

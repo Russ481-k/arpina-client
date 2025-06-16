@@ -39,11 +39,25 @@ export type EnrollmentCancellationProgressStatus =
   | "DENIED"; // 거부됨 (PG사)
 
 /**
+ * [백엔드 확인 완료] 수강 신청의 결제 관련 상태를 나타내는 공식 타입입니다.
+ * 2024-05-24 백엔드 팀의 회신에 따라 정의되었습니다.
+ * 'MypageEnrollDto'의 'status' 필드에 사용됩니다.
+ */
+export type EnrollmentPayStatus =
+  | "UNPAID" // 미결제
+  | "PAID" // 결제 완료
+  | "EXPIRED" // 만료
+  | "REFUND_REQUESTED" // 환불 요청
+  | "REFUND_PENDING_ADMIN_CANCEL" // 환불 대기 (관리자 취소)
+  | "PARTIALLY_REFUNDED" // 부분 환불 완료
+  | "REFUNDED" // 전액 환불 완료
+  | "CANCELED_UNPAID"; // 미결제 취소
+
+/**
  * 수강 신청의 생명주기 상태입니다.
  * 참고: 이 타입은 결제 상태와는 별개로, 수강 신청 자체의 상태를 나타냅니다.
  *
- * @deprecated `PaymentStatus`로 통합되었으므로 더 이상 사용하지 않습니다.
- * `mypage/page.tsx` 또는 다른 곳에서 사용 중인 경우 `PaymentStatus`로 마이그레이션해야 합니다.
+ * @deprecated 2024-05-24 부로 백엔드의 실제 상태값과 일치하는 `EnrollmentPayStatus`로 대체되었습니다. 이 타입은 더 이상 사용하지 않습니다.
  */
 export type EnrollmentPaymentLifecycleStatus =
   | "NOT_APPLICABLE"
