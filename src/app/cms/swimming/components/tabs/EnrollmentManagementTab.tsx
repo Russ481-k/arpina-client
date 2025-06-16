@@ -95,7 +95,6 @@ interface EnrollmentData {
     adminComment?: string;
   };
   userMemo?: string;
-  enrollStatus?: EnrollmentApplicationStatus | string;
   createdAt?: string;
   membershipType?: string;
 }
@@ -273,7 +272,6 @@ export const EnrollmentManagementTab = ({
           isRenewal: false,
           discountInfo: undefined,
           userMemo: undefined,
-          enrollStatus: dto.status as EnrollmentApplicationStatus | string,
           createdAt: dto.createdAt,
           membershipType: dto.membershipType,
         })
