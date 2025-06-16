@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Button,
@@ -84,7 +85,33 @@ export default function GroupReservationPage() {
     handleSubmit,
     handleBlur,
     updateAndValidate,
+    fieldToFocus,
+    clearFieldToFocus,
   } = useGroupReservationForm();
+
+  const router = useRouter();
+  const fieldRefs = useRef(new Map<string, HTMLElement>());
+
+  React.useEffect(() => {
+    if (fieldToFocus) {
+      const element = fieldRefs.current.get(fieldToFocus);
+
+      if (element) {
+        if (element.getAttribute("role") === "radiogroup") {
+          const firstRadio =
+            element.querySelector<HTMLElement>('[role="radio"]');
+          if (firstRadio) {
+            firstRadio.focus();
+            firstRadio.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        } else {
+          element.focus();
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      clearFieldToFocus();
+    }
+  }, [fieldToFocus, clearFieldToFocus]);
 
   const isRoomValid = (index: number) => {
     if (!Array.isArray(errors.roomReservations)) return false;
@@ -118,7 +145,9 @@ export default function GroupReservationPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          handleSubmit(e);
+          handleSubmit(e, () => {
+            router.push("/");
+          });
         }}
       >
         <VStack gap={8} align="stretch">
@@ -137,6 +166,9 @@ export default function GroupReservationPage() {
                 onCheckedChange={(details) =>
                   handleAllAgreementChange(details.checked === true)
                 }
+                ref={(el) => {
+                  if (el) fieldRefs.current.set("privacyAgreed", el);
+                }}
               >
                 <Checkbox.HiddenInput />
                 <Checkbox.Control />
@@ -173,11 +205,6 @@ export default function GroupReservationPage() {
                 bg="gray.50"
                 resize="none"
               />
-              {errors.privacyAgreed && (
-                <Text color="red.500" fontSize="sm" mt={-3} pl={8}>
-                  {errors.privacyAgreed}
-                </Text>
-              )}
             </AgreementItem>
             <AgreementItem
               title="선택 수집 항목(마케팅 활용)에 대한 동의"
@@ -213,7 +240,7 @@ export default function GroupReservationPage() {
           <Fieldset.Root>
             <Fieldset.Legend>행사정보</Fieldset.Legend>
             <VStack gap={4} align="stretch" mt={4}>
-              <Field.Root required>
+              <Field.Root required invalid={!!errors.eventType}>
                 <Field.Label>
                   행사구분{" "}
                   <Text as="span" color="red.500">
@@ -228,7 +255,11 @@ export default function GroupReservationPage() {
                   }
                 >
                   <Select.Control>
-                    <Select.Trigger>
+                    <Select.Trigger
+                      ref={(el) => {
+                        if (el) fieldRefs.current.set("eventType", el);
+                      }}
+                    >
                       <Select.ValueText placeholder="선택해주세요" />
                     </Select.Trigger>
                   </Select.Control>
@@ -247,14 +278,10 @@ export default function GroupReservationPage() {
                     </Select.Positioner>
                   </Portal>
                 </Select.Root>
-                {errors.eventType && (
-                  <Text color="red.500" fontSize="sm">
-                    {errors.eventType}
-                  </Text>
-                )}
+                <Field.ErrorText>{errors.eventType}</Field.ErrorText>
               </Field.Root>
 
-              <Field.Root required>
+              <Field.Root required invalid={!!errors.eventName}>
                 <Field.Label>
                   행사명{" "}
                   <Text as="span" color="red.500">
@@ -262,16 +289,15 @@ export default function GroupReservationPage() {
                   </Text>
                 </Field.Label>
                 <Input
+                  ref={(el) => {
+                    if (el) fieldRefs.current.set("eventName", el);
+                  }}
                   placeholder="행사명을 입력해주세요"
                   value={formData.eventName}
                   onChange={(e) => updateField("eventName", e.target.value)}
                   onBlur={() => handleBlur("eventName")}
                 />
-                {errors.eventName && (
-                  <Text color="red.500" fontSize="sm">
-                    {errors.eventName}
-                  </Text>
-                )}
+                <Field.ErrorText>{errors.eventName}</Field.ErrorText>
               </Field.Root>
 
               <For each={formData.roomReservations}>
@@ -309,7 +335,14 @@ export default function GroupReservationPage() {
                       )}
                     </Flex>
                     <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                      <Field.Root w="full" required>
+                      <Field.Root
+                        w="full"
+                        required
+                        invalid={
+                          Array.isArray(errors.roomReservations) &&
+                          !!errors.roomReservations[index]?.roomSizeDesc
+                        }
+                      >
                         <Field.Label>
                           세미나실 크기{" "}
                           <Text as="span" color="red.500">
@@ -329,15 +362,16 @@ export default function GroupReservationPage() {
                               );
                             }}
                           >
-                            <Select.Control
-                              borderColor={
-                                Array.isArray(errors.roomReservations) &&
-                                errors.roomReservations[index]?.roomSizeDesc
-                                  ? "red.500"
-                                  : undefined
-                              }
-                            >
-                              <Select.Trigger>
+                            <Select.Control>
+                              <Select.Trigger
+                                ref={(el) => {
+                                  if (el)
+                                    fieldRefs.current.set(
+                                      `roomReservations.${index}.roomSizeDesc`,
+                                      el
+                                    );
+                                }}
+                              >
                                 <Select.ValueText placeholder="크기 선택" />
                               </Select.Trigger>
                             </Select.Control>
@@ -361,7 +395,14 @@ export default function GroupReservationPage() {
                         </HStack>
                       </Field.Root>
 
-                      <Field.Root w="full" required>
+                      <Field.Root
+                        w="full"
+                        required
+                        invalid={
+                          Array.isArray(errors.roomReservations) &&
+                          !!errors.roomReservations[index]?.roomTypeDesc
+                        }
+                      >
                         <Field.Label>
                           세미나실 종류{" "}
                           <Text as="span" color="red.500">
@@ -382,15 +423,16 @@ export default function GroupReservationPage() {
                             }
                             disabled={!room.roomSizeDesc}
                           >
-                            <Select.Control
-                              borderColor={
-                                Array.isArray(errors.roomReservations) &&
-                                errors.roomReservations[index]?.roomTypeDesc
-                                  ? "red.500"
-                                  : undefined
-                              }
-                            >
-                              <Select.Trigger>
+                            <Select.Control>
+                              <Select.Trigger
+                                ref={(el) => {
+                                  if (el)
+                                    fieldRefs.current.set(
+                                      `roomReservations.${index}.roomTypeDesc`,
+                                      el
+                                    );
+                                }}
+                              >
                                 <Select.ValueText placeholder="종류 선택" />
                               </Select.Trigger>
                             </Select.Control>
@@ -419,7 +461,14 @@ export default function GroupReservationPage() {
                         </HStack>
                       </Field.Root>
 
-                      <Field.Root w="full" required>
+                      <Field.Root
+                        w="full"
+                        required
+                        invalid={
+                          Array.isArray(errors.roomReservations) &&
+                          !!errors.roomReservations[index]?.startDate
+                        }
+                      >
                         <Field.Label>
                           시작일{" "}
                           <Text as="span" color="red.500">
@@ -428,6 +477,13 @@ export default function GroupReservationPage() {
                         </Field.Label>
                         <HStack w="full">
                           <Input
+                            ref={(el) => {
+                              if (el)
+                                fieldRefs.current.set(
+                                  `roomReservations.${index}.startDate`,
+                                  el
+                                );
+                            }}
                             w="full"
                             type="date"
                             min={new Date().toISOString().split("T")[0]}
@@ -441,9 +497,20 @@ export default function GroupReservationPage() {
                             }
                           />
                         </HStack>
+                        <Field.ErrorText>
+                          {Array.isArray(errors.roomReservations) &&
+                            errors.roomReservations[index]?.startDate}
+                        </Field.ErrorText>
                       </Field.Root>
 
-                      <Field.Root w="full" required>
+                      <Field.Root
+                        w="full"
+                        required
+                        invalid={
+                          Array.isArray(errors.roomReservations) &&
+                          !!errors.roomReservations[index]?.endDate
+                        }
+                      >
                         <Field.Label>
                           종료일{" "}
                           <Text as="span" color="red.500">
@@ -452,6 +519,13 @@ export default function GroupReservationPage() {
                         </Field.Label>
                         <HStack w="full">
                           <Input
+                            ref={(el) => {
+                              if (el)
+                                fieldRefs.current.set(
+                                  `roomReservations.${index}.endDate`,
+                                  el
+                                );
+                            }}
                             w="full"
                             type="date"
                             min={new Date().toISOString().split("T")[0]}
@@ -461,9 +535,20 @@ export default function GroupReservationPage() {
                             }
                           />
                         </HStack>
+                        <Field.ErrorText>
+                          {Array.isArray(errors.roomReservations) &&
+                            errors.roomReservations[index]?.endDate}
+                        </Field.ErrorText>
                       </Field.Root>
                     </Grid>
-                    <Field.Root w="full" required>
+                    <Field.Root
+                      w="full"
+                      required
+                      invalid={
+                        Array.isArray(errors.roomReservations) &&
+                        !!errors.roomReservations[index]?.usageTimeDesc
+                      }
+                    >
                       <Field.Label>
                         사용시간{" "}
                         <Text as="span" color="red.500">
@@ -483,15 +568,16 @@ export default function GroupReservationPage() {
                             )
                           }
                         >
-                          <Select.Control
-                            borderColor={
-                              Array.isArray(errors.roomReservations) &&
-                              errors.roomReservations[index]?.usageTimeDesc
-                                ? "red.500"
-                                : undefined
-                            }
-                          >
-                            <Select.Trigger>
+                          <Select.Control>
+                            <Select.Trigger
+                              ref={(el) => {
+                                if (el)
+                                  fieldRefs.current.set(
+                                    `roomReservations.${index}.usageTimeDesc`,
+                                    el
+                                  );
+                              }}
+                            >
                               <Select.ValueText placeholder="시간 선택" />
                             </Select.Trigger>
                           </Select.Control>
@@ -522,14 +608,20 @@ export default function GroupReservationPage() {
                   {errors.roomReservations}
                 </Text>
               )}
-              <Button onClick={addRoomRequest} variant="outline">
+              <Button
+                ref={(el) => {
+                  if (el) fieldRefs.current.set("add-room-button", el);
+                }}
+                onClick={addRoomRequest}
+                variant="outline"
+              >
                 <HStack>
                   <PlusIcon />
                   <Text>세미나실 추가</Text>
                 </HStack>
               </Button>
 
-              <Field.Root required>
+              <Field.Root required invalid={!!errors.seatingArrangement}>
                 <Field.Label>
                   좌석배치방식{" "}
                   <Text as="span" color="red.500">
@@ -537,6 +629,9 @@ export default function GroupReservationPage() {
                   </Text>
                 </Field.Label>
                 <RadioGroup.Root
+                  ref={(el) => {
+                    if (el) fieldRefs.current.set("seatingArrangement", el);
+                  }}
                   colorPalette="teal"
                   value={formData.seatingArrangement}
                   onValueChange={(details) =>
@@ -576,18 +671,14 @@ export default function GroupReservationPage() {
                     </For>
                   </HStack>
                 </RadioGroup.Root>
-                {errors.seatingArrangement && (
-                  <Text color="red.500" fontSize="sm">
-                    {errors.seatingArrangement}
-                  </Text>
-                )}
+                <Field.ErrorText>{errors.seatingArrangement}</Field.ErrorText>
               </Field.Root>
 
               <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                 <Field.Root>
                   <Field.Label>인원수</Field.Label>
                   <Flex gap={4}>
-                    <Field.Root required>
+                    <Field.Root required invalid={!!errors.adultAttendees}>
                       <Field.Label>
                         성인{" "}
                         <Text as="span" color="red.500">
@@ -595,6 +686,9 @@ export default function GroupReservationPage() {
                         </Text>
                       </Field.Label>
                       <Input
+                        ref={(el) => {
+                          if (el) fieldRefs.current.set("adultAttendees", el);
+                        }}
                         type="number"
                         min={1}
                         value={formData.adultAttendees}
@@ -606,11 +700,7 @@ export default function GroupReservationPage() {
                         }
                         onBlur={() => handleBlur("adultAttendees")}
                       />
-                      {errors.adultAttendees && (
-                        <Text color="red.500" fontSize="sm">
-                          {errors.adultAttendees}
-                        </Text>
-                      )}
+                      <Field.ErrorText>{errors.adultAttendees}</Field.ErrorText>
                     </Field.Root>
                     <Field.Root>
                       <Field.Label>소인</Field.Label>
@@ -668,7 +758,7 @@ export default function GroupReservationPage() {
             <Fieldset.Legend>고객정보</Fieldset.Legend>
             <VStack gap={4} align="stretch" mt={4}>
               <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                <Field.Root required>
+                <Field.Root required invalid={!!errors.customerGroupName}>
                   <Field.Label>
                     단체명{" "}
                     <Text as="span" color="red.500">
@@ -676,6 +766,9 @@ export default function GroupReservationPage() {
                     </Text>
                   </Field.Label>
                   <Input
+                    ref={(el) => {
+                      if (el) fieldRefs.current.set("customerGroupName", el);
+                    }}
                     placeholder="단체명을 입력해주세요"
                     value={formData.customerGroupName}
                     onChange={(e) =>
@@ -683,11 +776,7 @@ export default function GroupReservationPage() {
                     }
                     onBlur={() => handleBlur("customerGroupName")}
                   />
-                  {errors.customerGroupName && (
-                    <Text color="red.500" fontSize="sm">
-                      {errors.customerGroupName}
-                    </Text>
-                  )}
+                  <Field.ErrorText>{errors.customerGroupName}</Field.ErrorText>
                 </Field.Root>
                 <Field.Root>
                   <Field.Label>소속지역</Field.Label>
@@ -699,7 +788,7 @@ export default function GroupReservationPage() {
                     }
                   />
                 </Field.Root>
-                <Field.Root required>
+                <Field.Root required invalid={!!errors.contactPersonName}>
                   <Field.Label>
                     담당자명{" "}
                     <Text as="span" color="red.500">
@@ -707,6 +796,9 @@ export default function GroupReservationPage() {
                     </Text>
                   </Field.Label>
                   <Input
+                    ref={(el) => {
+                      if (el) fieldRefs.current.set("contactPersonName", el);
+                    }}
                     placeholder="담당자명을 입력해주세요"
                     value={formData.contactPersonName}
                     onChange={(e) =>
@@ -714,11 +806,7 @@ export default function GroupReservationPage() {
                     }
                     onBlur={() => handleBlur("contactPersonName")}
                   />
-                  {errors.contactPersonName && (
-                    <Text color="red.500" fontSize="sm">
-                      {errors.contactPersonName}
-                    </Text>
-                  )}
+                  <Field.ErrorText>{errors.contactPersonName}</Field.ErrorText>
                 </Field.Root>
                 <Field.Root>
                   <Field.Label>부서 및 직위</Field.Label>
@@ -730,7 +818,7 @@ export default function GroupReservationPage() {
                     }
                   />
                 </Field.Root>
-                <Field.Root required>
+                <Field.Root required invalid={!!errors.contactPersonPhone}>
                   <Field.Label>
                     담당자 연락처{" "}
                     <Text as="span" color="red.500">
@@ -738,6 +826,9 @@ export default function GroupReservationPage() {
                     </Text>
                   </Field.Label>
                   <Input
+                    ref={(el) => {
+                      if (el) fieldRefs.current.set("contactPersonPhone", el);
+                    }}
                     type="tel"
                     placeholder="연락처를 입력해주세요 (예: 010-1234-5678)"
                     value={formData.contactPersonPhone}
@@ -746,13 +837,9 @@ export default function GroupReservationPage() {
                     }
                     onBlur={() => handleBlur("contactPersonPhone")}
                   />
-                  {errors.contactPersonPhone && (
-                    <Text color="red.500" fontSize="sm">
-                      {errors.contactPersonPhone}
-                    </Text>
-                  )}
+                  <Field.ErrorText>{errors.contactPersonPhone}</Field.ErrorText>
                 </Field.Root>
-                <Field.Root required>
+                <Field.Root required invalid={!!errors.contactPersonEmail}>
                   <Field.Label>
                     담당자 이메일{" "}
                     <Text as="span" color="red.500">
@@ -760,6 +847,9 @@ export default function GroupReservationPage() {
                     </Text>
                   </Field.Label>
                   <Input
+                    ref={(el) => {
+                      if (el) fieldRefs.current.set("contactPersonEmail", el);
+                    }}
                     type="email"
                     placeholder="이메일을 입력해주세요"
                     value={formData.contactPersonEmail}
@@ -768,11 +858,7 @@ export default function GroupReservationPage() {
                     }
                     onBlur={() => handleBlur("contactPersonEmail")}
                   />
-                  {errors.contactPersonEmail && (
-                    <Text color="red.500" fontSize="sm">
-                      {errors.contactPersonEmail}
-                    </Text>
-                  )}
+                  <Field.ErrorText>{errors.contactPersonEmail}</Field.ErrorText>
                 </Field.Root>
               </Grid>
             </VStack>

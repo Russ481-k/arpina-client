@@ -49,6 +49,24 @@ const initialRoomRequest: RoomReservationRequest = {
   usageTimeDesc: "",
 };
 
+const fieldLabels: { [key: string]: string } = {
+  privacyAgreed: "개인정보 수집 및 이용 동의",
+  eventType: "행사구분",
+  eventName: "행사명",
+  roomReservations: "세미나실",
+  seatingArrangement: "좌석배치방식",
+  adultAttendees: "성인 인원수",
+  customerGroupName: "단체명",
+  contactPersonName: "담당자명",
+  contactPersonPhone: "담당자 연락처",
+  contactPersonEmail: "담당자 이메일",
+  roomSizeDesc: "세미나실 크기",
+  roomTypeDesc: "세미나실 종류",
+  startDate: "시작일",
+  endDate: "종료일",
+  usageTimeDesc: "사용시간",
+};
+
 const initialFormData: GroupReservationInquiryData = {
   eventType: "",
   eventName: "",
@@ -81,6 +99,11 @@ export function useGroupReservationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
+  const [fieldToFocus, setFieldToFocus] = useState<string | null>(null);
+
+  const clearFieldToFocus = useCallback(() => {
+    setFieldToFocus(null);
+  }, []);
 
   const updateField = useCallback(
     <K extends keyof GroupReservationInquiryData>(
@@ -186,6 +209,9 @@ export function useGroupReservationForm() {
     }));
     setErrors((prev) => {
       const newErrors = { ...prev };
+      if (typeof newErrors.roomReservations === "string") {
+        delete newErrors.roomReservations;
+      }
       if (Array.isArray(newErrors.roomReservations)) {
         newErrors.roomReservations = [...newErrors.roomReservations, {}];
       }
@@ -198,160 +224,199 @@ export function useGroupReservationForm() {
       ...prev,
       roomReservations: prev.roomReservations.filter((_, i) => i !== index),
     }));
+
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      if (Array.isArray(newErrors.roomReservations)) {
+        const filteredErrors = newErrors.roomReservations.filter(
+          (_, i) => i !== index
+        );
+        if (filteredErrors.length > 0) {
+          newErrors.roomReservations = filteredErrors;
+        } else {
+          delete newErrors.roomReservations;
+        }
+      }
+      return newErrors;
+    });
+
+    setTouched((prev) => {
+      if (!prev.roomReservations) return prev;
+      const newRoomTouched = { ...prev.roomReservations };
+      delete newRoomTouched[index];
+
+      const reindexedTouched: TouchedFields["roomReservations"] = {};
+      for (const key in newRoomTouched) {
+        const numericKey = parseInt(key, 10);
+        if (numericKey > index) {
+          reindexedTouched[numericKey - 1] = newRoomTouched[key];
+        } else {
+          reindexedTouched[numericKey] = newRoomTouched[key];
+        }
+      }
+      return { ...prev, roomReservations: reindexedTouched };
+    });
   }, []);
 
   const validateForm = (
-    fieldName?: keyof GroupReservationInquiryData,
-    roomIndex?: number,
-    roomFieldName?: keyof RoomReservationRequest
-  ) => {
-    const newErrors: ValidationErrors = JSON.parse(JSON.stringify(errors));
+    data: GroupReservationInquiryData
+  ): ValidationErrors => {
+    const newErrors: ValidationErrors = {};
 
-    const validateField = (name: keyof GroupReservationInquiryData) => {
-      switch (name) {
-        case "eventType":
-          if (!formData.eventType) newErrors.eventType = "행사구분을 선택해주세요.";
-          else delete newErrors.eventType;
-          break;
-        case "eventName":
-          if (!formData.eventName?.trim()) newErrors.eventName = "행사명을 입력해주세요.";
-          else delete newErrors.eventName;
-          break;
-        case "seatingArrangement":
-          if (!formData.seatingArrangement) newErrors.seatingArrangement = "좌석배치방식을 선택해주세요.";
-          else delete newErrors.seatingArrangement;
-          break;
-        case "adultAttendees":
-          if (formData.adultAttendees === undefined || formData.adultAttendees <= 0) newErrors.adultAttendees = "성인 참석자는 1명 이상이어야 합니다.";
-          else delete newErrors.adultAttendees;
-          break;
-        case "customerGroupName":
-          if (!formData.customerGroupName?.trim()) newErrors.customerGroupName = "단체명을 입력해주세요.";
-          else delete newErrors.customerGroupName;
-          break;
-        case "contactPersonName":
-          if (!formData.contactPersonName?.trim()) newErrors.contactPersonName = "담당자명을 입력해주세요.";
-          else delete newErrors.contactPersonName;
-          break;
-        case "contactPersonPhone":
-          if (!formData.contactPersonPhone?.trim()) newErrors.contactPersonPhone = "담당자 연락처를 입력해주세요.";
-          else if (!isValidKoreanPhoneNumber(formData.contactPersonPhone)) newErrors.contactPersonPhone = "올바른 형식의 연락처를 입력해주세요. (예: 010-1234-5678)";
-          else delete newErrors.contactPersonPhone;
-          break;
-        case "contactPersonEmail":
-          {
-            const emailError = validateEmail(formData.contactPersonEmail);
-            if (emailError) {
-              newErrors.contactPersonEmail = emailError;
-            } else {
-              delete newErrors.contactPersonEmail;
-            }
-          }
-          break;
-        case "privacyAgreed":
-          if (!formData.privacyAgreed) newErrors.privacyAgreed = "개인정보 수집 및 이용 동의는 필수입니다.";
-          else delete newErrors.privacyAgreed;
-          break;
-        default:
-          break;
-      }
-    };
+    // Validate main form fields
+    if (!data.eventType) newErrors.eventType = "행사구분을 선택해주세요.";
+    if (!data.eventName?.trim()) newErrors.eventName = "행사명을 입력해주세요.";
+    if (!data.seatingArrangement)
+      newErrors.seatingArrangement = "좌석배치방식을 선택해주세요.";
+    if (data.adultAttendees === undefined || data.adultAttendees <= 0)
+      newErrors.adultAttendees = "성인 참석자는 1명 이상이어야 합니다.";
+    if (!data.customerGroupName?.trim())
+      newErrors.customerGroupName = "단체명을 입력해주세요.";
+    if (!data.contactPersonName?.trim())
+      newErrors.contactPersonName = "담당자명을 입력해주세요.";
+    if (!data.contactPersonPhone?.trim())
+      newErrors.contactPersonPhone = "담당자 연락처를 입력해주세요.";
+    else if (!isValidKoreanPhoneNumber(data.contactPersonPhone))
+      newErrors.contactPersonPhone =
+        "올바른 형식의 연락처를 입력해주세요. (예: 010-1234-5678)";
+    const emailError = validateEmail(data.contactPersonEmail);
+    if (emailError) newErrors.contactPersonEmail = emailError;
+    if (!data.privacyAgreed)
+      newErrors.privacyAgreed = "개인정보 수집 및 이용에 동의해주세요.";
 
-    const validateRoomField = (index: number, name: keyof RoomReservationRequest) => {
-      if (!newErrors.roomReservations || !Array.isArray(newErrors.roomReservations)) {
-        newErrors.roomReservations = [];
-      }
-      const roomErrors = (newErrors.roomReservations as RoomValidationErrors[])[index] || {};
-      
-      const room = formData.roomReservations[index];
-      if (!room[name]) {
-        switch (name) {
-          case "roomSizeDesc": roomErrors.roomSizeDesc = "필수"; break;
-          case "roomTypeDesc": roomErrors.roomTypeDesc = "필수"; break;
-          case "usageTimeDesc": roomErrors.usageTimeDesc = "필수"; break;
-        }
-      } else {
-        delete roomErrors[name];
-      }
-      (newErrors.roomReservations as RoomValidationErrors[])[index] = roomErrors;
-    };
-    
-    if (fieldName) {
-      validateField(fieldName);
-    } else if (roomIndex !== undefined && roomFieldName) {
-      validateRoomField(roomIndex, roomFieldName);
+    // Validate room reservations
+    if (data.roomReservations.length === 0) {
+      newErrors.roomReservations = "세미나실을 하나 이상 추가해주세요.";
     } else {
-      (Object.keys(formData) as Array<keyof GroupReservationInquiryData>).forEach(validateField);
-
-      if (formData.roomReservations.length === 0) {
-        newErrors.roomReservations = "세미나실을 최소 하나 이상 추가해주세요.";
-      } else {
-        delete newErrors.roomReservations;
-        const roomErrorsList: RoomValidationErrors[] = [];
-        formData.roomReservations.forEach((room, index) => {
-          const roomErrors = validateRoom(room);
-          roomErrorsList[index] = roomErrors;
-        });
-        if (roomErrorsList.some(errors => Object.keys(errors).length > 0)) {
-            newErrors.roomReservations = roomErrorsList;
+      const roomErrors: RoomValidationErrors[] = [];
+      data.roomReservations.forEach((room, index) => {
+        const currentRoomErrors = validateRoom(room);
+        if (Object.keys(currentRoomErrors).length > 0) {
+          roomErrors[index] = currentRoomErrors;
         }
+      });
+      if (roomErrors.some((error) => Object.keys(error || {}).length > 0)) {
+        newErrors.roomReservations = roomErrors;
       }
     }
-    
-    console.log("Validation Errors:", newErrors);
-    setErrors(newErrors);
-    
-    let hasErrors = Object.values(newErrors).some(error => error !== undefined);
-    if (Array.isArray(newErrors.roomReservations)) {
-      const roomErrorsExist = newErrors.roomReservations.some(roomError => Object.keys(roomError).length > 0);
-      hasErrors = hasErrors || roomErrorsExist;
-    }
-    
-    return !hasErrors;
+
+    return newErrors;
   };
 
   const handleBlur = (fieldName: keyof GroupReservationInquiryData) => {
     setTouched((prev) => ({ ...prev, [fieldName]: true }));
-    validateForm(fieldName);
+    const validationErrors = validateForm(formData);
+    const fieldError = validationErrors[fieldName as keyof ValidationErrors];
+    setErrors((prev) => ({
+      ...prev,
+      [fieldName]: fieldError,
+    }));
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const fieldOrder: (keyof GroupReservationInquiryData | "roomReservations")[] =
+    [
+      "privacyAgreed",
+      "eventType",
+      "eventName",
+      "roomReservations",
+      "seatingArrangement",
+      "adultAttendees",
+      "customerGroupName",
+      "contactPersonName",
+      "contactPersonPhone",
+      "contactPersonEmail",
+    ];
+
+  const roomFieldOrder: (keyof RoomReservationRequest)[] = [
+    "roomSizeDesc",
+    "roomTypeDesc",
+    "startDate",
+    "endDate",
+    "usageTimeDesc",
+  ];
+
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+    onSuccess?: () => void
+  ) => {
     event.preventDefault();
+    setFieldToFocus(null);
 
-    console.log("Submitting formData:", formData);
+    const validationErrors = validateForm(formData);
+    setErrors(validationErrors);
 
-    if (!validateForm()) {
+    if (Object.keys(validationErrors).length > 0) {
+      let firstErrorField: string | null = null;
+      const errorFieldNames: string[] = [];
+
+      for (const fieldName of fieldOrder) {
+        const error = validationErrors[fieldName as keyof ValidationErrors];
+        if (error) {
+          if (fieldName === "roomReservations") {
+            if (typeof error === "string") {
+              if (!firstErrorField) firstErrorField = "add-room-button";
+              if (!errorFieldNames.includes(fieldLabels.roomReservations))
+                errorFieldNames.push(fieldLabels.roomReservations);
+            } else if (Array.isArray(error)) {
+              for (let i = 0; i < formData.roomReservations.length; i++) {
+                const roomError = error[i];
+                if (roomError && Object.keys(roomError).length > 0) {
+                  for (const roomFieldName of roomFieldOrder) {
+                    if (
+                      roomError[roomFieldName as keyof RoomValidationErrors]
+                    ) {
+                      if (!firstErrorField)
+                        firstErrorField = `roomReservations.${i}.${roomFieldName}`;
+                      const label = fieldLabels[roomFieldName];
+                      if (!errorFieldNames.includes(label))
+                        errorFieldNames.push(label);
+                    }
+                  }
+                }
+              }
+            }
+          } else {
+            if (!firstErrorField) firstErrorField = fieldName as string;
+            const label = fieldLabels[fieldName as string];
+            if (label && !errorFieldNames.includes(label))
+              errorFieldNames.push(label);
+          }
+        }
+      }
+
+      if (firstErrorField) {
+        setFieldToFocus(firstErrorField);
+      }
+
+      const description = `다음 필수 항목을 확인해주세요: ${errorFieldNames.join(
+        ", "
+      )}`;
+
       toaster.error({
         title: "입력 오류",
-        description: "입력 내용을 다시 확인해주세요.",
+        description:
+          errorFieldNames.length > 0
+            ? description
+            : "필수 항목을 모두 입력해주세요.",
       });
       return;
     }
 
     setIsLoading(true);
     try {
-      const response =
-        await reservationApi.createGroupReservationInquiry(formData);
-      if (response.success) {
-        toaster.success({
-          title: "성공",
-          description: "단체 예약 문의가 성공적으로 접수되었습니다.",
-        });
-        setFormData(initialFormData); 
-        setErrors({}); 
-        setTouched({}); 
-      } else {
-        toaster.error({
-          title: "오류",
-          description: response.message || "문의 등록에 실패했습니다.",
-        });
+      await reservationApi.createGroupReservationInquiry(formData);
+      toaster.success({
+        title: "문의 접수 완료",
+        description: "문의가 성공적으로 접수되었습니다.",
+      });
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "알 수 없는 오류가 발생했습니다.";
-      toaster.error({ title: "오류", description: errorMessage });
+      toaster.error({
+        title: "오류",
+        description: "문의 접수 중 오류가 발생했습니다.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -362,12 +427,14 @@ export function useGroupReservationForm() {
     isLoading,
     errors,
     touched,
+    fieldToFocus,
     updateField,
     updateRoomField,
-    updateAndValidate,
     addRoomRequest,
     removeRoomRequest,
     handleSubmit,
     handleBlur,
+    updateAndValidate,
+    clearFieldToFocus,
   };
 } 

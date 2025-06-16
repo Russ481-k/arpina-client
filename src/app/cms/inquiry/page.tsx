@@ -52,6 +52,7 @@ export default function InquiryManagementPage() {
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
   const { rowData, columnDefs } = useMemo(() => {
     const baseColDefs: ColDef<GroupReservationInquiry>[] = [
+      { headerName: "상태", field: "status", minWidth: 100 },
       { headerName: "행사 구분", field: "eventType", minWidth: 120 },
       { headerName: "행사명", field: "eventName", minWidth: 200, flex: 1 },
       { headerName: "단체명", field: "customerGroupName", minWidth: 200 },
@@ -101,9 +102,12 @@ export default function InquiryManagementPage() {
       const newRow: any = { ...inquiry };
       if (inquiry.roomReservations) {
         inquiry.roomReservations.forEach((reservation, index) => {
+          const num = index + 1;
+          newRow[`seminar${num}_type`] = reservation.roomTypeDesc;
           newRow[
-            `seminar${index + 1}`
-          ] = `${reservation.roomTypeDesc} (${reservation.startDate} ~ ${reservation.endDate} / ${reservation.usageTimeDesc})`;
+            `seminar${num}_schedule`
+          ] = `${reservation.startDate} ~ ${reservation.endDate}`;
+          newRow[`seminar${num}_time`] = reservation.usageTimeDesc;
         });
       }
       return newRow;
@@ -111,13 +115,25 @@ export default function InquiryManagementPage() {
 
     const dynamicColDefs: ColDef[] = [];
     for (let i = 1; i <= maxRoomReservations; i++) {
-      dynamicColDefs.push({
-        headerName: `세미나실 ${i}`,
-        field: `seminar${i}`,
-        minWidth: 400,
-        cellStyle: { textAlign: "right" },
-        tooltipField: `seminar${i}`,
-      });
+      dynamicColDefs.push(
+        {
+          headerName: `세미나실 ${i}`,
+          field: `seminar${i}_type`,
+          width: 120,
+          cellStyle: { textAlign: "center" },
+        },
+        {
+          headerName: `세미나실 ${i} 일정`,
+          field: `seminar${i}_schedule`,
+          width: 200,
+        },
+        {
+          headerName: `세미나실 ${i} 시간대`,
+          field: `seminar${i}_time`,
+          width: 150,
+          cellStyle: { textAlign: "right" },
+        }
+      );
     }
 
     const finalColumnDefs = [
