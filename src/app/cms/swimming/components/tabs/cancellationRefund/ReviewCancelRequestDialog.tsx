@@ -23,6 +23,7 @@ import {
   Spinner,
   Portal,
   Grid,
+  Checkbox,
 } from "@chakra-ui/react";
 import { CheckIcon, XIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -167,6 +168,30 @@ export const ReviewCancelRequestDialog: React.FC<
     }
   }, [selectedRequest, isOpen]);
 
+  // '전액 환불' 상태가 변경될 때 환불 정보를 업데이트하는 useEffect
+  useEffect(() => {
+    if (!selectedRequest || !currentRefundDetails) return;
+
+    if (isFullRefund) {
+      // 전액 환불 시, 클라이언트에서 즉시 값 변경
+      setCurrentRefundDetails((prevDetails) => {
+        if (!prevDetails) return null;
+        const totalPaidAmount =
+          prevDetails.paidLessonAmount + prevDetails.paidLockerAmount;
+        return {
+          ...prevDetails,
+          lessonUsageAmount: 0,
+          finalRefundAmount: totalPaidAmount,
+          manualUsedDays: 0,
+        };
+      });
+      setManualUsedDaysInput(0);
+    } else {
+      // 전액 환불 해제 시, 원래 입력된 사용 일수 기준으로 API 재요청
+      handleUsedDaysChange(manualUsedDaysInput.toString());
+    }
+  }, [isFullRefund]);
+
   const handleUsedDaysChange = (value: string) => {
     const days = value === "" ? 0 : Math.max(0, parseInt(value, 10));
     setManualUsedDaysInput(days);
@@ -177,6 +202,10 @@ export const ReviewCancelRequestDialog: React.FC<
       enrollId: selectedRequest.enrollId,
       data: { manualUsedDays: days },
     });
+  };
+
+  const handleFullRefundChange = (checked: boolean) => {
+    setIsFullRefund(checked);
   };
 
   const previewRefundMutation = useMutation<
@@ -289,15 +318,12 @@ export const ReviewCancelRequestDialog: React.FC<
   });
 
   const handleApprove = () => {
-    if (!selectedRequest || !currentRefundDetails) return;
-    const approvalData: ApproveCancelRequestDto = {
+    if (!selectedRequest) return;
+    const data: ApproveCancelRequestDto = {
       manualUsedDays: isFullRefund ? 0 : manualUsedDaysInput,
-      adminComment: adminComment || undefined,
+      adminComment,
     };
-    approveMutation.mutate({
-      enrollId: selectedRequest.enrollId,
-      data: approvalData,
-    });
+    approveMutation.mutate({ enrollId: selectedRequest.enrollId, data });
   };
 
   const handleDeny = () => {
@@ -410,34 +436,17 @@ export const ReviewCancelRequestDialog: React.FC<
                 <Fieldset.Root>
                   <Fieldset.Content>
                     <Stack gap={4}>
-                      <Flex
-                        as="label"
-                        align="center"
-                        cursor="pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setIsFullRefund((prev) => !prev);
-                        }}
+                      <Checkbox.Root
+                        checked={isFullRefund}
+                        onCheckedChange={(details) =>
+                          handleFullRefundChange(!!details.checked)
+                        }
+                        colorScheme="blue"
                       >
-                        <Box
-                          w="16px"
-                          h="16px"
-                          border="2px solid"
-                          borderColor="gray.300"
-                          borderRadius="sm"
-                          mr={2}
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          bg={isFullRefund ? "blue.500" : "transparent"}
-                          transition="background-color 0.2s"
-                        >
-                          {isFullRefund && (
-                            <CheckIcon color="white" size={12} />
-                          )}
-                        </Box>
-                        <Text>전액 환불 처리 (사용일수 0일, 위약금 없음)</Text>
-                      </Flex>
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                        <Checkbox.Label>전액 환불 처리</Checkbox.Label>
+                      </Checkbox.Root>
                       {currentRefundDetails && (
                         <Box
                           p={4}
@@ -476,11 +485,9 @@ export const ReviewCancelRequestDialog: React.FC<
                                   <Text>강습료 사용액</Text>
                                   <Text>
                                     -
-                                    {isFullRefund
-                                      ? formatCurrency(0)
-                                      : formatCurrency(
-                                          currentRefundDetails?.lessonUsageAmount
-                                        )}
+                                    {formatCurrency(
+                                      currentRefundDetails?.lessonUsageAmount
+                                    )}
                                   </Text>
                                 </Flex>
                                 <Box
@@ -497,16 +504,9 @@ export const ReviewCancelRequestDialog: React.FC<
                                   >
                                     <Text>최종 환불액</Text>
                                     <Text color="red.500">
-                                      {isFullRefund
-                                        ? formatCurrency(
-                                            (selectedRequest.paymentInfo
-                                              ?.lessonPaidAmt ?? 0) +
-                                              (selectedRequest.paymentInfo
-                                                ?.lockerPaidAmt ?? 0)
-                                          )
-                                        : formatCurrency(
-                                            currentRefundDetails?.finalRefundAmount
-                                          )}
+                                      {formatCurrency(
+                                        currentRefundDetails?.finalRefundAmount
+                                      )}
                                     </Text>
                                   </Flex>
                                 </Box>
