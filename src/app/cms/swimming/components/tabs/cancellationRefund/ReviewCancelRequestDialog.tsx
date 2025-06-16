@@ -122,6 +122,7 @@ export const ReviewCancelRequestDialog: React.FC<
   const [adminComment, setAdminComment] = useState("");
   const [currentRefundDetails, setCurrentRefundDetails] =
     useState<UICalculatedRefundDetails | null>(null);
+  const [isFullRefund, setIsFullRefund] = useState(false);
 
   // 다이얼로그가 열릴 때 초기값 설정 및 API 호출
   useEffect(() => {
@@ -148,6 +149,7 @@ export const ReviewCancelRequestDialog: React.FC<
           selectedRequest.calculatedRefundDetails?.paidLockerAmount,
       });
       setAdminComment("");
+      setIsFullRefund(false);
 
       // 초기 API 호출
       previewRefundMutation.mutate({
@@ -158,6 +160,7 @@ export const ReviewCancelRequestDialog: React.FC<
       setManualUsedDaysInput(0);
       setAdminComment("");
       setCurrentRefundDetails(null);
+      setIsFullRefund(false);
       previewRefundMutation.reset();
       approveMutation.reset();
       denyMutation.reset();
@@ -288,7 +291,7 @@ export const ReviewCancelRequestDialog: React.FC<
   const handleApprove = () => {
     if (!selectedRequest || !currentRefundDetails) return;
     const approvalData: ApproveCancelRequestDto = {
-      manualUsedDays: manualUsedDaysInput,
+      manualUsedDays: isFullRefund ? 0 : manualUsedDaysInput,
       adminComment: adminComment || undefined,
     };
     approveMutation.mutate({
@@ -380,7 +383,9 @@ export const ReviewCancelRequestDialog: React.FC<
                           value={manualUsedDaysInput?.toString()}
                           onChange={(e) => handleUsedDaysChange(e.target.value)}
                           min={0}
-                          disabled={previewRefundMutation.isPending}
+                          disabled={
+                            previewRefundMutation.isPending || isFullRefund
+                          }
                         />
                         <Field.HelperText>
                           최초 시스템 계산일:{" "}
@@ -405,6 +410,34 @@ export const ReviewCancelRequestDialog: React.FC<
                 <Fieldset.Root>
                   <Fieldset.Content>
                     <Stack gap={4}>
+                      <Flex
+                        as="label"
+                        align="center"
+                        cursor="pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsFullRefund((prev) => !prev);
+                        }}
+                      >
+                        <Box
+                          w="16px"
+                          h="16px"
+                          border="2px solid"
+                          borderColor="gray.300"
+                          borderRadius="sm"
+                          mr={2}
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          bg={isFullRefund ? "blue.500" : "transparent"}
+                          transition="background-color 0.2s"
+                        >
+                          {isFullRefund && (
+                            <CheckIcon color="white" size={12} />
+                          )}
+                        </Box>
+                        <Text>전액 환불 처리 (사용일수 0일, 위약금 없음)</Text>
+                      </Flex>
                       {currentRefundDetails && (
                         <Box
                           p={4}
@@ -443,9 +476,11 @@ export const ReviewCancelRequestDialog: React.FC<
                                   <Text>강습료 사용액</Text>
                                   <Text>
                                     -
-                                    {formatCurrency(
-                                      currentRefundDetails?.lessonUsageAmount
-                                    )}
+                                    {isFullRefund
+                                      ? formatCurrency(0)
+                                      : formatCurrency(
+                                          currentRefundDetails?.lessonUsageAmount
+                                        )}
                                   </Text>
                                 </Flex>
                                 <Box
@@ -462,9 +497,16 @@ export const ReviewCancelRequestDialog: React.FC<
                                   >
                                     <Text>최종 환불액</Text>
                                     <Text color="red.500">
-                                      {formatCurrency(
-                                        currentRefundDetails?.finalRefundAmount
-                                      )}
+                                      {isFullRefund
+                                        ? formatCurrency(
+                                            (selectedRequest.paymentInfo
+                                              ?.lessonPaidAmt ?? 0) +
+                                              (selectedRequest.paymentInfo
+                                                ?.lockerPaidAmt ?? 0)
+                                          )
+                                        : formatCurrency(
+                                            currentRefundDetails?.finalRefundAmount
+                                          )}
                                     </Text>
                                   </Flex>
                                 </Box>
