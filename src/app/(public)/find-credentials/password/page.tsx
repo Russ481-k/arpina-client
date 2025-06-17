@@ -429,7 +429,7 @@ function FindPasswordContent() {
                   ? "gray"
                   : "blue"
               }
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/sports/swimming/lesson")}
               w="full"
               size="lg"
             >

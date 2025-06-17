@@ -113,7 +113,7 @@ export default function LoginPage() {
         type: "info",
         duration: 2000,
       });
-      router.push("/"); // 메인 페이지로 리디렉션
+      router.push("/sports/swimming/lesson"); // 메인 페이지로 리디렉션
     }
   }, [authLoading, isAuthenticated, router]); // 의존성 배열에 authLoading, isAuthenticated, router 추가
 

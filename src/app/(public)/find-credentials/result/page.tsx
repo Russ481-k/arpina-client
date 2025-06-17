@@ -194,7 +194,7 @@ function FindCredentialsResultLogic() {
           <Button
             variant="ghost"
             w="full"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/sports/swimming/lesson")}
             mt={
               resultState.status === "fail" || resultState.status === "error"
                 ? 0

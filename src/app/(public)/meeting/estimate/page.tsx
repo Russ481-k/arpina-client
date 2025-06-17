@@ -146,7 +146,7 @@ export default function GroupReservationPage() {
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit(e, () => {
-            router.push("/");
+            router.push("/sports/swimming/lesson");
           });
         }}
       >
