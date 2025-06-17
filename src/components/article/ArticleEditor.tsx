@@ -17,7 +17,8 @@ import {
   UseArticleFormProps,
   useArticleForm,
 } from "@/lib/hooks/useArticleForm";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 import { toaster } from "@/components/ui/toaster";
 
 // Define the expected result type from handleSubmit
@@ -78,7 +79,7 @@ export function ArticleEditor({
     maxFileSizeMB,
     disableAttachments,
   });
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useRecoilValue(authState);
   const [isAdminPage, setIsAdminPage] = useState(false);
   const [captchaText, setCaptchaText] = useState("");
   const [captchaImage, setCaptchaImage] = useState("");

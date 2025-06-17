@@ -25,10 +25,6 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
 import { MypageEnrollDto, MypagePaymentDto } from "@/types/api";
-import {
-  PaymentTransactionStatus,
-  EnrollmentPaymentLifecycleStatus,
-} from "@/types/statusTypes"; // Import new status types
 import { toaster } from "@/components/ui/toaster";
 import {
   PasswordInput,
@@ -166,8 +162,6 @@ export default function MyPage() {
 
   // Handle tab change with URL update
   const handleTabChange = (newTab: string) => {
-    console.log("🔄 Tab changing from", activeTab, "to", newTab);
-
     setActiveTab(newTab);
 
     // Update URL without page reload - remove tab parameter for default tab
@@ -180,31 +174,19 @@ export default function MyPage() {
 
     // Use replaceState to avoid creating new history entries
     window.history.replaceState({}, "", newUrl.toString());
-
-    console.log("🔗 URL updated to:", newUrl.toString());
   };
 
   async function fetchEnrollments(forceRefresh = false) {
     if (dataLoaded.enrollments && !forceRefresh) {
-      console.log("📋 Enrollments already loaded, skipping fetch");
       return;
     }
 
-    console.log(
-      "🔄 Fetching enrollments...",
-      forceRefresh ? "(forced refresh)" : ""
-    );
     try {
       const enrollmentsApiResponse = await mypageApi.getEnrollments();
       if (
         enrollmentsApiResponse &&
         Array.isArray(enrollmentsApiResponse.content)
       ) {
-        console.log(
-          "✅ Enrollments loaded successfully:",
-          enrollmentsApiResponse.content.length,
-          "items"
-        );
         setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
         setDataLoaded((prev) => ({ ...prev, enrollments: true }));
       } else {
@@ -228,13 +210,11 @@ export default function MyPage() {
   // Separate function for fetching payments
   async function fetchPayments() {
     if (dataLoaded.payments) {
-      console.log("💳 Payments already loaded, skipping fetch");
       return;
     }
 
     try {
       const paymentsApiResponse = await mypageApi.getPayments();
-      console.log("📦 Raw payments API response:", paymentsApiResponse);
 
       // API returns paginated response with content array
       if (
@@ -244,10 +224,6 @@ export default function MyPage() {
       ) {
         setPayments(paymentsApiResponse.content as MypagePaymentDto[]);
         setDataLoaded((prev) => ({ ...prev, payments: true }));
-        console.log(
-          "✅ Payments loaded successfully:",
-          paymentsApiResponse.content
-        );
       } else {
         console.warn(
           "Payments API response is not in expected format:",
@@ -625,8 +601,6 @@ export default function MyPage() {
 
   // Event Handlers for LessonCardActions
   const handleGoToPayment = async (enrollId: number) => {
-    console.log("🚀 Starting direct payment for enrollment:", enrollId);
-
     try {
       setIsLoading(true);
 
@@ -634,7 +608,6 @@ export default function MyPage() {
       const paymentInitData = await swimmingPaymentService.initKISPGPayment(
         enrollId
       );
-      console.log("💳 Payment init data received:", paymentInitData);
 
       // 결제 데이터 설정 및 결제창 표시
       setCurrentPaymentData(paymentInitData);
@@ -724,11 +697,10 @@ export default function MyPage() {
   };
 
   const handleRenewLesson = async (lessonId: number) => {
-    console.log("[Mypage] Renewing lesson:", lessonId);
     try {
       const renewalResponse = await swimmingPaymentService.renewalLesson({
         lessonId,
-        carryLocker: false, // Or allow user to choose
+        wantsLocker: false, // Or allow user to choose
       });
 
       if (renewalResponse) {
@@ -757,14 +729,12 @@ export default function MyPage() {
 
   // Function to refresh enrollment data (useful after payment completion)
   const refreshEnrollmentData = async () => {
-    console.log("🔄 Refreshing enrollment data...");
     setDataLoaded((prev) => ({ ...prev, enrollments: false }));
     await fetchEnrollments(true); // Force refresh
   };
 
   // Function to refresh payment data
   const refreshPaymentData = async () => {
-    console.log("🔄 Refreshing payment data...");
     setDataLoaded((prev) => ({ ...prev, payments: false }));
     await fetchPayments();
   };
@@ -1260,8 +1230,6 @@ export default function MyPage() {
           paymentData={currentPaymentData as any}
           enrollId={currentPaymentEnrollId}
           onPaymentComplete={async (success, data) => {
-            console.log("🎉 Payment completed:", { success, data });
-
             if (success) {
               toaster.create({
                 title: "결제 완료",
@@ -1271,16 +1239,11 @@ export default function MyPage() {
               });
 
               // 🎯 결제 완료 후 데이터 리프레시 (강제 리프레시)
-              console.log("🔄 Refreshing enrollment data...");
               await refreshEnrollmentData();
-              console.log("🔄 Refreshing payment data...");
               await refreshPaymentData();
 
               // 신청정보 탭으로 이동 (URL도 업데이트)
               handleTabChange("수영장_신청정보");
-              console.log(
-                "📍 Switched to enrollment info tab after payment completion"
-              );
             } else {
               toaster.create({
                 title: "결제 실패",
@@ -1295,8 +1258,6 @@ export default function MyPage() {
             setCurrentPaymentEnrollId(null);
           }}
           onPaymentClose={() => {
-            console.log("🚪 Payment frame closed");
-
             // 결제 데이터 초기화
             setCurrentPaymentData(null);
             setCurrentPaymentEnrollId(null);

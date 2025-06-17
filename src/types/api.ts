@@ -1,13 +1,13 @@
 import { AuthType, SkinType, YesNoType } from "./common";
 import { File } from "@/app/cms/file/types"; // Ensure File type is imported
 import {
-  PaymentTransactionStatus,
-  EnrollmentPaymentLifecycleStatus,
   EnrollmentApplicationStatus,
   EnrollmentCancellationProgressStatus,
   CancellationRequestRecordStatus,
   ApprovalStatus,
   LessonStatus,
+  EnrollmentPayStatus,
+  PaymentStatus,
 } from "./statusTypes";
 
 export type MenuType =
@@ -501,7 +501,7 @@ export interface PaymentConfirmResponseDto {
  * Based on user.md EnrollDto.
  */
 export interface MypageEnrollDto {
-  enrollId: number;
+  enrollId: number | null;
   lesson: {
     lessonId: number;
     title: string;
@@ -522,14 +522,15 @@ export interface MypageEnrollDto {
     reservationId: string;
     receiptId: string;
   };
-  status: EnrollmentPaymentLifecycleStatus | string; // Allow string for potential backend values not yet in enum
+  status: EnrollmentPayStatus | "RENEWAL_AVAILABLE" | string; // Allow string for potential backend values not yet in enum
   applicationDate: string;
   paymentExpireDt: string | null;
   usesLocker: boolean;
-  isRenewal: boolean;
+  isRenewal?: boolean;
   cancelStatus: EnrollmentCancellationProgressStatus | string; // Allow string
   cancelReason: string | null;
   renewalWindow?: {
+    isOpen: boolean;
     open: string;
     close: string;
   };
@@ -544,7 +545,7 @@ export interface MypageEnrollDto {
  */
 export interface MypageRenewalRequestDto {
   lessonId: number;
-  carryLocker: boolean;
+  wantsLocker: boolean;
 }
 
 /**
@@ -559,7 +560,7 @@ export interface MypagePaymentDto {
   refundedAmount?: number; // Optional - total refunded amount if any
   paidAt: string | null;
   refundedAt?: string | null; // Optional - refund date if any
-  status: PaymentTransactionStatus | string; // Allow string
+  status: PaymentStatus | string; // Allow string
 
   // Lesson details
   lessonTitle: string; // 강습 제목
@@ -606,7 +607,7 @@ export interface EnrollAdminResponseDto {
   userName: string;
   status: EnrollmentApplicationStatus | string; // Main enrollment status // Allow string
   // payStatus from enroll table: UNPAID, PAID, PARTIALLY_REFUNDED, PAYMENT_TIMEOUT, CANCELED_UNPAID
-  payStatus: EnrollmentPaymentLifecycleStatus | string; // Allow string
+  payStatus: EnrollmentPayStatus | string; // Allow string
   usesLocker: boolean;
   userGender?: "MALE" | "FEMALE" | "OTHER"; // From user profile
   createdAt: string; // ISO DateTime
@@ -647,7 +648,7 @@ export interface PaymentAdminDto {
   tid: string; // KISPG TID
   paidAmt: number; // Corrected to camelCase from paid_amt
   refundedAmt: number | null; // Corrected to camelCase from refunded_amt
-  status: PaymentTransactionStatus;
+  status: PaymentStatus;
   paidAt: string | null; // Corrected to camelCase from paid_at
   lastRefundDt?: string | null; // API sends lastRefundDt, ensure DTO matches (or map if different)
   pgProvider: string | null;
@@ -799,7 +800,7 @@ export interface CancelRequestAdminDto {
   userReason: string | null;
   adminComment?: string; // API uses 'adminComment'
   status: CancellationRequestRecordStatus | string; // Assumed based on frontend usage & API query params // Allow string
-  paymentStatus: EnrollmentPaymentLifecycleStatus | "REFUNDED" | string; // Allow string. "REFUNDED" added based on analysis.
+  paymentStatus: EnrollmentPayStatus | string; // Allow string. "REFUNDED" added based on analysis.
   lessonStartDate?: string; // Kept as optional, ensure backend provides if used for display/logic
   usesLocker?: boolean; // Kept as optional, ensure backend provides if used
   cancellationProcessingStatus?: EnrollmentCancellationProgressStatus | string; // Added new field // Allow string
@@ -807,9 +808,10 @@ export interface CancelRequestAdminDto {
 }
 
 export interface ApproveCancelRequestDto {
-  manualUsedDays?: number; // Optional, if admin adjusts used days
   adminComment?: string;
-  // KISPG refund parameters might be needed here if refund is triggered by this call
+  manualUsedDays?: number;
+  finalRefundAmount?: number;
+  isFullRefund?: boolean;
 }
 
 export interface DenyCancelRequestDto {
@@ -822,16 +824,18 @@ export interface RefundCalculationPreviewRequestDto {
 
 export interface RefundCalculationPreviewDto {
   systemCalculatedUsedDays: number;
+  manualUsedDays: number | null;
   effectiveUsedDays: number;
-  manualUsedDays?: number;
+  originalLessonPrice: number;
+  paidLessonAmount: number;
+  lockerPaidAmt: number; // API 응답 필드 이름이 lockerPaidAmt일 경우. paidLockerAmount가 맞다면 그것으로 사용
   lessonUsageDeduction: number;
   finalRefundAmount: number;
-  paidLessonAmount: number;
-  lockerPaidAmt: number;
-  originalLessonPrice: number;
+  isFullRefund: boolean;
 }
 
 export interface ManualRefundRequestDto {
+  enrollmentId: number;
   refundAmount: number;
   reason: string;
   // Potentially other details required for KISPG manual refund logging
@@ -1070,12 +1074,76 @@ export interface AdminPaymentData {
   discountAmount?: number; // Keep as optional, for potential future use or other data sources
   refundedAmount: number | null; // Matches PaymentAdminDto.refunded_amt
   paymentMethod: string; // From PaymentAdminDto.payMethod
-  paymentGateway?: string | null; // From PaymentAdminDto.pgProvider
-  status: PaymentTransactionStatus;
-  paidAt: string; // ISO DateTime string (assuming non-null from API for successful payments)
-  lastRefundAt?: string; // ISO DateTime string
-  orderNo?: string; // Keep as optional
-  memberType?: string; // Keep as optional
-  lockerFee?: number; // Keep as optional
-  pgResultCode?: string; // Added from PaymentAdminDto
+  paymentGateway: string | null;
+  status: PaymentStatus;
+  paidAt: string | null;
+  refundedAt: string | null;
+  cancellationReason: string | null;
+  pgResultCode: string | null;
+
+  // For UI state management, not from backend directly
+  pgResultMsg?: string;
+  pgQueryResult?: any;
+}
+
+export interface Popup {
+  id: number;
+  title: string;
+  content: string;
+  startDate: string;
+  endDate: string;
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+  displayOrder?: number;
+}
+
+export interface PopupOrderUpdatePayload {
+  orderedIds: number[];
+}
+
+export interface GroupReservationInquiry {
+  id: number;
+  status: "PENDING" | "CONFIRMED" | "CANCELED";
+  eventType?: string;
+  eventName?: string;
+  seatingArrangement?: string;
+  adultAttendees?: number;
+  childAttendees?: number;
+  diningServiceUsage?: boolean;
+  otherRequests?: string;
+  customerGroupName: string;
+  customerRegion?: string;
+  contactPersonName: string;
+  contactPersonDpt?: string;
+  contactPersonPhone: string;
+  contactPersonEmail: string;
+  privacyAgreed: boolean;
+  marketingAgreed: boolean;
+  adminMemo?: string;
+  createdBy?: string;
+  createdIp?: string;
+  createdDate: string;
+  updatedBy?: string;
+  updatedIp?: string;
+  updatedDate: string;
+  roomReservations: InquiryRoomReservation[];
+  memo?: string;
+}
+
+export interface InquiryRoomReservation {
+  id: number;
+  inquiryId: number;
+  roomSizeDesc?: string;
+  roomTypeDesc?: string;
+  startDate?: string;
+  endDate?: string;
+  usageTimeDesc?: string;
+}
+
+export interface MypageRenewalResponseDto {
+  enrollId: number;
+  lessonId: number;
+  paymentPageUrl: string;
+  paymentExpiresAt: string;
 }

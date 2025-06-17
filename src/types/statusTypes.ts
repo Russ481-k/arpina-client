@@ -5,6 +5,7 @@
  */
 export type PaymentStatus =
   | "PAID" // 결제 완료
+  | "UNPAID" // 미결제
   | "FAILED" // 결제 실패
   | "CANCELED" // 전액 환불 완료
   | "PARTIAL_REFUNDED"; // 부분 환불 완료
@@ -16,8 +17,9 @@ export type PaymentStatus =
  */
 export type UiDisplayStatus =
   | PaymentStatus
-  | "REFUND_REQUESTED" // 환불 요청됨
-  | "PAYMENT_PENDING"; // 결제 대기 (웹훅 수신 전 또는 미결제 상태)
+  | EnrollmentPayStatus
+  | "PAYMENT_PENDING"
+  | "ADMIN_CANCELED";
 
 /**
  * 관리자 CMS에서 사용하는 환불 요청 레코드의 상태입니다.
@@ -42,6 +44,7 @@ export type EnrollmentCancellationProgressStatus =
  * [백엔드 확인 완료] 수강 신청의 결제 관련 상태를 나타내는 공식 타입입니다.
  * 2024-05-24 백엔드 팀의 회신에 따라 정의되었습니다.
  * 'MypageEnrollDto'의 'status' 필드에 사용됩니다.
+
  */
 export type EnrollmentPayStatus =
   | "UNPAID" // 미결제
@@ -53,49 +56,27 @@ export type EnrollmentPayStatus =
   | "REFUNDED" // 전액 환불 완료
   | "CANCELED_UNPAID"; // 미결제 취소
 
-/**
- * 수강 신청의 생명주기 상태입니다.
- * 참고: 이 타입은 결제 상태와는 별개로, 수강 신청 자체의 상태를 나타냅니다.
- *
- * @deprecated 2024-05-24 부로 백엔드의 실제 상태값과 일치하는 `EnrollmentPayStatus`로 대체되었습니다. 이 타입은 더 이상 사용하지 않습니다.
- */
-export type EnrollmentPaymentLifecycleStatus =
-  | "NOT_APPLICABLE"
-  | "PAYMENT_PENDING"
-  | "PAYMENT_COMPLETED"
-  | "PAYMENT_FAILED"
-  | "PARTIALLY_REFUNDED"
-  | "REFUNDED"
-  | "REFUND_REQUESTED"
-  | "REFUND_PENDING_ADMIN_CANCEL";
-
-/**
- * @deprecated `PaymentStatus`로 통합되었습니다.
- */
-export type PaymentTransactionStatus =
-  | "PAID"
-  | "FAILED"
-  | "CANCELED"
-  | "PARTIAL_REFUNDED"
-  | "REFUND_REQUESTED"
-  | "REFUNDED"
-  | "REFUND_DENIED"
-  | "REFUND_FAILED";
-
 // Status of the enrollment application itself, separate from payment.
 export type EnrollmentApplicationStatus =
-  | "APPLIED"  // 신청 완료 (결제상태와는 별개)
+  | "APPLIED" // 신청 완료 (결제상태와는 별개)
   | "CANCELED"; // 신청 취소 (결제상태와는 별개)
 
 // Status for discount applications or similar approval processes
 export type ApprovalStatus =
-  | "PENDING"  // 승인 대기
+  | "PENDING" // 승인 대기
   | "APPROVED" // 승인됨
-  | "DENIED";  // 거절됨
+  | "DENIED"; // 거절됨
 
 // Lesson Status (from swim-admin.md and AdminLessonDto)
 export type LessonStatus =
-  | "OPEN"      // 접수 가능 (강습 오픈 상태)
-  | "CLOSED"    // 접수 마감 (수동 또는 자동 마감)
-  | "ONGOING"   // 진행 중 (강습 기간 중)
-  | "COMPLETED"; // 종료됨 (강습 기간 완료) 
+  | "OPEN" // 접수 가능 (강습 오픈 상태)
+  | "CLOSED" // 접수 마감 (수동 또는 자동 마감)
+  | "ONGOING" // 진행 중 (강습 기간 중)
+  | "COMPLETED"; // 종료됨 (강습 기간 완료)
+
+export type CancellationProcessingStatus =
+  | "REQ"
+  | "APPROVED"
+  | "DENIED"
+  | "ADMIN_CANCELED"
+  | "NONE";

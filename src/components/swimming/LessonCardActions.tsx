@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button, Text, Box, Flex } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
-import {
-  EnrollmentPayStatus,
-  EnrollmentCancellationProgressStatus,
-} from "@/types/statusTypes";
+import { mypageApi } from "@/lib/api/mypageApi";
+import { toaster } from "@/components/ui/toaster";
 import dayjs from "dayjs";
 
 // Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
@@ -66,6 +65,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   onApplyClick,
   onGoToPayment,
 }) => {
+  const router = useRouter();
+
   const getInitialTimeRemaining = () => {
     if (!enrollment && lesson.reservationId) {
       const targetDate = parseKSTDateString(lesson.reservationId);
@@ -139,50 +140,73 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   }, [lesson.id, lesson.reservationId, enrollment, isCountingDown]);
 
   if (enrollment) {
-    const enrollStatus = enrollment.status as EnrollmentPayStatus;
-    const cancelStatus =
-      enrollment.cancelStatus as EnrollmentCancellationProgressStatus;
+    if (
+      enrollment.isRenewal === true &&
+      enrollment.status === "RENEWAL_AVAILABLE"
+    ) {
+      const handleRenewal = async () => {
+        if (!enrollment.lesson?.lessonId) {
+          console.error("재수강할 강습 정보가 없습니다.");
+          toaster.create({
+            title: "오류",
+            description: "재수강할 강습 정보를 찾을 수 없습니다.",
+            type: "error",
+          });
+          return;
+        }
+
+        try {
+          const response = await mypageApi.requestRenewal({
+            lessonId: enrollment.lesson.lessonId,
+            wantsLocker: false, // 사물함 선택 UI 추가 전까지 false로 고정
+          });
+
+          if (response && response.paymentPageUrl) {
+            router.push(response.paymentPageUrl);
+          } else {
+            throw new Error("결제 페이지 URL을 받지 못했습니다.");
+          }
+        } catch (error) {
+          console.error("재수강 신청 처리 중 오류 발생:", error);
+          toaster.create({
+            title: "재수강 신청 실패",
+            description:
+              "재수강 신청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+            type: "error",
+          });
+        }
+      };
+
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button colorScheme="teal" w="100%" onClick={handleRenewal}>
+            재수강 신청하기
+          </Button>
+          <Text fontSize="xs" color="gray.500">
+            {enrollment.renewalWindow?.open
+              ? `${dayjs(enrollment.renewalWindow.open).format("M/D")}~${dayjs(
+                  enrollment.renewalWindow.close
+                ).format("M/D")}`
+              : "재수강 신청 기간"}
+          </Text>
+        </Flex>
+      );
+    }
+    const enrollStatus = enrollment.status;
     const { enrollId } = enrollment;
 
-    if (enrollStatus === "EXPIRED") {
+    if (enrollStatus === "CANCELED_UNPAID") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
           <Button variant="outline" colorPalette="gray" w="100%" disabled>
             <Text color="gray.500" fontSize="sm">
-              결제 시간 만료
+              취소 완료
             </Text>
           </Button>
         </Flex>
       );
     }
-
-    if (enrollStatus === "REFUND_REQUESTED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              환불 처리중
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-
-    if (
-      enrollStatus === "REFUND_PENDING_ADMIN_CANCEL" &&
-      cancelStatus === "APPROVED"
-    ) {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              관리자 확인 취소
-            </Text>
-          </Button>
-        </Flex>
-      );
-    }
-
+    // '취소' 관련 상태들을 우선적으로 처리합니다.
     if (enrollStatus === "REFUNDED") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
@@ -195,19 +219,55 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       );
     }
 
-    if (enrollStatus === "CANCELED_UNPAID") {
+    if (enrollStatus === "ADMIN_CANCELED") {
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              취소 완료 (미결제)
+          <Button variant="outline" colorPalette="red" w="100%" disabled>
+            <Text color="red.500" fontSize="sm">
+              관리자 취소
             </Text>
           </Button>
         </Flex>
       );
     }
 
-    if (enrollStatus === "UNPAID") {
+    if (enrollStatus === "REFUND_REQUESTED") {
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button variant="outline" colorPalette="blue" w="100%" disabled>
+            <Text color="blue.500" fontSize="sm">
+              환불 요청됨 : 진행사항 및 완료 여부는 안내데스크에 문의
+            </Text>
+          </Button>
+        </Flex>
+      );
+    }
+
+    if (enrollStatus === "REFUND_PENDING_ADMIN_CANCEL") {
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button variant="outline" colorPalette="blue" w="100%" disabled>
+            <Text color="blue.500" fontSize="sm">
+              환불 처리중
+            </Text>
+          </Button>
+        </Flex>
+      );
+    }
+
+    if (enrollStatus === "PARTIALLY_REFUNDED") {
+      return (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Button variant="outline" colorPalette="gray" w="100%" disabled>
+            <Text color="gray.500" fontSize="sm">
+              부분 환불 완료
+            </Text>
+          </Button>
+        </Flex>
+      );
+    }
+
+    if (enrollStatus === "PAYMENT_PENDING" || enrollStatus === "UNPAID") {
       return (
         <Flex align="center" gap={3} w="100%">
           <Flex direction="column" align="center" gap={2} w="50%">
@@ -215,12 +275,17 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
               colorPalette="teal"
               w="100%"
               onClick={() => {
-                if (onGoToPayment && enrollment?.enrollId) {
-                  onGoToPayment(enrollment.enrollId);
+                if (onGoToPayment && enrollId) {
+                  onGoToPayment(enrollId);
                 } else {
                   console.warn(
                     "결제 핸들러가 설정되지 않았거나 enrollId가 없습니다."
                   );
+                  toaster.create({
+                    title: "오류",
+                    description: "결제 정보가 올바르지 않습니다.",
+                    type: "error",
+                  });
                 }
               }}
             >
@@ -231,7 +296,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
             <Button
               colorPalette="red"
               w="50%"
-              onClick={() => onRequestCancel(enrollId)}
+              onClick={() => enrollId && onRequestCancel(enrollId)}
             >
               취소 신청
             </Button>
@@ -247,7 +312,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
             <Button
               colorPalette="red"
               w="100%"
-              onClick={() => onRequestCancel(enrollId)}
+              onClick={() => enrollId && onRequestCancel(enrollId)}
             >
               취소 신청
             </Button>
@@ -256,25 +321,12 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       );
     }
 
-    // Handle other statuses: PAYMENT_TIMEOUT, PARTIALLY_REFUNDED, REFUNDED
-    // REFUND_PENDING_ADMIN_CANCEL and CANCELED_UNPAID are handled above.
-    // UNPAID and PAID are handled above.
+    // Handle other statuses: FAILED, etc.
     return (
       <Flex direction="column" align="center" gap={2} w="100%">
         <Text fontSize="sm" color="gray.500" textAlign="center">
-          상태: {enrollment.status}{" "}
-          {/* Display original string or map to label */}
+          상태: {enrollment.status}
         </Text>
-        {/* Show cancel button only for PARTIALLY_REFUNDED in this "other" block */}
-        {onRequestCancel && enrollStatus === "PARTIALLY_REFUNDED" && (
-          <Button
-            colorPalette="red"
-            w="100%"
-            onClick={() => onRequestCancel(enrollId)}
-          >
-            취소 신청
-          </Button>
-        )}
       </Flex>
     );
   } else {

@@ -18,7 +18,8 @@ import NextLink from "next/link";
 import { Menu } from "@/types/api";
 import { Grid3X3Icon, LogOutIcon, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState, useAuthActions } from "@/stores/auth";
 
 interface MobileMenuDrawerProps {
   menusWithLastFlag: (Menu & { isLastMenuItem?: boolean })[];
@@ -39,7 +40,8 @@ export const MobileMenuDrawer = memo(
     height,
   }: MobileMenuDrawerProps) => {
     const router = useRouter();
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated } = useRecoilValue(authState);
+    const { logout } = useAuthActions();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false); // To manually control drawer closing
 
     const handleNavigate = useCallback(

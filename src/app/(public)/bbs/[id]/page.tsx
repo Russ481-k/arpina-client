@@ -346,8 +346,6 @@ export default function BoardPage({
   }
 
   const { pageDetails, posts, pagination } = boardData;
-
-  // 기존 렌더링 로직 (Switch 문 등)
   return (
     <PageContainer>
       {/* Use BoardControls component */}

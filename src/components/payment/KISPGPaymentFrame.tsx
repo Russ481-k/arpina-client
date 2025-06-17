@@ -591,7 +591,6 @@ const KISPGPaymentFrame = forwardRef<
 
   return (
     <>
-      {/* 결제 폼 - JSP의 payInit 폼과 동일 */}
       <form
         ref={formRef}
         id="kispg_payment_form"

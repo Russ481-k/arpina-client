@@ -72,7 +72,6 @@ export const TemporaryEnrollmentDialog: React.FC<
         memo: "",
       });
       onClose(); // Close dialog on success
-      console.log("임시 등록 성공 (TemporaryEnrollmentDialog):", _response);
     },
     onError: (error) => {
       console.error(

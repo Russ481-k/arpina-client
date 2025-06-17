@@ -16,13 +16,15 @@ import { Field as CustomField } from "@/components/ui/field";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toaster } from "@/components/ui/toaster";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState, useAuthActions } from "@/stores/auth";
 import { LoginCredentials } from "@/types/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { isLoading: authLoading, isAuthenticated } = useRecoilValue(authState);
+  const { login } = useAuthActions();
 
   const [username, setUsername] = useState(""); // email -> username
   const [password, setPassword] = useState("");
@@ -54,37 +56,28 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setErrors({ ...errors, general: "" });
 
-    try {
-      const credentials: LoginCredentials = { username, password };
-      await login(credentials);
-      // Login successful - toast will be shown during redirect
-      toaster.create({
-        title: "로그인 성공",
-        description: "기존 페이지로 이동합니다.",
-        type: "success",
-        duration: 3000,
+    login({ username, password }, false)
+      .then(() => {
+        toaster.create({
+          title: "로그인 성공",
+          description: "기존 페이지로 이동합니다.",
+          type: "success",
+          duration: 3000,
+        });
+        // Redirect logic is handled in useAuthActions, but we can have a fallback here
+        const returnUrl = searchParams.get("returnUrl") || "/";
+        router.push(returnUrl);
+      })
+      .catch((error) => {
+        // Error is already displayed by the hook, but we can set local state if needed
+        const errorMessage =
+          error?.response?.data?.message ||
+          "로그인에 실패했습니다. 아이디나 비밀번호를 확인해주세요.";
+        setErrors({ username: "", password: "", general: errorMessage });
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-      router.push("/sports/swimming/lesson");
-      // The redirect is handled in the AuthContext
-    } catch (error: any) {
-      console.error("Login error:", error);
-      let errorMessage = "로그인에 실패했습니다. 다시 시도해주세요.";
-
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-
-      setErrors({ ...errors, general: errorMessage });
-
-      toaster.create({
-        title: "로그인 실패",
-        description: errorMessage,
-        type: "error",
-        duration: 5000,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   // Handle notification from URL parameters
@@ -122,7 +115,7 @@ export default function LoginPage() {
       });
       router.push("/"); // 메인 페이지로 리디렉션
     }
-  }, []); // 의존성 배열에 authLoading, isAuthenticated, router 추가
+  }, [authLoading, isAuthenticated, router]); // 의존성 배열에 authLoading, isAuthenticated, router 추가
 
   // Check if the form is in loading state
   const isLoading = isSubmitting || authLoading;

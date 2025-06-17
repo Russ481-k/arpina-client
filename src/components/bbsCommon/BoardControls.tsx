@@ -87,24 +87,23 @@ const BoardControls: React.FC<BoardControlsProps> = ({
       <Flex
         justify="space-between"
         alignItems={{ base: "stretch", md: "center" }}
-        mb={6}
+        mb={2}
         gap={{ base: 3, md: 4 }}
         direction={{ base: "column", md: "row" }}
-        pt={{ base: "3", md: "5", lg: "10" }}
       >
         {/* Left Group: Title and Total Posts */}
 
         {pagination &&
           pagination.totalElements > -1 && ( // Show if totalElements is 0 or more
             <Text
-              fontSize={{ base: "md", md: "lg", lg: "2xl" }}
+              fontSize={{ base: "md", md: "lg", lg: "xl" }}
               color="#05140E"
               fontWeight="medium"
             >
               · 총{" "}
               <Text
                 as="span"
-                fontSize={{ base: "lg", md: "xl", lg: "3xl" }}
+                fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
                 color="#2C65FD"
                 fontWeight="semibold"
               >

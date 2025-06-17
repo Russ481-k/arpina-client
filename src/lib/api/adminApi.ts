@@ -1,4 +1,4 @@
-import { PaymentTransactionStatus } from "@/types/statusTypes";
+import { PaymentStatus } from "@/types/statusTypes";
 import { privateApi } from "./client"; // Assuming CMS uses the same authenticated client
 import type {
   AdminLessonDto,
@@ -200,7 +200,7 @@ export const adminApi = {
     data: DenyCancelRequestDto
   ): Promise<EnrollAdminResponseDto> => {
     const response = await privateApi.post<EnrollAdminResponseDto>(
-      `${CMS_API_BASE}/enrollments/${enrollId}/deny-cancel`,
+      `${CMS_API_BASE}/enrollments/${enrollId}/cancel/deny`,
       data
     );
     return response.data;
@@ -247,7 +247,7 @@ export const adminApi = {
 
     const adminPaymentDataContent = paginatedDto.data.content.map(
       (dto: PaymentAdminDto): AdminPaymentData => {
-        const mappedStatus: PaymentTransactionStatus = dto.status;
+        const mappedStatus: PaymentStatus = dto.status;
 
         return {
           paymentId: dto.paymentId,
@@ -264,8 +264,9 @@ export const adminApi = {
           paymentGateway: dto.pgProvider,
           status: mappedStatus,
           paidAt: dto.paidAt || new Date().toISOString(),
-          lastRefundAt: dto.lastRefundDt ?? undefined,
-          pgResultCode: dto.pgResultCode,
+          refundedAt: dto.lastRefundDt ?? null,
+          cancellationReason: null,
+          pgResultCode: dto.pgResultCode ?? null,
         };
       }
     );
@@ -307,5 +308,37 @@ export const adminApi = {
       { params }
     );
     return response.data;
+  },
+
+  denyEnrollmentCancellationAdmin: async (
+    enrollId: number,
+    payload: { adminComment?: string }
+  ) => {
+    const response = await privateApi.post<void>(
+      `${CMS_API_BASE}/enrollments/${enrollId}/cancel/deny`,
+      payload
+    );
+    return response.data;
+  },
+
+  // KISPG 결제 내역 직접 조회
+  queryPgTransaction: async (payload: {
+    tid: string;
+    moid?: string;
+    amt: string;
+  }): Promise<ApiResponse<any>> => {
+    const response = await privateApi.post<ApiResponse<any>>(
+      `${CMS_API_BASE}/payments/query-pg`,
+      payload
+    );
+    return response.data;
+  },
+};
+
+export const cmsSwimmingApi = {
+  getLessons: (params?: {
+    // ... existing code ...
+  }) => {
+    // ... existing code ...
   },
 };

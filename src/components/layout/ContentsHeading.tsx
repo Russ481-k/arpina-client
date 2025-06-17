@@ -4,11 +4,10 @@ import { Heading } from "@chakra-ui/react";
 
 const ContentsHeading = ({ title }: { title: string }) => {
   return (
-    <Box mb={10}>
+    <Box mb={4}>
       <Heading
         as="h3"
-        size={{ base: "2xl", md: "4xl", lg: "6xl" }}
-        mb={10}
+        size={{ base: "2xl", md: "3xl", lg: "4xl" }}
         pb={3}
         borderBottom="2px solid #0D344E"
         color="#0D344E"

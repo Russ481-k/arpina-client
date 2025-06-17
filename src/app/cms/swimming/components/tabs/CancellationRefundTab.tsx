@@ -59,34 +59,20 @@ const PaymentLifecycleStatusCellRenderer: React.FC<
   const processingStatus = data.cancellationProcessingStatus;
   const paymentStatus = data.paymentStatus;
 
-  // 1. cancellationProcessingStatus를 우선적으로 표시
-  if (processingStatus && processingStatus !== "NONE") {
-    const configMap: Partial<
-      Record<
-        string,
-        { label: string; colorPalette: string; variant?: "solid" | "outline" }
-      >
-    > = {
-      REQ: { label: "환불처리요청", colorPalette: "blue", variant: "outline" },
-      PENDING: {
-        label: "환불처리중",
-        colorPalette: "yellow",
-        variant: "outline",
-      },
-      APPROVED: {
-        label: "환불처리승인",
-        colorPalette: "green",
-        variant: "solid",
-      },
-      DENIED: { label: "환불처리반려", colorPalette: "red", variant: "solid" },
-    };
-
-    const config = configMap[processingStatus] || {
-      label: processingStatus.toString(),
-      colorPalette: "gray",
-      variant: "outline",
-    };
-
+  // New logic based on the guide
+  if (processingStatus === "ADMIN_CANCELED") {
+    const config =
+      paymentStatus === "REFUND_PENDING_ADMIN_CANCEL"
+        ? {
+            label: "관리자 취소 (환불필요)",
+            colorPalette: "red",
+            variant: "solid",
+          }
+        : {
+            label: "관리자 취소 (미결제)",
+            colorPalette: "gray",
+            variant: "outline",
+          };
     return (
       <Badge
         colorPalette={config.colorPalette as any}
@@ -97,7 +83,22 @@ const PaymentLifecycleStatusCellRenderer: React.FC<
     );
   }
 
-  // 2. paymentStatus를 차선으로 표시
+  // Use centralized status util for other statuses
+  if (processingStatus && processingStatus !== "NONE") {
+    const statusInfo = getDisplayStatusInfo(
+      processingStatus as UiDisplayStatus
+    );
+    return (
+      <Badge
+        colorPalette={statusInfo.color as any}
+        variant={statusInfo.variant as any}
+      >
+        {statusInfo.label}
+      </Badge>
+    );
+  }
+
+  // Fallback to paymentStatus
   if (paymentStatus) {
     const statusInfo = getDisplayStatusInfo(paymentStatus as UiDisplayStatus);
     return (
@@ -126,26 +127,44 @@ const ActionCellRenderer: React.FC<
     return null;
   }
 
-  // 백엔드 문서에 따르면 환불 요청 상태는 UI에서만 사용하는 확장 상태임
-  // API 응답의 paymentStatus가 'REFUND_REQUESTED'일 때 검토 버튼 표시
+  const { paymentStatus, cancellationProcessingStatus } = data;
 
-  if (data.paymentStatus === "REFUND_REQUESTED") {
+  // 사용자의 취소 요청 건 ("환불 검토" 버튼)
+  if (paymentStatus === "REFUND_REQUESTED") {
     return (
       <Button
         size="xs"
         colorPalette="teal"
         variant="outline"
-        disabled={data.cancellationProcessingStatus !== null}
+        disabled={cancellationProcessingStatus !== "REQ"}
         onClick={() => context.openReviewDialog(data)}
       >
-        {data.cancellationProcessingStatus !== null ? "검토 완료" : "환불 검토"}
+        {cancellationProcessingStatus === "REQ" ? "환불 검토" : "검토 완료"}
       </Button>
     );
   }
 
-  const statusInfo = getDisplayStatusInfo(
-    data.paymentStatus as UiDisplayStatus
-  );
+  // 관리자 직권 취소 건 (환불 필요 시 "환불 처리" 버튼)
+  if (paymentStatus === "REFUND_PENDING_ADMIN_CANCEL") {
+    return (
+      <Button
+        size="xs"
+        colorPalette="red"
+        variant="outline"
+        onClick={() => {
+          if (cancellationProcessingStatus === "ADMIN_CANCELED")
+            context.openReviewDialog(data);
+        }}
+      >
+        {cancellationProcessingStatus === "ADMIN_CANCELED"
+          ? "환불 처리"
+          : "취소 처리"}
+      </Button>
+    );
+  }
+
+  // 그 외의 경우는 상태에 맞는 비활성 버튼 표시
+  const statusInfo = getDisplayStatusInfo(paymentStatus as UiDisplayStatus);
 
   return (
     <Button size="xs" variant="ghost" colorPalette="gray" disabled>
@@ -312,6 +331,7 @@ export const CancellationRefundTab = ({
         field: "status",
         cellRenderer: ActionCellRenderer,
         width: 100,
+        pinned: "right",
         cellStyle: { justifyContent: "center" },
         onCellClicked: (event: CellClickedEvent<CancelRequestAdminDto>) => {
           if (event.data?.paymentStatus === "REFUND_REQUESTED") {
@@ -361,7 +381,7 @@ export const CancellationRefundTab = ({
           },
         ]}
       />
-      <Box>
+      <Box my={1}>
         <Text fontSize="sm">
           총 {filteredCancelRequests.length}개의 요청이 있습니다.
         </Text>
@@ -385,7 +405,6 @@ export const CancellationRefundTab = ({
               context={agGridContext}
               headerHeight={36}
               rowHeight={40}
-              suppressCellFocus
               animateRows
             />
           </Box>

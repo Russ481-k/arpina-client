@@ -11,14 +11,15 @@ import { Topbar } from "@/components/layout/Topbar";
 import { usePathname } from "next/navigation";
 import { useColors } from "@/styles/theme";
 import { ColorModeToggle } from "@/components/common/ColorModeToggle";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 
 function Layout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
   const colors = useColors();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useRecoilValue(authState);
   const pathname = usePathname();
 
   // 홈페이지 스타일에 맞는 색상 적용

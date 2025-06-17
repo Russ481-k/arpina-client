@@ -1,37 +1,27 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
-import { Box, Text, Stack, Badge, Flex } from "@chakra-ui/react";
-import { CreditCardIcon } from "lucide-react"; // Keep if used by a renderer
+import { Box, Text, Stack, Badge, Flex, Button } from "@chakra-ui/react";
+import { CreditCardIcon } from "lucide-react";
 import { AgGridReact } from "ag-grid-react";
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import type { ColDef, ICellRendererParams, GridApi } from "ag-grid-community";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
-// Import AdminPaymentData as PaymentData and the new PaymentStatus
 import type { AdminPaymentData as PaymentData } from "@/types/api";
 import type { PaymentStatus, UiDisplayStatus } from "@/types/statusTypes";
-import { displayStatusConfig } from "@/lib/utils/statusUtils"; // Import the centralized config
-import {
-  formatPhoneNumberForKISPG,
-  formatPhoneNumberWithHyphen,
-} from "@/lib/utils/phoneUtils";
+import { displayStatusConfig } from "@/lib/utils/statusUtils";
+import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 import dayjs from "dayjs";
 
-// Local PaymentData interface is removed to resolve conflict
-// interface PaymentData { ... } // This local definition is deleted
-
 interface PaymentsViewProps {
-  payments: PaymentData[]; // Now uses AdminPaymentData aliased as PaymentData, which should have status: PaymentStatus
-  lessonIdFilter?: number | null;
-  selectedYear: string; // Added prop
-  selectedMonth: string; // Added prop
+  payments: PaymentData[];
   agGridTheme: string;
   bg: string;
   textColor: string;
   borderColor: string;
-  // Pass any other shared props like colors if needed by renderers
+  onQueryPg: (tid: string, amt: number) => void;
+  setGridApi: (api: GridApi<PaymentData>) => void;
 }
 
-// Shared utility or helper functions (consider moving to a common file)
 const formatCurrency = (amount: number | undefined | null) => {
   if (amount === undefined || amount === null) return "-";
   return new Intl.NumberFormat("ko-KR").format(amount) + "원";
@@ -48,17 +38,13 @@ const formatDateTime = (dateString: string | undefined | null) => {
   }
 };
 
-// Configuration for PaymentTransactionStatus display is now removed.
-
-// PaymentMethodCellRenderer (can be part of this file or shared)
 const PaymentMethodCellRenderer: React.FC<
-  ICellRendererParams<PaymentData, string | undefined> // paymentMethod is string, but value could be undefined
+  ICellRendererParams<PaymentData, string | undefined>
 > = (params) => {
-  // params.value is paymentMethod. params.data is the full PaymentData object.
   const paymentMethod = params.data?.paymentMethod?.toUpperCase();
   if (!paymentMethod) return null;
 
-  let paymentMethodText = params.data?.paymentMethod || ""; // Default to raw value if not mapped
+  let paymentMethodText = params.data?.paymentMethod || "";
 
   if (paymentMethod === "CARD") {
     paymentMethodText = "카드결제";
@@ -78,7 +64,6 @@ const PaymentMethodCellRenderer: React.FC<
   );
 };
 
-// PaymentStatusCellRenderer updated for PaymentStatus
 const PaymentStatusCellRenderer: React.FC<
   ICellRendererParams<PaymentData, PaymentStatus>
 > = (params) => {
@@ -99,21 +84,19 @@ const PaymentStatusCellRenderer: React.FC<
 
 export const PaymentsView: React.FC<PaymentsViewProps> = ({
   payments,
-  lessonIdFilter,
-  selectedYear,
-  selectedMonth,
   agGridTheme,
   bg,
   textColor,
   borderColor,
+  onQueryPg,
+  setGridApi,
 }) => {
   const paymentGridRef = useRef<AgGridReact<PaymentData>>(null);
   const [paymentFilters, setPaymentFilters] = useState({
     searchTerm: "",
-    status: "" as PaymentStatus | "", // Ensure status can be empty string for "all"
+    status: "" as PaymentStatus | "",
   });
 
-  // statusOptions updated for PaymentStatus
   const statusOptions: {
     value: PaymentStatus | "";
     label: string;
@@ -133,7 +116,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
   };
 
   const filteredPayments = useMemo(() => {
-    let data = [...payments]; // Create a new array to avoid mutating the prop
+    let data = [...payments];
 
     return data.filter((payment) => {
       const searchTermLower = paymentFilters.searchTerm.toLowerCase();
@@ -194,7 +177,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "paidAmount",
         valueFormatter: (params) => formatCurrency(params.value),
         width: 110,
-        cellStyle: { justifyContent: "flex-end" },
+        cellStyle: { textAlign: "right" },
         sortable: true,
         filter: "agNumberColumnFilter",
       },
@@ -203,7 +186,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "refundedAmount",
         valueFormatter: (params) => formatCurrency(params.value),
         width: 110,
-        cellStyle: { justifyContent: "flex-end" },
+        cellStyle: { textAlign: "right" },
         sortable: true,
         filter: "agNumberColumnFilter",
       },
@@ -212,19 +195,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "paymentMethod",
         cellRenderer: PaymentMethodCellRenderer,
         width: 110,
-        cellStyle: { justifyContent: "center" },
-        sortable: true,
-      },
-      {
-        headerName: "PG사",
-        field: "paymentGateway",
-        width: 100,
-        sortable: true,
-      },
-      {
-        headerName: "PG결과코드",
-        field: "pgResultCode",
-        width: 120,
+        cellStyle: { textAlign: "center" },
         sortable: true,
       },
       {
@@ -239,11 +210,11 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         field: "status",
         cellRenderer: PaymentStatusCellRenderer,
         width: 100,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: { textAlign: "center" },
         sortable: true,
       },
     ],
-    []
+    [onQueryPg]
   );
 
   const defaultColDef = useMemo<ColDef>(
@@ -283,13 +254,14 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             placeholder: "전체",
           },
         ]}
-        onSearchButtonClick={() => {
-          console.log("Search payments with filters:", paymentFilters);
-        }}
         showSearchButton={true}
       />
-
-      <Box className={agGridTheme} h="510px" w="full">
+      <Box>
+        <Text fontSize="sm">
+          총 {filteredPayments.length}개의 결제 내역이 있습니다.
+        </Text>
+      </Box>
+      <Box className={agGridTheme} h="540px" w="full">
         <AgGridReact<PaymentData>
           ref={paymentGridRef}
           rowData={filteredPayments}
@@ -305,6 +277,8 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             borderBottom: `1px solid ${borderColor}`,
           })}
           animateRows={true}
+          onGridReady={(params) => setGridApi(params.api)}
+          getRowId={(params) => params.data.tid}
         />
       </Box>
     </Stack>

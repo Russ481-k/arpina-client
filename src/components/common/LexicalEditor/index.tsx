@@ -214,9 +214,9 @@ const Toolbar = memo(function Toolbar({
         if (file) {
           const localUrl = URL.createObjectURL(file);
 
-          if (onMediaAdded) {
-            onMediaAdded(localUrl, file);
-          }
+          // Restore focus to the editor before inserting the image.
+          // This is crucial because opening the file dialog causes the editor to lose focus.
+          editor.focus();
 
           editor.update(() => {
             const sel = $getSelection();
@@ -233,9 +233,14 @@ const Toolbar = memo(function Toolbar({
               sel.insertNodes([node]);
             }
           });
+
+          if (onMediaAdded) {
+            onMediaAdded(localUrl, file);
+          }
+
           toaster.success({
-            title: "Media added to editor",
-            description: "The media will be uploaded when the post is saved.",
+            title: "미디어가 추가되었습니다.",
+            description: "게시글이 저장될 때 미디어가 업로드됩니다.",
             duration: 3000,
           });
         }

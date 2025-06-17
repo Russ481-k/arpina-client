@@ -2,10 +2,12 @@
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import ApTable03 from "@/components/contents/ApTable03";
-import { Box, Heading } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import InfoBoxList01 from "@/components/contents/InfoBoxList01";
+import InfoBoxList02 from "@/components/contents/InfoBoxList02";
+import HeadingH401 from "@/components/contents/HeadingH401";
 
-export default function FeePage() {
+export default function SportsFeePage() {
   const tableRows01 = [
     // Header rows
     {
@@ -116,7 +118,6 @@ export default function FeePage() {
       ],
     },
   ];
-
   const tableRows04 = [
     {
       isHeader: true,
@@ -152,7 +153,12 @@ export default function FeePage() {
     "할인율의 경우 단일종목 골프(연습장)는 3개월 5%, 6개월 10%, 12개월 15%의 할인이 적용됩니다.",
     "환불은 탈회신청서 제출일을 기준으로 환불 처리되며, 위약금은 이용 개시일 전후 회원의 귀책 사유로 계약 해지시 총 결제금액(전체금액)의 10% 및 고객께서 이용하신 일 수에 해당하는 금액을 공제한 후 환불 처리됩니다.",
   ];
-
+  const infoItems02 = [
+    "스포츠회원 또는 가족(성인) 2인 등록 시 1인 5% 추가할인",
+    "국가유공자(본인만 해당) 10% 추가할인",
+    "다자녀, 다문화 가정(성인) 등록 시 10% 추가할인",
+    "휴회·탈회 신청시 프런트에 회원 카드를 반드시 반납해주시기 바랍니다.",
+  ];
   return (
     <PageContainer>
       <Box>
@@ -164,20 +170,7 @@ export default function FeePage() {
         <InfoBoxList01 items={infoItems01} />
       </Box>
       <Box mt={"100px"}>
-        <Heading
-          as="h4"
-          border="1px solid #2E3192"
-          borderRadius={"100px"}
-          mb={5}
-          p={5}
-          color="#2E3192"
-          fontSize="3xl"
-          fontWeight="bold"
-          lineHeight="1"
-          textAlign="center"
-        >
-          1회 입장 이용요금표
-        </Heading>
+        <HeadingH401>1회 입장 이용요금표</HeadingH401>
 
         <ApTable03
           rows={tableRows02}
@@ -195,25 +188,19 @@ export default function FeePage() {
       </Box>
 
       <Box mt={"100px"}>
-        <Heading
-          as="h4"
-          border="1px solid #2E3192"
-          borderRadius={"100px"}
-          mb={5}
-          p={5}
-          color="#2E3192"
-          fontSize="3xl"
-          fontWeight="bold"
-          lineHeight="1"
-          textAlign="center"
-        >
-          객실투숙객 1회 입장 이용요금표
-        </Heading>
+        <HeadingH401>객실투숙객 1회 입장 이용요금표</HeadingH401>
 
         <ApTable03
           rows={tableRows04}
           className="ap-table03"
           visuallyHiddenText="객실투숙객 1회 입장 이용요금표로 구분, 자유수영, 헬스, 사우나, 골프(70분), 정보제공"
+        />
+      </Box>
+      <Box mt={10}>
+        <InfoBoxList02
+          title="할인 적용대상 참고사항"
+          subtitle="중복할인 불가, 월 회원이상"
+          items={infoItems02}
         />
       </Box>
     </PageContainer>

@@ -30,7 +30,7 @@ export default function ArticleWritePage() {
   // State to hold attachment properties derived from pageDetails
   const [attachmentConfig, setAttachmentConfig] =
     useState<EditorAttachmentConfig>({
-      disableAttachments: true,
+      disableAttachments: false,
       maxFileAttachments: undefined,
       maxFileSizeMB: undefined,
     });

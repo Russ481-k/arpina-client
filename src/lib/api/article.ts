@@ -152,7 +152,12 @@ export const articleApi = {
   createArticle: async (formData: FormData): Promise<ApiResponse<number>> => {
     const response = await privateApi.post<ApiResponse<number>>(
       "/cms/bbs/article",
-      formData
+      formData,
+      {
+        headers: {
+          'Content-Type': undefined
+        }
+      }
     );
     return response.data;
   },
@@ -164,7 +169,12 @@ export const articleApi = {
   ): Promise<ApiResponse<void>> => {
     const response = await privateApi.put<ApiResponse<void>>(
       `/cms/bbs/article/${nttId}`,
-      formData
+      formData,
+      {
+        headers: {
+          'Content-Type': undefined
+        }
+      }
     );
     return response.data;
   },
