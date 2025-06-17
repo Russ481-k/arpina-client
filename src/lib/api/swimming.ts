@@ -1,4 +1,4 @@
-import { api, publicApi, privateApi } from "./client";
+import { publicApi, privateApi } from "./client";
 import {
   LessonDTO,
   LockerDTO,
@@ -10,8 +10,7 @@ import {
   RenewalDTO,
   RenewalRequestDto,
 } from "@/types/swimming";
-import { PaginationParams, PaginatedResponse } from "@/types/api";
-import { privateApiMethods, publicApiMethods } from "./client";
+import { PaginationParams, PaginatedResponse, ApiResponse } from "@/types/api";
 import {
   EnrollLessonRequestDto,
   EnrollInitiationResponseDto,
@@ -128,7 +127,10 @@ const formatDate = (dateString: string): string => {
 export const getLessons = async (
   params: PaginationParams
 ): Promise<PaginatedResponse<LessonDTO>> => {
-  const response = await publicApi.get("/swimming/lessons", { params });
+  const response = await publicApi.get<PaginatedResponse<BackendLessonDTO>>(
+    "/swimming/lessons",
+    { params }
+  );
 
   // 백엔드 응답 데이터 매핑
   const mappedData = {
@@ -139,12 +141,14 @@ export const getLessons = async (
     },
   };
 
-  return mappedData;
+  return mappedData as unknown as PaginatedResponse<LessonDTO>;
 };
 
 // 특정 강습 상세 조회
 export const getLesson = async (lessonId: number): Promise<LessonDTO> => {
-  const response = await api.get(`/swimming/lessons/${lessonId}`);
+  const response = await publicApi.get<ApiResponse<LessonDTO>>(
+    `/swimming/lessons/${lessonId}`
+  );
   return response.data.data;
 };
 
@@ -153,23 +157,31 @@ export const getLessonsByPeriod = async (
   startDate: string,
   endDate: string
 ): Promise<LessonDTO[]> => {
-  const response = await api.get("/swimming/lessons/period", {
-    params: { startDate, endDate },
-  });
+  const response = await publicApi.get<ApiResponse<LessonDTO[]>>(
+    "/swimming/lessons/period",
+    {
+      params: { startDate, endDate },
+    }
+  );
   return response.data.data;
 };
 
 // 사용 가능한 사물함 목록 조회
 export const getLockers = async (gender?: string): Promise<LockerDTO[]> => {
-  const response = await api.get("/swimming/lockers", {
-    params: { gender },
-  });
+  const response = await publicApi.get<ApiResponse<LockerDTO[]>>(
+    "/swimming/lockers",
+    {
+      params: { gender },
+    }
+  );
   return response.data.data;
 };
 
 // 특정 사물함 상세 조회
 export const getLocker = async (lockerId: number): Promise<LockerDTO> => {
-  const response = await api.get(`/swimming/lockers/${lockerId}`);
+  const response = await publicApi.get<ApiResponse<LockerDTO>>(
+    `/swimming/lockers/${lockerId}`
+  );
   return response.data.data;
 };
 
@@ -177,10 +189,9 @@ export const getLocker = async (lockerId: number): Promise<LockerDTO> => {
 export const enrollLesson = async (
   enrollRequest: EnrollRequestDto
 ): Promise<EnrollInitiationResponseDto> => {
-  const response = await api.post(
-    "/payment/prepare-kispg-payment",
-    enrollRequest
-  );
+  const response = await privateApi.post<
+    ApiResponse<EnrollInitiationResponseDto>
+  >("/payment/prepare-kispg-payment", enrollRequest);
   return response.data.data;
 };
 
@@ -189,7 +200,7 @@ export const cancelEnroll = async (
   enrollId: number,
   cancelRequest: CancelRequestDto
 ): Promise<EnrollResponseDto> => {
-  const response = await api.post(
+  const response = await privateApi.post<ApiResponse<EnrollResponseDto>>(
     `/swimming/enroll/${enrollId}/cancel`,
     cancelRequest
   );
@@ -198,7 +209,9 @@ export const cancelEnroll = async (
 
 // 내 신청 내역 조회
 export const getMyEnrolls = async (): Promise<EnrollDTO[]> => {
-  const response = await api.get("/swimming/my-enrolls");
+  const response = await privateApi.get<ApiResponse<EnrollDTO[]>>(
+    "/swimming/my-enrolls"
+  );
   return response.data.data;
 };
 
@@ -207,15 +220,20 @@ export const getMyEnrollsByStatus = async (
   status: string,
   params: PaginationParams
 ): Promise<PaginatedResponse<EnrollDTO>> => {
-  const response = await api.get("/swimming/my-enrolls/status", {
-    params: { status, ...params },
-  });
+  const response = await privateApi.get<PaginatedResponse<EnrollDTO>>(
+    "/swimming/my-enrolls/status",
+    {
+      params: { status, ...params },
+    }
+  );
   return response.data;
 };
 
 // 특정 신청 상세 조회
 export const getEnroll = async (enrollId: number): Promise<EnrollDTO> => {
-  const response = await api.get(`/swimming/enrolls/${enrollId}`);
+  const response = await privateApi.get<ApiResponse<EnrollDTO>>(
+    `/swimming/enrolls/${enrollId}`
+  );
   return response.data.data;
 };
 
@@ -223,12 +241,14 @@ export const getEnroll = async (enrollId: number): Promise<EnrollDTO> => {
 export const payEnroll = async (
   paymentRequest: PaymentRequestDto
 ): Promise<void> => {
-  await api.post("/swimming/pay", paymentRequest);
+  await privateApi.post("/swimming/pay", paymentRequest);
 };
 
 // 재등록 안내 조회
 export const getRenewalInfo = async (): Promise<RenewalDTO[]> => {
-  const response = await api.get("/swimming/renewal");
+  const response = await privateApi.get<ApiResponse<RenewalDTO[]>>(
+    "/swimming/renewal"
+  );
   return response.data.data;
 };
 
@@ -236,7 +256,7 @@ export const getRenewalInfo = async (): Promise<RenewalDTO[]> => {
 export const processRenewal = async (
   renewalRequest: RenewalRequestDto
 ): Promise<void> => {
-  await api.post("/swimming/renewal", renewalRequest);
+  await privateApi.post("/swimming/renewal", renewalRequest);
 };
 
 // Base paths from markdown documents
@@ -254,11 +274,8 @@ export const swimmingPaymentService = {
    */
   getPublicLessons: (
     params?: PaginationParams
-  ): Promise<PaginatedResponse<LessonDto>> => {
-    return publicApiMethods.get<PaginatedResponse<LessonDto>>(
-      `${SWIMMING_BASE_PATH}/lessons`,
-      { params }
-    );
+  ): Promise<PaginatedResponse<LessonDTO>> => {
+    return getLessons(params || {});
   },
 
   /**
@@ -266,11 +283,13 @@ export const swimmingPaymentService = {
    * Corresponds to POST /api/v1/payment/prepare-kispg-payment
    */
   enrollLesson: withAuthRedirect(
-    (data: EnrollLessonRequestDto): Promise<EnrollInitiationResponseDto> => {
-      return privateApiMethods.post<
-        EnrollInitiationResponseDto,
-        EnrollLessonRequestDto
+    async (
+      data: EnrollLessonRequestDto
+    ): Promise<EnrollInitiationResponseDto> => {
+      const response = await privateApi.post<
+        ApiResponse<EnrollInitiationResponseDto>
       >(`${PAYMENT_BASE_PATH}/prepare-kispg-payment`, data);
+      return response.data.data;
     }
   ),
 
@@ -279,14 +298,14 @@ export const swimmingPaymentService = {
    * Corresponds to POST /api/v1/payment/confirm/{enrollId}
    */
   confirmPayment: withAuthRedirect(
-    (
+    async (
       enrollId: number,
       data: PaymentConfirmRequestDto
     ): Promise<PaymentConfirmResponseDto> => {
-      return privateApiMethods.post<
-        PaymentConfirmResponseDto,
-        PaymentConfirmRequestDto
+      const response = await privateApi.post<
+        ApiResponse<PaymentConfirmResponseDto>
       >(`${PAYMENT_BASE_PATH}/confirm/${enrollId}`, data);
+      return response.data.data;
     }
   ),
 
@@ -295,11 +314,13 @@ export const swimmingPaymentService = {
    * Corresponds to POST /api/v1/mypage/renewal (as per swim-overview.md)
    */
   renewalLesson: withAuthRedirect(
-    (data: MypageRenewalRequestDto): Promise<EnrollInitiationResponseDto> => {
-      return privateApiMethods.post<
-        EnrollInitiationResponseDto,
-        MypageRenewalRequestDto
+    async (
+      data: MypageRenewalRequestDto
+    ): Promise<EnrollInitiationResponseDto> => {
+      const response = await privateApi.post<
+        ApiResponse<EnrollInitiationResponseDto>
       >(`${MYPAGE_BASE_PATH}/renewal`, data);
+      return response.data.data;
     }
   ),
 
@@ -311,9 +332,9 @@ export const swimmingPaymentService = {
    * For now, keeping a swimming related cancel here.
    */
   cancelUserEnrollment: withAuthRedirect(
-    (enrollId: number, data?: { reason?: string }): Promise<void> => {
+    async (enrollId: number, data?: { reason?: string }): Promise<void> => {
       // Assuming EnrollResponseDto might not be returned or needed for simple cancel
-      return privateApiMethods.post<void, { reason?: string }>(
+      await privateApi.post<void, { reason?: string }>(
         `${SWIMMING_BASE_PATH}/enroll/${enrollId}/cancel`,
         data
       );
@@ -326,10 +347,11 @@ export const swimmingPaymentService = {
    * Returns payment initialization parameters for secure payment.
    */
   initKISPGPayment: withAuthRedirect(
-    (enrollId: number): Promise<KISPGPaymentInitResponseDto> => {
-      return privateApiMethods.get<KISPGPaymentInitResponseDto>(
-        `${PAYMENT_BASE_PATH}/kispg-init-params/${enrollId}`
-      );
+    async (enrollId: number): Promise<KISPGPaymentInitResponseDto> => {
+      const response = await privateApi.get<
+        ApiResponse<KISPGPaymentInitResponseDto>
+      >(`${PAYMENT_BASE_PATH}/kispg-init-params/${enrollId}`);
+      return response.data.data;
     }
   ),
 

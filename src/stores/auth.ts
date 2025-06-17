@@ -57,10 +57,7 @@ export const useAuthActions = () => {
             type: "warning",
           });
         } else if (fromCMS) {
-          if (
-            appUser.role === "ADMIN" ||
-            appUser.role === "SYSTEM_ADMIN"
-          ) {
+          if (appUser.role === "ADMIN" || appUser.role === "SYSTEM_ADMIN") {
             router.push("/cms/menu");
             toaster.create({
               title: "로그인 성공",
@@ -106,7 +103,10 @@ export const useAuthActions = () => {
     try {
       await authApi.logout();
     } catch (error) {
-      console.error("Logout API call failed, proceeding with local logout", error);
+      console.error(
+        "Logout API call failed, proceeding with local logout",
+        error
+      );
     } finally {
       const currentPath = window.location.pathname;
       const fromCMS = currentPath.startsWith("/cms");
@@ -141,12 +141,12 @@ export const useAuthActions = () => {
         localStorage.setItem(USER_KEY, JSON.stringify(appUser));
         setAuth({ isAuthenticated: true, user: appUser, isLoading: false });
       } catch (error) {
-        // 토큰이 유효하지 않은 경우
+        // 토큰이 유효하지 않은 경우 (재발급 실패 포함)
         removeToken();
         setAuth({ isAuthenticated: false, user: null, isLoading: false });
       }
     } else {
-      setAuth({ isAuthenticated: false, user: null, isLoading:false });
+      setAuth({ isAuthenticated: false, user: null, isLoading: false });
     }
   };
 
@@ -155,4 +155,4 @@ export const useAuthActions = () => {
     logout,
     syncAuthState,
   };
-}; 
+};

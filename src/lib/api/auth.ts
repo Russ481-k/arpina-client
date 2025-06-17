@@ -5,7 +5,7 @@ import {
   User,
 } from "@/types/api";
 import { publicApi, privateApi } from "./client";
-import { getToken } from "../auth-utils";
+import { getToken, setToken, removeToken } from "../auth-utils";
 
 // React Query 키 정의
 export const authKeys = {
@@ -20,6 +20,7 @@ export interface AuthApi {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   verifyToken: () => Promise<User>;
   logout: () => Promise<void>;
+  getMe: () => Promise<User>;
 }
 
 // 인증 API 구현
@@ -29,25 +30,37 @@ export const authApi = {
       "/auth/login",
       credentials
     );
+    const authData = response.data.data; // 실제 데이터는 .data 안에 있습니다.
 
-    // API 응답 데이터의 role 형식 통일 ("ROLE_ADMIN" -> "ADMIN")
-    if (response.data.data?.user?.role) {
-      response.data.data.user.role =
-        response.data.data.user.role.replace("ROLE_", "") || "USER";
+    if (authData?.accessToken) {
+      // accessToken, refreshToken을 저장합니다.
+      // accessTokenExpiresIn은 AuthResponse 타입에 없으므로 제거합니다.
+      setToken(authData.accessToken, authData.refreshToken);
+    }
+
+    // 응답 데이터의 role 형식 통일 ("ROLE_ADMIN" -> "ADMIN")
+    if (authData?.user?.role) {
+      authData.user.role = authData.user.role.replace("ROLE_", "") || "USER";
     }
 
     return response;
   },
 
   logout: async () => {
-    await publicApi.post<void>("/auth/logout");
+    // 서버에 로그아웃 요청 (선택적)
+    // await publicApi.post<void>("/auth/logout");
+
+    // 클라이언트 측 토큰 제거
+    removeToken();
+
+    // 페이지를 새로고침하여 상태를 초기화하거나, 로그인 페이지로 리디렉션
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   },
 
   verifyToken: async (): Promise<User> => {
-    const token = getToken();
-    const response = await privateApi.get<VerifyTokenResponse>("/auth/verify", {
-      headers: token ? { Authorization: `Bearer ${token.trim()}` } : undefined,
-    });
+    const response = await privateApi.get<VerifyTokenResponse>("/auth/verify");
 
     const apiData = response.data.data;
 
