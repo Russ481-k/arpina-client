@@ -1,7 +1,19 @@
 "use client";
 
-import { Box, Flex, Text, Icon } from "@chakra-ui/react";
+import { Box, Flex, Text, Icon, Input, Button, Select } from "@chakra-ui/react";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { createListCollection } from "@chakra-ui/react";
+
+const phoneNumbers = createListCollection({
+  items: [
+    { label: "010", value: "010" },
+    { label: "011", value: "011" },
+    { label: "016", value: "016" },
+    { label: "017", value: "017" },
+    { label: "018", value: "018" },
+    { label: "019", value: "019" },
+  ],
+});
 
 export default function SheetPage() {
   return (
@@ -239,20 +251,19 @@ export default function SheetPage() {
           이름 및 단체명
         </Text>
         <Box mb={6}>
-          <Box
-            as="input"
+          <input
             type="text"
             placeholder="이름 및 단체명을 입력해주세요"
-            w="100%"
-            h="52px"
-            px={5}
-            bg="#F3F3F5"
-            borderRadius="xl"
-            border="none"
-            fontSize="md"
-            color="#373636"
-            _placeholder={{ color: "#9E9E9E", fontWeight: 500 }}
-            mb={0}
+            style={{
+              width: "100%",
+              height: "52px",
+              padding: "0 20px",
+              background: "#F3F3F5",
+              borderRadius: "12px",
+              border: "none",
+              fontSize: "16px",
+              color: "#373636",
+            }}
           />
         </Box>
         {/* 연락처 */}
@@ -260,17 +271,18 @@ export default function SheetPage() {
           연락처
         </Text>
         <Flex gap={3} mb={6}>
-          <Box
-            as="select"
-            w="110px"
-            h="52px"
-            px={4}
-            bg="#F3F3F5"
-            borderRadius="xl"
-            border="none"
-            fontSize="md"
-            color="#373636"
-            fontWeight={600}
+          <select
+            style={{
+              width: "110px",
+              height: "52px",
+              padding: "0 16px",
+              background: "#F3F3F5",
+              borderRadius: "12px",
+              border: "none",
+              fontSize: "16px",
+              color: "#373636",
+              fontWeight: 600,
+            }}
           >
             <option value="010">010</option>
             <option value="011">011</option>
@@ -278,34 +290,34 @@ export default function SheetPage() {
             <option value="017">017</option>
             <option value="018">018</option>
             <option value="019">019</option>
-          </Box>
-          <Box
-            as="input"
+          </select>
+          <input
             type="text"
             maxLength={4}
-            w="33%"
-            h="52px"
-            px={4}
-            bg="#F3F3F5"
-            borderRadius="xl"
-            border="none"
-            fontSize="md"
-            color="#373636"
-            _placeholder={{ color: "#9E9E9E", fontWeight: 500 }}
+            style={{
+              width: "33%",
+              height: "52px",
+              padding: "0 16px",
+              background: "#F3F3F5",
+              borderRadius: "12px",
+              border: "none",
+              fontSize: "16px",
+              color: "#373636",
+            }}
           />
-          <Box
-            as="input"
+          <input
             type="text"
             maxLength={4}
-            w="33%"
-            h="52px"
-            px={4}
-            bg="#F3F3F5"
-            borderRadius="xl"
-            border="none"
-            fontSize="md"
-            color="#373636"
-            _placeholder={{ color: "#9E9E9E", fontWeight: 500 }}
+            style={{
+              width: "33%",
+              height: "52px",
+              padding: "0 16px",
+              background: "#F3F3F5",
+              borderRadius: "12px",
+              border: "none",
+              fontSize: "16px",
+              color: "#373636",
+            }}
           />
         </Flex>
         {/* 이메일 */}
@@ -313,53 +325,53 @@ export default function SheetPage() {
           이메일
         </Text>
         <Box mb={10}>
-          <Box
-            as="input"
+          <input
             type="email"
             placeholder="견적서를 받을 이메일을 입력해주세요"
-            w="100%"
-            h="52px"
-            px={5}
-            bg="#F3F3F5"
-            borderRadius="xl"
-            border="none"
-            fontSize="md"
-            color="#373636"
-            _placeholder={{ color: "#9E9E9E", fontWeight: 500 }}
+            style={{
+              width: "100%",
+              height: "52px",
+              padding: "0 20px",
+              background: "#F3F3F5",
+              borderRadius: "12px",
+              border: "none",
+              fontSize: "16px",
+              color: "#373636",
+            }}
           />
         </Box>
         {/* 버튼 영역 */}
         <Flex gap={4} justify="center" mt={8}>
-          <Box
-            as="button"
+          <button
             type="button"
-            w="48%"
-            h="54px"
-            borderRadius="xl"
-            border="2px solid #2E3192"
-            bg="white"
-            color="#2E3192"
-            fontWeight="900"
-            fontSize="xl"
-            _hover={{ bg: "#F3F3F5" }}
+            style={{
+              width: "48%",
+              height: "54px",
+              borderRadius: "12px",
+              border: "2px solid #2E3192",
+              background: "white",
+              color: "#2E3192",
+              fontWeight: 900,
+              fontSize: "24px",
+            }}
           >
             이전 페이지
-          </Box>
-          <Box
-            as="button"
+          </button>
+          <button
             type="submit"
-            w="48%"
-            h="54px"
-            borderRadius="xl"
-            bg="#2E3192"
-            color="white"
-            fontWeight="900"
-            fontSize="xl"
-            border="none"
-            _hover={{ bg: "#22246B" }}
+            style={{
+              width: "48%",
+              height: "54px",
+              borderRadius: "12px",
+              background: "#2E3192",
+              color: "white",
+              fontWeight: 900,
+              fontSize: "24px",
+              border: "none",
+            }}
           >
             견적서 다운로드
-          </Box>
+          </button>
         </Flex>
       </Box>
     </PageContainer>

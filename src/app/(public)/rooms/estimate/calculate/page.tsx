@@ -1267,7 +1267,11 @@ export default function EstimatePage() {
           >
             객실
           </Heading>
-          <Collapsible.Root open={isOpen} onOpenChange={setIsOpen} my={10}>
+          <Collapsible.Root
+            open={isOpen}
+            onOpenChange={() => setIsOpen(!isOpen)}
+            my={10}
+          >
             <Collapsible.Trigger
               display="flex"
               alignItems="center"
@@ -1364,7 +1368,7 @@ export default function EstimatePage() {
                     fontWeight="bold"
                     _hover={{ bg: "#1B2066" }}
                     onClick={handleApplyDates}
-                    isDisabled={
+                    disabled={
                       !(
                         checkInDate &&
                         checkOutDate &&
@@ -1408,8 +1412,10 @@ export default function EstimatePage() {
                 fontSize="2xl"
                 background="linear-gradient(90deg, #0C8EA4 0%, rgba(46, 49, 146, 0.80) 100%)"
                 backgroundClip="text"
-                WebkitBackgroundClip="text"
-                WebkitTextFillColor="transparent"
+                style={{
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
               >
                 연회장/객실 가견견적 산출 프로그램
               </Text>
