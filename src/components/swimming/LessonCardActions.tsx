@@ -236,7 +236,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
         <Flex direction="column" align="center" gap={2} w="100%">
           <Button variant="outline" colorPalette="blue" w="100%" disabled>
             <Text color="blue.500" fontSize="sm">
-              환불 요청됨
+              환불 요청됨 : 진행사항 및 완료 여부는 안내데스크에 문의
             </Text>
           </Button>
         </Flex>
