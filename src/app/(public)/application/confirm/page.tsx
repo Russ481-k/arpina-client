@@ -40,7 +40,7 @@ const DEFAULT_MEMBERSHIP_OPTIONS: MembershipOption[] = [
   { value: "general", label: "해당사항없음", discountPercentage: 0 },
   {
     value: "merit",
-    label: "국가 유공자 10%할인",
+    label: "국가 유공자(본인) 10%할인",
     discountPercentage: 10,
   },
   {
