@@ -1,8 +1,8 @@
 // 수영장 강습 관련 타입 정의
 
 import {
-  PaymentTransactionStatus,
-  EnrollmentPaymentLifecycleStatus,
+  PaymentStatus,
+  EnrollmentPayStatus,
   EnrollmentCancellationProgressStatus,
   // LessonStatus, // LessonDTO here doesn't use this level of detail for its own status field
 } from "./statusTypes";
@@ -48,7 +48,7 @@ export interface EnrollResponseDto {
   lessonId: number;
   lockerId?: number;
   status: string; // This is likely EnrollmentApplicationStatus or similar, but API might send generic string.
-  payStatus: EnrollmentPaymentLifecycleStatus | string; // Allow string for flexibility
+  payStatus: EnrollmentPayStatus | string; // Allow string for flexibility
   expireDt: string;
   userName: string;
   lessonTitle: string;
@@ -72,7 +72,7 @@ export interface EnrollDTO {
   lessonId: number;
   lockerId?: number;
   status: string; // General status of the enrollment, could be EnrollmentApplicationStatus
-  payStatus: EnrollmentPaymentLifecycleStatus | string; // UNPAID, PAID, CANCELED_UNPAID // Allow string
+  payStatus: EnrollmentPayStatus | string; // UNPAID, PAID, CANCELED_UNPAID // Allow string
   expireDt: string;
   userName: string;
   lessonTitle: string;
@@ -238,7 +238,7 @@ export interface MypageEnrollDto {
     // If this needs to be more specific, it should align with LessonStatus from statusTypes.ts
     status: string; 
   };
-  status: EnrollmentPaymentLifecycleStatus | string; // pay_status from enroll table // Allow string
+  status: EnrollmentPayStatus | string; // pay_status from enroll table // Allow string
   applicationDate: string; // ISO 8601 datetime string
   paymentExpireDt: string | null; // enroll.expire_dt (KISPG 결제 페이지 만료 시간)
   usesLocker: boolean;
@@ -277,7 +277,7 @@ export interface MypagePaymentDto {
   refunded_amt: number; // 누적 환불액
   paidAt: string | null; // 결제일시 ISO 8601
   refund_dt: string | null; // 마지막 환불 시각 ISO 8601
-  status: PaymentTransactionStatus | string; // Allow string
+  status: PaymentStatus | string; // Allow string
 }
 
 // It's good practice to also have a generic API response type,

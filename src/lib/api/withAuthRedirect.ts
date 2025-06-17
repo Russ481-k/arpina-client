@@ -28,7 +28,6 @@ export function withAuthRedirect<T extends (...args: any[]) => Promise<any>>(
     } catch (error) {
       const apiError = error as ApiError;
       console.error("[withAuthRedirect] API Error caught:", apiError);
-      console.log(`[withAuthRedirect] API Error status: ${apiError.status}`);
 
       if (apiError.status === 401) {
         console.log(

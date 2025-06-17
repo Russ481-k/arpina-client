@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { toaster } from "../ui/toaster";
 import LessonCardActions from "./LessonCardActions";
 import { getMembershipLabel } from "@/lib/utils/displayUtils";
-import { useAuth } from "@/lib/AuthContext";
-import { UserContextState } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 import dayjs from "dayjs";
 
 interface LessonCardProps {
@@ -63,7 +63,11 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
     onRenewLesson,
   }) => {
     const router = useRouter();
-    const { user, isAuthenticated, isLoading: authIsLoading } = useAuth();
+    const {
+      user,
+      isAuthenticated,
+      isLoading: authIsLoading,
+    } = useRecoilValue(authState);
 
     const occupiedSpots = Math.max(
       0,
@@ -134,10 +138,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
 
       // 2. 역할 확인 - 관리자는 신청 불가 (useAuth 사용)
       if (user) {
-        const adminRoles: Array<UserContextState["role"]> = [
-          "ADMIN",
-          "SYSTEM_ADMIN",
-        ];
+        const adminRoles = ["ADMIN", "SYSTEM_ADMIN"];
         if (adminRoles.includes(user.role)) {
           toaster.create({
             title: "신청 권한 없음",

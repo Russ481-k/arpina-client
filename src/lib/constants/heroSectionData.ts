@@ -8,6 +8,296 @@ export const heroSectionData: Record<
     breadcrumb: { label: string; url: string }[];
   }
 > = {
+  "/arpina/intro": {
+    header: "아르피나",
+    title: "소개",
+    image: "/images/arpina/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "아르피나", url: "/arpina/intro" },
+    ],
+  },
+  "/arpina/location": {
+    header: "아르피나",
+    title: "소개",
+    image: "/images/arpina/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "아르피나", url: "/arpina/intro" },
+    ],
+  },
+  "/rooms/bed/twin": {
+    header: "객실",
+    title: "트윈",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/bed/twin" },
+    ],
+  },
+  "/rooms/bed/triple": {
+    header: "객실",
+    title: "트리플",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/bed/triple" },
+    ],
+  },
+  "/rooms/bed/deluxe": {
+    header: "객실",
+    title: "디럭스",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/bed/deluxe" },
+    ],
+  },
+  "/rooms/ondol/korean-deluxe": {
+    header: "객실",
+    title: "온돌객실",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/ondol/korean-deluxe" },
+    ],
+  },
+  "/rooms/family": {
+    header: "객실",
+    title: "패밀리",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/family" },
+    ],
+  },
+  "/rooms/youth/6-bed": {
+    header: "객실",
+    title: "유스 6인실",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/youth/6-bed" },
+    ],
+  },
+  "/rooms/youth/korean-8-bed": {
+    header: "객실",
+    title: "코리안 유스 8인실",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/youth/korean-8-bed" },
+    ],
+  },
+  "/rooms/guide": {
+    header: "객실",
+    title: "이용안내",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/guide" },
+    ],
+  },
+  "/rooms/estimate/calculate": {
+    header: "객실",
+    title: "연회장/객실 가견적 산출",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/estimate/calculate" },
+    ],
+  },
+  "/rooms/estimate/sheet": {
+    header: "객실",
+    title: "연회장/객실 가견적 산출",
+    image: "/images/rooms/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "객실", url: "/rooms/estimate/sheet" },
+    ],
+  },
+  "/meeting/grand": {
+    header: "회의실",
+    title: "대회의실",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "대회의실", url: "/meeting/grand" },
+    ],
+  },
+  "/meeting/medium/seagull": {
+    header: "회의실",
+    title: "시걸",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "중회의실", url: "/meeting/medium/seagull" },
+    ],
+  },
+  "/meeting/medium/clover": {
+    header: "회의실",
+    title: "클로버",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "중회의실", url: "/meeting/medium/seagull" },
+    ],
+  },
+  "/meeting/medium/jasmine": {
+    header: "회의실",
+    title: "자스민",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "중회의실", url: "/meeting/medium/seagull" },
+    ],
+  },
+  "/meeting/small/garam": {
+    header: "회의실",
+    title: "가람",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "소회의실", url: "/meeting/small/garam" },
+    ],
+  },
+  "/meeting/small/nuri": {
+    header: "회의실",
+    title: "누리",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "소회의실", url: "/meeting/small/garam" },
+    ],
+  },
+  "/meeting/small/ocean": {
+    header: "회의실",
+    title: "오션",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "소회의실", url: "/meeting/small/garam" },
+    ],
+  },
+  "/sports/futsal": {
+    header: "스포츠",
+    title: "풋살",
+    image: "/images/sports/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/futsal" },
+    ],
+  },
+  "/sports/golf": {
+    header: "스포츠",
+    title: "골프",
+    image: "/images/sports/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/futsal" },
+    ],
+  },
+  "/sports/swimming": {
+    header: "스포츠",
+    title: "수영",
+    image: "/images/sports/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/futsal" },
+    ],
+  },
+  "/sports/swimming/lesson": {
+    header: "스포츠",
+    title: "수영장 온라인 신청",
+    image: "/images/sports/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/swimming/futsal" },
+    ],
+  },
+  "/sports/guide": {
+    header: "스포츠",
+    title: "스포츠 이용안내",
+    image: "/images/sports/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/swimming/futsal" },
+    ],
+  },
+  "/sports/fee": {
+    header: "스포츠",
+    title: "요금안내",
+    image: "/images/sports/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "스포츠", url: "/sports/swimming/futsal" },
+    ],
+  },
+  "/youth": {
+    header: " ",
+    title: "청소년",
+    image: "/images/youth/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/youth" },
+    ],
+  },
+  "/facilities/restaurant-jj": {
+    header: "부대시설",
+    title: "대식당 J&J",
+    image: "/images/facilities/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/facilities/restaurant-jj" },
+    ],
+  },
+  "/facilities/ediya-coffee": {
+    header: " ",
+    title: "청소년",
+    image: "/images/facilities/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/facilities/restaurant-jj" },
+    ],
+  },
+  "/facilities/seven-eleven": {
+    header: " ",
+    title: "청소년",
+    image: "/images/facilities/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/facilities/restaurant-jj" },
+    ],
+  },
   "/mypage": {
     header: "사용자정보",
     title: "마이페이지",
@@ -18,16 +308,7 @@ export const heroSectionData: Record<
       { label: "사용자정보", url: "/mypage" },
     ],
   },
-  "/sports/swimming": {
-    header: "스포츠",
-    title: "수영장 온라인 신청",
-    image: "/images/mypage/sub_visual.png",
-    breadcrumbBorderColor: "#2E3192",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "스포츠", url: "/sports/swimming/lesson" },
-    ],
-  },
+
   "/application/confirm": {
     header: "스포츠",
     title: "수영장 온라인 신청",
@@ -35,7 +316,7 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "스포츠", url: "/sports/swimming/lesson" },
+      { label: "스포츠", url: "/sports/swimming/futsal" },
     ],
   },
   "/bbs/notices": {
@@ -50,7 +331,7 @@ export const heroSectionData: Record<
   },
   "/bbs/gallery": {
     header: "알림",
-    title: "공지사항",
+    title: "갤러리",
     image: "/images/bbs/sub_visual.png",
     breadcrumbBorderColor: "#353535",
     breadcrumb: [
@@ -108,115 +389,4 @@ export const heroSectionData: Record<
       { label: "알림", url: "/bbs/voice" },
     ],
   },
-  "/reference/form": {
-    header: "자료실",
-    title: "서식",
-    image: "/images/reference/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "자료실", url: "/reference/form" },
-    ],
-  },
-  "/about/overview": {
-    header: "센터안내",
-    title: "시설개요",
-    image: "/images/about/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "센터안내", url: "/about/overview" },
-    ],
-  },
-  "/program/gs-class": {
-    header: "창업기업 모집",
-    title: "모집공고",
-    image: "/images/program/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "창업기업 모집", url: "/program/gs-class" },
-    ],
-  },
-  "/program/grow-up": {
-    header: "창업기업 모집",
-    title: "모집공고",
-    image: "/images/program/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "창업기업 모집", url: "/program/grow-up" },
-    ],
-  },
-  "/about/greet": {
-    header: "센터안내",
-    title: "인사말",
-    image: "/images/about/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "센터안내", url: "/about/greet" },
-    ],
-  },
-  "/about/location": {
-    header: "센터안내",
-    title: "오시는길",
-    image: "/images/about/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "센터안내", url: "/about/location" },
-    ],
-  },
-  "/about/contact": {
-    header: "센터안내",
-    title: "문의하기",
-    image: "/images/about/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "센터안내", url: "/about/contact" },
-    ],
-  },
-  "/program/scale-up": {
-    header: "창업기업 모집",
-    title: "모집공고",
-    image: "/images/program/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "창업기업 모집", url: "/program/scale-up" },
-    ],
-  },
-  "/reference/process": {
-    header: "자료실",
-    title: "입주신청절차",
-    image: "/images/reference/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "자료실", url: "/reference/process" },
-    ],
-  },
-  "/reference/apply": {
-    header: "자료실",
-    title: "프로그램신청안내",
-    image: "/images/reference/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "자료실", url: "/reference/apply" },
-    ],
-  },
-  "/enterprise/participants": {
-    header: "입주기업소개",
-    title: "입주현황",
-    image: "/images/enterprise/sub_visual.png",
-    breadcrumbBorderColor: "#353535",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "창업기업 소개", url: "/enterprise/participants" },
-    ],
-  },
-  // ...다른 게시판 추가
 };

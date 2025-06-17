@@ -26,7 +26,7 @@ import { toaster } from "@/components/ui/toaster";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
 import KISPGPaymentPopup from "@/components/payment/KISPGPaymentFrame";
-import { AuthGuard } from "@/components/guard/AuthGuard";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
 
 interface MembershipOption {
@@ -140,8 +140,6 @@ const ApplicationConfirmPage = () => {
   // Helper function to extract enrollId from payment response
   const extractEnrollIdFromPaymentResponse = (response: any): number | null => {
     try {
-      console.log("Extracting enrollId from response:", response);
-
       // 1. Extract from mbsReserved1 field (format: "temp_enrollId" or "enroll_enrollId")
       if (response.mbsReserved1) {
         const parts = response.mbsReserved1.split("_");
@@ -150,10 +148,6 @@ const ApplicationConfirmPage = () => {
           if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
             const enrollId = parseInt(parts[1]);
             if (!isNaN(enrollId)) {
-              console.log(
-                `EnrollId extracted from mbsReserved1 (${parts[0]}_):`,
-                enrollId
-              );
               return enrollId;
             }
           }
@@ -168,10 +162,6 @@ const ApplicationConfirmPage = () => {
           if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
             const enrollId = parseInt(parts[1]);
             if (!isNaN(enrollId)) {
-              console.log(
-                `EnrollId extracted from moid (${parts[0]}_):`,
-                enrollId
-              );
               return enrollId;
             }
           }
@@ -185,10 +175,6 @@ const ApplicationConfirmPage = () => {
           if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
             const enrollId = parseInt(parts[1]);
             if (!isNaN(enrollId)) {
-              console.log(
-                `EnrollId extracted from ordNo (${parts[0]}_):`,
-                enrollId
-              );
               return enrollId;
             }
           }
@@ -198,7 +184,6 @@ const ApplicationConfirmPage = () => {
       // 4. Direct enrollId field
       if (response.enrollId && !isNaN(parseInt(response.enrollId))) {
         const enrollId = parseInt(response.enrollId);
-        console.log("EnrollId extracted from direct enrollId field:", enrollId);
         return enrollId;
       }
 

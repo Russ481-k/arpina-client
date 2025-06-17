@@ -44,24 +44,21 @@ export function useBoardSettings(
       setIsLoading(true);
       setError(null);
       try {
-        let settings: BoardMaster;
-        if (isPublicContext) {
-          // Type assertion might be needed if getPublicBoardInfo's return type isn't directly BoardMaster
-          settings = (await boardApi.getPublicBoardInfo(bbsId)) as BoardMaster;
-        } else {
-          settings = (await boardApi.getBoard(bbsId)) as BoardMaster;
+        const response = isPublicContext
+          ? await boardApi.getPublicBoardInfo(bbsId)
+          : await boardApi.getBoard(bbsId);
+
+        if (!response.data.success || !response.data.data) {
+          throw new Error(response.data.message || "Failed to fetch settings");
         }
+        
+        const settings = response.data.data;
         setBoardSettings(settings);
 
-        // Gracefully handle settings possibly being null or properties missing
         setEditorAttachmentProps({
-          maxFileAttachments: settings
-            ? Number(settings.attachmentLimit) || undefined // Fallback to undefined if NaN
-            : undefined,
-          maxFileSizeMB: settings
-            ? Number(settings.attachmentSize) || undefined // Fallback to undefined if NaN
-            : undefined,
-          disableAttachments: !settings || settings.attachmentYn !== "Y", // True if no settings or not 'Y'
+          maxFileAttachments: Number(settings.attachmentLimit) || undefined,
+          maxFileSizeMB: Number(settings.attachmentSize) || undefined,
+          disableAttachments: settings.attachmentYn !== "Y",
         });
       } catch (err: any) {
         console.error(

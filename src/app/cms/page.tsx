@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 import { Box } from "@chakra-ui/react";
 import { useColors } from "@/styles/theme";
 
 export default function Cms() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useRecoilValue(authState);
   const router = useRouter();
   const colors = useColors();
 

@@ -254,9 +254,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
             placeholder: "전체",
           },
         ]}
-        onSearchButtonClick={() => {
-          console.log("Search payments with filters:", paymentFilters);
-        }}
         showSearchButton={true}
       />
       <Box>

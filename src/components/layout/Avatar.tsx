@@ -6,7 +6,8 @@ import { DataListItem, DataListRoot } from "@/components/ui/data-list";
 import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
 import { useState, useEffect } from "react";
 import { useColors } from "@/styles/theme";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState, useAuthActions } from "@/stores/auth";
 
 interface AvatarProps {
   isSidebarOpen: boolean;
@@ -25,7 +26,12 @@ export function Avatar({
   const colors = useColors();
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
-  const { logout, user } = useAuth();
+  const { user } = useRecoilValue(authState);
+  const { logout } = useAuthActions();
+
+  const handleLogout = () => {
+    logout();
+  };
 
   // 홈페이지 스타일에 맞는 색상 적용
   const textColor = useColorModeValue(colors.text.primary, "whiteAlpha.900");
@@ -239,7 +245,7 @@ export function Avatar({
                 justifyContent="center"
                 h="8"
                 color={menuTextColor}
-                onClick={logout}
+                onClick={handleLogout}
                 _hover={{ bg: menuItemHoverBg, color: colors.primary.default }}
                 _focus={{
                   outline: "none",

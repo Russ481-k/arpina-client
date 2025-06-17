@@ -13,7 +13,8 @@ import {
   Center,
 } from "@chakra-ui/react";
 import { LuEye, LuEyeOff, LuCheck } from "react-icons/lu";
-import { useAuth } from "@/lib/AuthContext";
+import { useRecoilValue } from "recoil";
+import { authState, useAuthActions } from "@/stores/auth";
 import { Field } from "@/components/ui/field";
 import { InputGroup } from "@/components/ui/input-group";
 import { useColors } from "@/styles/theme";
@@ -23,7 +24,8 @@ import { toaster } from "@/components/ui/toaster";
 import { Logo } from "@/components/ui/logo";
 
 function LoginForm() {
-  const { isAuthenticated, isLoading, login, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useRecoilValue(authState);
+  const { login, logout } = useAuthActions();
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -45,30 +47,14 @@ function LoginForm() {
 
   // Check if user has admin role
   const hasAdminRole =
-    !!user && (user.role === "ADMIN" || user.role === "SYSTEM_ADMIN");
+    user && (user.role === "ADMIN" || user.role === "SYSTEM_ADMIN");
 
   useEffect(() => {
     // Only redirect if authenticated and has admin role
-    if (isAuthenticated) {
-      if (hasAdminRole) {
-        router.push("/cms/menu");
-      } else {
-        toaster.create({
-          title: "권한이 없습니다",
-          description: "관리자 계정이 아닙니다. 관리자 계정으로 로그인하세요.",
-          type: "error",
-          duration: 5000,
-        });
-        // Clear auth data to force re-login
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("token_expiry");
-        localStorage.removeItem("auth_user");
-        // Force page refresh to clear auth context
-        window.location.reload();
-      }
+    if (isAuthenticated && hasAdminRole) {
+      router.push("/cms/menu");
     }
-  }, [isAuthenticated, router, hasAdminRole, user]);
+  }, [isAuthenticated, hasAdminRole, router]);
 
   useEffect(() => {
     const rememberedId = localStorage.getItem("rememberedId");
@@ -107,36 +93,10 @@ function LoginForm() {
     }
 
     // Attempt login
-    try {
-      await login({ username, password });
-
-      // Store username in localStorage if "remember me" is checked
-      if (rememberMe) {
-        localStorage.setItem("rememberedId", username);
-      } else {
-        localStorage.removeItem("rememberedId");
-      }
-
-      // Login success message
-      toaster.create({
-        title: "로그인 성공",
-        type: "success",
-      });
-    } catch (error: any) {
-      console.error("Login error:", error);
-      // Handle login errors
-      if (error?.response?.data?.message) {
-        toaster.create({
-          title: error.response.data.message,
-          type: "error",
-        });
-      } else {
-        toaster.create({
-          title: "로그인에 실패했습니다.",
-          type: "error",
-        });
-      }
-    }
+    login({ username, password }, true).catch(() => {
+      // 에러는 useAuthActions 내에서 토스터로 처리되므로 여기서는 추가 작업이 필요 없습니다.
+      // 필요하다면 추가적인 클라이언트 사이드 로직을 여기에 구현할 수 있습니다.
+    });
   };
 
   if (isLoading) {

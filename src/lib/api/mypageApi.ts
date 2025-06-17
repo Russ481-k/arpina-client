@@ -4,7 +4,9 @@ import {
   MypagePaymentDto,
   MypageRenewalRequestDto,
   LockerAvailabilityDto,
+  MypageRenewalResponseDto,
 } from "@/types/api";
+import { EnrollmentPayStatus } from "@/types/statusTypes";
 import { withAuthRedirect } from "./withAuthRedirect";
 
 // --- Common Query String Parameters (for reference, used in function signatures) ---
@@ -42,7 +44,7 @@ export interface TemporaryPasswordRequestDto {
 
 // For GET /enroll QS
 export interface GetEnrollmentsParams {
-  status?: "UNPAID" | "PAID" | "PAYMENT_TIMEOUT" | "CANCELED_UNPAID" | string;
+  status?: EnrollmentPayStatus | string;
   page?: number;
   size?: number;
   sort?: string;
@@ -158,6 +160,21 @@ export const mypageApi = {
       await privateApi.patch<void>(`${MYPAGE_API_BASE}/enroll/${id}/cancel`, {
         reason,
       });
+    }
+  ),
+
+  /**
+   * @description 재수강 신청을 하고 결제 페이지 정보를 받아옵니다. (신규 재수강 정책)
+   */
+  requestRenewal: withAuthRedirect(
+    async (
+      data: MypageRenewalRequestDto
+    ): Promise<MypageRenewalResponseDto> => {
+      const response = await privateApi.post<MypageRenewalResponseDto>(
+        `${MYPAGE_API_BASE}/renewal`,
+        data
+      );
+      return response.data;
     }
   ),
 

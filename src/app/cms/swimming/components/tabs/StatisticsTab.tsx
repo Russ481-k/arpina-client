@@ -78,9 +78,7 @@ export const StatisticsTab: React.FC = () => {
   const colors = useColors();
   const queryClient = useQueryClient();
 
-  const [selectedYear, setSelectedYear] = useState(
-    dayjs().year().toString()
-  );
+  const [selectedYear, setSelectedYear] = useState(dayjs().year().toString());
   const [selectedMonth, setSelectedMonth] = useState("all");
 
   const years = useMemo(() => {
@@ -211,7 +209,6 @@ export const StatisticsTab: React.FC = () => {
     toaster.info({
       title: "엑셀 다운로드 준비 중... (구현 필요)",
     });
-    console.log("Exporting data for:", selectedYear, selectedMonth, apiStats);
   };
 
   return (
