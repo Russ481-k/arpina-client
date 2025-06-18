@@ -68,7 +68,7 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
   children,
 }) => {
   return (
-    <Box>
+    <Box mb={2}>
       <Flex gap={1.5} wrap="nowrap" align="center">
         {children}
         {selectFilters.map((filter) => (
@@ -79,6 +79,7 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
           >
             <NativeSelect.Field
               id={filter.id}
+              name={filter.id}
               value={filter.value}
               onChange={filter.onChange}
               fontSize="xs"

@@ -1044,7 +1044,8 @@ export interface PaginatedData<T> {
   totalElements: number;
   size: number;
   number: number; // current page number (0-indexed)
-  sort: { // This sort is for the whole page, pageable.sort is for individual items
+  sort: {
+    // This sort is for the whole page, pageable.sort is for individual items
     sorted: boolean;
     unsorted: boolean;
     empty: boolean;
@@ -1139,6 +1140,9 @@ export interface InquiryRoomReservation {
   startDate?: string;
   endDate?: string;
   usageTimeDesc?: string;
+  lessonId: number;
+  paymentPageUrl: string;
+  paymentExpiresAt: string;
 }
 
 export interface MypageRenewalResponseDto {
@@ -1146,4 +1150,23 @@ export interface MypageRenewalResponseDto {
   lessonId: number;
   paymentPageUrl: string;
   paymentExpiresAt: string;
+}
+
+export interface EnrollmentDetailDto {
+  lessonTitle: string;
+  lessonMonth: string;
+  lessonTime: string;
+  payStatus: string;
+  paymentDate: string;
+}
+
+export interface UserEnrollmentHistoryDto {
+  index: number;
+  uuid: string;
+  username: string;
+  name: string;
+  phone: string;
+  status: string;
+  lastEnrollment: EnrollmentDetailDto | null;
+  enrollmentHistory: EnrollmentDetailDto[];
 }
