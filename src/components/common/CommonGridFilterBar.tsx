@@ -67,8 +67,15 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
   showSearchButton = true,
   children,
 }) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      onSearchButtonClick?.();
+    }
+  };
+
   return (
-    <Box mb={2}>
+    <Box>
       <Flex gap={1.5} wrap="nowrap" align="center">
         {children}
         {selectFilters.map((filter) => (
@@ -104,6 +111,7 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
           placeholder={searchTermPlaceholder}
           value={searchTerm}
           onChange={onSearchTermChange}
+          onKeyDown={handleKeyDown}
           fontSize="xs"
           flexGrow={1}
           minW="150px"

@@ -117,6 +117,7 @@ export interface User {
   lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
+  socialType?: "KAKAO" | "NAVER" | "GOOGLE";
 }
 
 // API 요청 데이터 타입
@@ -274,6 +275,7 @@ export interface Company {
   extra?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
+  uuid: string;
 }
 
 export interface CompanyQueryParams {
@@ -1153,6 +1155,7 @@ export interface MypageRenewalResponseDto {
 }
 
 export interface EnrollmentDetailDto {
+  enrollmentId: string;
   lessonTitle: string;
   lessonMonth: string;
   lessonTime: string;
@@ -1169,4 +1172,24 @@ export interface UserEnrollmentHistoryDto {
   status: string;
   lastEnrollment: EnrollmentDetailDto | null;
   enrollmentHistory: EnrollmentDetailDto[];
+}
+
+export interface Page<T> {
+  content: T[];
+  number: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+}
+
+export interface UserCreationDto {
+  username?: string;
+  name?: string;
+  phone?: string;
+}
+
+export interface UserUpdateDto {
+  name?: string;
+  phone?: string;
+  status?: string;
 }

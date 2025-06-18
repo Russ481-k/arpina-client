@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, forwardRef, useImperativeHandle } from "react";
 import { AgGridReact } from "ag-grid-react";
 import {
   ColDef,
@@ -18,125 +18,141 @@ import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+export interface UserGridRef {
+  exportToCsv: () => void;
+}
+
 interface UserGridProps {
   users: UserEnrollmentHistoryDto[];
   onEditUser: (user: UserEnrollmentHistoryDto) => void;
-  onDeleteUser: (userId: string) => void;
   onRowSelected: (user: UserEnrollmentHistoryDto) => void;
   isLoading: boolean;
   selectedUserId?: string | null;
 }
 
-export const UserGrid = ({
-  users,
-  onEditUser,
-  onDeleteUser,
-  onRowSelected,
-  isLoading,
-}: UserGridProps) => {
-  const gridRef = React.useRef<AgGridReact<UserEnrollmentHistoryDto>>(null);
-  const { colorMode } = useColorMode();
-  const agGridTheme =
-    colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
+export const UserGrid = forwardRef<UserGridRef, UserGridProps>(
+  ({ users, onEditUser, onRowSelected, isLoading }, ref) => {
+    const gridRef = React.useRef<AgGridReact<UserEnrollmentHistoryDto>>(null);
+    const { colorMode } = useColorMode();
+    const agGridTheme =
+      colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
-  const defaultColDef = useMemo<ColDef>(
-    () => ({
-      sortable: true,
-      resizable: true,
-      filter: true,
-      floatingFilter: false,
-      cellStyle: { fontSize: "13px", display: "flex", alignItems: "center" },
-    }),
-    []
-  );
+    useImperativeHandle(ref, () => ({
+      exportToCsv: () => {
+        const params = {
+          fileName: `사용자_목록_${new Date().toISOString().slice(0, 10)}.csv`,
+        };
+        gridRef.current?.api.exportDataAsCsv(params);
+      },
+    }));
 
-  const colDefs = useMemo<ColDef<UserEnrollmentHistoryDto>[]>(
-    () => [
-      {
-        headerName: "No.",
-        field: "index",
-        width: 80,
-        sortable: false,
-        filter: false,
-      },
-      { headerName: "로그인 ID", field: "username", flex: 1, minWidth: 180 },
-      { headerName: "이름", field: "name", width: 120 },
-      { headerName: "연락처", field: "phone", width: 150 },
-      {
-        headerName: "상태",
-        field: "status",
-        width: 100,
-        cellRenderer: (p: { value: string }) => (
-          <Badge
-            size="sm"
-            colorPalette={p.value === "ACTIVE" ? "green" : "red"}
-          >
-            {p.value}
-          </Badge>
-        ),
-      },
-      {
-        headerName: "최근 강습명",
-        field: "lastEnrollment.lessonTitle",
-        flex: 1,
-        minWidth: 200,
-        tooltipField: "lastEnrollment.lessonTitle",
-      },
-      {
-        headerName: "최근 강습 시간",
-        field: "lastEnrollment.lessonTime",
-        minWidth: 200,
-        tooltipField: "lastEnrollment.lessonTime",
-      },
-      {
-        headerName: "결제 상태",
-        field: "lastEnrollment.payStatus",
-        width: 120,
-        cellRenderer: (p: { value?: string }) => {
-          if (!p.value) return null;
-          return <CommonPayStatusBadge status={p.value} />;
-        },
-      },
-      {
-        headerName: "최근 결제일",
-        field: "lastEnrollment.paymentDate",
-        width: 180,
-        valueFormatter: (p: ValueFormatterParams) => {
-          return p.value ? new Date(p.value).toLocaleString("ko-KR") : "-";
-        },
-      },
-      {
-        headerName: "관리",
-        field: "uuid",
-        width: 120,
-        pinned: "right",
-        cellRenderer: UserActionsCellRenderer,
-        cellRendererParams: {
-          onEditUser,
-          onDeleteUser,
-        },
-      },
-    ],
-    [onEditUser, onDeleteUser]
-  );
+    const defaultColDef = useMemo<ColDef>(
+      () => ({
+        sortable: true,
+        resizable: true,
+        filter: true,
+        floatingFilter: false,
+        cellStyle: { fontSize: "13px", display: "flex", alignItems: "center" },
+      }),
+      []
+    );
 
-  return (
-    <Box className={agGridTheme} h="560px" w="full">
-      <AgGridReact<UserEnrollmentHistoryDto>
-        ref={gridRef}
-        rowData={users}
-        columnDefs={colDefs}
-        onRowClicked={(e) => e.data && onRowSelected(e.data)}
-        defaultColDef={defaultColDef}
-        headerHeight={36}
-        rowHeight={40}
-        overlayLoadingTemplate={
-          isLoading
-            ? '<span class="ag-overlay-loading-center">사용자 목록을 불러오는 중...</span>'
-            : '<span class="ag-overlay-no-rows-center">표시할 사용자가 없습니다.</span>'
-        }
-        rowDragManaged={false}
-      />
-    </Box>
-  );
-};
+    const colDefs = useMemo<ColDef<UserEnrollmentHistoryDto>[]>(
+      () => [
+        {
+          headerName: "No.",
+          field: "index",
+          width: 80,
+          sortable: false,
+          filter: false,
+        },
+        { headerName: "로그인 ID", field: "username", flex: 1, minWidth: 180 },
+        { headerName: "이름", field: "name", width: 120 },
+        { headerName: "연락처", field: "phone", width: 150 },
+        {
+          headerName: "상태",
+          field: "status",
+          width: 100,
+          cellRenderer: (p: { value: string }) => (
+            <Badge
+              size="sm"
+              colorPalette={p.value === "ACTIVE" ? "green" : "red"}
+            >
+              {p.value}
+            </Badge>
+          ),
+        },
+        {
+          headerName: "최근 강습명",
+          field: "lastEnrollment.lessonTitle",
+          flex: 1,
+          minWidth: 200,
+          tooltipField: "lastEnrollment.lessonTitle",
+        },
+        {
+          headerName: "최근 강습 시간",
+          field: "lastEnrollment.lessonTime",
+          minWidth: 200,
+          tooltipField: "lastEnrollment.lessonTime",
+        },
+        {
+          headerName: "결제 상태",
+          field: "lastEnrollment.payStatus",
+          width: 120,
+          cellRenderer: (p: { value?: string }) => {
+            if (!p.value) return null;
+            return <CommonPayStatusBadge status={p.value} />;
+          },
+        },
+        {
+          headerName: "최근 결제일",
+          field: "lastEnrollment.paymentDate",
+          width: 180,
+          valueFormatter: (p: ValueFormatterParams) => {
+            return p.value ? new Date(p.value).toLocaleString("ko-KR") : "-";
+          },
+        },
+        // {
+        //   headerName: "관리",
+        //   field: "uuid",
+        //   width: 80,
+        //   pinned: "right",
+        //   cellRenderer: UserActionsCellRenderer,
+        //   cellRendererParams: {
+        //     onEditUser,
+        //   },
+        //   suppressRowClickSelection: true,
+        // },
+      ],
+      [onEditUser]
+    );
+
+    return (
+      <Box className={agGridTheme} h="560px" w="full" mt={2}>
+        <AgGridReact<UserEnrollmentHistoryDto>
+          ref={gridRef}
+          rowData={users}
+          columnDefs={colDefs}
+          onSelectionChanged={(e) => {
+            const selectedRows = e.api.getSelectedRows();
+            if (selectedRows.length > 0) {
+              onRowSelected(selectedRows[0]);
+            }
+          }}
+          rowSelection="single"
+          defaultColDef={defaultColDef}
+          headerHeight={36}
+          rowHeight={40}
+          overlayLoadingTemplate={
+            isLoading
+              ? '<span class="ag-overlay-loading-center">사용자 목록을 불러오는 중...</span>'
+              : '<span class="ag-overlay-no-rows-center">표시할 사용자가 없습니다.</span>'
+          }
+          rowDragManaged={false}
+        />
+      </Box>
+    );
+  }
+);
+
+UserGrid.displayName = "UserGrid";

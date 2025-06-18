@@ -3,7 +3,7 @@
 import { Box, IconButton } from "@chakra-ui/react";
 import { User } from "@/types/api";
 import { ICellRendererParams } from "ag-grid-community";
-import { EditIcon, DeleteIcon } from "lucide-react";
+import { EditIcon } from "lucide-react";
 
 interface UserActionsCellRendererProps extends ICellRendererParams<User> {
   onEditUser: (user: User) => void;
@@ -13,18 +13,15 @@ interface UserActionsCellRendererProps extends ICellRendererParams<User> {
 export const UserActionsCellRenderer = (
   props: UserActionsCellRendererProps
 ) => {
-  const { data, onEditUser, onDeleteUser } = props;
+  const { data, onEditUser } = props;
 
   if (!data) {
     return null;
   }
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
     onEditUser(data);
-  };
-
-  const handleDelete = () => {
-    onDeleteUser(data.uuid);
   };
 
   return (
@@ -36,15 +33,6 @@ export const UserActionsCellRenderer = (
         onClick={handleEdit}
       >
         <EditIcon size="16" />
-      </IconButton>
-      <IconButton
-        aria-label="Delete user"
-        size="sm"
-        variant="ghost"
-        colorScheme="red"
-        onClick={handleDelete}
-      >
-        <DeleteIcon size="16" />
       </IconButton>
     </Box>
   );

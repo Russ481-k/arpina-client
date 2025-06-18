@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Flex, Heading, Badge } from "@chakra-ui/react";
-import { UserGrid } from "./components/UserGrid";
+import { UserGrid, UserGridRef } from "./components/UserGrid";
 import { UserEditor } from "./components/UserEditor";
 import { GridSection } from "@/components/ui/grid-section";
 import { useColorModeValue } from "@/components/ui/color-mode";
@@ -14,6 +14,7 @@ import { AxiosError } from "axios";
 import { CustomPagination } from "@/components/common/CustomPagination";
 import { CommonGridFilterBar } from "@/components/common/CommonGridFilterBar";
 import { UserDetailDialog } from "./components/UserDetailDialog";
+import { ChangeLessonDialog } from "./components/ChangeLessonDialog";
 
 const SEARCH_TYPE_OPTIONS = [
   { value: "ALL", label: "전체유형" },
@@ -32,13 +33,17 @@ const PAY_STATUS_OPTIONS = [
 ];
 
 export default function UserManagementPage() {
-  const [selectedUser, setSelectedUser] =
+  const [selectedUserForEdit, setSelectedUserForEdit] =
+    useState<UserEnrollmentHistoryDto | null>(null);
+  const [userForLessonChange, setUserForLessonChange] =
     useState<UserEnrollmentHistoryDto | null>(null);
   const [detailedUser, setDetailedUser] =
     useState<UserEnrollmentHistoryDto | null>(null);
   const [users, setUsers] = useState<UserEnrollmentHistoryDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageInfo, setPageInfo] = useState({ totalPages: 1 });
+  const editingUserIdRef = useRef<string | null>(null);
+  const gridRef = useRef<UserGridRef>(null);
 
   const [filters, setFilters] = useState({
     searchType: "ALL",
@@ -108,11 +113,20 @@ export default function UserManagementPage() {
       size: query.size,
       payStatus,
     };
-    if (searchType !== "ALL" && searchTerm) {
-      newQuery[
-        searchType as keyof Omit<UserListParams, "payStatus" | "page" | "size">
-      ] = searchTerm;
+
+    if (searchTerm) {
+      if (searchType === "ALL") {
+        newQuery.searchKeyword = searchTerm;
+      } else {
+        newQuery[
+          searchType as keyof Omit<
+            UserListParams,
+            "payStatus" | "page" | "size"
+          >
+        ] = searchTerm;
+      }
     }
+
     setQuery(newQuery);
   };
 
@@ -124,25 +138,38 @@ export default function UserManagementPage() {
     setQuery((prev) => ({ ...prev, page: 0, size }));
   };
 
-  const handleAddUser = () => setSelectedUser(null);
-  const handleEditUser = (user: UserEnrollmentHistoryDto) =>
-    setSelectedUser(user);
+  const handleAddUser = () => setSelectedUserForEdit(null);
+  const handleEditUser = (user: UserEnrollmentHistoryDto) => {
+    editingUserIdRef.current = user.uuid;
+    setUserForLessonChange(user);
+    setTimeout(() => {
+      editingUserIdRef.current = null;
+    }, 100);
+  };
   const handleShowDetails = (user: UserEnrollmentHistoryDto) => {
+    if (editingUserIdRef.current === user.uuid) {
+      return;
+    }
     setDetailedUser(user);
   };
   const handleCloseDetails = () => setDetailedUser(null);
+  const handleCloseLessonChangeModal = () => setUserForLessonChange(null);
 
-  const handleCloseEditor = () => setSelectedUser(null);
+  const handleExport = () => {
+    gridRef.current?.exportToCsv();
+  };
+
+  const handleCloseEditor = () => setSelectedUserForEdit(null);
 
   const handleSubmit = async (userData: Partial<UserEnrollmentHistoryDto>) => {
     try {
-      if (selectedUser?.uuid) {
+      if (selectedUserForEdit?.uuid) {
         const updatePayload = {
           name: userData.name,
           phone: userData.phone,
           status: userData.status,
         };
-        await userCmsApi.updateUser(selectedUser.uuid, updatePayload);
+        await userCmsApi.updateUser(selectedUserForEdit.uuid, updatePayload);
       } else {
         const createPayload = {
           username: userData.username,
@@ -152,9 +179,9 @@ export default function UserManagementPage() {
         await userCmsApi.createUser(createPayload);
       }
       refreshUsers();
-      setSelectedUser(null);
+      setSelectedUserForEdit(null);
       toaster.create({
-        title: selectedUser
+        title: selectedUserForEdit
           ? "사용자 정보가 수정되었습니다."
           : "사용자가 생성되었습니다.",
         type: "success",
@@ -174,7 +201,7 @@ export default function UserManagementPage() {
     try {
       await userCmsApi.deleteUser(userId);
       refreshUsers();
-      setSelectedUser(null);
+      setSelectedUserForEdit(null);
       toaster.create({
         title: "사용자가 삭제되었습니다.",
         type: "success",
@@ -196,19 +223,10 @@ export default function UserManagementPage() {
       id: "userList",
       x: 0,
       y: 1,
-      w: 8,
+      w: 13,
       h: 11,
       title: "사용자 목록",
       subtitle: "등록된 사용자 목록입니다.",
-    },
-    {
-      id: "userEditor",
-      x: 8,
-      y: 1,
-      w: 4,
-      h: 11,
-      title: "사용자 편집",
-      subtitle: "사용자의 상세 정보를 수정할 수 있습니다.",
     },
   ];
 
@@ -222,14 +240,8 @@ export default function UserManagementPage() {
                 회원 관리
               </Heading>
               <Badge
-                bg={useColorModeValue(
-                  colors.primary.light,
-                  colors.primary.light
-                )}
-                color={useColorModeValue(
-                  colors.primary.default,
-                  colors.primary.default
-                )}
+                bg={colors.secondary.light}
+                color={colors.secondary.default}
                 px={2}
                 py={1}
                 borderRadius="md"
@@ -250,9 +262,7 @@ export default function UserManagementPage() {
                 } as React.ChangeEvent<HTMLInputElement>)
               }
               onSearchButtonClick={handleSearch}
-              onExport={() => {
-                /* 엑셀 다운로드 로직 */
-              }}
+              onExport={handleExport}
               selectFilters={[
                 {
                   id: "payStatus",
@@ -271,12 +281,12 @@ export default function UserManagementPage() {
               ]}
             />
             <UserGrid
+              ref={gridRef}
               users={users}
-              onEditUser={handleEditUser}
-              onDeleteUser={handleDeleteUser}
-              isLoading={isLoading}
-              selectedUserId={selectedUser?.uuid}
               onRowSelected={handleShowDetails}
+              onEditUser={handleEditUser}
+              isLoading={isLoading}
+              selectedUserId={userForLessonChange?.uuid}
             />
             <CustomPagination
               currentPage={query.page || 0}
@@ -286,20 +296,20 @@ export default function UserManagementPage() {
               onPageSizeChange={handlePageSizeChange}
             />
           </Box>
-
-          <Box>
-            <UserEditor
-              user={selectedUser}
-              onClose={handleCloseEditor}
-              onDelete={handleDeleteUser}
-              onSubmit={handleSubmit}
-            />
-          </Box>
         </GridSection>
         <UserDetailDialog
           isOpen={!!detailedUser}
           onClose={handleCloseDetails}
           user={detailedUser}
+        />
+        <ChangeLessonDialog
+          isOpen={!!userForLessonChange}
+          onClose={handleCloseLessonChangeModal}
+          user={userForLessonChange}
+          onSuccess={() => {
+            handleCloseLessonChangeModal();
+            refreshUsers();
+          }}
         />
       </Box>
     </Box>
