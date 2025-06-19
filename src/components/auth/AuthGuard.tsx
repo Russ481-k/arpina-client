@@ -125,7 +125,7 @@ export const AuthGuard = ({
         description: "관리자 계정은 해당 페이지에 직접 접근할 수 없습니다.",
         type: "error",
       });
-      router.push("/sports/swimming/lesson");
+      router.push("/");
       return;
     }
   }, [

@@ -68,7 +68,7 @@ function AuthErrorContent() {
           bg="#2E3192"
           color="white"
           _hover={{ bg: "#1A365D" }}
-          onClick={() => router.push("/sports/swimming/lesson")}
+          onClick={() => router.push("/")}
         >
           홈으로 돌아가기
         </Button>

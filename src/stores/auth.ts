@@ -57,7 +57,10 @@ export const useAuthActions = () => {
             type: "warning",
           });
         } else if (fromCMS) {
-          if (appUser.role === "ADMIN" || appUser.role === "SYSTEM_ADMIN") {
+          if (
+            appUser.role === "ADMIN" ||
+            appUser.role === "SYSTEM_ADMIN"
+          ) {
             router.push("/cms/menu");
             toaster.create({
               title: "로그인 성공",
@@ -75,7 +78,7 @@ export const useAuthActions = () => {
           }
         } else {
           // 일반 로그인
-          router.push("/sports/swimming/lesson");
+          router.push("/");
         }
       } else {
         throw new Error(
@@ -103,10 +106,7 @@ export const useAuthActions = () => {
     try {
       await authApi.logout();
     } catch (error) {
-      console.error(
-        "Logout API call failed, proceeding with local logout",
-        error
-      );
+      console.error("Logout API call failed, proceeding with local logout", error);
     } finally {
       const currentPath = window.location.pathname;
       const fromCMS = currentPath.startsWith("/cms");
@@ -146,7 +146,7 @@ export const useAuthActions = () => {
         setAuth({ isAuthenticated: false, user: null, isLoading: false });
       }
     } else {
-      setAuth({ isAuthenticated: false, user: null, isLoading: false });
+      setAuth({ isAuthenticated: false, user: null, isLoading:false });
     }
   };
 
@@ -155,4 +155,4 @@ export const useAuthActions = () => {
     logout,
     syncAuthState,
   };
-};
+}; 
