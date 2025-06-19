@@ -61,13 +61,13 @@ export default function ParticipantsPage() {
         images={images}
         showReservation={false}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (8층 자스민)</HeadingH4>
         <Text
           mt="10px"
-          mb="60px"
+          mb={{ base: 4, md: 10, lg: 25 }}
           color="#FAB20B"
-          fontSize="3xl"
+          fontSize={{ base: "xl", md: "2xl", lg: "3xl" }}
           fontWeight="medium"
         >
           출장뷔페 및 외부 음식물 반입금지

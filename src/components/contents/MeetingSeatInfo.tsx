@@ -1,6 +1,14 @@
 "use client";
 
-import { Box, Flex, Heading, Image, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Heading,
+  Image,
+  Text,
+  useBreakpointValue,
+} from "@chakra-ui/react";
+import HeadingH4 from "./HeadingH4";
 
 interface SeatItem {
   imageSrc: string;
@@ -45,18 +53,21 @@ export default function MeetingSeatInfo({
   title = "좌석배치 정보",
   seats = defaultSeats,
 }: MeetingSeatInfoProps) {
+  // 반응형 폰트 크기 설정
+
+  const seatTitleFontSize = useBreakpointValue({
+    base: "sm", // sm 이하: 2단계 줄임 (3xl -> xl)
+    md: "lg", // md: 1단계 줄임 (3xl -> 2xl)
+    lg: "3xl", // lg: 원래 크기 (3xl)
+  });
+
   return (
-    <Box className="mr-seat-box" mt="100px">
-      <Heading
-        as="h4"
-        mb="60px"
-        color="#393939"
-        fontSize="60px"
-        fontWeight="bold"
-        lineHeight="1"
-      >
-        {title}
-      </Heading>
+    <Box
+      className="mr-seat-box"
+      mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}
+    >
+      <HeadingH4>{title}</HeadingH4>
+
       <Flex className="mr-seat-list" justifyContent="space-between" gap="10px">
         {seats.map((seat, index) => (
           <Box key={index} textAlign="center">
@@ -66,7 +77,12 @@ export default function MeetingSeatInfo({
               borderRadius="20px"
               border="2px solid #838383"
             />
-            <Text mt={4} color="#393939" fontSize="3xl" fontWeight="semibold">
+            <Text
+              mt={4}
+              color="#393939"
+              fontSize={seatTitleFontSize}
+              fontWeight="semibold"
+            >
               {seat.title}
             </Text>
           </Box>

@@ -5,13 +5,20 @@ import InfoTopBox from "@/components/contents/InfoTopBox";
 import ListStyle01, { ListItem } from "@/components/contents/listStyle01";
 import ListStyle02, { ServiceItem } from "@/components/contents/listStyle02";
 import OperGuide from "@/components/contents/operGuide";
-import { Mark } from "@chakra-ui/react";
+import { Mark, useBreakpointValue } from "@chakra-ui/react";
 
 export default function ParticipantsPage() {
   const images = [
     "/images/contents/triple_img01.jpg",
     "/images/contents/triple_img02.jpg",
   ];
+
+  // 반응형 SVG 크기 설정
+  const svgSize = useBreakpointValue({
+    base: "50px",
+    sm: "100px",
+    md: "179px",
+  });
 
   // 리스트 아이템 정의 - 각 항목별로 명확하게 구분
   const listItems: ListItem[] = [
@@ -21,8 +28,8 @@ export default function ParticipantsPage() {
         <>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="179"
-            height="179"
+            width={svgSize}
+            height={svgSize}
             viewBox="0 0 179 179"
             fill="none"
           >
@@ -34,64 +41,64 @@ export default function ParticipantsPage() {
               d="M136.887 116.812H42.0566V105.408H136.887V116.812Z"
               fill="#F2F2F2"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path d="M46.5371 116.813V143.445V116.813Z" fill="#F2F2F2" />
             <path
               d="M46.5371 116.813V143.445"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path d="M132.408 116.813V143.445V116.813Z" fill="#F2F2F2" />
             <path
               d="M132.408 116.813V143.445"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M122.667 77.1115H101.667L100.334 105.41H124.001L122.667 77.1115Z"
               fill="#F2F2F2"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M120.305 60.892C120.305 65.3866 116.662 69.0293 112.167 69.0293C107.674 69.0293 104.031 65.3866 104.031 60.892C104.031 56.3986 107.674 52.756 112.167 52.756C116.662 52.756 120.305 56.3986 120.305 60.892Z"
               fill="#F2F2F2"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M119.421 55.8359H104.916V48.2786H119.421V55.8359Z"
               fill="#F2F2F2"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path d="M104.916 42.5566H119.421H104.916Z" fill="#F2F2F2" />
             <path
               d="M104.916 42.5566H119.421"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
-              stroke-linecap="square"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+              strokeLinecap="square"
             />
             <path
               d="M71.0361 73.6748C75.1626 73.6748 78.5068 70.3306 78.5068 66.2041C78.5066 62.0792 75.1626 58.7354 71.0361 58.7354C66.9112 58.7355 63.5676 62.0792 63.5674 66.2041C63.5674 70.3306 66.9112 73.6747 71.0361 73.6748Z"
               fill="#F2F2F2"
               stroke="#2E3192"
-              stroke-width="1.33333"
+              strokeWidth="1.33333"
             />
             <path
               d="M79.1737 66.2045C79.1737 70.6991 75.5311 74.3418 71.0364 74.3418C66.5431 74.3418 62.9004 70.6991 62.9004 66.2045C62.9004 61.7111 66.5431 58.0685 71.0364 58.0685C75.5311 58.0685 79.1737 61.7111 79.1737 66.2045Z"
               fill="#F2F2F2"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M82.8698 149.314V113.39L81.5365 82.4251H60.5365L59.2031 113.39V149.314"
@@ -100,8 +107,8 @@ export default function ParticipantsPage() {
             <path
               d="M82.8698 149.314V113.39L81.5365 82.4251H60.5365L59.2031 113.39V149.314"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M67.2363 149.314L68.5697 116.057H73.5057L74.839 149.314"
@@ -110,8 +117,8 @@ export default function ParticipantsPage() {
             <path
               d="M67.2363 149.314L68.5697 116.057H73.5057L74.839 149.314"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M81.5371 82.4248L93.4264 105.41L81.5371 82.4248Z"
@@ -120,8 +127,8 @@ export default function ParticipantsPage() {
             <path
               d="M81.5371 82.4248L93.4264 105.41"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
           </svg>
           <ListStyle01.StyledText>
@@ -137,8 +144,8 @@ export default function ParticipantsPage() {
         <>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="179"
-            height="179"
+            width={svgSize}
+            height={svgSize}
             viewBox="0 0 179 179"
             fill="none"
           >
@@ -149,37 +156,37 @@ export default function ParticipantsPage() {
             <path
               d="M40.9512 127.236V81.2603H50.2845V127.236"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M130.729 127.236V95.9283H140.062V127.236"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M50.2852 110.682H130.729"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M58 109.307L58.0625 70.5154"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M68.1738 70.5137H47.9512L50.6178 51.6803H65.5072L68.1738 70.5137Z"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
           </svg>
           <ListStyle01.StyledText>
             트리플 객실은 싱글침대 3개로 구성되어, 3인이 편안하게 이용하실 수
-            있습니다. <br /> 총 10실 운영 중입니다.
+            있습니다. <br /> 총 15실 운영 중입니다.
           </ListStyle01.StyledText>
         </>
       ),
@@ -190,8 +197,8 @@ export default function ParticipantsPage() {
         <>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="179"
-            height="179"
+            width={svgSize}
+            height={svgSize}
             viewBox="0 0 179 179"
             fill="none"
           >
@@ -206,8 +213,8 @@ export default function ParticipantsPage() {
             <path
               d="M68.8456 52.2787C68.8456 56.772 65.2029 60.416 60.7096 60.416C56.2163 60.416 52.5723 56.772 52.5723 52.2787C52.5723 47.7853 56.2163 44.1427 60.7096 44.1427C65.2029 44.1427 68.8456 47.7853 68.8456 52.2787Z"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
               d="M72.5417 135.387V99.4627L71.2083 68.4974H50.2083L48.875 99.4627V135.387"
@@ -216,55 +223,74 @@ export default function ParticipantsPage() {
             <path
               d="M72.5417 135.387V99.4627L71.2083 68.4974H50.2083L48.875 99.4627V135.387"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
-              d="M56.9062 135.387L58.2396 102.129H63.1769L64.5103 135.387"
+              d="M56.9082 135.387L58.2416 102.13H63.1776L64.5109 135.387"
               fill="#F2F2F2"
             />
             <path
-              d="M56.9062 135.387L58.2396 102.129H63.1769L64.5103 135.387"
+              d="M56.9082 135.387L58.2416 102.13H63.1776L64.5109 135.387"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
-              d="M120.846 52.2787C120.846 56.772 117.203 60.416 112.71 60.416C108.216 60.416 104.572 56.772 104.572 52.2787C104.572 47.7853 108.216 44.1427 112.71 44.1427C117.203 44.1427 120.846 47.7853 120.846 52.2787Z"
+              d="M71.209 68.4974L83.0983 91.4827L71.209 68.4974Z"
               fill="#F2F2F2"
             />
             <path
-              d="M120.846 52.2787C120.846 56.772 117.203 60.416 112.71 60.416C108.216 60.416 104.572 56.772 104.572 52.2787C104.572 47.7853 108.216 44.1427 112.71 44.1427C117.203 44.1427 120.846 47.7853 120.846 52.2787Z"
+              d="M71.209 68.4974L83.0983 91.4827"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
-              d="M124.542 135.387V111.831H130.07L124.504 98.5521L121.876 68.4974H103.542L100.914 98.5521L95.3477 111.831H100.876V135.387"
+              d="M117.154 52.2787C117.154 56.772 113.511 60.416 109.018 60.416C104.525 60.416 100.881 56.772 100.881 52.2787C100.881 47.7853 104.525 44.1427 109.018 44.1427C113.511 44.1427 117.154 47.7853 117.154 52.2787Z"
               fill="#F2F2F2"
             />
             <path
-              d="M124.542 135.387V111.831H130.07L124.504 98.5521L121.876 68.4974H103.542L100.914 98.5521L95.3477 111.831H100.876V135.387"
+              d="M117.154 52.2787C117.154 56.772 113.511 60.416 109.018 60.416C104.525 60.416 100.881 56.772 100.881 52.2787C100.881 47.7853 104.525 44.1427 109.018 44.1427C113.511 44.1427 117.154 47.7853 117.154 52.2787Z"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
             <path
-              d="M108.908 135.387L109.852 111.831H115.567L116.511 135.387"
+              d="M120.85 135.387V99.4627L119.517 68.4974H98.517L97.1836 99.4627V135.387"
               fill="#F2F2F2"
             />
             <path
-              d="M108.908 135.387L109.852 111.831H115.567L116.511 135.387"
+              d="M120.85 135.387V99.4627L119.517 68.4974H98.517L97.1836 99.4627V135.387"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+            />
+            <path
+              d="M105.217 135.387L106.55 102.13H111.486L112.819 135.387"
+              fill="#F2F2F2"
+            />
+            <path
+              d="M105.217 135.387L106.55 102.13H111.486L112.819 135.387"
+              stroke="#2E3192"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+            />
+            <path
+              d="M119.518 68.4974L131.407 91.4827L119.518 68.4974Z"
+              fill="#F2F2F2"
+            />
+            <path
+              d="M119.518 68.4974L131.407 91.4827"
+              stroke="#2E3192"
+              strokeWidth="4"
+              strokeMiterlimit="10"
             />
           </svg>
           <ListStyle01.StyledText>
-            기준인원은 <Mark variant="text">3명</Mark>이며, <br />
-            <Mark variant="text">주중 : 66,000원</Mark> <br />
-            <Mark variant="text">주말 : 110,000원</Mark>으로 <br />
-            운영하고 있습니다.
+            기준인원은 <Mark variant="text">3명</Mark>이며, 추가인원은{" "}
+            <Mark variant="text">1명당 20,000원</Mark>입니다. <br />
+            객실 요금은 <Mark variant="text">150,000원</Mark>부터 시작됩니다.
           </ListStyle01.StyledText>
         </>
       ),
@@ -275,8 +301,8 @@ export default function ParticipantsPage() {
         <>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="179"
-            height="180"
+            width={svgSize}
+            height={svgSize}
             viewBox="0 0 179 180"
             fill="none"
           >
@@ -299,10 +325,10 @@ export default function ParticipantsPage() {
             <path
               d="M47.0744 81.5458C41.0424 83.4245 39.5184 84.9471 37.6397 90.9805C35.7611 84.9471 34.2371 83.4245 28.2051 81.5458C34.2371 79.6671 35.7611 78.1445 37.6397 72.1098C39.5184 78.1445 41.0424 79.6671 47.0744 81.5458Z"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             <path
               d="M155.615 72.1109C149.581 73.9895 148.057 75.5122 146.179 81.5469C144.3 75.5122 142.777 73.9895 136.744 72.1109C142.777 70.2322 144.3 68.7095 146.179 62.6762C148.057 68.7095 149.581 70.2322 155.615 72.1109Z"
@@ -311,10 +337,10 @@ export default function ParticipantsPage() {
             <path
               d="M155.615 72.1109C149.581 73.9895 148.057 75.5122 146.179 81.5469C144.3 75.5122 142.777 73.9895 136.744 72.1109C142.777 70.2322 144.3 68.7095 146.179 62.6762C148.057 68.7095 149.581 70.2322 155.615 72.1109Z"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             <path
               d="M90.6422 139.767C84.6088 141.646 83.0848 143.17 81.2062 149.203C79.3275 143.17 77.8048 141.646 71.7715 139.767C77.8048 137.888 79.3275 136.366 81.2062 130.332C83.0848 136.366 84.6088 137.888 90.6422 139.767Z"
@@ -323,10 +349,10 @@ export default function ParticipantsPage() {
             <path
               d="M90.6422 139.767C84.6088 141.646 83.0848 143.17 81.2062 149.203C79.3275 143.17 77.8048 141.646 71.7715 139.767C77.8048 137.888 79.3275 136.366 81.2062 130.332C83.0848 136.366 84.6088 137.888 90.6422 139.767Z"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             <path
               d="M81.2072 41.4175C75.1752 43.2962 73.6512 44.8202 71.7726 50.8535C69.8939 44.8202 68.3699 43.2962 62.3379 41.4175C68.3699 39.5388 69.8939 38.0162 71.7726 31.9828C73.6512 38.0162 75.1752 39.5388 81.2072 41.4175Z"
@@ -335,10 +361,10 @@ export default function ParticipantsPage() {
             <path
               d="M81.2072 41.4175C75.1752 43.2962 73.6512 44.8202 71.7726 50.8535C69.8939 44.8202 68.3699 43.2962 62.3379 41.4175C68.3699 39.5388 69.8939 38.0162 71.7726 31.9828C73.6512 38.0162 75.1752 39.5388 81.2072 41.4175Z"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             <path
               d="M91.6409 72.1094C91.6409 72.1094 90.7516 38.032 107.641 34.9214L91.6409 72.1094Z"
@@ -359,10 +385,10 @@ export default function ParticipantsPage() {
             <path
               d="M37.6406 107.365C37.6406 107.365 52.0846 102.698 69.1966 121.031"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             <path
               d="M125.765 98.6494C123.047 100.232 120.225 102.333 117.697 104.528C115.133 106.739 112.736 109.153 110.561 111.755C108.372 114.34 106.363 117.088 104.653 120.013C102.857 122.895 101.479 126 100.183 129.133L100.143 129.232C99.7215 130.252 98.5522 130.736 97.5322 130.315C96.5295 129.9 96.0442 128.761 96.4282 127.755C97.7228 124.371 99.1255 121.005 100.964 117.872C102.721 114.693 104.793 111.699 107.068 108.872C109.327 106.032 111.824 103.384 114.515 100.944C117.235 98.4827 119.991 96.2707 123.291 94.2374C124.48 93.5054 126.037 93.8747 126.771 95.0654C127.504 96.2534 127.132 97.812 125.944 98.544C125.929 98.5534 125.915 98.5627 125.9 98.5707L125.765 98.6494Z"
@@ -371,10 +397,10 @@ export default function ParticipantsPage() {
             <path
               d="M142.974 116.665C142.974 116.665 128.53 111.999 111.418 130.332"
               stroke="#2E3192"
-              stroke-width="4"
-              stroke-miterlimit="10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="4"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
           <ListStyle01.StyledText>
