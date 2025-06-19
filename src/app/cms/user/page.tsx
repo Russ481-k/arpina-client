@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Flex, Heading, Badge } from "@chakra-ui/react";
 import { UserGrid, UserGridRef } from "./components/UserGrid";
-import { UserEditor } from "./components/UserEditor";
 import { GridSection } from "@/components/ui/grid-section";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
@@ -18,7 +17,7 @@ import { ChangeLessonDialog } from "./components/ChangeLessonDialog";
 
 const SEARCH_TYPE_OPTIONS = [
   { value: "ALL", label: "전체유형" },
-  { value: "username", label: "로그인 ID" },
+  { value: "username", label: "ID" },
   { value: "name", label: "이름" },
   { value: "phone", label: "연락처" },
   { value: "lessonTime", label: "강습 시간" },
@@ -225,8 +224,8 @@ export default function UserManagementPage() {
       y: 1,
       w: 13,
       h: 11,
-      title: "사용자 목록",
-      subtitle: "등록된 사용자 목록입니다.",
+      title: "회원 목록",
+      subtitle: "등록된 회원 목록입니다.",
     },
   ];
 

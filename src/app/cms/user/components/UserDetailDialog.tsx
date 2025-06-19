@@ -63,7 +63,7 @@ export const UserDetailDialog: React.FC<UserDetailDialogProps> = ({
                 <Box p={4} borderWidth={1} borderRadius="md">
                   <Stack direction="row" gap="4" wrap="wrap">
                     <InfoRow label="이름" value={user.name} />
-                    <InfoRow label="로그인 ID" value={user.username} />
+                    <InfoRow label="ID" value={user.username} />
                     <InfoRow label="연락처" value={user.phone} />
                     <InfoRow
                       label="상태"

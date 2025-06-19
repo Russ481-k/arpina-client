@@ -66,7 +66,7 @@ export const UserGrid = forwardRef<UserGridRef, UserGridProps>(
           sortable: false,
           filter: false,
         },
-        { headerName: "로그인 ID", field: "username", flex: 1, minWidth: 180 },
+        { headerName: "ID", field: "username", flex: 1, minWidth: 180 },
         { headerName: "이름", field: "name", width: 120 },
         { headerName: "연락처", field: "phone", width: 150 },
         {
