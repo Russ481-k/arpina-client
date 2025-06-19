@@ -1193,3 +1193,14 @@ export interface UserUpdateDto {
   phone?: string;
   status?: string;
 }
+
+export interface MainMediaDto {
+  id: number;
+  type: "IMAGE" | "VIDEO";
+  title: string;
+  thumbnailUrl?: string;
+  fileUrl: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
