@@ -468,7 +468,7 @@ export default function Home() {
                     >
                       전체
                     </Tabs.Trigger>
-                    <Tabs.Trigger
+                    {/* <Tabs.Trigger
                       value="notice"
                       fontSize="lg"
                       fontWeight="semibold"
@@ -512,29 +512,26 @@ export default function Home() {
                       }}
                     >
                       유관기관홍보
-                    </Tabs.Trigger>
+                    </Tabs.Trigger> */}
                   </Tabs.List>
                   <Tabs.Content value="all">
                     <Box>{renderNoticeList(articles)}</Box>
                   </Tabs.Content>
-                  <Tabs.Content value="notice">
+                  {/* <Tabs.Content value="notice">
                     <Box>
-                      {/* Filtering logic can be added here if articles have categories */}
                       {renderNoticeList(articles)}
                     </Box>
                   </Tabs.Content>
                   <Tabs.Content value="promotion">
                     <Box>
-                      {/* Filtering logic can be added here if articles have categories */}
                       {renderNoticeList(articles)}
                     </Box>
                   </Tabs.Content>
                   <Tabs.Content value="related">
                     <Box>
-                      {/* Filtering logic can be added here if articles have categories */}
                       {renderNoticeList(articles)}
                     </Box>
-                  </Tabs.Content>
+                  </Tabs.Content> */}
                 </Tabs.Root>
               </Box>
               <Box w="460px" flexShrink={0}>
