@@ -27,6 +27,7 @@ import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import { PopupManager } from "@/components/common/PopupManager";
 import { articleApi, Article } from "@/lib/api/article";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { colorMode } = useColorMode();
@@ -36,6 +37,7 @@ export default function Home() {
   const swiperRef = useRef<SwiperType | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -112,7 +114,7 @@ export default function Home() {
             <Box as="span" className="notice-title">
               {article.title}
             </Box>
-            <Box as="span" className="notice-date">
+            <Box as="span" className="notice-date" w="140px">
               {new Date(article.createdAt).toLocaleDateString("ko-KR")}
             </Box>
           </Link>
@@ -401,20 +403,16 @@ export default function Home() {
                 overflow="hidden"
               >
                 <Box w="100%" h="100%">
-                  <Image
-                    src="/images/main/main_0.png"
-                    alt="호텔 실시간 예약"
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    cursor="pointer"
-                    onClick={() => {
-                      window.open(
-                        "https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA",
-                        "_blank"
-                      );
-                    }}
-                  />
+                  <Link href="/meeting/estimate">
+                    <Image
+                      src="/images/main/main_0.png"
+                      alt="호텔 실시간 예약"
+                      w="100%"
+                      h="100%"
+                      objectFit="cover"
+                      cursor="pointer"
+                    />
+                  </Link>
                 </Box>
               </Box>
             </Flex>
@@ -514,7 +512,7 @@ export default function Home() {
                       유관기관홍보
                     </Tabs.Trigger> */}
                   </Tabs.List>
-                  <Tabs.Content value="all">
+                  <Tabs.Content value="all" mt={7}>
                     <Box>{renderNoticeList(articles)}</Box>
                   </Tabs.Content>
                   {/* <Tabs.Content value="notice">

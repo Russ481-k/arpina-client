@@ -181,7 +181,6 @@ function LoginForm() {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="admin"
                       bg={inputBg}
                       borderColor={inputBorder}
                       color={inputText}
@@ -234,7 +233,6 @@ function LoginForm() {
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
                         bg={inputBg}
                         borderColor={inputBorder}
                         color={inputText}
@@ -303,6 +301,21 @@ function LoginForm() {
                   }}
                 >
                   Sign In
+                </Button>
+                <Button
+                  type="submit"
+                  colorPalette="blue"
+                  variant="outline"
+                  size="lg"
+                  fontSize="md"
+                  fontWeight="semibold"
+                  h="12"
+                  bgGradient={colors.gradient.primary}
+                  color="white"
+                  letterSpacing="wide"
+                  onClick={() => router.push("/")}
+                >
+                  Home
                 </Button>
               </Flex>
             </form>

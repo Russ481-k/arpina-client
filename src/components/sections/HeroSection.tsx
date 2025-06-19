@@ -14,7 +14,6 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useColors } from "@/styles/theme";
 import { usePathname } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
-import { LuArrowRight } from "react-icons/lu";
 import Image from "next/image";
 
 export interface SlideContent {
@@ -38,7 +37,6 @@ export function HeroSection({ slideContents }: HeroSectionProps) {
   const slideRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [imageError, setImageError] = useState(false);
 
   const colors = useColors();
   const pathname = usePathname();
@@ -124,15 +122,11 @@ export function HeroSection({ slideContents }: HeroSectionProps) {
     if (slideContents[currentPage]?.image) {
       const imgEl = new window.Image();
       imgEl.src = slideContents[currentPage].image;
-      imgEl.onload = () => {
-        setImageError(false);
-      };
       imgEl.onerror = () => {
         console.error(
           "Failed to load image:",
           slideContents[currentPage].image
         );
-        setImageError(true);
       };
     }
   }, [currentPage, slideContents]);
@@ -167,251 +161,256 @@ export function HeroSection({ slideContents }: HeroSectionProps) {
         { label: slideContents[currentPage]?.title, url: undefined },
       ]
     : undefined;
-
   return (
-    <Box
-      mt={slideContents.length === 0 ? 0 : { base: "80px", lg: "108px" }}
-      bg={colors.bg}
-      h={slideContents.length === 0 ? "100%" : "30vh"}
-      position="relative"
-      overflow="hidden"
-    >
-      <Container p={0} maxW="100%" h="100%">
-        <Box ref={containerRef} position="relative" h="100%">
-          <AnimatePresence initial={false} custom={currentPage}>
-            <Box
-              ref={slideRef}
-              key={currentPage}
-              position="absolute"
-              top={0}
-              left={0}
-              w="100%"
-              h="100%"
-              style={{
-                transform: `translateX(${dragOffset}px)`,
-                transition:
-                  dragStart === null ? "transform 0.3s ease-out" : "none",
-              }}
-              onMouseDown={handleDragStart}
-              onMouseMove={handleDragMove}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
-              onTouchStart={handleDragStart}
-              onTouchMove={handleDragMove}
-              onTouchEnd={handleDragEnd}
-            >
-              <Image
-                src={slideContents[currentPage]?.image || ""}
-                alt={slideContents[currentPage]?.title || ""}
-                fill
-                style={{
-                  objectFit: "cover",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  zIndex: 0,
-                }}
-                sizes="100vw"
-                onError={(e) => {
-                  console.error("Image failed to load:", e);
-                  setImageError(true);
-                }}
-                priority={currentPage === 0}
-              />
-              <Box
-                position="absolute"
-                top={0}
-                left={0}
-                w="100%"
-                h="100%"
-                zIndex={1}
-              />
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                position="absolute"
-                top={0}
-                left={0}
-                w="100%"
-                h="100%"
-                zIndex={2}
-                textAlign="center"
-                pointerEvents="none"
-                px={4}
-                pb={slideContents[currentPage]?.header ? "72px" : 0}
-              >
-                {slideContents[currentPage]?.header && (
-                  <Text
-                    fontSize={{ base: "md", sm: "lg", md: "xl" }}
-                    fontWeight="bold"
-                    color="white"
-                    lineHeight="1.6"
-                    whiteSpace="pre-line"
-                    textShadow="0 2px 4px rgba(0,0,0,0.3)"
-                  >
-                    {slideContents[currentPage]?.header}
-                  </Text>
-                )}
-                <Heading
-                  as="h1"
-                  fontSize={
-                    slideContents[currentPage]?.header
-                      ? { base: "3xl", sm: "4xl", md: "5xl", lg: "6xl" }
-                      : { base: "2xl", sm: "3xl", md: "4xl", lg: "5xl" }
-                  }
-                  fontWeight="extrabold"
-                  mb={slideContents[currentPage]?.header ? 6 : 2}
-                  color="white"
-                  lineHeight="1.2"
-                  textShadow="0 2px 4px rgba(0,0,0,0.3)"
-                >
-                  {slideContents[currentPage]?.title}
-                </Heading>
-                {slideContents[currentPage]?.subtitle && (
-                  <Text
-                    fontSize={{ base: "md", sm: "lg", md: "xl" }}
-                    mb={{ base: 8, md: 28 }}
-                    fontWeight="bold"
-                    color="white"
-                    lineHeight="1.6"
-                    whiteSpace="pre-line"
-                    textShadow="0 2px 4px rgba(0,0,0,0.3)"
-                  >
-                    {slideContents[currentPage]?.subtitle}
-                  </Text>
-                )}
-              </Flex>
-              {slideContents[currentPage]?.header && (
+    <>
+      {!!slideContents[0] && (
+        <Box
+          mt={slideContents.length === 0 ? 0 : { base: "80px", lg: "108px" }}
+          bg={colors.bg}
+          h={slideContents.length === 0 ? "100%" : "30vh"}
+          position="relative"
+          overflow="hidden"
+        >
+          <Container p={0} maxW="100%" h="100%">
+            <Box ref={containerRef} position="relative" h="100%">
+              <AnimatePresence initial={false} custom={currentPage}>
                 <Box
+                  ref={slideRef}
+                  key={currentPage}
                   position="absolute"
+                  top={0}
                   left={0}
-                  bottom={0}
                   w="100%"
-                  display="flex"
-                  justifyContent="center"
-                  zIndex={3}
-                  backgroundColor="white"
-                  py={4}
+                  h="100%"
+                  style={{
+                    transform: `translateX(${dragOffset}px)`,
+                    transition:
+                      dragStart === null ? "transform 0.3s ease-out" : "none",
+                  }}
+                  onMouseDown={handleDragStart}
+                  onMouseMove={handleDragMove}
+                  onMouseUp={handleDragEnd}
+                  onMouseLeave={handleDragEnd}
+                  onTouchStart={handleDragStart}
+                  onTouchMove={handleDragMove}
+                  onTouchEnd={handleDragEnd}
                 >
-                  <Breadcrumb.Root
-                    px={6}
-                    py={3}
-                    borderRadius={12}
-                    border={`1px solid ${slideContents[currentPage]?.breadcrumbBorderColor}`}
+                  <Image
+                    src={slideContents[currentPage]?.image || ""}
+                    alt={slideContents[currentPage]?.title || ""}
+                    fill
+                    style={{
+                      objectFit: "cover",
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      zIndex: 0,
+                    }}
+                    sizes="100vw"
+                    priority={currentPage === 0}
+                  />
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    w="100%"
+                    h="100%"
+                    zIndex={1}
+                  />
+                  <Flex
+                    direction="column"
+                    align="center"
+                    justify="center"
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    w="100%"
+                    h="100%"
+                    zIndex={2}
+                    textAlign="center"
+                    pointerEvents="none"
+                    px={4}
+                    pb={slideContents[currentPage]?.header ? "72px" : 0}
                   >
-                    <Breadcrumb.List>
-                      {isCmsPreview ? (
-                        <>
-                          {cmsBreadcrumbArr?.map((item, idx, arr) => {
-                            return (
-                              <React.Fragment key={item.url || item.label}>
-                                {idx > 0 && (
-                                  <Breadcrumb.Separator>
-                                    <Box
-                                      as="span"
-                                      color="gray.400"
-                                      mx={2}
-                                      fontSize="sm"
-                                      fontWeight="light"
-                                    >
-                                      /
-                                    </Box>
-                                  </Breadcrumb.Separator>
-                                )}
-                                <Breadcrumb.Item>
-                                  {idx === arr.length - 1 ? (
-                                    <Breadcrumb.CurrentLink
-                                      color={colors.primary.dark}
-                                      fontSize="sm"
-                                      fontWeight="bold"
-                                    >
-                                      {item.label}
-                                    </Breadcrumb.CurrentLink>
-                                  ) : item.url ? (
-                                    <Breadcrumb.Link
-                                      as={Link}
-                                      href={
-                                        item.url !== "/" ? `${item.url}` : "/"
-                                      }
-                                      {...linkStyles}
-                                    >
-                                      <Text fontSize="sm" fontWeight="bold">
-                                        {item.label}
-                                      </Text>
-                                    </Breadcrumb.Link>
-                                  ) : (
-                                    <Text fontSize="sm" fontWeight="bold">
-                                      {item.label}
-                                    </Text>
-                                  )}
-                                </Breadcrumb.Item>
-                              </React.Fragment>
-                            );
-                          })}
-                        </>
-                      ) : (
-                        <>
-                          <Breadcrumb.Item>
-                            <Breadcrumb.Link as={Link} href="/" {...linkStyles}>
-                              <Text fontSize="sm" fontWeight="bold">
-                                Home
-                              </Text>
-                            </Breadcrumb.Link>
-                          </Breadcrumb.Item>
-                          {paths.map((path, index) => {
-                            const isLast = index === paths.length - 1;
-                            const href = `/${paths
-                              .slice(0, index + 1)
-                              .join("/")}`;
-                            const label = routeMap[path] || path;
-                            return (
-                              <React.Fragment key={`separator-${path}`}>
-                                <Breadcrumb.Separator>
-                                  <Box
-                                    as="span"
-                                    color="gray.400"
-                                    mx={2}
-                                    fontSize="sm"
-                                    fontWeight="light"
-                                  >
-                                    /
-                                  </Box>
-                                </Breadcrumb.Separator>
-                                <Breadcrumb.Item>
-                                  {isLast ? (
-                                    <Breadcrumb.CurrentLink
-                                      color={colors.primary.dark}
-                                      fontSize="sm"
-                                      fontWeight="bold"
-                                    >
-                                      {label}
-                                    </Breadcrumb.CurrentLink>
-                                  ) : (
-                                    <Breadcrumb.Link
-                                      as={Link}
-                                      href={href}
-                                      {...linkStyles}
-                                    >
-                                      <Text fontSize="sm" fontWeight="bold">
-                                        {label}
-                                      </Text>
-                                    </Breadcrumb.Link>
-                                  )}
-                                </Breadcrumb.Item>
-                              </React.Fragment>
-                            );
-                          })}
-                        </>
-                      )}
-                    </Breadcrumb.List>
-                  </Breadcrumb.Root>
+                    {slideContents[currentPage]?.header && (
+                      <Text
+                        fontSize={{ base: "md", sm: "lg", md: "xl" }}
+                        fontWeight="bold"
+                        color="white"
+                        lineHeight="1.6"
+                        whiteSpace="pre-line"
+                        textShadow="0 2px 4px rgba(0,0,0,0.3)"
+                      >
+                        {slideContents[currentPage]?.header}
+                      </Text>
+                    )}
+                    <Heading
+                      as="h1"
+                      fontSize={
+                        slideContents[currentPage]?.header
+                          ? { base: "3xl", sm: "4xl", md: "5xl", lg: "6xl" }
+                          : { base: "2xl", sm: "3xl", md: "4xl", lg: "5xl" }
+                      }
+                      fontWeight="extrabold"
+                      mb={slideContents[currentPage]?.header ? 6 : 2}
+                      color="white"
+                      lineHeight="1.2"
+                      textShadow="0 2px 4px rgba(0,0,0,0.3)"
+                    >
+                      {slideContents[currentPage]?.title}
+                    </Heading>
+                    {slideContents[currentPage]?.subtitle && (
+                      <Text
+                        fontSize={{ base: "md", sm: "lg", md: "xl" }}
+                        mb={{ base: 8, md: 28 }}
+                        fontWeight="bold"
+                        color="white"
+                        lineHeight="1.6"
+                        whiteSpace="pre-line"
+                        textShadow="0 2px 4px rgba(0,0,0,0.3)"
+                      >
+                        {slideContents[currentPage]?.subtitle}
+                      </Text>
+                    )}
+                  </Flex>
+                  {slideContents[currentPage]?.header && (
+                    <Box
+                      position="absolute"
+                      left={0}
+                      bottom={0}
+                      w="100%"
+                      display="flex"
+                      justifyContent="center"
+                      zIndex={3}
+                      backgroundColor="white"
+                      py={4}
+                    >
+                      <Breadcrumb.Root
+                        px={6}
+                        py={3}
+                        borderRadius={12}
+                        border={`1px solid ${slideContents[currentPage]?.breadcrumbBorderColor}`}
+                      >
+                        <Breadcrumb.List>
+                          {isCmsPreview ? (
+                            <>
+                              {cmsBreadcrumbArr?.map((item, idx, arr) => {
+                                return (
+                                  <React.Fragment key={item.url || item.label}>
+                                    {idx > 0 && (
+                                      <Breadcrumb.Separator>
+                                        <Box
+                                          as="span"
+                                          color="gray.400"
+                                          mx={2}
+                                          fontSize="sm"
+                                          fontWeight="light"
+                                        >
+                                          /
+                                        </Box>
+                                      </Breadcrumb.Separator>
+                                    )}
+                                    <Breadcrumb.Item>
+                                      {idx === arr.length - 1 ? (
+                                        <Breadcrumb.CurrentLink
+                                          color={colors.primary.dark}
+                                          fontSize="sm"
+                                          fontWeight="bold"
+                                        >
+                                          {item.label}
+                                        </Breadcrumb.CurrentLink>
+                                      ) : item.url ? (
+                                        <Breadcrumb.Link
+                                          as={Link}
+                                          href={
+                                            item.url !== "/"
+                                              ? `${item.url}`
+                                              : "/"
+                                          }
+                                          {...linkStyles}
+                                        >
+                                          <Text fontSize="sm" fontWeight="bold">
+                                            {item.label}
+                                          </Text>
+                                        </Breadcrumb.Link>
+                                      ) : (
+                                        <Text fontSize="sm" fontWeight="bold">
+                                          {item.label}
+                                        </Text>
+                                      )}
+                                    </Breadcrumb.Item>
+                                  </React.Fragment>
+                                );
+                              })}
+                            </>
+                          ) : (
+                            <>
+                              <Breadcrumb.Item>
+                                <Breadcrumb.Link
+                                  as={Link}
+                                  href="/"
+                                  {...linkStyles}
+                                >
+                                  <Text fontSize="sm" fontWeight="bold">
+                                    Home
+                                  </Text>
+                                </Breadcrumb.Link>
+                              </Breadcrumb.Item>
+                              {paths.map((path, index) => {
+                                const isLast = index === paths.length - 1;
+                                const href = `/${paths
+                                  .slice(0, index + 1)
+                                  .join("/")}`;
+                                const label = routeMap[path] || path;
+                                return (
+                                  <React.Fragment key={`separator-${path}`}>
+                                    <Breadcrumb.Separator>
+                                      <Box
+                                        as="span"
+                                        color="gray.400"
+                                        mx={2}
+                                        fontSize="sm"
+                                        fontWeight="light"
+                                      >
+                                        /
+                                      </Box>
+                                    </Breadcrumb.Separator>
+                                    <Breadcrumb.Item>
+                                      {isLast ? (
+                                        <Breadcrumb.CurrentLink
+                                          color={colors.primary.dark}
+                                          fontSize="sm"
+                                          fontWeight="bold"
+                                        >
+                                          {label}
+                                        </Breadcrumb.CurrentLink>
+                                      ) : (
+                                        <Breadcrumb.Link
+                                          as={Link}
+                                          href={href}
+                                          {...linkStyles}
+                                        >
+                                          <Text fontSize="sm" fontWeight="bold">
+                                            {label}
+                                          </Text>
+                                        </Breadcrumb.Link>
+                                      )}
+                                    </Breadcrumb.Item>
+                                  </React.Fragment>
+                                );
+                              })}
+                            </>
+                          )}
+                        </Breadcrumb.List>
+                      </Breadcrumb.Root>
+                    </Box>
+                  )}
                 </Box>
-              )}
+              </AnimatePresence>
             </Box>
-          </AnimatePresence>
+          </Container>
         </Box>
-      </Container>
-    </Box>
+      )}
+    </>
   );
 }

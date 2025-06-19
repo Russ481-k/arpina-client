@@ -198,6 +198,16 @@ export const heroSectionData: Record<
       { label: "소회의실", url: "/meeting/small/garam" },
     ],
   },
+  "/meeting/estimate": {
+    header: "회의실",
+    title: "회의실 모의견적 발행",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "소회의실", url: "/meeting/small/garam" },
+    ],
+  },
   "/sports/futsal": {
     header: "스포츠",
     title: "풋살",
@@ -258,14 +268,34 @@ export const heroSectionData: Record<
       { label: "스포츠", url: "/sports/swimming/futsal" },
     ],
   },
-  "/youth": {
-    header: " ",
-    title: "청소년",
+  "/youth/committee": {
+    header: "청소년",
+    title: "청소년 운영위원회회",
     image: "/images/youth/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/youth" },
+      { label: "청소년", url: "/youth/committee" },
+    ],
+  },
+  "/youth/training": {
+    header: "청소년",
+    title: "청소년 수련활동동",
+    image: "/images/youth/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/youth/committee" },
+    ],
+  },
+  "/youth/fee": {
+    header: "청소년",
+    title: "청소년 이용요금",
+    image: "/images/youth/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/youth/committee" },
     ],
   },
   "/facilities/restaurant-jj": {
@@ -279,8 +309,8 @@ export const heroSectionData: Record<
     ],
   },
   "/facilities/ediya-coffee": {
-    header: " ",
-    title: "청소년",
+    header: "부대시설",
+    title: "이디야 커피",
     image: "/images/facilities/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -289,8 +319,8 @@ export const heroSectionData: Record<
     ],
   },
   "/facilities/seven-eleven": {
-    header: " ",
-    title: "청소년",
+    header: "부대시설",
+    title: "편의점(세븐일레븐)",
     image: "/images/facilities/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -380,6 +410,16 @@ export const heroSectionData: Record<
     ],
   },
   "/bbs/voice": {
+    header: "알림",
+    title: "고객의소리",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "알림", url: "/bbs/voice" },
+    ],
+  },
+  "/bbs/voice/write": {
     header: "알림",
     title: "고객의소리",
     image: "/images/bbs/sub_visual.png",

@@ -3,9 +3,9 @@ import { Button, Text, Box, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
-import { mypageApi } from "@/lib/api/mypageApi";
 import { toaster } from "@/components/ui/toaster";
 import dayjs from "dayjs";
+import { Dialog, CloseButton } from "@chakra-ui/react";
 
 // Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
 // and return a Date object.
@@ -81,6 +81,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   const [timeRemaining, setTimeRemaining] = useState(getInitialTimeRemaining);
   // isCountingDown is true if there was an initial time remaining (i.e., reservationId is in the future)
   const [isCountingDown, setIsCountingDown] = useState(!!timeRemaining);
+
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined = undefined;
@@ -178,6 +180,10 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     }
     const enrollStatus = enrollment.status;
     const { enrollId } = enrollment;
+
+    const isCourseExpired: boolean = enrollment.lesson.endDate
+      ? dayjs().isAfter(dayjs(enrollment.lesson.endDate), "day")
+      : false;
 
     if (enrollStatus === "CANCELED_UNPAID") {
       return (
@@ -280,7 +286,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
             <Button
               colorPalette="red"
               w="50%"
-              onClick={() => enrollId && onRequestCancel(enrollId)}
+              onClick={() => setIsCancelDialogOpen(true)}
+              disabled={isCourseExpired}
             >
               취소 신청
             </Button>
@@ -296,7 +303,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
             <Button
               colorPalette="red"
               w="100%"
-              onClick={() => enrollId && onRequestCancel(enrollId)}
+              onClick={() => setIsCancelDialogOpen(true)}
+              disabled={isCourseExpired}
             >
               취소 신청
             </Button>
@@ -307,11 +315,49 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
 
     // Handle other statuses: FAILED, etc.
     return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Text fontSize="sm" color="gray.500" textAlign="center">
-          상태: {enrollment.status}
-        </Text>
-      </Flex>
+      <>
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Text fontSize="sm" color="gray.500" textAlign="center">
+            상태: {enrollment.status}
+          </Text>
+        </Flex>
+        <Dialog.Root
+          open={isCancelDialogOpen}
+          onOpenChange={(details) => {
+            if (!details.open) setIsCancelDialogOpen(false);
+          }}
+        >
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>취소 신청 확인</Dialog.Title>
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton />
+                </Dialog.CloseTrigger>
+              </Dialog.Header>
+              <Dialog.Body>정말로 강습 취소를 신청하시겠습니까?</Dialog.Body>
+              <Dialog.Footer>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCancelDialogOpen(false)}
+                >
+                  닫기
+                </Button>
+                <Button
+                  colorPalette="red"
+                  onClick={() => {
+                    if (enrollId) onRequestCancel?.(enrollId);
+                    setIsCancelDialogOpen(false);
+                  }}
+                >
+                  취소 신청
+                </Button>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Dialog.Root>
+      </>
     );
   } else {
     // Listing context (no enrollment) - Purely time and capacity based
@@ -373,6 +419,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     } else if (!applicationStartTime || !applicationEndTime) {
       // 5. Dates are invalid or missing
       buttonContent = "정보확인필요";
+
       buttonDisabled = true;
       buttonBgColor = "#A0AEC0";
       hoverBgColor = "#A0AEC0";

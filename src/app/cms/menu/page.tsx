@@ -34,6 +34,7 @@ import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 
 import { Swiper } from "swiper/react";
 import { MainMediaDialog } from "./components/MainMediaDialog";
+import { useRouter } from "next/navigation";
 
 export default function MenuManagementPage() {
   const renderCount = React.useRef(0);
@@ -47,12 +48,12 @@ export default function MenuManagementPage() {
   const [forceExpandMenuId, setForceExpandMenuId] = useState<number | null>(
     null
   );
-
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
+
   const colors = useColors();
   const swiperRef = useRef<SwiperType | null>(null);
-
-  const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
+  const router = useRouter();
 
   const findParentMenu = useCallback(
     (menus: Menu[], targetId: number): Menu | null => {
@@ -631,20 +632,16 @@ export default function MenuManagementPage() {
                         overflow="hidden"
                       >
                         <Box w="100%" h="100%">
-                          <Image
-                            src="/images/main/main_0.png"
-                            alt="호텔 실시간 예약"
-                            w="100%"
-                            h="100%"
-                            objectFit="cover"
-                            cursor="pointer"
-                            onClick={() => {
-                              window.open(
-                                "https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA",
-                                "_blank"
-                              );
-                            }}
-                          />
+                          <Link href="/meeting/estimate">
+                            <Image
+                              src="/images/main/main_0.png"
+                              alt="호텔 실시간 예약"
+                              w="100%"
+                              h="100%"
+                              objectFit="cover"
+                              cursor="pointer"
+                            />
+                          </Link>
                         </Box>
                       </Box>
                     </Flex>
