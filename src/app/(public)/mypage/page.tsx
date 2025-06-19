@@ -1015,7 +1015,7 @@ export default function MyPage() {
 
                 return (
                   <LessonCard
-                    key={enroll.enrollId}
+                    key={enroll.enrollId ?? `renewal-${enroll.lesson.lessonId}`}
                     lesson={lessonDataForCard}
                     context="mypage" // Set context to "mypage"
                     enrollment={enroll} // Pass the full enrollment object

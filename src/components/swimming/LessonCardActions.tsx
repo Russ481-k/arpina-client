@@ -143,8 +143,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
 
   if (enrollment) {
     if (
-      enrollment.isRenewal === true &&
-      enrollment.status === "RENEWAL_AVAILABLE"
+      enrollment.status === "RENEWAL_AVAILABLE" &&
+      enrollment.renewal === true
     ) {
       const handleRenewal = () => {
         if (!enrollment) {

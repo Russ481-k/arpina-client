@@ -529,6 +529,7 @@ export interface MypageEnrollDto {
   paymentExpireDt: string | null;
   usesLocker: boolean;
   isRenewal?: boolean;
+  renewal?: boolean;
   cancelStatus: EnrollmentCancellationProgressStatus | string; // Allow string
   cancelReason: string | null;
   renewalWindow?: {
