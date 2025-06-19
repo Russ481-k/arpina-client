@@ -33,6 +33,7 @@ import { Menu } from "@/types/api";
 import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 
 import { Swiper } from "swiper/react";
+import { MainMediaDialog } from "./components/MainMediaDialog";
 
 export default function MenuManagementPage() {
   const renderCount = React.useRef(0);
@@ -50,6 +51,8 @@ export default function MenuManagementPage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const colors = useColors();
   const swiperRef = useRef<SwiperType | null>(null);
+
+  const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
 
   const findParentMenu = useCallback(
     (menus: Menu[], targetId: number): Menu | null => {
@@ -376,7 +379,7 @@ export default function MenuManagementPage() {
     // Implementation of handleCancelCancel
   }, []);
 
-  // 메뉴 관리 페이지 레이아웃 정의
+  // 메인 관리 페이지 레이아웃 정의
   const menuLayout = [
     {
       id: "header",
@@ -455,6 +458,13 @@ export default function MenuManagementPage() {
                 관리자
               </Badge>
             </Flex>
+            {/* <Button
+              variant="outline"
+              colorPalette="purple"
+              onClick={() => setIsMediaDialogOpen(true)}
+            >
+              메인 미디어 관리
+            </Button> */}
           </Flex>
 
           <Box>
@@ -1315,6 +1325,10 @@ export default function MenuManagementPage() {
         confirmText="취소"
         cancelText="계속"
         backdrop="rgba(0, 0, 0, 0.5)"
+      />
+      <MainMediaDialog
+        isOpen={isMediaDialogOpen}
+        onClose={() => setIsMediaDialogOpen(false)}
       />
       <Toaster />
     </Box>

@@ -17,6 +17,7 @@ import {
   LuChevronsLeft,
   LuChevronsRight,
 } from "react-icons/lu";
+import { MoreHorizontal } from "lucide-react";
 
 interface CustomPaginationProps {
   currentPage: number; // 0-indexed
@@ -26,6 +27,54 @@ interface CustomPaginationProps {
   onPageSizeChange: (size: number) => void;
   availablePageSizes?: number[];
 }
+
+const getPaginationItems = (
+  totalPages: number,
+  currentPage: number // 0-indexed
+): (string | number)[] => {
+  if (totalPages <= 9) {
+    return Array.from({ length: totalPages }, (_, i) => i);
+  }
+
+  const current = currentPage + 1;
+  const total = totalPages;
+  let pages: (string | number)[];
+
+  // Case 1: Current page is near the start
+  if (current <= 5) {
+    pages = [1, 2, 3, 4, 5, 6, 7, "...", total];
+  }
+  // Case 2: Current page is near the end
+  else if (current >= total - 4) {
+    pages = [
+      1,
+      "...",
+      total - 6,
+      total - 5,
+      total - 4,
+      total - 3,
+      total - 2,
+      total - 1,
+      total,
+    ];
+  }
+  // Case 3: Current page is in the middle
+  else {
+    pages = [
+      1,
+      2,
+      "...",
+      current - 1,
+      current,
+      current + 1,
+      "...",
+      total - 1,
+      total,
+    ];
+  }
+
+  return pages.map((p) => (typeof p === "number" ? p - 1 : p));
+};
 
 export const CustomPagination: React.FC<CustomPaginationProps> = ({
   currentPage,
@@ -55,16 +104,14 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
     [effectivePageSizes]
   );
 
+  const paginationItems = getPaginationItems(totalPages, currentPage);
+
   if (
     totalPages <= 1 &&
     (!effectivePageSizes || effectivePageSizes.length === 0)
   ) {
     return null; // Don't render if no pagination controls are needed
   }
-
-  // --- Generate Page Number Buttons (Simple version: show all for now) ---
-  // Consider adding more sophisticated logic here for large numbers of pages
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i);
 
   // Hover background for inactive/icon buttons
   const hoverBg = colorMode === "dark" ? "whiteAlpha.100" : "blackAlpha.100";
@@ -74,7 +121,7 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
   return (
     <Flex justify="space-between" alignItems="center" p={4} w="100%">
       {totalPages > 1 ? (
-        <HStack gap={2}>
+        <HStack gap={2} alignItems="center">
           {/* First Page Button */}
           <IconButton
             aria-label="First page"
@@ -101,7 +148,30 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
           </IconButton>
 
           {/* Page Number Buttons */}
-          {pageNumbers.map((pageIndex) => {
+          {paginationItems.map((item, index) => {
+            if (typeof item === "string") {
+              return (
+                <Button
+                  key={`dots-${index}`}
+                  size="xs"
+                  disabled
+                  variant="outline"
+                  borderColor={borderColor}
+                  color={textColor}
+                  _disabled={{
+                    opacity: 1,
+                    cursor: "default",
+                    bg: "transparent",
+                  }}
+                  display="flex"
+                  alignItems="center"
+                >
+                  <MoreHorizontal />
+                </Button>
+              );
+            }
+
+            const pageIndex = item;
             const isActive = currentPage === pageIndex;
             return (
               <Button

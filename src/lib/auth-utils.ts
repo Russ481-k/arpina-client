@@ -5,15 +5,6 @@ export const USER_KEY = "auth_user";
 
 export const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
-
-  // Check token expiry
-  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
-  if (expiry && new Date(expiry) < new Date()) {
-    console.warn("토큰이 만료되었습니다");
-    removeToken();
-    return null;
-  }
-
   return localStorage.getItem(TOKEN_KEY);
 };
 

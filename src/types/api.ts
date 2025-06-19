@@ -117,6 +117,7 @@ export interface User {
   lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
+  socialType?: "KAKAO" | "NAVER" | "GOOGLE";
 }
 
 // API 요청 데이터 타입
@@ -274,6 +275,7 @@ export interface Company {
   extra?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
+  uuid: string;
 }
 
 export interface CompanyQueryParams {
@@ -1044,7 +1046,8 @@ export interface PaginatedData<T> {
   totalElements: number;
   size: number;
   number: number; // current page number (0-indexed)
-  sort: { // This sort is for the whole page, pageable.sort is for individual items
+  sort: {
+    // This sort is for the whole page, pageable.sort is for individual items
     sorted: boolean;
     unsorted: boolean;
     empty: boolean;
@@ -1139,6 +1142,9 @@ export interface InquiryRoomReservation {
   startDate?: string;
   endDate?: string;
   usageTimeDesc?: string;
+  lessonId: number;
+  paymentPageUrl: string;
+  paymentExpiresAt: string;
 }
 
 export interface MypageRenewalResponseDto {
@@ -1146,4 +1152,55 @@ export interface MypageRenewalResponseDto {
   lessonId: number;
   paymentPageUrl: string;
   paymentExpiresAt: string;
+}
+
+export interface EnrollmentDetailDto {
+  enrollmentId: string;
+  lessonTitle: string;
+  lessonMonth: string;
+  lessonTime: string;
+  payStatus: string;
+  paymentDate: string;
+}
+
+export interface UserEnrollmentHistoryDto {
+  index: number;
+  uuid: string;
+  username: string;
+  name: string;
+  phone: string;
+  status: string;
+  lastEnrollment: EnrollmentDetailDto | null;
+  enrollmentHistory: EnrollmentDetailDto[];
+}
+
+export interface Page<T> {
+  content: T[];
+  number: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+}
+
+export interface UserCreationDto {
+  username?: string;
+  name?: string;
+  phone?: string;
+}
+
+export interface UserUpdateDto {
+  name?: string;
+  phone?: string;
+  status?: string;
+}
+
+export interface MainMediaDto {
+  id: number;
+  type: "IMAGE" | "VIDEO";
+  title: string;
+  thumbnailUrl?: string;
+  fileUrl: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
 }
