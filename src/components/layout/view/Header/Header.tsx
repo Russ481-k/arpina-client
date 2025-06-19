@@ -53,11 +53,11 @@ export const Header = memo(function Header({
     return pathname === menuUrl || pathname.startsWith(menuUrl + "/");
   };
 
-  // const visibleMenus = menus.filter((menu) => menu.visible !== false);
-  // const menusWithLastFlag = visibleMenus.map((menu, index) => ({
-  //   ...menu,
-  //   isLastMenuItem: index === visibleMenus.length - 1,
-  // }));
+  const visibleMenus = menus.filter((menu) => menu.visible !== false);
+  const menusWithLastFlag = visibleMenus.map((menu, index) => ({
+    ...menu,
+    isLastMenuItem: index === visibleMenus.length - 1,
+  }));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -195,7 +195,7 @@ export const Header = memo(function Header({
                 </Link>
               </Flex>
               <DesktopNav
-                menusWithLastFlag={[]}
+                menusWithLastFlag={menusWithLastFlag}
                 isNavHovered={isNavHovered}
                 isDark={isDark}
                 currentPage={currentPage}
@@ -239,7 +239,7 @@ export const Header = memo(function Header({
         boxShadow={isNavHovered ? "0 4px 20px rgba(0, 0, 0, 0.1)" : "none"}
       />
       <MobileMenuDrawer
-        menusWithLastFlag={[]}
+        menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}
         isDark={isDark}
         isPreview={isPreview}
@@ -249,7 +249,7 @@ export const Header = memo(function Header({
       <SitemapDrawer
         isOpen={isSitemapDrawerOpen}
         onClose={() => setIsSitemapDrawerOpen(false)}
-        menusWithLastFlag={[]}
+        menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}
         isDark={isDark}
         width={logoWidth}
