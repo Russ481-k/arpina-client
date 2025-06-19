@@ -17,7 +17,7 @@ import Layout from "@/components/layout/view/Layout";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useMenu } from "@/lib/hooks/useMenu";
 import { sortMenus } from "@/lib/api/menu";
-import { useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -26,6 +26,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import { PopupManager } from "@/components/common/PopupManager";
+import { articleApi, Article } from "@/lib/api/article";
 
 export default function Home() {
   const { colorMode } = useColorMode();
@@ -33,6 +34,35 @@ export default function Home() {
   const { menus } = useMenu();
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        setIsLoading(true);
+        const response = await articleApi.getArticles({
+          bbsId: 1,
+          menuId: 79,
+          page: 0,
+          size: 5, // Fetch top 5 articles
+          sort: "createdAt,desc",
+        });
+
+        if (response.success && response.data) {
+          setArticles(response.data.content);
+        } else {
+          console.error("Failed to fetch articles:", response.message);
+        }
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, []);
 
   const treeMenus = useMemo(() => {
     try {
@@ -56,6 +86,40 @@ export default function Home() {
       return [];
     }
   }, [menus]);
+
+  // Function to render notice list
+  const renderNoticeList = (items: Article[]) => {
+    if (isLoading) {
+      return <Text>Loading...</Text>;
+    }
+
+    if (items.length === 0) {
+      return <Text>게시물이 없습니다.</Text>;
+    }
+
+    return (
+      <Flex className="mnotice-list" flexDirection={"column"} gap={5}>
+        {items.map((article) => (
+          <Link
+            key={article.nttId}
+            href={`/bbs/1/read/${article.nttId}`}
+            className="notice-item notice"
+          >
+            <Box as="span" className="notice-cate">
+              {/* This could be dynamic if article has category info */}
+              공지
+            </Box>
+            <Box as="span" className="notice-title">
+              {article.title}
+            </Box>
+            <Box as="span" className="notice-date">
+              {new Date(article.createdAt).toLocaleDateString("ko-KR")}
+            </Box>
+          </Link>
+        ))}
+      </Flex>
+    );
+  };
 
   return (
     <Layout menus={treeMenus} currentPage="홈">
@@ -397,9 +461,9 @@ export default function Home() {
                       transition="all 0.2s"
                       cursor="pointer"
                       _active={{
-                        color: "#fff",
-                        bg: "#2E3192",
-                        borderRadius: "35px",
+                        color: "#2E3192",
+                        bg: "rgba(46, 49, 146, 0.05)",
+                        borderBottom: "2px solid #2E3192",
                       }}
                     >
                       전체
@@ -451,283 +515,24 @@ export default function Home() {
                     </Tabs.Trigger>
                   </Tabs.List>
                   <Tabs.Content value="all">
-                    <Box>
-                      <Flex
-                        className="mnotice-list"
-                        flexDirection={"column"}
-                        gap={5}
-                      >
-                        <Link href="..." className="notice-item notice">
-                          <Box as="span" className="notice-cate">
-                            공지
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item related">
-                          <Box as="span" className="notice-cate">
-                            유관기관 홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item promotion">
-                          <Box as="span" className="notice-cate">
-                            홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item notice">
-                          <Box as="span" className="notice-cate">
-                            공지
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item related">
-                          <Box as="span" className="notice-cate">
-                            유관기관 홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                      </Flex>
-                    </Box>
+                    <Box>{renderNoticeList(articles)}</Box>
                   </Tabs.Content>
                   <Tabs.Content value="notice">
                     <Box>
-                      <Flex
-                        className="mnotice-list"
-                        flexDirection={"column"}
-                        gap={5}
-                      >
-                        <Link href="..." className="notice-item notice">
-                          <Box as="span" className="notice-cate">
-                            공지
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item notice">
-                          <Box as="span" className="notice-cate">
-                            공지
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item notice">
-                          <Box as="span" className="notice-cate">
-                            공지
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item notice">
-                          <Box as="span" className="notice-cate">
-                            공지
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item notice">
-                          <Box as="span" className="notice-cate">
-                            공지
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                      </Flex>
+                      {/* Filtering logic can be added here if articles have categories */}
+                      {renderNoticeList(articles)}
                     </Box>
                   </Tabs.Content>
                   <Tabs.Content value="promotion">
                     <Box>
-                      <Flex
-                        className="mnotice-list"
-                        flexDirection={"column"}
-                        gap={5}
-                      >
-                        <Link href="..." className="notice-item promotion">
-                          <Box as="span" className="notice-cate">
-                            홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item promotion">
-                          <Box as="span" className="notice-cate">
-                            홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item promotion">
-                          <Box as="span" className="notice-cate">
-                            홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item promotion">
-                          <Box as="span" className="notice-cate">
-                            홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item promotion">
-                          <Box as="span" className="notice-cate">
-                            홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                      </Flex>
+                      {/* Filtering logic can be added here if articles have categories */}
+                      {renderNoticeList(articles)}
                     </Box>
                   </Tabs.Content>
                   <Tabs.Content value="related">
                     <Box>
-                      <Flex
-                        className="mnotice-list"
-                        flexDirection={"column"}
-                        gap={5}
-                      >
-                        <Link href="..." className="notice-item related ">
-                          <Box as="span" className="notice-cate">
-                            유관기관홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item related ">
-                          <Box as="span" className="notice-cate">
-                            유관기관홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item related ">
-                          <Box as="span" className="notice-cate">
-                            유관기관홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item related ">
-                          <Box as="span" className="notice-cate">
-                            유관기관홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                        <Link href="..." className="notice-item related ">
-                          <Box as="span" className="notice-cate">
-                            유관기관홍보
-                          </Box>
-                          <Box as="span" className="notice-title">
-                            23년 및 24년 상,하반기 DBR 선착순 무료 배포 (학생관
-                            105호 취업지원센터)
-                          </Box>
-                          <Box as="span" className="notice-date">
-                            2025.05.29
-                          </Box>
-                        </Link>
-                      </Flex>
+                      {/* Filtering logic can be added here if articles have categories */}
+                      {renderNoticeList(articles)}
                     </Box>
                   </Tabs.Content>
                 </Tabs.Root>
