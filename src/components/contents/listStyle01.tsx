@@ -7,6 +7,7 @@ import {
   Heading,
   Mark,
   Text,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import { useState, ReactNode } from "react";
 
@@ -29,6 +30,9 @@ const CollapsibleItem = ({
   onOpenChange,
 }: CollapsibleItemProps) => {
   const isOpen = openItemKey === itemKey;
+  // 반응형 폰트사이즈
+  const numberSize = useBreakpointValue({ base: "lg", md: "2xl", lg: "4xl" });
+  const titleSize = useBreakpointValue({ base: "lg", md: "xl", lg: "2xl" });
 
   return (
     <Collapsible.Root
@@ -40,22 +44,23 @@ const CollapsibleItem = ({
         <Text
           display="flex"
           alignItems="center"
-          gap="100px"
+          gap={{ base: "10px", md: "20px", lg: "100px" }}
           w="100%"
           maxW="1400px"
           margin="0 auto"
+          py={{ base: 2, md: 3, lg: 0 }}
           color="#393939"
-          fontSize="2xl"
+          fontSize={titleSize}
           fontWeight="Bold"
         >
-          <Mark color="#EFEFF1" fontSize="70px" fontWeight="extrabold">
+          <Mark color="#EFEFF1" fontSize={numberSize} fontWeight="extrabold">
             {number}
           </Mark>
           {title}
           <chakra.svg
             xmlns="http://www.w3.org/2000/svg"
-            width="80px"
-            height="81px"
+            width={{ base: "20px", md: "40px", lg: "80px" }}
+            height={{ base: "20px", md: "40px", lg: "81px" }}
             viewBox="0 0 80 81"
             fill="none"
             ml="auto"
@@ -80,8 +85,8 @@ const CollapsibleItem = ({
           w="100%"
           maxW="1400px"
           margin="0 auto"
-          py={7}
-          pl="140px"
+          py={{ base: 2, md: 3, lg: 7 }}
+          pl={{ base: "0", md: "40px", lg: "140px" }}
         >
           {content}
         </Box>
@@ -105,11 +110,14 @@ export interface ListStyle01Props {
 }
 
 // 스타일이 적용된 텍스트 컴포넌트
-export const StyledText = ({ children }: { children: ReactNode }) => (
-  <Text color="#393939" fontSize="24px">
-    {children}
-  </Text>
-);
+export const StyledText = ({ children }: { children: ReactNode }) => {
+  const textSize = useBreakpointValue({ base: "md", md: "lg", lg: "xl" });
+  return (
+    <Text color="#393939" fontSize={textSize}>
+      {children}
+    </Text>
+  );
+};
 
 function ListStyle01({ title, items }: ListStyle01Props) {
   // 현재 열린 항목의 키를 저장하는 상태
@@ -127,13 +135,16 @@ function ListStyle01({ title, items }: ListStyle01Props) {
       }
     };
 
+  // 반응형 타이틀 폰트사이즈
+  const headingSize = useBreakpointValue({ base: "2xl", md: "3xl", lg: "5xl" });
+
   return (
     <Box className="room-info-box" mt="100px">
       <Heading
         as="h4"
-        mb="60px"
+        mb={{ base: "20px", md: "30px", lg: "60px" }}
         color="#393939"
-        fontSize="60px"
+        fontSize={headingSize}
         fontWeight="bold"
         lineHeight="1"
       >

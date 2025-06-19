@@ -117,7 +117,7 @@ export default function ParticipantsPage() {
     "사용 용도 이외의 사용 금지",
     "시설물 사용 후 주변 환경 정리 (경기장 내· 외부, 배출된 쓰레기는 신속히 자체 수거 처리)",
     "안전사고 발생 방지 조치(이용자의 부주의로 인한 안전사고에 대한 민·형사상 책임은 이용자 책임)",
-    "시설물 사용시 순찰근무자가 예약 확인을 요구할 수 있습니다.",
+    "시설물 사용시 순찰근무자가 예약 확인을 요구할 수 있습니다.",
   ];
 
   return (
@@ -128,26 +128,31 @@ export default function ParticipantsPage() {
         description="부산도시공사 아르피나에서는 시민들의 건강과 편익 증진을 도모 하고자 풋살장 대관을 다음과 같이 운영하고 있습니다."
         images={images}
         showReservation={false}
+        downloadInfo={{
+          text: "풋살장 이용규정 다운로드",
+          url: "/files/futsal_regulations.pdf",
+          fileName: "futsal_regulations.pdf",
+        }}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>현황안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>이용시 유의사항</HeadingH4>
         <ApTable01 rows={tableRows02} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>이용요금 예약 및 절차</HeadingH4>
         <ApTable02 rows={tableRows03} />
         <InfoBoxList01 items={infoItems01} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>예약 취소 및 환불규정</HeadingH4>
         <ApTable02 rows={tableRows04} />
         <InfoBoxList01 items={infoItems02} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>승인조건 및 유의사항</HeadingH4>
         <InfoBoxList01 items={infoItems03} />
       </Box>

@@ -64,7 +64,7 @@ export default function ApTable03({
                   py={5}
                   px={1}
                   color={"#333"}
-                  fontSize={"xl"}
+                  fontSize={{ base: "sm", md: "lg", lg: "xl" }}
                   fontWeight={"regular"}
                   style={{
                     border: "none",
@@ -93,7 +93,7 @@ export default function ApTable03({
                   py={5}
                   px={1}
                   color={"#555"}
-                  fontSize={"xl"}
+                  fontSize={{ base: "sm", md: "lg", lg: "xl" }}
                   fontWeight={"light"}
                   style={{
                     border: "none",

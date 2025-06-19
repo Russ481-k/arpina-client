@@ -18,10 +18,10 @@ interface HeadingH401Props {
 export default function HeadingH401({
   children,
   color = "#2E3192",
-  fontSize = "3xl",
+  fontSize = { base: "lg", md: "xl", lg: "2xl" },
   fontWeight = "bold",
-  mb = 5,
-  p = 5,
+  mb = { base: 2, md: 3, lg: 5 },
+  p = { base: 2, md: 3, lg: 5 },
   textAlign = "center",
   border = "1px solid #2E3192",
   borderRadius = "100px",

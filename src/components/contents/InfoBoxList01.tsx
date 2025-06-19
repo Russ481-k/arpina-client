@@ -16,11 +16,11 @@ export default function InfoBoxList01({
   return (
     <Box
       className="info-list-box01"
+      marginTop={{ base: "5", md: "10", lg: "15" }}
+      padding={{ base: "2", md: "3", lg: "4" }}
       style={{
         backgroundColor: "#F7F8FB",
         borderRadius: "20px",
-        marginTop: "60px",
-        padding: "20px",
       }}
     >
       <Box>
@@ -50,7 +50,7 @@ export default function InfoBoxList01({
               key={index}
               _marker={{ fontSize: "0" }}
               color={"#393939"}
-              fontSize="lg"
+              fontSize={{ base: "sm", md: "md", lg: "lg" }}
               style={{
                 display: "flex",
                 alignItems: "center",
