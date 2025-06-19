@@ -163,9 +163,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
 
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button colorScheme="teal" w="100%" onClick={handleRenewal}>
-            재수강 신청하기
-          </Button>
           <Text fontSize="xs" color="gray.500">
             {enrollment.renewalWindow?.open
               ? `${dayjs(enrollment.renewalWindow.open).format("M/D")}~${dayjs(
@@ -173,6 +170,9 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
                 ).format("M/D")}`
               : "재수강 신청 기간"}
           </Text>
+          <Button colorPalette="teal" w="100%" onClick={handleRenewal}>
+            재수강 신청하기
+          </Button>
         </Flex>
       );
     }
