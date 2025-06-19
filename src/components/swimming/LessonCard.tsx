@@ -18,7 +18,7 @@ interface LessonCardProps {
   enrollment?: MypageEnrollDto;
   onRequestCancel?: (enrollId: number) => void;
   onGoToPayment?: (enrollId: number) => void;
-  onRenewLesson?: (lessonId: number) => void;
+  onRenewLesson?: (enrollment: MypageEnrollDto) => void;
 }
 
 // Simplified KST Date Parser (should ideally be in a shared utils file)
@@ -316,6 +316,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
             onRequestCancel={context === "mypage" ? onRequestCancel : undefined}
             onApplyClick={context !== "mypage" ? handleApplyClick : undefined}
             onGoToPayment={onGoToPayment}
+            onRenewLesson={onRenewLesson}
           />
         </Box>
       </Box>

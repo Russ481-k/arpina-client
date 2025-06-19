@@ -56,6 +56,7 @@ interface LessonCardActionsProps {
   onRequestCancel?: (enrollId: number) => void;
   onApplyClick?: () => void;
   onGoToPayment?: (enrollId: number) => void;
+  onRenewLesson?: (enrollment: MypageEnrollDto) => void;
 }
 
 const LessonCardActions: React.FC<LessonCardActionsProps> = ({
@@ -64,6 +65,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   onRequestCancel,
   onApplyClick,
   onGoToPayment,
+  onRenewLesson,
 }) => {
   const router = useRouter();
 
@@ -144,9 +146,9 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       enrollment.isRenewal === true &&
       enrollment.status === "RENEWAL_AVAILABLE"
     ) {
-      const handleRenewal = async () => {
-        if (!enrollment.lesson?.lessonId) {
-          console.error("재수강할 강습 정보가 없습니다.");
+      const handleRenewal = () => {
+        if (!enrollment) {
+          console.error("재수강할 신청 정보가 없습니다.");
           toaster.create({
             title: "오류",
             description: "재수강할 강습 정보를 찾을 수 없습니다.",
@@ -154,26 +156,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           });
           return;
         }
-
-        try {
-          const response = await mypageApi.requestRenewal({
-            lessonId: enrollment.lesson.lessonId,
-            wantsLocker: false, // 사물함 선택 UI 추가 전까지 false로 고정
-          });
-
-          if (response && response.paymentPageUrl) {
-            router.push(response.paymentPageUrl);
-          } else {
-            throw new Error("결제 페이지 URL을 받지 못했습니다.");
-          }
-        } catch (error) {
-          console.error("재수강 신청 처리 중 오류 발생:", error);
-          toaster.create({
-            title: "재수강 신청 실패",
-            description:
-              "재수강 신청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
-            type: "error",
-          });
+        if (onRenewLesson) {
+          onRenewLesson(enrollment);
         }
       };
 

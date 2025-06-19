@@ -696,35 +696,39 @@ export default function MyPage() {
     }
   };
 
-  const handleRenewLesson = async (lessonId: number) => {
-    try {
-      const renewalResponse = await swimmingPaymentService.renewalLesson({
-        lessonId,
-        wantsLocker: false, // Or allow user to choose
-      });
-
-      if (renewalResponse) {
-        toaster.create({
-          title: "재등록 성공",
-          description: "강습 재등록이 완료되었습니다.",
-          type: "success",
-        });
-
-        // Refresh enrollments data
-        setDataLoaded((prev) => ({ ...prev, enrollments: false }));
-        await fetchEnrollments();
-      }
-    } catch (error) {
-      console.error("[Mypage] Failed to renew lesson:", error);
+  const handleRenewLesson = async (enrollment: MypageEnrollDto) => {
+    if (!enrollment || !enrollment.lesson) {
       toaster.create({
-        title: "재등록 실패",
-        description: getApiErrorMessage(
-          error,
-          "강습 재등록에 실패했습니다. 다시 시도해주세요."
-        ),
+        title: "오류",
+        description: "재수강할 강습 정보가 없습니다.",
         type: "error",
       });
+      return;
     }
+
+    const { lesson } = enrollment;
+
+    // Logic is copied from LessonCard.tsx's handleApplyClick
+    toaster.create({
+      title: "재수강 신청",
+      description: "신청 정보 확인 페이지로 이동합니다.",
+      type: "info",
+      duration: 1500,
+    });
+
+    const queryParams = new URLSearchParams({
+      lessonId: lesson.lessonId.toString(),
+      lessonTitle: lesson.title,
+      lessonPrice: lesson.price.toString(),
+      lessonStartDate: lesson.startDate,
+      lessonEndDate: lesson.endDate,
+      lessonTime: lesson.timeSlot || "",
+      lessonDays: lesson.days || "",
+      lessonTimePrefix: lesson.timePrefix || "",
+      isRenewal: "true", // Add a flag to indicate this is a renewal
+    });
+
+    router.push(`/application/confirm?${queryParams.toString()}`);
   };
 
   // Function to refresh enrollment data (useful after payment completion)
