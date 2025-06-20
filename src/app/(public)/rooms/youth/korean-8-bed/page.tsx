@@ -425,9 +425,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="유스 Yourth"
-        titleHighlight="유스"
-        description="유스룸은 국내·외 수학여행단이나 학생 단체들의 숙박 또는 유스호스텔러를 위한 2층 침대로 구성되어있습니다."
+        title="코리안 유스룸 Korean Yourth"
+        titleHighlight="코리안 유스룸"
+        description="총 8명이 이용 가능한 코리안 유스룸은 온돌 바닥에 이부자리를 펴는 전통 숙박 방식의 편안함과 아늑함을 갖춘 객실로, 국내외 청소년 단체 전용 숙박 공간입니다."
         images={images}
         showReservation={true}
       />
