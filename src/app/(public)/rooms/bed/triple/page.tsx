@@ -185,8 +185,9 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            트리플 객실은 싱글침대 3개로 구성되어, 3인이 편안하게 이용하실 수
-            있습니다. <br /> 총 15실 운영 중입니다.
+            슈페리어 트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한
+            분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며,
+            머무시는 동안 편안하고 안락한 휴식을 제공합니다.
           </ListStyle01.StyledText>
         </>
       ),
@@ -450,9 +451,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="트리플 Triple"
-        titleHighlight="트리플"
-        description="깨끗하고 아늑한 분위기의 슈페리어 트리플은 3인용 객실로서 합리적인 방 구조로 아르피나에 머물고 계시는 동안에도 최고의 편안함을 드립니다. 슈페리어 트리플을 통해 편안하고 따뜻한 경험을 즐겨보시길 바랍니다."
+        title="슈페리어 트리플 Superior Triple"
+        titleHighlight="슈페리어 트리플"
+        description="슈페리어 트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한 분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며, 머무시는 동안 편안하고 안락한 휴식을 제공합니다."
         images={images}
         showReservation={true}
       />

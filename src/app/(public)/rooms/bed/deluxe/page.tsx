@@ -185,8 +185,9 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            디럭스 객실은 싱글침대 2개, 퀸침대 1개로 구성되어, 4인이 편안하게
-            이용하실 수 있습니다. <br />총 45실 운영 중입니다.
+            넓고 쾌적한 공간을 갖춘 슈페리어 디럭스는 실용적인 구조와 아늑한
+            분위기를 갖추어, 가족이나 친구와 함께하는 여행에 안성맞춤인 4인용
+            객실입니다. 머무는 동안 여유롭고 편안한 휴식을 누려보세요.
           </ListStyle01.StyledText>
         </>
       ),
@@ -450,9 +451,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="디럭스 Deluxe"
-        titleHighlight="디럭스"
-        description="깨끗하고 아늑한 분위기의 슈페리어 디럭스는 합리적인 방 구조로 아르피나에 머물고 계시는 동안 최고의 편안함을 드립니다. "
+        title="슈페리어 디럭스 Superior Deluxe"
+        titleHighlight="슈페리어 디럭스"
+        description="넓고 쾌적한 공간을 갖춘 슈페리어 디럭스는 실용적인 구조와 아늑한 분위기를 갖추어, 가족이나 친구와 함께하는 여행에 안성맞춤인 4인용 객실입니다. 머무는 동안 여유롭고 편안한 휴식을 누려보세요."
         images={images}
         showReservation={true}
       />

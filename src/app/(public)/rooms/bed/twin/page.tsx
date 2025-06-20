@@ -185,8 +185,9 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            트윈 객실은 더블침대 1개와 싱글침대 1개로 구성되어, 2인이 편안하게
-            이용하실 수 있습니다. <br />총 20실 운영 중입니다.
+            슈페리어 트윈룸은 2인 이용에 적합한 객실로 비즈니스 고객은 물론 단체
+            여행을 인솔하는 지도자나 장애인을 위한 전용 객실도 마련되어있어 보다
+            편리하고 쾌적한 투숙이 가능합니다.
           </ListStyle01.StyledText>
         </>
       ),
@@ -450,9 +451,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="트윈 Twin"
-        titleHighlight="트윈"
-        description="개별 여행객들에게 적합한 트윈은 비즈니스맨을 위한 룸으로 이용되고 있으며, 장애인을 고려하여 마련된 객실과 단체여행객을 인솔하는 지도자를 위한 객실로 구성되어 있습니다."
+        title="슈페리어 트윈 Superior Twin"
+        titleHighlight="슈페리어 트윈"
+        description="슈페리어 트윈은 2인 이용에 적합한 객실로, 비즈니스 고객은 물론 단체 여행을 인솔하는 지도자나 장애인을 위한 전용 객실도 마련되어있어 보다 편리하고 쾌적한 투숙이 가능합니다."
         images={images}
         showReservation={true}
       />

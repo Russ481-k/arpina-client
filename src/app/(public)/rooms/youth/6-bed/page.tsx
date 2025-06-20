@@ -185,8 +185,9 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            유스 객실은 2층 침대 3개로 구성되어, 6인이 편안하게 이용하실 수
-            있습니다. <br />총 15실 운영 중입니다.
+            국내·외 학생 단체, 수학여행단 및 유스호스텔러를 위한 유스룸은 2층
+            침대가 마련되어 있어 다수의 인원이 편리하고 쾌적하게 머물 수 있는
+            객실입니다.
           </ListStyle01.StyledText>
         </>
       ),

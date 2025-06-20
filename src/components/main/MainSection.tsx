@@ -27,7 +27,7 @@ const MainSection = () => {
         mx="auto"
         my={0}
       >
-        당신의 새로운 여정이 시작 되는곳
+        광안리 - 해운대 - 센텀시티를 잇는 이상적인 허브
       </Heading>
       <HeroSection />
       <MarqueeSection />

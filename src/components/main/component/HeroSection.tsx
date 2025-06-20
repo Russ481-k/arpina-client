@@ -132,7 +132,7 @@ export function HeroSection() {
                           fontWeight="semibold"
                           color="#1F2732"
                         >
-                          기억에 남을 완벽한 하루, 아르피나
+                          도심 속 합리적인 컨벤션 & 스테이
                         </Text>
                       </Box>
                     </Box>

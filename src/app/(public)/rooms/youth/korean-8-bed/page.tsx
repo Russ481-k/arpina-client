@@ -185,8 +185,9 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            코리안유스 객실은 온돌방으로 구성되어, 8인이 편안하게 이용하실 수
-            있습니다. <br />총 4실 운영 중입니다.
+            총 8명이 이용 가능한 코리안 유스룸은 온돌 바닥에 이부자리를 펴는
+            전통 숙박 방식의 편안함과 아늑함을 갖춘 객실로, 국내외 청소년 단체
+            전용 숙박 공간입니다.
           </ListStyle01.StyledText>
         </>
       ),

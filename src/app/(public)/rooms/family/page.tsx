@@ -433,9 +433,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="패밀리 Family"
-        titleHighlight="패밀리"
-        description="아르피나 7층에 위치하고 있는 거실, 침대방 및 온돌방으로 꾸며진 객실로 가족 단위 여행객에게 적합합니다."
+        title="패밀리 스위트 Family Sweet"
+        titleHighlight="패밀리 스위트"
+        description="패밀리 스위트는 가족 단위 여행객에게 적합한 객실로, 거실, 침대방 및 온돌방으로 꾸며진 공간을 제공합니다."
         images={images}
         showReservation={true}
       />
