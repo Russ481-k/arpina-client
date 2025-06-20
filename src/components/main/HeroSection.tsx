@@ -7,6 +7,7 @@ import {
   Link,
   Text,
   useBreakpointValue,
+  AspectRatio,
 } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
 import { useState, useRef } from "react";
@@ -48,17 +49,6 @@ export function HeroSection() {
           },
           ".slide-content.active": {
             animation: "slideUp 0.8s ease-out forwards",
-          },
-          ".swiper-container::before": {
-            content: "''",
-            position: "absolute",
-            left: 0,
-            bottom: 0,
-            backgroundColor: "#fff",
-            width: "427px",
-            height: "82px",
-            zIndex: 1,
-            pointerEvents: "none",
           },
         }}
       />
@@ -118,32 +108,32 @@ export function HeroSection() {
                     position="relative"
                     display="block"
                   >
-                    <Box position="relative" w="100%">
-                      <Box
-                        className={`slide-content ${
-                          activeSlide === 0 ? "active" : ""
-                        }`}
-                        position="absolute"
-                        bottom="0"
-                        left="0"
-                      >
+                    <AspectRatio ratio={1088 / 550} w="100%">
+                      <Image
+                        src="/images/contents/msec01_sld_img02.png"
+                        alt="새로운 여정의 시작"
+                        w="100%"
+                        h="100%"
+                        objectFit="cover"
+                      />
+                    </AspectRatio>
+                    <Box
+                      className={`slide-content ${
+                        activeSlide === 0 ? "active" : ""
+                      }`}
+                      position="absolute"
+                      bottom="0"
+                      left="0"
+                      zIndex="2"
+                    >
+                      <Box bg="white" p={6}>
                         <Text
-                          py={6}
                           fontSize="30px"
                           fontWeight="semibold"
                           color="#1F2732"
                         >
-                          기억에 남을 완벽한 하루, 아르피나
+                          강습신청바로가기
                         </Text>
-                      </Box>
-                      <Box position="relative" w="100%">
-                        <Image
-                          src="/images/contents/msec01_sld_img02.png"
-                          alt="새로운 여정의 시작"
-                          w="100%"
-                          h="auto"
-                          objectFit="cover"
-                        />
                       </Box>
                     </Box>
                   </Link>
@@ -156,12 +146,12 @@ export function HeroSection() {
               w={heroBoxWidth}
               overflow="hidden"
             >
-              <Box w="auto" h="auto">
+              <Box>
                 <Image
                   src="/images/contents/main_0.png"
                   alt="호텔 실시간 예약"
                   w="100%"
-                  h="100%"
+                  h="auto"
                   objectFit="cover"
                   cursor="pointer"
                   onClick={() => {

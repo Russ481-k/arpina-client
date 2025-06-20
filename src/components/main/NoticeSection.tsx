@@ -233,7 +233,7 @@ export function NoticeSection() {
                     paddingLeft: tabsPaddingLeft,
                   }}
                 >
-                  <Tabs.Trigger
+                  {/* <Tabs.Trigger
                     value="all"
                     fontSize="lg"
                     fontWeight="semibold"
@@ -247,7 +247,7 @@ export function NoticeSection() {
                     }}
                   >
                     전체
-                  </Tabs.Trigger>
+                  </Tabs.Trigger> */}
                 </Tabs.List>
                 <Tabs.Content value="all" mt={7}>
                   <Box>{renderNoticeList(articles)}</Box>
