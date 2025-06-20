@@ -132,7 +132,7 @@ export function HeroSection() {
                           fontWeight="semibold"
                           color="#1F2732"
                         >
-                          강습신청바로가기
+                          기억에 남을 완벽한 하루, 아르피나
                         </Text>
                       </Box>
                     </Box>
