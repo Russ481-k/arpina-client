@@ -26,7 +26,7 @@ export function NoticeSection() {
           bbsId: 1,
           menuId: 79,
           page: 0,
-          size: 5,
+          size: 6,
           sort: "createdAt,desc",
         });
 
@@ -268,7 +268,7 @@ export function NoticeSection() {
               <Box borderRadius="20px" overflow="hidden">
                 <Link href="...">
                   <Image
-                    src="/images/contents/msec02_bnr_img01.jpg"
+                    src="/images/main/main_1.png"
                     alt="부산 유스호스텔 아르피나 배너"
                     w="100%"
                     h="100%"

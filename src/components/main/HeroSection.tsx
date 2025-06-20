@@ -150,16 +150,20 @@ export function HeroSection() {
               overflow="hidden"
             >
               <Box w="100%" h="100%">
-                <Link href="/meeting/estimate">
-                  <Image
-                    src="/images/main/main_0.png"
-                    alt="호텔 실시간 예약"
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    cursor="pointer"
-                  />
-                </Link>
+                <Image
+                  src="/images/contents/main_0.png"
+                  alt="호텔 실시간 예약"
+                  w="100%"
+                  h="100%"
+                  objectFit="cover"
+                  cursor="pointer"
+                  onClick={() => {
+                    window.open(
+                      "https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA",
+                      "_blank"
+                    );
+                  }}
+                />
               </Box>
             </Box>
           </Flex>
