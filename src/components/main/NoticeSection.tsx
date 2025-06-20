@@ -194,6 +194,7 @@ export function NoticeSection() {
             color: "#808080",
             fontSize: "20px",
             fontWeight: "700",
+            whiteSpace: "nowrap",
           },
         }}
       />
@@ -266,12 +267,12 @@ export function NoticeSection() {
                 배너존
               </Heading>
               <Box borderRadius="20px" overflow="hidden">
-                <Link href="...">
+                <Link href="/meeting/estimate">
                   <Image
                     src="/images/main/main_1.png"
                     alt="부산 유스호스텔 아르피나 배너"
                     w="100%"
-                    h="100%"
+                    h="auto"
                     objectFit="cover"
                   />
                 </Link>

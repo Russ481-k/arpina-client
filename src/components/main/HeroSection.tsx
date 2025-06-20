@@ -112,34 +112,41 @@ export function HeroSection() {
                 }}
               >
                 <SwiperSlide>
-                  <Box position="relative" w="100%">
-                    <Box
-                      className={`slide-content ${
-                        activeSlide === 0 ? "active" : ""
-                      }`}
-                      position="absolute"
-                      bottom="0"
-                      left="0"
-                    >
-                      <Text
-                        py={6}
-                        fontSize="30px"
-                        fontWeight="semibold"
-                        color="#1F2732"
-                      >
-                        기억에 남을 완벽한 하루, 아르피나
-                      </Text>
-                    </Box>
+                  <Link
+                    href="/sports/swimming/lesson"
+                    w="100%"
+                    position="relative"
+                    display="block"
+                  >
                     <Box position="relative" w="100%">
-                      <Image
-                        src="/images/contents/msec01_sld_img01.png"
-                        alt="새로운 여정의 시작"
-                        w="100%"
-                        h="100%"
-                        objectFit="cover"
-                      />
+                      <Box
+                        className={`slide-content ${
+                          activeSlide === 0 ? "active" : ""
+                        }`}
+                        position="absolute"
+                        bottom="0"
+                        left="0"
+                      >
+                        <Text
+                          py={6}
+                          fontSize="30px"
+                          fontWeight="semibold"
+                          color="#1F2732"
+                        >
+                          기억에 남을 완벽한 하루, 아르피나
+                        </Text>
+                      </Box>
+                      <Box position="relative" w="100%">
+                        <Image
+                          src="/images/contents/msec01_sld_img02.png"
+                          alt="새로운 여정의 시작"
+                          w="100%"
+                          h="auto"
+                          objectFit="cover"
+                        />
+                      </Box>
                     </Box>
-                  </Box>
+                  </Link>
                 </SwiperSlide>
               </Swiper>
             </Box>
@@ -149,7 +156,7 @@ export function HeroSection() {
               w={heroBoxWidth}
               overflow="hidden"
             >
-              <Box w="100%" h="100%">
+              <Box w="auto" h="auto">
                 <Image
                   src="/images/contents/main_0.png"
                   alt="호텔 실시간 예약"

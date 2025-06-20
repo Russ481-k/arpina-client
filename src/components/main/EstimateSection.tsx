@@ -10,12 +10,315 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
+import { useState } from "react";
 
 export function EstimateSection() {
   const headingFontSize = useBreakpointValue({ base: "30px", md: "40px" });
   const containerPadding = useBreakpointValue({ base: 4, md: 0 });
   const innerContainerPadding = useBreakpointValue({ base: 4, md: 10 });
-  const buttonTextFontSize = useBreakpointValue({ base: "sm", md: "md" });
+  const flexDirection = useBreakpointValue<"column" | "row">({
+    base: "column",
+    lg: "row",
+  });
+  const flexBasis = useBreakpointValue({ base: "100%", lg: "33%" });
+
+  // 달력 range-picker 상태 및 함수
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [nextMonthDate, setNextMonthDate] = useState(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    return date;
+  });
+  const [checkInDate, setCheckInDate] = useState<any>(null);
+  const [checkOutDate, setCheckOutDate] = useState<any>(null);
+  const [selectionMode, setSelectionMode] = useState("checkIn");
+  const [selectedRangeText, setSelectedRangeText] = useState("");
+
+  const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  const getDaysInMonth = (year: number, month: number) =>
+    new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) =>
+    new Date(year, month, 1).getDay();
+  const formatDate = (date: { year: any; month: any; day: any }) =>
+    `${date.year}.${(date.month + 1).toString().padStart(2, "0")}.${date.day
+      .toString()
+      .padStart(2, "0")}`;
+  const isSameDate = (
+    d1: { year: any; month: any; day: any },
+    d2: { year: any; month: any; day: any }
+  ) =>
+    d1 &&
+    d2 &&
+    d1.year === d2.year &&
+    d1.month === d2.month &&
+    d1.day === d2.day;
+  const isDateInRange = (
+    date: { year: any; month: any; day: any },
+    start: { year: any; month: any; day: any },
+    end: { year: any; month: any; day: any }
+  ) => {
+    const check = new Date(date.year, date.month, date.day);
+    const s = new Date(start.year, start.month, start.day);
+    const e = new Date(end.year, end.month, end.day);
+    return check >= s && check <= e;
+  };
+  const handlePrevMonth = () => {
+    const newCurrent = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - 1,
+      1
+    );
+    setCurrentDate(newCurrent);
+    setNextMonthDate(
+      new Date(newCurrent.getFullYear(), newCurrent.getMonth() + 1, 1)
+    );
+  };
+  const handleNextMonth = () => {
+    const newCurrent = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      1
+    );
+    setCurrentDate(newCurrent);
+    setNextMonthDate(
+      new Date(newCurrent.getFullYear(), newCurrent.getMonth() + 1, 1)
+    );
+  };
+  const handleDateClick = (day: number, monthDate: Date) => {
+    const dateInfo = {
+      year: monthDate.getFullYear(),
+      month: monthDate.getMonth(),
+      day,
+    };
+    if (selectionMode === "checkIn") {
+      setCheckInDate(dateInfo);
+      if (
+        checkOutDate &&
+        new Date(dateInfo.year, dateInfo.month, dateInfo.day) >
+          new Date(checkOutDate.year, checkOutDate.month, checkOutDate.day)
+      ) {
+        setCheckOutDate(null);
+      }
+      setSelectionMode("checkOut");
+    } else {
+      if (
+        checkInDate &&
+        new Date(dateInfo.year, dateInfo.month, dateInfo.day) <
+          new Date(checkInDate.year, checkInDate.month, checkInDate.day)
+      )
+        return;
+      setCheckOutDate(dateInfo);
+      setSelectionMode("checkIn");
+    }
+  };
+  function getNightsDays(
+    checkIn: { year: any; month: any; day: any },
+    checkOut: { year: any; month: any; day: any }
+  ) {
+    if (!checkIn || !checkOut) return null;
+    const inDate = new Date(checkIn.year, checkIn.month, checkIn.day);
+    const outDate = new Date(checkOut.year, checkOut.month, checkOut.day);
+    const diff = outDate.getTime() - inDate.getTime();
+    if (diff <= 0) return null;
+    const nights = diff / (1000 * 60 * 60 * 24);
+    const days = nights + 1;
+    return { nights, days };
+  }
+  function handleApplyDates() {
+    if (checkInDate && checkOutDate) {
+      const range = getNightsDays(checkInDate, checkOutDate);
+      if (range) {
+        setSelectedRangeText(
+          `${formatDate(checkInDate)} ~ ${formatDate(checkOutDate)} (${
+            range.nights
+          }박 ${range.days}일)`
+        );
+        setCalendarOpen(false);
+      }
+    }
+  }
+  function handleResetDates() {
+    setCheckInDate(null);
+    setCheckOutDate(null);
+    setSelectionMode("checkIn");
+    setSelectedRangeText("");
+  }
+  // 달력 렌더링 함수
+  const renderCalendar = (monthDate: Date, calendarIndex: number) => {
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDayOfMonth = getFirstDayOfMonth(year, month);
+    const prevMonthDays = Array.from({ length: firstDayOfMonth }, (_, i) => {
+      const prevMonth = month === 0 ? 11 : month - 1;
+      const prevYear = month === 0 ? year - 1 : year;
+      const daysInPrevMonth = getDaysInMonth(prevYear, prevMonth);
+      return daysInPrevMonth - firstDayOfMonth + i + 1;
+    });
+    const currentMonthDays = Array.from(
+      { length: daysInMonth },
+      (_, i) => i + 1
+    );
+    const nextMonthDays = Array.from(
+      { length: 42 - (prevMonthDays.length + currentMonthDays.length) },
+      (_, i) => i + 1
+    );
+    return (
+      <Box flex="1" minW={{ base: "100%", md: "250px" }}>
+        <Flex justify="space-between" align="center" mb={2}>
+          {calendarIndex === 0 ? (
+            <Box
+              as="button"
+              p={1}
+              _hover={{ bg: "gray.100" }}
+              onClick={handlePrevMonth}
+              aria-label="이전 달"
+            >
+              <svg width="12" height="24" viewBox="0 0 12 24" fill="none">
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M1.84306 12.7109L7.50006 18.3679L8.91406 16.9539L3.96406 12.0039L8.91406 7.05389L7.50006 5.63989L1.84306 11.2969C1.65559 11.4844 1.55028 11.7387 1.55028 12.0039C1.55028 12.2691 1.65559 12.5234 1.84306 12.7109Z"
+                  fill="#2E3192"
+                />
+              </svg>
+            </Box>
+          ) : (
+            <Box width="32px" />
+          )}
+          <Text
+            fontWeight="700"
+            fontSize="md"
+            color="#2E3192"
+            textAlign="center"
+          >
+            {year}년 {month + 1}월
+          </Text>
+          {calendarIndex === 1 ? (
+            <Box
+              as="button"
+              p={1}
+              _hover={{ bg: "gray.100" }}
+              onClick={handleNextMonth}
+              aria-label="다음 달"
+            >
+              <svg width="12" height="24" viewBox="0 0 12 24" fill="none">
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M10.1569 12.7109L4.49994 18.3679L3.08594 16.9539L8.03594 12.0039L3.08594 7.05389L4.49994 5.63989L10.1569 11.2969C10.3444 11.4844 10.4497 11.7387 10.4497 12.0039C10.4497 12.2691 10.3444 12.5234 10.1569 12.7109Z"
+                  fill="#2E3192"
+                />
+              </svg>
+            </Box>
+          ) : (
+            <Box width="32px" />
+          )}
+        </Flex>
+        <Flex
+          justifyContent="space-between"
+          color="#373636"
+          fontWeight="bold"
+          fontSize="sm"
+          mb={1}
+        >
+          {weekDays.map((d, i) => (
+            <Box
+              key={d}
+              w="32px"
+              textAlign="center"
+              color={i === 0 || i === 6 ? "#2E3192" : "#373636"}
+            >
+              {d}
+            </Box>
+          ))}
+        </Flex>
+        {/* 날짜 셀 */}
+        <Flex wrap="wrap">
+          {prevMonthDays.map((day, i) => (
+            <Box
+              key={`prev-${i}`}
+              w="32px"
+              h="32px"
+              textAlign="center"
+              lineHeight="32px"
+              borderRadius="8px"
+              color="#BDBDBD"
+              bg="transparent"
+              fontSize="sm"
+              opacity={0.5}
+              cursor="default"
+            >
+              {day}
+            </Box>
+          ))}
+          {currentMonthDays.map((day, i) => {
+            const dateInfo = { year, month, day };
+            const isCheckIn = checkInDate && isSameDate(dateInfo, checkInDate);
+            const isCheckOut =
+              checkOutDate && isSameDate(dateInfo, checkOutDate);
+            const isInRange =
+              checkInDate &&
+              checkOutDate &&
+              isDateInRange(dateInfo, checkInDate, checkOutDate);
+            return (
+              <Box
+                key={`current-${i}`}
+                w="32px"
+                h="32px"
+                textAlign="center"
+                lineHeight="32px"
+                borderRadius="8px"
+                fontWeight={
+                  isCheckIn || isCheckOut ? "700" : isInRange ? "600" : "500"
+                }
+                color={
+                  isCheckIn || isCheckOut
+                    ? "#fff"
+                    : isInRange
+                    ? "#2E3192"
+                    : "#232323"
+                }
+                bg={
+                  isCheckIn || isCheckOut
+                    ? "#2E3192"
+                    : isInRange
+                    ? "#F0F2F7"
+                    : "transparent"
+                }
+                mx={0.5}
+                fontSize="sm"
+                _hover={{ bg: isCheckIn || isCheckOut ? "#1B2066" : "#E6F0FA" }}
+                cursor="pointer"
+                onClick={() => handleDateClick(day, monthDate)}
+              >
+                {day}
+              </Box>
+            );
+          })}
+          {nextMonthDays.map((day, i) => (
+            <Box
+              key={`next-${i}`}
+              w="32px"
+              h="32px"
+              textAlign="center"
+              lineHeight="32px"
+              borderRadius="8px"
+              color="#BDBDBD"
+              bg="transparent"
+              fontSize="sm"
+              opacity={0.5}
+              cursor="default"
+            >
+              {day}
+            </Box>
+          ))}
+        </Flex>
+      </Box>
+    );
+  };
 
   return (
     <>
@@ -82,101 +385,416 @@ export function EstimateSection() {
                 backgroundColor="#F7F7F8"
                 borderRadius={"20px"}
                 p={innerContainerPadding}
-                flexDirection="column"
+                flexFlow="row wrap"
                 gap={6}
+                alignItems="flex-start"
               >
-                <Collapsible.Root>
-                  <Collapsible.Trigger asChild>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      colorScheme="blue"
-                      borderRadius={"20px"}
-                      px={10}
-                      py={4}
-                      width="100%"
-                      justifyContent="space-between"
-                      fontSize={buttonTextFontSize}
+                <Flex
+                  flex="3"
+                  gap={6}
+                  direction={flexDirection}
+                  w="100%"
+                  flexWrap="wrap"
+                >
+                  <Box flexBasis={flexBasis} flexGrow={1} minW="300px">
+                    <Collapsible.Root>
+                      <Collapsible.Trigger asChild>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          borderRadius="16px"
+                          borderWidth="2px"
+                          borderColor="#0C8EA4"
+                          bg="#fff"
+                          boxShadow="none"
+                          px={10}
+                          py={7}
+                          w="100%"
+                          h="72px"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="flex-start"
+                          gap={4}
+                          _hover={{ bg: "#F7F8FB", borderColor: "#0C8EA4" }}
+                          _active={{ bg: "#F7F8FB", borderColor: "#0C8EA4" }}
+                        >
+                          <Box
+                            as="span"
+                            display="flex"
+                            alignItems="center"
+                            mr={2}
+                          >
+                            <svg
+                              width="28"
+                              height="28"
+                              fill="none"
+                              viewBox="0 0 28 28"
+                            >
+                              <path
+                                d="M7.5 14a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm10.5 0a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm10.5 0a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                                fill="#9E9E9E"
+                              />
+                            </svg>
+                          </Box>
+                          <Text
+                            color="#9E9E9E"
+                            fontWeight="500"
+                            fontSize="lg"
+                            flex="1"
+                            textAlign="left"
+                          >
+                            필요한 세미나실을 선택해주세요
+                          </Text>
+                          <Box as="span" ml={2} color="#9E9E9E" fontSize="xl">
+                            ▼
+                          </Box>
+                        </Button>
+                      </Collapsible.Trigger>
+                      <Collapsible.Content>
+                        <Box
+                          mt={4}
+                          p={0}
+                          backgroundColor="#F7F8FB"
+                          borderRadius="20px"
+                          overflow="hidden"
+                          border="1.5px solid #E0E0E0"
+                        >
+                          <Text
+                            fontWeight="700"
+                            fontSize="md"
+                            color="#0C8EA4"
+                            textAlign="center"
+                            py={4}
+                            borderBottom="1.5px solid #E0E0E0"
+                            bg="#fff"
+                            borderTopLeftRadius="20px"
+                            borderTopRightRadius="20px"
+                          >
+                            선택하신 연회장 정보가 표시됩니다
+                          </Text>
+                          <Flex
+                            px={6}
+                            py={3}
+                            alignItems="center"
+                            fontWeight="700"
+                            color="#0C8EA4"
+                            fontSize="md"
+                            borderBottom="1.5px solid #E0E0E0"
+                          >
+                            <Box flex="1">연회장명</Box>
+                            <Box w="160px" textAlign="center">
+                              이용기간(일)
+                            </Box>
+                          </Flex>
+                          {/* 연회장 리스트 */}
+                          {[
+                            "누리",
+                            "가람",
+                            "오션",
+                            "그랜드볼룸",
+                            "시걸",
+                            "자스민",
+                            "클로버",
+                          ].map((name, idx) => (
+                            <Flex
+                              key={name}
+                              px={6}
+                              py={3}
+                              alignItems="center"
+                              borderBottom={
+                                idx === 6 ? "none" : "1.5px solid #E0E0E0"
+                              }
+                              fontSize="lg"
+                              bg="#F7F8FB"
+                            >
+                              <Box flex="1" color="#444" fontWeight="600">
+                                {name}
+                              </Box>
+                              <Flex
+                                w="160px"
+                                alignItems="center"
+                                justifyContent="center"
+                                gap={2}
+                              >
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  borderColor="#0C8EA4"
+                                  color="#0C8EA4"
+                                  borderRadius="8px"
+                                  minW="36px"
+                                  h="36px"
+                                  fontSize="2xl"
+                                  fontWeight="bold"
+                                  px={0}
+                                  _hover={{ bg: "#E6F0FA" }}
+                                >
+                                  –
+                                </Button>
+                                <Text
+                                  fontWeight="700"
+                                  fontSize="lg"
+                                  w="32px"
+                                  textAlign="center"
+                                  color="#0C8EA4"
+                                >
+                                  1
+                                </Text>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  borderColor="#0C8EA4"
+                                  color="#0C8EA4"
+                                  borderRadius="8px"
+                                  minW="36px"
+                                  h="36px"
+                                  fontSize="2xl"
+                                  fontWeight="bold"
+                                  px={0}
+                                  _hover={{ bg: "#E6F0FA" }}
+                                >
+                                  +
+                                </Button>
+                              </Flex>
+                            </Flex>
+                          ))}
+                        </Box>
+                      </Collapsible.Content>
+                    </Collapsible.Root>
+                  </Box>
+                  <Box flexBasis={flexBasis} flexGrow={1} minW="300px">
+                    <Collapsible.Root
+                      open={calendarOpen}
+                      onOpenChange={({ open }) => setCalendarOpen(open)}
                     >
-                      필요한 세미나실을 선택해주세요
-                      <Box as="span" ml={2}>
-                        ▼
-                      </Box>
-                    </Button>
-                  </Collapsible.Trigger>
-                  <Collapsible.Content>
-                    <Box
-                      mt={4}
-                      p={4}
-                      backgroundColor="white"
-                      borderRadius="10px"
-                    >
-                      <Text>세미나실 선택 옵션들이 여기에 표시됩니다.</Text>
-                    </Box>
-                  </Collapsible.Content>
-                </Collapsible.Root>
-
-                <Collapsible.Root>
-                  <Collapsible.Trigger asChild>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      colorScheme="blue"
-                      borderRadius={"20px"}
-                      px={10}
-                      py={4}
-                      width="100%"
-                      justifyContent="space-between"
-                      fontSize={buttonTextFontSize}
-                    >
-                      체크인 날짜 - 체크아웃 날짜를 선택해주세요
-                      <Box as="span" ml={2}>
-                        ▼
-                      </Box>
-                    </Button>
-                  </Collapsible.Trigger>
-                  <Collapsible.Content>
-                    <Box
-                      mt={4}
-                      p={4}
-                      backgroundColor="white"
-                      borderRadius="10px"
-                    >
-                      <Text>날짜 선택 캘린더가 여기에 표시됩니다.</Text>
-                    </Box>
-                  </Collapsible.Content>
-                </Collapsible.Root>
-
-                <Collapsible.Root>
-                  <Collapsible.Trigger asChild>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      colorScheme="blue"
-                      borderRadius={"20px"}
-                      px={10}
-                      py={4}
-                      width="100%"
-                      justifyContent="space-between"
-                      fontSize={buttonTextFontSize}
-                    >
-                      날짜 선택 후 필요한 객실을 선택해주세요
-                      <Box as="span" ml={2}>
-                        ▼
-                      </Box>
-                    </Button>
-                  </Collapsible.Trigger>
-                  <Collapsible.Content>
-                    <Box
-                      mt={4}
-                      p={4}
-                      backgroundColor="white"
-                      borderRadius="10px"
-                    >
-                      <Text>객실 선택 옵션들이 여기에 표시됩니다.</Text>
-                    </Box>
-                  </Collapsible.Content>
-                </Collapsible.Root>
+                      <Collapsible.Trigger asChild>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          borderRadius="16px"
+                          borderWidth="2px"
+                          borderColor="#2E3192"
+                          bg="#fff"
+                          boxShadow="none"
+                          px={10}
+                          py={7}
+                          w="100%"
+                          h="72px"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="flex-start"
+                          gap={4}
+                          _hover={{ bg: "#F7F8FB", borderColor: "#2E3192" }}
+                          _active={{ bg: "#F7F8FB", borderColor: "#2E3192" }}
+                        >
+                          <Box
+                            as="span"
+                            display="flex"
+                            alignItems="center"
+                            mr={2}
+                          >
+                            <svg
+                              width="28"
+                              height="28"
+                              fill="none"
+                              viewBox="0 0 28 28"
+                            >
+                              <rect
+                                x="4"
+                                y="7"
+                                width="20"
+                                height="16"
+                                rx="3"
+                                fill="#9E9E9E"
+                              />
+                              <rect
+                                x="8"
+                                y="3"
+                                width="2"
+                                height="6"
+                                rx="1"
+                                fill="#9E9E9E"
+                              />
+                              <rect
+                                x="18"
+                                y="3"
+                                width="2"
+                                height="6"
+                                rx="1"
+                                fill="#9E9E9E"
+                              />
+                            </svg>
+                          </Box>
+                          <Text
+                            color="#9E9E9E"
+                            fontWeight="500"
+                            fontSize="lg"
+                            flex="1"
+                            textAlign="left"
+                            whiteSpace="nowrap"
+                            overflow="hidden"
+                            textOverflow="ellipsis"
+                          >
+                            {selectedRangeText
+                              ? selectedRangeText
+                              : "체크인 날짜 - 체크아웃 날짜를 선택해주세요"}
+                          </Text>
+                          <Box as="span" ml={2} color="#9E9E9E" fontSize="xl">
+                            ▼
+                          </Box>
+                        </Button>
+                      </Collapsible.Trigger>
+                      <Collapsible.Content>
+                        <Box
+                          mt={4}
+                          p={0}
+                          backgroundColor="#F7F8FB"
+                          borderRadius="20px"
+                          overflow="hidden"
+                          border="1.5px solid #E0E0E0"
+                        >
+                          <Flex
+                            px={6}
+                            py={4}
+                            gap={12}
+                            direction={{ base: "column", md: "row" }}
+                          >
+                            {renderCalendar(currentDate, 0)}
+                            {renderCalendar(nextMonthDate, 1)}
+                          </Flex>
+                          <Box
+                            borderTop="1.5px solid #E0E0E0"
+                            mt={6}
+                            px={6}
+                            py={4}
+                          >
+                            <Flex justifyContent="flex-end" gap={3}>
+                              <Button
+                                variant="outline"
+                                borderColor="#2E3192"
+                                color="#2E3192"
+                                borderRadius="8px"
+                                fontWeight="700"
+                                px={6}
+                                py={2}
+                                _hover={{ bg: "#ECECF6" }}
+                                onClick={handleResetDates}
+                              >
+                                초기화
+                              </Button>
+                              <Button
+                                bg="#2E3192"
+                                color="#fff"
+                                borderRadius="8px"
+                                fontWeight="700"
+                                px={6}
+                                py={2}
+                                _hover={{ bg: "#232366" }}
+                                onClick={handleApplyDates}
+                                disabled={
+                                  !(
+                                    checkInDate &&
+                                    checkOutDate &&
+                                    getNightsDays(checkInDate, checkOutDate)
+                                  )
+                                }
+                              >
+                                적용
+                              </Button>
+                            </Flex>
+                          </Box>
+                        </Box>
+                      </Collapsible.Content>
+                    </Collapsible.Root>
+                  </Box>
+                  <Box flexBasis={flexBasis} flexGrow={1} minW="300px">
+                    <Collapsible.Root>
+                      <Collapsible.Trigger asChild>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          borderRadius="16px"
+                          borderWidth="2px"
+                          borderColor="#2E3192"
+                          bg="#fff"
+                          boxShadow="none"
+                          px={10}
+                          py={7}
+                          w="100%"
+                          h="72px"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="flex-start"
+                          gap={4}
+                          _hover={{ bg: "#F7F8FB", borderColor: "#2E3192" }}
+                          _active={{ bg: "#F7F8FB", borderColor: "#2E3192" }}
+                        >
+                          <Box
+                            as="span"
+                            display="flex"
+                            alignItems="center"
+                            mr={2}
+                          >
+                            <svg
+                              width="28"
+                              height="28"
+                              fill="none"
+                              viewBox="0 0 28 28"
+                            >
+                              <rect
+                                x="3"
+                                y="12"
+                                width="22"
+                                height="10"
+                                rx="3"
+                                fill="#9E9E9E"
+                              />
+                              <rect
+                                x="7"
+                                y="7"
+                                width="14"
+                                height="7"
+                                rx="3"
+                                fill="#9E9E9E"
+                              />
+                            </svg>
+                          </Box>
+                          <Text
+                            color="#9E9E9E"
+                            fontWeight="500"
+                            fontSize="lg"
+                            flex="1"
+                            textAlign="left"
+                          >
+                            날짜 선택 후 필요한 객실을 선택해주세요
+                          </Text>
+                          <Box as="span" ml={2} color="#9E9E9E" fontSize="xl">
+                            ▼
+                          </Box>
+                        </Button>
+                      </Collapsible.Trigger>
+                      <Collapsible.Content>
+                        <Box
+                          mt={4}
+                          p={4}
+                          backgroundColor="white"
+                          borderRadius="10px"
+                        >
+                          <Text>객실 선택 옵션들이 여기에 표시됩니다.</Text>
+                        </Box>
+                      </Collapsible.Content>
+                    </Collapsible.Root>
+                  </Box>
+                </Flex>
+                <Text
+                  width="100%"
+                  fontWeight="900"
+                  fontSize={{ base: "3xl", md: "4xl" }}
+                  color="#444445"
+                  textAlign="right"
+                >
+                  ₩ 정보 입력 후 확인가능
+                </Text>
               </Flex>
             </Box>
           </Box>
