@@ -19,8 +19,8 @@ import {
   DialogBackdrop,
   DialogPositioner,
   Flex,
-  Badge, // Added Badge for renderers
-  Portal, // Added Portal import
+  Badge,
+  Portal,
 } from "@chakra-ui/react";
 import { AgGridReact } from "ag-grid-react";
 import {
@@ -28,42 +28,30 @@ import {
   type ICellRendererParams,
   type ValueFormatterParams,
 } from "ag-grid-community";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
-import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge"; // Import the common badge
-import type { EnrollmentPayStatus } from "@/types/statusTypes"; // Added import
+import { toaster } from "@/components/ui/toaster";
+import { adminApi } from "@/lib/api/adminApi";
+import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
+import type { EnrollmentPayStatus } from "@/types/statusTypes";
+import type { EnrollAdminResponseDto, UserMemoDto } from "@/types/api";
 
-// Re-define or import EnrollmentData if it's not too complex, or pass as generic
-// For simplicity, let's redefine a minimal version here or expect it from props.
-// It's better to have a shared types file eventually.
-interface EnrollmentData {
-  enrollId: number;
-  lessonId: number;
-  lessonTitle: string;
-  payStatus: EnrollmentPayStatus | string; // MODIFIED: Was PaymentTransactionStatus
-  usesLocker: boolean;
-  userName: string;
-  userLoginId: string;
-  userPhone: string;
+// NOTE: This interface extends the DTO. The memo is fetched separately and
+// might not be part of the grid's initial data (`selectedUser`).
+export interface EnrollmentData extends EnrollAdminResponseDto {
+  memo?: string; // This might be stale, primary source of memo is the dedicated query.
   isRenewal?: boolean;
-  createdAt?: string;
-  userMemo?: string;
 }
 
 const enrollmentQueryKeys = {
-  all: ["adminEnrollments"] as const, // Assuming this is a shared key structure
-  userHistory: (userLoginId?: string) =>
-    [...enrollmentQueryKeys.all, "userHistory", userLoginId] as const,
+  all: ["adminEnrollments"] as const,
+  userHistory: (userId?: string) =>
+    [...enrollmentQueryKeys.all, "userHistory", userId] as const,
 };
 
-// PayStatusCellRenderer (copied from EnrollmentManagementTab, consider moving to a shared file)
-// REMOVE the local PayStatusCellRenderer as we will use CommonPayStatusBadge
-
-// UsesLockerCellRenderer (copied, consider moving to shared)
 const UsesLockerCellRenderer: React.FC<
-  ICellRendererParams<EnrollmentData, boolean> // Reverted to boolean type for usesLocker
+  ICellRendererParams<EnrollmentData, boolean>
 > = (params) => {
-  // Reverted to original Badge logic for usesLocker
   return (
     <Badge
       colorPalette={params.value ? "blue" : "gray"}
@@ -79,12 +67,11 @@ interface UserMemoDialogProps {
   isOpen: boolean;
   onClose: () => void;
   selectedUser: EnrollmentData | null;
-  // queryClient: ReturnType<typeof useQueryClient>; // Pass queryClient if needed for mutations inside
   agGridTheme: string;
   bg: string;
   textColor: string;
   borderColor: string;
-  colors: any; // Replace with a more specific type from your theme
+  colors: any;
 }
 
 export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
@@ -97,43 +84,82 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
   borderColor,
   colors,
 }) => {
+  console.log("Selected User in Dialog:", selectedUser);
   const [userMemoText, setUserMemoText] = useState("");
-  const queryClient = useQueryClient(); // Get queryClient instance
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (selectedUser) {
-      setUserMemoText(selectedUser.userMemo || "");
-    } else {
-      setUserMemoText("");
-    }
-  }, [selectedUser]);
+  // 1. Fetch the user's memo using userId (which is the UUID)
+  const { data: userMemoData } = useQuery<UserMemoDto, Error>({
+    queryKey: ["userMemo", selectedUser?.userId],
+    queryFn: () => {
+      if (!selectedUser?.userId)
+        throw new Error("User ID (UUID) is not provided.");
+      return adminApi.getUserMemo(selectedUser.userId);
+    },
+    enabled: !!selectedUser?.userId,
+    retry: false,
+  });
 
+  // 2. Fetch user's entire enrollment history using userId
   const {
     data: userEnrollmentsHistoryData,
     isLoading: isLoadingUserEnrollmentsHistory,
-  } = useQuery<EnrollmentData[], Error>({
-    queryKey: enrollmentQueryKeys.userHistory(selectedUser?.userLoginId),
-    queryFn: async (): Promise<EnrollmentData[]> => {
-      if (!selectedUser?.userLoginId) {
-        return [];
-      }
-      // IMPORTANT: This is a placeholder implementation.
-      // Replace with an actual API call to fetch all enrollments for the user.
-      console.warn(
-        `Placeholder: API call for user enrollment history for ${selectedUser.userLoginId} needs to be implemented. Returning empty data after delay.`
-      );
-      // Example:
-      // const response = await adminApi.getAdminEnrollments({ userId: selectedUser.userLoginId, size: 100, page: 0 });
-      // return response.data.content.map(...); // map to EnrollmentData
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      return [];
+  } = useQuery<EnrollAdminResponseDto[], Error>({
+    queryKey: enrollmentQueryKeys.userHistory(selectedUser?.userId),
+    queryFn: async () => {
+      if (!selectedUser?.userId) return [];
+      const response = await adminApi.getAdminEnrollments({
+        userId: selectedUser.userId,
+        page: 0,
+        size: 1000,
+        sort: "createdAt,desc",
+      });
+      return response.data.content;
     },
-    enabled: !!selectedUser?.userLoginId,
+    enabled: !!selectedUser?.userId,
   });
+
+  // Set memo text when data is available
+  useEffect(() => {
+    const memo = userMemoData?.memo ?? selectedUser?.memo ?? "";
+    setUserMemoText(memo);
+  }, [userMemoData, selectedUser]);
+
+  // 3. Setup mutation for saving the memo using userId
+  const { mutate: saveMemo, isPending: isSavingMemo } = useMutation({
+    mutationFn: (memo: string) => {
+      if (!selectedUser?.userId)
+        throw new Error("User ID (UUID) is not provided.");
+      return adminApi.createUserMemo(selectedUser.userId, { memo });
+    },
+    onSuccess: () => {
+      toaster.success({
+        title: "메모 저장 성공",
+        description: `${selectedUser?.userName} 회원님의 메모가 성공적으로 저장되었습니다.`,
+      });
+      queryClient.invalidateQueries({ queryKey: enrollmentQueryKeys.all });
+      if (selectedUser?.userId) {
+        queryClient.invalidateQueries({
+          queryKey: ["userMemo", selectedUser.userId],
+        });
+      }
+      onClose();
+    },
+    onError: (error) => {
+      console.error("Failed to save memo:", error);
+      alert("메모 저장 중 오류가 발생했습니다.");
+    },
+  });
+
+  const handleUserMemoSave = () => {
+    if (!selectedUser) return;
+    saveMemo(userMemoText);
+  };
 
   const userEnrollmentHistoryColDefs = useMemo<ColDef<EnrollmentData>[]>(
     () => [
-      { headerName: "강습명", field: "lessonTitle", flex: 1, minWidth: 150 },
+      { headerName: "강습명", field: "lessonTitle", flex: 1, minWidth: 100 },
+      { headerName: "강습 시간", field: "lessonTime", width: 200 },
       {
         headerName: "신청일",
         field: "createdAt",
@@ -145,21 +171,19 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
       {
         headerName: "신청/결제 상태",
         field: "payStatus",
-        // cellRenderer: PayStatusCellRenderer, // Remove this
         cellRenderer: (
           params: ICellRendererParams<
             EnrollmentData,
             EnrollmentData["payStatus"]
-          > // MODIFIED for clarity
+          >
         ) => (
           <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
-            {/* CommonPayStatusBadge now expects EnrollmentPayStatus | string */}
             <CommonPayStatusBadge
               status={params.value as EnrollmentPayStatus}
             />
           </Flex>
-        ), // Use CommonPayStatusBadge
-        width: 100, // Adjusted width
+        ),
+        width: 100,
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -181,13 +205,6 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
     []
   );
 
-  const handleUserMemoSave = () => {
-    if (!selectedUser) return;
-    // TODO: Implement actual memo save mutation
-    // Example: mutation.mutate({ userId: selectedUser.userLoginId, memo: userMemoText });
-    onClose();
-  };
-
   if (!selectedUser) return null;
 
   return (
@@ -195,7 +212,7 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
       <Portal>
         <DialogBackdrop />
         <DialogPositioner>
-          <DialogContent maxWidth="container.lg">
+          <DialogContent maxWidth="820px">
             <DialogHeader>
               <DialogTitle>
                 회원 정보 - {selectedUser.userName} ({selectedUser.userLoginId})
@@ -211,9 +228,18 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
                     placeholder="회원에 대한 메모를 입력하세요"
                     rows={3}
                   />
-                  <Field.HelperText>
-                    회원과 관련된 중요한 정보나 상담 내용을 기록하세요.
-                  </Field.HelperText>
+                  {userMemoData?.memoUpdatedAt && (
+                    <Field.HelperText
+                      color={colors.text.secondary}
+                      fontSize="xs"
+                    >
+                      최종 수정:{" "}
+                      {new Date(userMemoData.memoUpdatedAt).toLocaleString()}
+                      {userMemoData.memoUpdatedBy
+                        ? ` by ${userMemoData.memoUpdatedBy}`
+                        : ""}
+                    </Field.HelperText>
+                  )}
                 </Field.Root>
 
                 <Box mt={2}>
@@ -265,8 +291,12 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
               <Button variant="outline" onClick={onClose}>
                 취소
               </Button>
-              <Button colorPalette="blue" onClick={handleUserMemoSave}>
-                저장
+              <Button
+                colorPalette="blue"
+                onClick={handleUserMemoSave}
+                disabled={isSavingMemo}
+              >
+                {isSavingMemo ? "저장 중..." : "저장"}
               </Button>
             </DialogFooter>
             <DialogCloseTrigger />

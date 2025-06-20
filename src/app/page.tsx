@@ -13,11 +13,12 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import { PopupManager } from "@/components/common/PopupManager";
-import { HeroSection } from "@/components/main/HeroSection";
-import { MarqueeSection } from "@/components/main/MarqueeSection";
-import { NoticeSection } from "@/components/main/NoticeSection";
-import { ApplySection } from "@/components/main/ApplySection";
-import { EstimateSection } from "@/components/main/EstimateSection";
+import { HeroSection } from "@/components/main/component/HeroSection";
+import { MarqueeSection } from "@/components/main/component/MarqueeSection";
+import { NoticeSection } from "@/components/main/component/NoticeSection";
+import { ApplySection } from "@/components/main/component/ApplySection";
+import { EstimateSection } from "@/components/main/component/EstimateSection";
+import MainSection from "@/components/main/MainSection";
 
 export default function Home() {
   const { colorMode } = useColorMode();
@@ -58,34 +59,8 @@ export default function Home() {
           },
         }}
       />
-      <Box
-        as="main"
-        id="mainContent"
-        pt={100}
-        fontFamily="'Paperlogy', sans-serif"
-        lineHeight="1"
-      >
-        <Heading
-          as="h3"
-          mb={6}
-          fontSize="40px"
-          fontWeight="bold"
-          color={"#444445"}
-          lineHeight={"1"}
-          fontFamily="'Paperlogy', sans-serif"
-          w={"100%"}
-          maxW={"1600px"}
-          mx="auto"
-          my={0}
-        >
-          당신의 새로운 여정이 시작 되는곳
-        </Heading>
-        <HeroSection />
-        <MarqueeSection />
-        <NoticeSection />
-        <ApplySection />
-        <EstimateSection />
-      </Box>
+
+      <MainSection />
     </Layout>
   );
 }

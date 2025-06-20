@@ -1,33 +1,15 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
   Box,
   Text,
   Button,
-  Field,
-  Input,
-  NativeSelect,
-  Stack,
   Badge,
   Flex,
   IconButton,
-  DialogRoot,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  DialogCloseTrigger,
-  DialogBackdrop,
-  DialogPositioner,
-  For,
-  Textarea,
   Spinner,
   HStack,
-  Portal,
-  Checkbox,
-  Tag,
 } from "@chakra-ui/react";
 import {
   SearchIcon,
@@ -42,16 +24,8 @@ import {
 import { useColors } from "@/styles/theme";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
-import type {
-  EnrollAdminResponseDto,
-  PaginatedResponse,
-  TemporaryEnrollmentRequestDto,
-} from "@/types/api";
-import {
-  UiDisplayStatus,
-  ApprovalStatus,
-  EnrollmentApplicationStatus,
-} from "@/types/statusTypes";
+import type { EnrollAdminResponseDto, PaginatedResponse } from "@/types/api";
+import { UiDisplayStatus } from "@/types/statusTypes";
 import { AgGridReact } from "ag-grid-react";
 import {
   type ColDef,
@@ -59,8 +33,6 @@ import {
   AllCommunityModule,
   type ICellRendererParams,
   type ValueFormatterParams,
-  type RowClickedEvent,
-  type CellClickedEvent,
 } from "ag-grid-community";
 
 import { useColorMode } from "@/components/ui/color-mode";
@@ -71,33 +43,14 @@ import { displayStatusConfig } from "@/lib/utils/statusUtils";
 import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 // Import the new dialog components
-import { UserMemoDialog } from "./enrollmentManagement/UserMemoDialog";
+import {
+  UserMemoDialog,
+  type EnrollmentData,
+} from "./enrollmentManagement/UserMemoDialog";
 import { TemporaryEnrollmentDialog } from "./enrollmentManagement/TemporaryEnrollmentDialog";
 import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-interface EnrollmentData {
-  enrollId: number;
-  lessonId: number;
-  lessonTitle: string;
-  payStatus: UiDisplayStatus | string;
-  usesLocker: boolean;
-  userName: string;
-  userGender: string;
-  userLoginId: string;
-  userPhone: string;
-  isRenewal?: boolean;
-  discountInfo?: {
-    type: string;
-    status: ApprovalStatus | string;
-    approvedAt?: string;
-    adminComment?: string;
-  };
-  userMemo?: string;
-  createdAt?: string;
-  membershipType?: string;
-}
 
 interface EnrollmentManagementTabProps {
   lessonIdFilter?: number | null;
@@ -207,15 +160,11 @@ export const EnrollmentManagementTab = ({
   }, []);
 
   const {
-    data: enrollmentsData,
+    data: paginatedEnrollmentsData,
     isLoading: isLoadingEnrollments,
     isError: isErrorEnrollments,
     error: enrollmentsError,
-  } = useQuery<
-    PaginatedResponse<EnrollAdminResponseDto>,
-    Error,
-    EnrollmentData[]
-  >({
+  } = useQuery<PaginatedResponse<EnrollAdminResponseDto>, Error>({
     queryKey: enrollmentQueryKeys.list(
       lessonIdFilter,
       selectedYear,
@@ -255,32 +204,21 @@ export const EnrollmentManagementTab = ({
         page: 0,
       });
     },
-    select: (
-      apiResponse: PaginatedResponse<EnrollAdminResponseDto>
-    ): EnrollmentData[] => {
-      return apiResponse.data.content.map(
-        (dto: EnrollAdminResponseDto): EnrollmentData => ({
-          enrollId: dto.enrollId,
-          lessonId: dto.lessonId,
-          lessonTitle: dto.lessonTitle,
-          payStatus: dto.payStatus as UiDisplayStatus | string,
-          usesLocker: dto.usesLocker,
-          userName: dto.userName,
-          userGender: dto.userGender || "기타",
-          userLoginId: dto.userLoginId || "N/A",
-          userPhone: dto.userPhone || "N/A",
-          isRenewal: false,
-          discountInfo: undefined,
-          userMemo: undefined,
-          createdAt: dto.createdAt,
-          membershipType: dto.membershipType,
-        })
-      );
-    },
-    enabled: !!lessonIdFilter && !!selectedYear && !!selectedMonth,
   });
 
-  const rowData = useMemo(() => enrollmentsData || [], [enrollmentsData]);
+  const gridData = useMemo<EnrollmentData[]>(() => {
+    if (!paginatedEnrollmentsData?.data?.content) {
+      return [];
+    }
+    return paginatedEnrollmentsData.data.content.map(
+      (dto: EnrollAdminResponseDto): EnrollmentData => ({
+        ...dto,
+        userGender: dto.userGender || "OTHER",
+        userLoginId: dto.userLoginId || "N/A",
+        userPhone: dto.userPhone || "N/A",
+      })
+    );
+  }, [paginatedEnrollmentsData]);
 
   const [selectedUserForMemo, setSelectedUserForMemo] =
     useState<EnrollmentData | null>(null);
@@ -339,25 +277,17 @@ export const EnrollmentManagementTab = ({
         filter: "agTextColumnFilter",
       },
       {
-        headerName: "결제상태",
+        headerName: "신청/결제 상태",
         field: "payStatus",
-        minWidth: 120,
-        cellRenderer: (
-          params: ICellRendererParams<
-            EnrollmentData,
-            EnrollmentData["payStatus"]
-          >
-        ) => (
-          <Flex h="100%" w="100%" alignItems="center" justifyContent="center">
-            <CommonPayStatusBadge status={params.value as UiDisplayStatus} />
-          </Flex>
+        cellRenderer: (params: ICellRendererParams<EnrollmentData>) => (
+          <CommonPayStatusBadge status={params.value} />
         ),
+        width: 120,
         cellStyle: {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         },
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "사물함",
@@ -374,7 +304,7 @@ export const EnrollmentManagementTab = ({
         headerName: "구분",
         field: "isRenewal",
         cellRenderer: RenewalCellRenderer,
-        width: 80,
+        width: 70,
         cellStyle: {
           display: "flex",
           alignItems: "center",
@@ -392,7 +322,7 @@ export const EnrollmentManagementTab = ({
         },
       },
     ],
-    [colors]
+    [colors, colorMode]
   );
 
   const defaultColDef = useMemo<ColDef>(
@@ -495,20 +425,19 @@ export const EnrollmentManagementTab = ({
   );
 
   const filteredEnrollmentsForGrid = useMemo(() => {
-    let data = rowData;
+    let data = gridData;
     if (filters.searchTerm) {
       data = data.filter((enrollment) => {
-        const searchTermLower = filters.searchTerm.toLowerCase();
+        const term = filters.searchTerm.toLowerCase();
         return (
-          enrollment.userName.toLowerCase().includes(searchTermLower) ||
-          enrollment.userLoginId.toLowerCase().includes(searchTermLower) ||
-          (enrollment.userPhone &&
-            enrollment.userPhone.includes(searchTermLower))
+          enrollment.userName?.toLowerCase().includes(term) ||
+          enrollment.userLoginId?.toLowerCase().includes(term) ||
+          enrollment.userPhone?.toLowerCase().includes(term)
         );
       });
     }
     return data;
-  }, [rowData, filters.searchTerm]);
+  }, [gridData, filters.searchTerm]);
 
   const handleOpenTempEnrollDialog = () => {
     if (!lessonIdFilter) {
@@ -549,7 +478,7 @@ export const EnrollmentManagementTab = ({
     );
   }
 
-  if (rowData.length === 0 && lessonIdFilter) {
+  if (gridData.length === 0 && lessonIdFilter) {
     return (
       <Box p={4} textAlign="center">
         <Text color={colors.text.secondary}>

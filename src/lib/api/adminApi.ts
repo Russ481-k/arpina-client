@@ -24,6 +24,7 @@ import type {
   PaginatedResponse,
   TemporaryEnrollmentRequestDto,
   AdminPaymentData,
+  CreateUserMemoRequestDto,
 } from "@/types/api";
 
 const CMS_API_BASE = "/cms";
@@ -156,19 +157,19 @@ export const adminApi = {
   // User Memo Management
   createUserMemo: async (
     userId: string,
-    data: UserMemoDto
+    data: CreateUserMemoRequestDto
   ): Promise<UserMemoDto> => {
-    const response = await privateApi.post<UserMemoDto>(
+    const response = await privateApi.post<ApiResponse<UserMemoDto>>(
       `${CMS_API_BASE}/users/${userId}/memo`,
       data
     );
-    return response.data;
+    return response.data.data;
   },
   getUserMemo: async (userId: string): Promise<UserMemoDto> => {
-    const response = await privateApi.get<UserMemoDto>(
+    const response = await privateApi.get<ApiResponse<UserMemoDto>>(
       `${CMS_API_BASE}/users/${userId}/memo`
     );
-    return response.data;
+    return response.data.data;
   },
 
   // Cancel/Refund Management
@@ -241,7 +242,7 @@ export const adminApi = {
   ): Promise<PaginatedResponse<AdminPaymentData>> => {
     const response = await privateApi.get<PaginatedResponse<PaymentAdminDto>>(
       `${CMS_API_BASE}/payments`,
-      { params: { ...params, sort: params.sort || 'paidAt,desc' } }
+      { params: { ...params, sort: params.sort || "paidAt,desc" } }
     );
     const paginatedDto = response.data;
 

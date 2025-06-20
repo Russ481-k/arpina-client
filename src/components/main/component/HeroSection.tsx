@@ -108,7 +108,7 @@ export function HeroSection() {
                     position="relative"
                     display="block"
                   >
-                    <AspectRatio ratio={1088 / 550} w="100%">
+                    <AspectRatio ratio={1088 / 620} w="100%">
                       <Image
                         src="/images/contents/msec01_sld_img02.png"
                         alt="새로운 여정의 시작"
@@ -126,7 +126,7 @@ export function HeroSection() {
                       left="0"
                       zIndex="2"
                     >
-                      <Box bg="white" p={6}>
+                      <Box bg="transparent" p={6}>
                         <Text
                           fontSize="30px"
                           fontWeight="semibold"

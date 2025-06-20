@@ -616,6 +616,7 @@ export interface EnrollAdminResponseDto {
   createdAt: string; // ISO DateTime
   expireDt?: string | null; // Payment expiration from enroll.expire_dt
   lessonTitle: string;
+  lessonTime?: string | null;
   lessonId: number;
   payment_tid?: string | null; // KISPG TID from payment table
   paid_amt?: number | null; // Initial paid amount from payment table
@@ -758,11 +759,14 @@ export interface UpdateDiscountStatusRequestDto {
 
 export interface UserMemoDto {
   memoId?: number; // Optional, present if updating/fetching existing
-  userId: string;
-  memoText: string;
-  createdAt?: string; // ISO DateTime string
-  updatedAt?: string; // ISO DateTime string
-  adminId?: string; // ID of admin who wrote/updated memo
+  userUuid: string;
+  memo: string;
+  memoUpdatedAt?: string; // ISO DateTime string
+  memoUpdatedBy?: string; // ID of admin who wrote/updated memo
+}
+
+export interface CreateUserMemoRequestDto {
+  memo: string;
 }
 
 // Represents the structure of an object within the 'paymentInfo' field of the API response
