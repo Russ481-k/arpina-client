@@ -76,10 +76,7 @@ export const Header = memo(function Header({
     return pathname === menuUrl || pathname.startsWith(menuUrl + "/");
   };
 
-  console.log("menus", menus);
-
   const visibleMenus = buildVisibleMenuTree(menus);
-  console.log("visibleMenus", visibleMenus);
   const menusWithLastFlag = visibleMenus.map((menu, index) => ({
     ...menu,
     isLastMenuItem: index === visibleMenus.length - 1,
