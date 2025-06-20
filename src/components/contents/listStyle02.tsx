@@ -47,7 +47,7 @@ function ListStyle02({ title, items }: ListStyle02Props) {
   const imageWidth = useBreakpointValue({
     base: "60px", // 모바일
     md: "91px", // 태블릿
-    md: "130px", // 데스크톱
+    lg: "130px", // 데스크톱
   });
 
   // 반응형 gap 설정

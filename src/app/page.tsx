@@ -637,7 +637,7 @@ export default function Home() {
             </Box>
           </Box>
         </Box>
-{/* 
+
         <Box className="msec04">
           <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
             <Box className="mprice-box">
@@ -766,7 +766,7 @@ export default function Home() {
               </Box>
             </Box>
           </Box>
-        </Box> */}
+        </Box>
       </Box>
     </Layout>
   );
