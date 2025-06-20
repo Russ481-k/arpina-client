@@ -56,8 +56,8 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="클로버 clover"
         titleHighlight="클로버"
-        description="국제회의 및 학회부터 소규모 교육과 워크숍까지! <br />
-다양한 규모의 회의실을 갖추어 성공적인 비즈니스를 지원합니다."
+        description="클로버룸은 아늑하고 모던한 인테리어에 첨단 회의 설비를 갖춘 다목적 비즈니스 공간입니다. 국제회의, 기업 간담회, 세미나 등 다양한 목적의 행사를 품격 있게 연출할 수 있으며, 세심하게 구성된 실내 분위기가 한층 더 집중도 높은 시간을 선사합니다. 
+※ 클로버룸이 있는 8층 중앙에 위치한 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과 바다를 아우르는 탁 트인 조망을 경험하실 수 있습니다."
         images={images}
         showReservation={false}
       />

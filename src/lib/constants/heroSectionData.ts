@@ -130,12 +130,12 @@ export const heroSectionData: Record<
   },
   "/meeting/grand": {
     header: "회의실",
-    title: "대회의실",
+    title: "그랜드볼룸",
     image: "/images/meeting/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "대회의실", url: "/meeting/grand" },
+      { label: "그랜드볼룸", url: "/meeting/grand" },
     ],
   },
   "/meeting/medium/seagull": {

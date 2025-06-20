@@ -564,7 +564,7 @@ const Seminars: SeminarInfoProps[] = [
   },
   {
     name: "그랜드볼룸",
-    location: "2F / 대회의실",
+    location: "2F / 그랜드볼룸",
     maxPeople: 250,
     area: "543.15",
     price: 1386000,

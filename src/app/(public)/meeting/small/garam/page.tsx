@@ -76,8 +76,7 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="가람/누리 GARAM&NURI"
         titleHighlight="가람/누리"
-        description="국제회의 및 학회부터 소규모 교육과 워크숍까지! <br />
-다양한 규모의 회의실을 갖추어 성공적인 비즈니스를 지원합니다."
+        description="아르피나 1층에 위치한 가람 및 누리 회의실은 기업 및 각종 단체의 중 · 소규모 세미나, 간담회 등에 적합한 공간으로, 쾌적하고 조용한 환경 속에서 성공적인 행사 진행을 위한 최적의 조건을 제공합니다."
         images={images}
         showReservation={false}
       />

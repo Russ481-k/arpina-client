@@ -135,7 +135,7 @@ export default function ParticipantsPage() {
   // 시설 규모 데이터
   const facilityScaleItems = [
     "객실 : 110실(3~7F)",
-    "회의실 : 대회의실 1실, 중회의실 3실, 소회의실 3실",
+    "회의실 : 그랜드볼룸 1실, 중회의실 3실, 소회의실 3실",
     "주차 : 지하 209대, 지상 88대 (대형버스 주차 가능) 각종",
     "편의시설",
   ];

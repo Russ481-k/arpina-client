@@ -56,6 +56,10 @@ export default function InfoTopBox({
       return "051-731-9802"; // 베드룸 섹션 전화번호
     } else if (pathname?.includes("/sports/futsal")) {
       return "051-740-3271"; // 풋살장 섹션 전화번호
+    } else if (pathname?.includes("/facilities/restaurant-jj")) {
+      return "010-3394-7114"; // 제이엔제이 전화번호
+    } else if (pathname?.includes("/facilities/ediya-coffee")) {
+      return "0507-1404-9915"; // 이디야 커피 전화번호
     } else {
       return "051-731-9800"; // 기본 전화번호
     }

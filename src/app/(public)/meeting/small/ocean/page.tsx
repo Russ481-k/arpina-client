@@ -52,8 +52,7 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="오션 Ocean"
         titleHighlight="오션"
-        description="국제회의 및 학회부터 소규모 교육과 워크숍까지! <br />
-다양한 규모의 회의실을 갖추어 성공적인 비즈니스를 지원합니다."
+        description="아르피나 2층에 위치한 오션 회의실은 기업 및 각종 단체의 소규모 세미나와 간담회에 적합한 공간으로, 쾌적하고 집중도 높은 환경을 제공하여 원활한 행사 운영을 지원합니다."
         images={images}
         showReservation={false}
       />
