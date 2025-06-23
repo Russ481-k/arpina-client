@@ -479,7 +479,7 @@ export interface KISPGPaymentInitResponseDto {
  */
 export interface PaymentConfirmRequestDto {
   pgToken: string;
-  wantsLocker: boolean;
+  usesLocker: boolean;
 }
 
 /**
@@ -548,7 +548,7 @@ export interface MypageEnrollDto {
  */
 export interface MypageRenewalRequestDto {
   lessonId: number;
-  wantsLocker: boolean;
+  usesLocker: boolean;
 }
 
 /**

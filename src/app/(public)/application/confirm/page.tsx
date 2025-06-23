@@ -395,14 +395,14 @@ const ApplicationConfirmPage = () => {
 
     try {
       // Step 1: Create enrollment
-      const enrollRequestData: EnrollLessonRequestDto = {
-        lessonId,
+      const enrollRequest: EnrollLessonRequestDto = {
+        lessonId: lessonId,
         usesLocker: selectedLocker,
         membershipType: selectedMembershipType,
       };
 
       const enrollResponse = await swimmingPaymentService.enrollLesson(
-        enrollRequestData
+        enrollRequest
       );
 
       if (enrollResponse) {

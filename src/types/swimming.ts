@@ -39,7 +39,7 @@ export interface LockerDTO {
 // 강습 신청 요청 DTO
 export interface EnrollRequestDto {
   lessonId: number;
-  wantsLocker: boolean;
+  usesLocker: boolean;
 }
 
 // 강습 신청 응답 DTO
@@ -113,7 +113,7 @@ export interface RenewalDTO {
 // 재등록 요청 DTO
 export interface RenewalRequestDto {
   lessonId: number;
-  carryLocker: boolean;
+  usesLocker: boolean;
 }
 
 /**
@@ -201,7 +201,7 @@ export interface KISPGInitParamsDto {
  */
 export interface PaymentConfirmRequestDto {
   pgToken: string; // The token or transaction ID from KISPG
-  wantsLocker: boolean; // Final confirmation of locker choice
+  usesLocker: boolean; // Final confirmation of locker choice
 }
 
 /**
@@ -236,7 +236,7 @@ export interface MypageEnrollDto {
     price: number;
     // lesson.status field from api.ts MypageEnrollDto.lesson has 'string', not specific LessonStatus yet.
     // If this needs to be more specific, it should align with LessonStatus from statusTypes.ts
-    status: string; 
+    status: string;
   };
   status: EnrollmentPayStatus | string; // pay_status from enroll table // Allow string
   applicationDate: string; // ISO 8601 datetime string
@@ -260,7 +260,7 @@ export interface MypageEnrollDto {
  */
 export interface MypageRenewalRequestDto {
   lessonId: number;
-  carryLocker: boolean; // 희망 여부, 결제페이지에서 최종선택
+  usesLocker: boolean; // 희망 여부, 결제페이지에서 최종선택
 }
 // Response for POST /mypage/renewal is EnrollInitiationResponseDto
 
