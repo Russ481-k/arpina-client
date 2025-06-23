@@ -1,6 +1,5 @@
 "use client";
 
-import { Box, Heading } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
 import { getScrollbarStyle } from "@/styles/scrollbar";
 import Layout from "@/components/layout/view/Layout";
@@ -13,11 +12,6 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import { PopupManager } from "@/components/common/PopupManager";
-import { HeroSection } from "@/components/main/component/HeroSection";
-import { MarqueeSection } from "@/components/main/component/MarqueeSection";
-import { NoticeSection } from "@/components/main/component/NoticeSection";
-import { ApplySection } from "@/components/main/component/ApplySection";
-import { EstimateSection } from "@/components/main/component/EstimateSection";
 import MainSection from "@/components/main/MainSection";
 
 export default function Home() {

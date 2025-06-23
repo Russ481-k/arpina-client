@@ -450,7 +450,7 @@ export default function ParticipantsPage() {
           </Box>
         </Flex>
       </Box>
-      <Box>
+        <Box>
         <Box className="location-box">
           <Heading
             display="flex"
@@ -831,7 +831,7 @@ export default function ParticipantsPage() {
               title="- 교통편 이용안내 (도보)"
               items={transportInfo05}
             />
-          </Flex>
+      </Flex>
         </Box>
       </Box>
     </PageContainer>

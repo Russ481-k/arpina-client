@@ -13,8 +13,8 @@ import {
   Em,
   Collapsible,
   Grid,
-  useDisclosure,
   Button,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import InfoBoxList01 from "@/components/contents/InfoBoxList01";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -22,6 +22,10 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import React from "react";
+import PDFGenerator, {
+  generatePDFFromElement,
+} from "@/components/contents/PDFGenerator";
+import EstimateTemplate from "@/components/contents/EstimateTemplate";
 
 // SVG Icons as components
 const PeopleIcon = () => (
@@ -797,6 +801,13 @@ export default function EstimatePage() {
   // useDisclosure 대신 useState로 Collapsible 상태 제어
   const [isOpen, setIsOpen] = React.useState(false);
 
+  // PDF 모달 상태
+  // const {
+  //   open: isPDFOpen,
+  //   onOpen: onPDFOpen,
+  //   onClose: onPDFClose,
+  // } = useDisclosure();
+
   // 캘린더 요일 영문 약어
   const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -1233,6 +1244,102 @@ export default function EstimatePage() {
 
   const totalAmount = seminarTotal + roomTotal;
 
+  // PDF 데이터 준비
+  const preparePDFData = () => {
+    // 연회장 데이터
+    const hallData = hallList
+      .map((name, idx) => {
+        const seminar = Seminars.find((s) => s.name === name);
+        return {
+          name,
+          days: hallDays[idx] || 0,
+          price: seminar?.price || 0,
+        };
+      })
+      .filter((hall) => hall.days > 0);
+
+    // 객실 데이터
+    const roomData = roomList
+      .map((name, idx) => {
+        const room = rooms.find((r) => r.name === name);
+        return {
+          name,
+          nights: roomNights[idx] || 0,
+          count: roomCounts[idx] || 0,
+          weekdayPrice: room?.weekdayPrice || 0,
+          weekendPrice: room?.weekendPrice || 0,
+        };
+      })
+      .filter((room) => room.nights > 0 && room.count > 0);
+
+    // 날짜 포맷팅
+    const formatDate = (dateInfo: DateInfo | null) => {
+      if (!dateInfo) return undefined;
+      return `${dateInfo.year}.${(dateInfo.month + 1)
+        .toString()
+        .padStart(2, "0")}.${dateInfo.day.toString().padStart(2, "0")}`;
+    };
+
+    return {
+      hallData,
+      roomData,
+      checkInDate: formatDate(checkInDate),
+      checkOutDate: formatDate(checkOutDate),
+      totalAmount,
+      companyInfo: {
+        name: "견적 요청 기관",
+        address: "주소를 입력해주세요",
+        phone: "연락처를 입력해주세요",
+        email: "이메일을 입력해주세요",
+      },
+    };
+  };
+
+  // PDF 다운로드 함수
+  const handlePDFDownload = async () => {
+    try {
+      // PDF 데이터 준비
+      const pdfData = preparePDFData();
+
+      // 임시 div 요소 생성
+      const tempDiv = document.createElement("div");
+      tempDiv.style.position = "absolute";
+      tempDiv.style.left = "-9999px";
+      tempDiv.style.top = "-9999px";
+      tempDiv.style.width = "210mm";
+      tempDiv.style.minHeight = "297mm";
+      tempDiv.style.padding = "20mm";
+      tempDiv.style.backgroundColor = "white";
+      tempDiv.style.fontFamily =
+        '"Noto Sans KR", "맑은고딕", "돋움", arial, Dotum, Verdana, helvetica, clean, sans-serif';
+      tempDiv.style.fontSize = "12px";
+      tempDiv.style.lineHeight = "1.4";
+      tempDiv.style.color = "#333333";
+      tempDiv.style.boxSizing = "border-box";
+
+      // React 컴포넌트를 HTML로 렌더링
+      const { createRoot } = await import("react-dom/client");
+      const root = createRoot(tempDiv);
+      root.render(<EstimateTemplate {...pdfData} />);
+
+      // DOM에 추가
+      document.body.appendChild(tempDiv);
+
+      // 잠시 대기하여 렌더링 완료
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // PDF 생성
+      await generatePDFFromElement(tempDiv, "아르피나_견적서.pdf");
+
+      // 임시 요소 제거
+      document.body.removeChild(tempDiv);
+      root.unmount();
+    } catch (error) {
+      console.error("PDF 생성 중 오류 발생:", error);
+      alert("PDF 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
   return (
     <PageContainer>
       <Heading mb="-50px" color="#373636" fontSize="2xl" fontWeight="700">
@@ -1585,6 +1692,8 @@ export default function EstimatePage() {
               py={6}
               _hover={{ bg: "#1B2066" }}
               mt={2}
+              onClick={handlePDFDownload}
+              disabled={totalAmount <= 0}
             >
               가견적서 발행 바로가기
               <svg
