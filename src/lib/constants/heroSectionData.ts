@@ -168,24 +168,14 @@ export const heroSectionData: Record<
       { label: "중회의실", url: "/meeting/medium/seagull" },
     ],
   },
-  "/meeting/small/garam": {
+  "/meeting/small/garam-nuri": {
     header: "회의실",
-    title: "가람",
+    title: "가람&누리",
     image: "/images/meeting/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/small/garam" },
-    ],
-  },
-  "/meeting/small/nuri": {
-    header: "회의실",
-    title: "누리",
-    image: "/images/meeting/sub_visual.png",
-    breadcrumbBorderColor: "#2E3192",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/small/garam" },
+      { label: "소회의실", url: "/meeting/small/garam-nuri" },
     ],
   },
   "/meeting/small/ocean": {
@@ -195,7 +185,7 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/small/garam" },
+      { label: "소회의실", url: "/meeting/small/garam-nuri" },
     ],
   },
   "/meeting/estimate": {
@@ -205,7 +195,7 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/small/garam" },
+      { label: "소회의실", url: "/meeting/estimate" },
     ],
   },
   "/sports/futsal": {
@@ -269,7 +259,7 @@ export const heroSectionData: Record<
     ],
   },
   "/youth/committee": {
-    header: "청소년",
+    header: "부대시설설",
     title: "청소년 운영위원회회",
     image: "/images/youth/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",

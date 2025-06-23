@@ -79,9 +79,9 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     } else {
       // Reset form for new lesson with dynamic date defaults and specific time
       const today = dayjs();
-      const firstDayOfMonth = today.startOf('month');
-      const lastDayOfMonth = today.endOf('month');
-      const lastDayOfLastMonth = today.subtract(1, 'month').endOf('month');
+      const firstDayOfMonth = today.startOf("month");
+      const lastDayOfMonth = today.endOf("month");
+      const lastDayOfLastMonth = today.subtract(1, "month").endOf("month");
 
       setFormData({
         title: "",
@@ -198,7 +198,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
           <Heading size="sm" color={textColor}>
             {isEditing ? "강습 수정" : "새 강습 추가"}
           </Heading>
-          {onAddNew && (
+          {/* {onAddNew && (
             <Button
               size="xs"
               onClick={handleNewLesson}
@@ -207,7 +207,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
             >
               새 강습
             </Button>
-          )}
+          )} */}
         </Flex>
 
         {error && (

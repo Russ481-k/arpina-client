@@ -155,7 +155,7 @@ export default function ParticipantsPage() {
     },
     {
       src: "/images/contents/intro_floor_img02.jpg",
-      description: "골프연습장, 스포츠센터, 오션/마리나, 그랜드 볼룸",
+      description: "골프연습장, 스포츠센터, 오션, 그랜드 볼룸",
     },
     { src: "/images/contents/intro_floor_img03.jpg", description: "객실" },
     { src: "/images/contents/intro_floor_img04.jpg", description: "객실" },
@@ -164,11 +164,11 @@ export default function ParticipantsPage() {
     { src: "/images/contents/intro_floor_img07.jpg", description: "객실" },
     {
       src: "/images/contents/intro_floor_img08.jpg",
-      description: "클로버, 쟈스민, 시걸",
+      description: "클로버, 자스민, 시걸",
     },
     {
       src: "/images/contents/intro_floor_img09.jpg",
-      description: "편의점, 스포츠놀이학교",
+      description: "편의점",
     },
     { src: "/images/contents/intro_floor_img10.jpg", description: "주차장" },
     { src: "/images/contents/intro_floor_img11.jpg", description: "주차장" },
