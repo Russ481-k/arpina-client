@@ -1,13 +1,9 @@
 {
+    "$schema": "https://openapi.vercel.sh/vercel.json",
     "redirects": [
       {
-        "source": "http://arpina.co.kr/(.*)",
-        "destination": "https://arpina-cms-bnxm.vercel.app/$1",
-        "permanent": true
-      },
-      {
-        "source": "http://www.arpina.co.kr/(.*)",
-        "destination": "https://arpina-cms-bnxm.vercel.app/$1",
+        "source": "/:path*",
+        "destination": "https://arpina-cms-bnxm.vercel.app/:path*",
         "permanent": true
       }
     ]
