@@ -190,18 +190,28 @@ export default function MyPage() {
         const rawEnrollments =
           (enrollmentsApiResponse.content as MypageEnrollDto[]) || [];
 
-        // 재수강 가능한 강습과 이미 신청/결제된 강습이 동일한 lessonId를 가질 경우,
-        // 재수강 정보는 표시하지 않도록 필터링합니다.
-        const activeLessonIds = new Set(
-          rawEnrollments.filter((e) => !e.renewal).map((e) => e.lesson.lessonId)
+        // '활성' 상태를 명확히 정의합니다 (취소/환불된 상태 제외).
+        const activeStatuses = ["PAID", "PAYMENT_PENDING", "UNPAID"];
+
+        // 활성 신청 내역에 대해 "강습ID_시작일" 형태의 고유 키를 생성합니다.
+        // 이를 통해 다른 기간의 동일 강습을 구분할 수 있습니다.
+        const activeEnrollmentKeys = new Set(
+          rawEnrollments
+            .filter(
+              (e) => !e.renewal && activeStatuses.includes(e.status || "")
+            )
+            .map((e) => `${e.lesson.lessonId}_${e.lesson.startDate}`)
         );
 
+        // 재수강 카드와 활성 신청 카드를 비교하여 필터링합니다.
         const filteredEnrollments = rawEnrollments.filter((e) => {
-          // 강습이 재수강 옵션이고, 동일한 lessonId의 활성 신청이 존재하면 숨깁니다.
+          // 재수강 카드의 경우,
           if (e.renewal) {
-            return !activeLessonIds.has(e.lesson.lessonId);
+            // 동일한 기간의 활성 신청 내역이 존재하면 숨깁니다.
+            const renewalKey = `${e.lesson.lessonId}_${e.lesson.startDate}`;
+            return !activeEnrollmentKeys.has(renewalKey);
           }
-          // 활성 신청(재수강 아님)은 항상 표시합니다.
+          // 재수강 카드가 아니면 항상 표시합니다.
           return true;
         });
 
