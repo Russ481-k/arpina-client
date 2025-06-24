@@ -187,7 +187,25 @@ export default function MyPage() {
         enrollmentsApiResponse &&
         Array.isArray(enrollmentsApiResponse.content)
       ) {
-        setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
+        const rawEnrollments =
+          (enrollmentsApiResponse.content as MypageEnrollDto[]) || [];
+
+        // 재수강 가능한 강습과 이미 신청/결제된 강습이 동일한 lessonId를 가질 경우,
+        // 재수강 정보는 표시하지 않도록 필터링합니다.
+        const activeLessonIds = new Set(
+          rawEnrollments.filter((e) => !e.renewal).map((e) => e.lesson.lessonId)
+        );
+
+        const filteredEnrollments = rawEnrollments.filter((e) => {
+          // 강습이 재수강 옵션이고, 동일한 lessonId의 활성 신청이 존재하면 숨깁니다.
+          if (e.renewal) {
+            return !activeLessonIds.has(e.lesson.lessonId);
+          }
+          // 활성 신청(재수강 아님)은 항상 표시합니다.
+          return true;
+        });
+
+        setEnrollments(filteredEnrollments);
         setDataLoaded((prev) => ({ ...prev, enrollments: true }));
       } else {
         console.warn(
