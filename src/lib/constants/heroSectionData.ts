@@ -195,7 +195,7 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/estimate" },
+      { label: "회의실", url: "/meeting/estimate" },
     ],
   },
   "/sports/futsal": {
