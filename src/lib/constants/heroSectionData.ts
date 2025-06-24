@@ -190,7 +190,7 @@ export const heroSectionData: Record<
   },
   "/meeting/estimate": {
     header: "회의실",
-    title: "회의실 모의견적 발행",
+    title: "회의실 단체예약 문의",
     image: "/images/meeting/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
