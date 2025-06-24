@@ -144,10 +144,14 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   }, [lesson.id, lesson.reservationId, enrollment, isCountingDown]);
 
   if (enrollment) {
-    if (
-      enrollment.status === "RENEWAL_AVAILABLE" &&
-      enrollment.renewal === true
-    ) {
+    const { enrollId, status, lesson } = enrollment;
+    const isCourseExpired: boolean = lesson.endDate
+      ? dayjs().isAfter(dayjs(lesson.endDate), "day")
+      : false;
+
+    let actionButtons = null;
+
+    if (status === "RENEWAL_AVAILABLE" && enrollment.renewal === true) {
       const handleRenewal = () => {
         if (!enrollment) {
           console.error("재수강할 신청 정보가 없습니다.");
@@ -162,7 +166,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           onRenewLesson(enrollment);
         }
       };
-      return (
+      actionButtons = (
         <Flex direction="column" align="center" gap={2} w="100%">
           <Text fontSize="xs" color="gray.500">
             {enrollment.renewalWindow?.open
@@ -178,88 +182,56 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           </Button>
         </Flex>
       );
-    }
-    const enrollStatus = enrollment.status;
-    const { enrollId } = enrollment;
-
-    const isCourseExpired: boolean = enrollment.lesson.endDate
-      ? dayjs().isAfter(dayjs(enrollment.lesson.endDate), "day")
-      : false;
-
-    if (enrollStatus === "CANCELED_UNPAID") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              취소 완료
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "CANCELED_UNPAID") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
+          <Text color="gray.500" fontSize="sm">
+            취소 완료
+          </Text>
+        </Button>
       );
-    }
-    // '취소' 관련 상태들을 우선적으로 처리합니다.
-    if (enrollStatus === "REFUNDED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              환불 완료
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "REFUNDED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
+          <Text color="gray.500" fontSize="sm">
+            환불 완료
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "ADMIN_CANCELED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="red" w="100%" disabled>
-            <Text color="red.500" fontSize="sm">
-              관리자 취소
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "ADMIN_CANCELED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="red" w="100%" disabled>
+          <Text color="red.500" fontSize="sm">
+            관리자 취소
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "REFUND_REQUESTED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="blue" w="100%" disabled>
-            <Text color="blue.500" fontSize="sm">
-              환불 요청됨 : 진행사항 및 완료 여부는 안내데스크에 문의
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "REFUND_REQUESTED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="blue" w="100%" disabled>
+          <Text color="blue.500" fontSize="sm">
+            환불 요청됨 : 진행사항 및 완료 여부는 안내데스크에 문의
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "REFUND_PENDING_ADMIN_CANCEL") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="blue" w="100%" disabled>
-            <Text color="blue.500" fontSize="sm">
-              환불 처리중
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "REFUND_PENDING_ADMIN_CANCEL") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="blue" w="100%" disabled>
+          <Text color="blue.500" fontSize="sm">
+            환불 처리중
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "PARTIALLY_REFUNDED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              부분 환불 완료
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "PARTIALLY_REFUNDED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
+          <Text color="gray.500" fontSize="sm">
+            부분 환불 완료
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "PAYMENT_PENDING" || enrollStatus === "UNPAID") {
-      return (
+    } else if (status === "PAYMENT_PENDING" || status === "UNPAID") {
+      actionButtons = (
         <Flex align="center" gap={3} w="100%">
           <Flex direction="column" align="center" gap={2} w="50%">
             <Button
@@ -295,10 +267,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           )}
         </Flex>
       );
-    }
-
-    if (enrollStatus === "PAID") {
-      return (
+    } else if (status === "PAID") {
+      actionButtons = (
         <Flex align="center" gap={3} w="100%">
           {onRequestCancel && (
             <Button
@@ -312,16 +282,19 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           )}
         </Flex>
       );
-    }
-
-    // Handle other statuses: FAILED, etc.
-    return (
-      <>
+    } else {
+      actionButtons = (
         <Flex direction="column" align="center" gap={2} w="100%">
           <Text fontSize="sm" color="gray.500" textAlign="center">
-            상태: {enrollment.status}
+            상태: {status}
           </Text>
         </Flex>
+      );
+    }
+
+    return (
+      <>
+        {actionButtons}
         <Dialog.Root
           open={isCancelDialogOpen}
           onOpenChange={(details) => {

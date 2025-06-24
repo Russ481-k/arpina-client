@@ -670,7 +670,7 @@ export default function MyPage() {
         description: "취소 요청이 접수되었습니다.",
         type: "success",
       });
-      await fetchEnrollments();
+      await refreshEnrollmentData();
     } catch (error: any) {
       console.error("[Mypage] Failed to request cancellation:", error);
       toaster.create({
