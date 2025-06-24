@@ -162,14 +162,15 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           onRenewLesson(enrollment);
         }
       };
-
       return (
         <Flex direction="column" align="center" gap={2} w="100%">
           <Text fontSize="xs" color="gray.500">
             {enrollment.renewalWindow?.open
-              ? `${dayjs(enrollment.renewalWindow.open).format("M/D")}~${dayjs(
-                  enrollment.renewalWindow.close
-                ).format("M/D")}`
+              ? `${dayjs(enrollment.renewalWindow.open)
+                  .subtract(9, "hour")
+                  .format("M/D")}~${dayjs(enrollment.renewalWindow.close)
+                  .subtract(9, "hour")
+                  .format("M/D")}`
               : "재수강 신청 기간"}
           </Text>
           <Button colorPalette="teal" w="100%" onClick={handleRenewal}>
