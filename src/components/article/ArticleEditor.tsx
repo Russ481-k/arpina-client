@@ -9,6 +9,7 @@ import {
   HStack,
   Image,
   IconButton,
+  Accordion,
 } from "@chakra-ui/react";
 import { LuRefreshCw } from "react-icons/lu";
 import { LexicalEditor } from "@/components/common/LexicalEditor";
@@ -190,6 +191,13 @@ export function ArticleEditor({
     }
   };
 
+  // Helper to format date for datetime-local input
+  const formatDateTimeForInput = (isoString: string | null | undefined) => {
+    if (!isoString) return "";
+    // Converts "2024-03-20T09:00:00+09:00" to "2024-03-20T09:00"
+    return isoString.slice(0, 16);
+  };
+
   if (isLoading) {
     return (
       <Flex justify="center" align="center" h="300px">
@@ -243,6 +251,64 @@ export function ArticleEditor({
           disabled={isAdminPage && isAuthenticated}
         />
       </Box>
+
+      {isAdminPage && (
+        <Accordion.Root collapsible>
+          <Accordion.Item value="advanced-settings">
+            <Accordion.ItemTrigger>
+              <Box as="span" flex="1" textAlign="left" fontWeight="bold">
+                고급 설정
+              </Box>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent>
+              <Accordion.ItemBody>
+                <Flex direction="column" gap={4} pt={4}>
+                  <Box>
+                    <Text fontWeight="bold" mb={1}>
+                      표시 작성자
+                    </Text>
+                    <Input
+                      placeholder="사용자에게 표시될 작성자 이름"
+                      size="md"
+                      value={formData.displayWriter || ""}
+                      onChange={(e) =>
+                        updateFormField("displayWriter", e.target.value)
+                      }
+                    />
+                  </Box>
+                  <Box>
+                    <Text fontWeight="bold" mb={1}>
+                      표시 게시일
+                    </Text>
+                    <Input
+                      type="datetime-local"
+                      size="md"
+                      value={formatDateTimeForInput(formData.postedAt)}
+                      onChange={(e) =>
+                        updateFormField("postedAt", e.target.value)
+                      }
+                    />
+                  </Box>
+                  <Box>
+                    <Text fontWeight="bold" mb={1}>
+                      조회수
+                    </Text>
+                    <Input
+                      type="number"
+                      placeholder="조회수"
+                      size="md"
+                      value={formData.hits || 0}
+                      onChange={(e) => updateFormField("hits", e.target.value)}
+                    />
+                  </Box>
+                </Flex>
+              </Accordion.ItemBody>
+            </Accordion.ItemContent>
+          </Accordion.Item>
+        </Accordion.Root>
+      )}
+
       <Box>
         <Text fontWeight="bold" mb={1}>
           제목(필수)

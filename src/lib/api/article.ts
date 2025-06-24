@@ -37,6 +37,8 @@ export interface Article {
   publishEndDt: string;
   externalLink: string | null;
   hits: number;
+  displayWriter?: string;
+  postedAt?: string;
   createdAt: string;
   updatedAt: string;
   attachments: AttachmentInfoDto[] | null;
@@ -155,8 +157,8 @@ export const articleApi = {
       formData,
       {
         headers: {
-          'Content-Type': undefined
-        }
+          "Content-Type": undefined,
+        },
       }
     );
     return response.data;
@@ -172,8 +174,8 @@ export const articleApi = {
       formData,
       {
         headers: {
-          'Content-Type': undefined
-        }
+          "Content-Type": undefined,
+        },
       }
     );
     return response.data;
