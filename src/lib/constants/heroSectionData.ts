@@ -295,7 +295,7 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/facilities/restaurant-jj" },
+      { label: "부대시설", url: "/facilities/restaurant-jj" },
     ],
   },
   "/facilities/ediya-coffee": {
@@ -305,7 +305,7 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/facilities/restaurant-jj" },
+      { label: "부대시설", url: "/facilities/restaurant-jj" },
     ],
   },
   "/facilities/seven-eleven": {
@@ -315,7 +315,7 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/facilities/restaurant-jj" },
+      { label: "부대시설", url: "/facilities/restaurant-jj" },
     ],
   },
   "/mypage": {
