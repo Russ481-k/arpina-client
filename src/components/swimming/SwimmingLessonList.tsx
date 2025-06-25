@@ -84,8 +84,12 @@ export const SwimmingLessonList = () => {
     const currentMonth = now.month() + 1;
     const allowedMonthsByDate = [currentMonth];
 
-    // If it's the 25th or later, allow viewing next month's lessons.
-    if (now.date() >= 25) {
+    // 25일 오전 10시부터 다음 달 강습이 보이도록 설정합니다.
+    const isAfterOpeningTime =
+      (now.date() === 25 && now.hour() >= 9 && now.minute() >= 2) ||
+      now.date() > 25;
+
+    if (isAfterOpeningTime) {
       const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
       allowedMonthsByDate.push(nextMonth);
     }
@@ -100,7 +104,7 @@ export const SwimmingLessonList = () => {
       // 한글 날짜 형식 파싱 (예: "25년06월09일" -> "2025-06-09")
       const koreanDateRegex = /(\d{2})년(\d{2})월(\d{2})일/;
       const match = lesson.startDate.match(koreanDateRegex);
-      
+
       if (!match) {
         return false;
       }
