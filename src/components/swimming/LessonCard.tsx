@@ -310,14 +310,14 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
               )}
           </Box>
 
-          <LessonCardActions
+          {/* <LessonCardActions
             lesson={lesson}
             enrollment={context === "mypage" ? enrollment : undefined}
             onRequestCancel={context === "mypage" ? onRequestCancel : undefined}
             onApplyClick={context !== "mypage" ? handleApplyClick : undefined}
             onGoToPayment={onGoToPayment}
             onRenewLesson={onRenewLesson}
-          />
+          /> */}
         </Box>
       </Box>
     );

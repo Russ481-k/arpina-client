@@ -7,7 +7,6 @@ import {
   Grid,
   GridItem,
   useBreakpointValue,
-  Icon,
 } from "@chakra-ui/react";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useLessons } from "@/lib/hooks/useSwimming";
@@ -16,7 +15,6 @@ import { LessonFilterControls } from "./LessonFilterControls";
 import { LessonCard } from "./LessonCard";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { FiClock } from "react-icons/fi";
 
 // dayjs 커스텀 파싱 플러그인 추가
 dayjs.extend(customParseFormat);
@@ -250,45 +248,11 @@ export const SwimmingLessonList = () => {
         justifyItems="center"
         width="100%"
       >
-        {/* {filteredLessons.map((lesson: LessonDTO) => (
+        {filteredLessons.map((lesson: LessonDTO) => (
           <GridItem key={lesson.id} w="100%">
             <LessonCard lesson={lesson} />
           </GridItem>
-        ))} */}
-        <Flex
-          direction="column"
-          align="center"
-          justify="center"
-          p={8}
-          bg="white"
-          borderRadius="xl"
-          boxShadow="lg"
-          border="1px"
-          borderColor="gray.100"
-          w="100%"
-          maxW="600px"
-          mx="auto"
-          textAlign="center"
-        >
-          <Icon as={FiClock} w={12} h={12} color="#2E3192" mb={4} />
-          <Text
-            fontSize={{ base: "xl", md: "2xl" }}
-            fontWeight="bold"
-            color="#2E3192"
-            mb={2}
-            letterSpacing="tight"
-          >
-            11시 부터 신청 가능합니다
-          </Text>
-          <Text
-            fontSize={{ base: "lg", md: "xl" }}
-            fontWeight="medium"
-            color="#2E3192"
-            opacity={0.9}
-          >
-            불편을 드려 죄송합니다
-          </Text>
-        </Flex>
+        ))}
       </Grid>
     );
   }
