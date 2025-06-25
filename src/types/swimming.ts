@@ -42,6 +42,12 @@ export interface EnrollRequestDto {
   usesLocker: boolean;
 }
 
+// 수강 신청 자격 확인 응답 DTO
+export interface EnrollmentEligibility {
+  eligible: boolean;
+  message: string;
+}
+
 // 강습 신청 응답 DTO
 export interface EnrollResponseDto {
   enrollId: number;

@@ -11,6 +11,7 @@ import { getMembershipLabel } from "@/lib/utils/displayUtils";
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
 import dayjs from "dayjs";
+import { getEnrollmentEligibility } from "@/lib/api/swimming";
 
 interface LessonCardProps {
   lesson: LessonDTO & { applicationStartDate?: string };
@@ -113,7 +114,7 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
     }
     // --- End Display Status Calculation ---
 
-    const handleApplyClick = () => {
+    const handleApplyClick = async () => {
       // 1. 로그인 여부 확인 (useAuth 사용)
       if (authIsLoading) {
         toaster.create({
@@ -150,7 +151,31 @@ export const LessonCard: React.FC<LessonCardProps> = React.memo(
         }
       }
 
-      // 3. 신청 가능 여부 확인 (lesson.id 사용)
+      // 3. 수강 신청 자격 확인
+      try {
+        const eligibility = await getEnrollmentEligibility(lesson.id);
+        if (!eligibility.eligible) {
+          toaster.create({
+            title: "신청 불가",
+            description: eligibility.message,
+            type: "warning",
+            duration: 5000,
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("수강 신청 자격 확인 실패:", error);
+        toaster.create({
+          title: "오류 발생",
+          description:
+            "신청 자격 확인 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+          type: "error",
+          duration: 3000,
+        });
+        return;
+      }
+
+      // 4. 신청 가능 여부 확인 (lesson.id 사용)
       if (!canApply || !lesson.id) {
         toaster.create({
           title: "신청 불가",

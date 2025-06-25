@@ -9,6 +9,7 @@ import {
   PaymentRequestDto,
   RenewalDTO,
   RenewalRequestDto,
+  EnrollmentEligibility,
 } from "@/types/swimming";
 import { PaginationParams, PaginatedResponse, ApiResponse } from "@/types/api";
 import {
@@ -181,6 +182,19 @@ export const getLockers = async (gender?: string): Promise<LockerDTO[]> => {
 export const getLocker = async (lockerId: number): Promise<LockerDTO> => {
   const response = await publicApi.get<ApiResponse<LockerDTO>>(
     `/swimming/lockers/${lockerId}`
+  );
+  return response.data.data;
+};
+
+// 수강 신청 자격 확인
+export const getEnrollmentEligibility = async (
+  lessonId: number
+): Promise<EnrollmentEligibility> => {
+  const response = await privateApi.get<ApiResponse<EnrollmentEligibility>>(
+    "/swimming/enroll/eligibility",
+    {
+      params: { lessonId },
+    }
   );
   return response.data.data;
 };

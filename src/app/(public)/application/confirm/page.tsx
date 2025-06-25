@@ -19,7 +19,10 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { MdInfoOutline } from "react-icons/md";
-import { swimmingPaymentService } from "@/lib/api/swimming";
+import {
+  swimmingPaymentService,
+  getEnrollmentEligibility,
+} from "@/lib/api/swimming";
 import { mypageApi, ProfileDto } from "@/lib/api/mypageApi";
 import { EnrollLessonRequestDto, LockerAvailabilityDto } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
@@ -199,40 +202,80 @@ const ApplicationConfirmPage = () => {
   };
 
   useEffect(() => {
-    const idStr = searchParams.get("lessonId");
-    const title = searchParams.get("lessonTitle");
-    const priceStr = searchParams.get("lessonPrice");
-    const startDate = searchParams.get("lessonStartDate");
-    const endDate = searchParams.get("lessonEndDate");
-    const time = searchParams.get("lessonTime");
+    const processParams = async () => {
+      const idStr = searchParams.get("lessonId");
+      const title = searchParams.get("lessonTitle");
+      const priceStr = searchParams.get("lessonPrice");
+      const startDate = searchParams.get("lessonStartDate");
+      const endDate = searchParams.get("lessonEndDate");
+      const time = searchParams.get("lessonTime");
 
-    if (
-      idStr &&
-      !isNaN(parseInt(idStr)) &&
-      title &&
-      priceStr &&
-      !isNaN(parseFloat(priceStr)) &&
-      startDate &&
-      endDate &&
-      time
-    ) {
-      setLessonId(parseInt(idStr));
-      setLessonTitle(title);
-      setLessonPrice(parseFloat(priceStr));
-      setLessonStartDate(startDate);
-      setLessonEndDate(endDate);
-      setLessonTime(time);
-    } else {
-      setError("잘못된 접근입니다. 강습 정보가 URL에 충분하지 않습니다.");
-      setIsLoading(false);
-      toaster.create({
-        title: "오류",
-        description:
-          "필수 강습 정보가 URL에 없습니다. 이전 페이지로 돌아갑니다.",
-        type: "error",
-      });
-      router.push("/sports/swimming/lesson");
-    }
+      if (idStr && !isNaN(parseInt(idStr))) {
+        const currentLessonId = parseInt(idStr);
+
+        try {
+          const eligibility = await getEnrollmentEligibility(currentLessonId);
+          if (!eligibility.eligible) {
+            toaster.create({
+              title: "신청 불가",
+              description: eligibility.message,
+              type: "warning",
+              duration: 5000,
+            });
+            router.push("/sports/swimming/lesson");
+            return;
+          }
+        } catch (error) {
+          console.error("수강 신청 자격 확인 실패:", error);
+          toaster.create({
+            title: "오류 발생",
+            description:
+              "신청 자격 확인 중 문제가 발생했습니다. 페이지를 이동합니다.",
+            type: "error",
+            duration: 3000,
+          });
+          router.push("/sports/swimming/lesson");
+          return;
+        }
+
+        if (
+          title &&
+          priceStr &&
+          !isNaN(parseFloat(priceStr)) &&
+          startDate &&
+          endDate &&
+          time
+        ) {
+          setLessonId(currentLessonId);
+          setLessonTitle(title);
+          setLessonPrice(parseFloat(priceStr));
+          setLessonStartDate(startDate);
+          setLessonEndDate(endDate);
+          setLessonTime(time);
+        } else {
+          setError("잘못된 접근입니다. 강습 정보가 URL에 충분하지 않습니다.");
+          setIsLoading(false);
+          toaster.create({
+            title: "오류",
+            description:
+              "필수 강습 정보가 URL에 없습니다. 이전 페이지로 돌아갑니다.",
+            type: "error",
+          });
+          router.push("/sports/swimming/lesson");
+        }
+      } else {
+        setError("잘못된 접근입니다. 강습 ID가 유효하지 않습니다.");
+        setIsLoading(false);
+        toaster.create({
+          title: "오류",
+          description: "강습 ID가 유효하지 않습니다. 이전 페이지로 돌아갑니다.",
+          type: "error",
+        });
+        router.push("/sports/swimming/lesson");
+      }
+    };
+
+    processParams();
   }, [searchParams, router]);
 
   useEffect(() => {
