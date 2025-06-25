@@ -19,6 +19,27 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 // dayjs 커스텀 파싱 플러그인 추가
 dayjs.extend(customParseFormat);
 
+const parseKSTDateString = (
+  kstDateStringWithSuffix: string | undefined
+): Date | null => {
+  if (!kstDateStringWithSuffix) {
+    return null;
+  }
+
+  // "YYYY.MM.DD HH:MM:SS 까지"와 같은 포맷을 파싱
+  let parsableDateStr = kstDateStringWithSuffix
+    .replace(/부터|까지/g, "")
+    .trim();
+  parsableDateStr = parsableDateStr.replace(/\./g, "-"); // "YYYY-MM-DD HH:MM:SS" 형태로 변환
+
+  const date = dayjs(parsableDateStr);
+
+  if (!date.isValid()) {
+    return null;
+  }
+  return date.toDate();
+};
+
 // Updated FilterState to support multi-select (array-based)
 interface FilterState {
   status: string[];
@@ -122,8 +143,17 @@ export const SwimmingLessonList = () => {
       }
 
       // Rule 2: Show Available and Remaining (user toggle)
-      if (showAvailableOnly && lesson.remaining === 0) {
-        return false;
+      if (showAvailableOnly) {
+        // 정원이 마감된 경우 필터링
+        if (lesson.remaining === 0) {
+          return false;
+        }
+
+        // 접수 기간이 마감된 경우 필터링
+        const applicationEndTime = parseKSTDateString(lesson.receiptId);
+        if (applicationEndTime && now.isAfter(dayjs(applicationEndTime))) {
+          return false;
+        }
       }
 
       // Rule 3: Month Match (user filter from UI)
