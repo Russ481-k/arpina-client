@@ -86,8 +86,7 @@ export const SwimmingLessonList = () => {
 
     // 25일 오전 10시부터 다음 달 강습이 보이도록 설정합니다.
     const isAfterOpeningTime =
-      (now.date() === 25 && now.hour() >= 9 && now.minute() >= 2) ||
-      now.date() > 25;
+      (now.date() === 25 && now.hour() >= 10) || now.date() > 25;
 
     if (isAfterOpeningTime) {
       const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
