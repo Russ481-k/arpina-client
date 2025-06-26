@@ -7,8 +7,10 @@ import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
 import { Box, Text } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/grand_img01.jpg",
     "/images/contents/grand_img02.jpg",
@@ -59,6 +61,7 @@ export default function ParticipantsPage() {
         description="대규모 국제회의와 학회, 기업 연수까지 소화 가능한 그랜드볼룸은 아르피나 최대 규모의 회의실로, 음향·조명·빔프로젝터 등 고급 기자재를 완비해 품격 있는 행사를 연출하실 수 있습니다."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("/meeting/estimate")}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (2층 그랜드 볼룸)</HeadingH4>

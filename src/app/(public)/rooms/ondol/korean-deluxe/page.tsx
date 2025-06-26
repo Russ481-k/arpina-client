@@ -6,8 +6,10 @@ import ListStyle01, { ListItem } from "@/components/contents/listStyle01";
 import ListStyle02, { ServiceItem } from "@/components/contents/listStyle02";
 import OperGuide from "@/components/contents/operGuide";
 import { Mark, useBreakpointValue } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/korean_deluxe_img01.jpg",
     "/images/contents/korean_deluxe_img02.jpg",
@@ -438,6 +440,7 @@ export default function ParticipantsPage() {
         description="코리안 슈페리어는 4인 이용이 가능한 온돌형 객실로 바닥에 이부자리를 깔아 머무는 전통적인 숙박 형태를 선호하는 분들께 적합합니다. 가족단위 또는 어르신을 포함한 투숙객에게 깔끔하고 편안한 휴식 공간을 제공합니다."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />

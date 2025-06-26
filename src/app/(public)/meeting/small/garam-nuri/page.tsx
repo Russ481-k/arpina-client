@@ -7,8 +7,10 @@ import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
 import { Box, Text } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/garam_img01.jpg",
     "/images/contents/garam_img02.jpg",
@@ -79,7 +81,8 @@ export default function ParticipantsPage() {
         titleHighlight="가람/누리"
         description="아르피나 1층에 위치한 가람 및 누리 회의실은 기업 및 각종 단체의 중 · 소규모 세미나, 간담회 등에 적합한 공간으로, 쾌적하고 조용한 환경 속에서 성공적인 행사 진행을 위한 최적의 조건을 제공합니다."
         images={images}
-        showReservation={true}
+        showReservation={true}  
+        buttonOnClick={() => router.push("/meeting/estimate")}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (1층 가람/누리)</HeadingH4>
