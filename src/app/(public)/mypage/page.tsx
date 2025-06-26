@@ -215,7 +215,23 @@ export default function MyPage() {
           return true;
         });
 
-        setEnrollments(filteredEnrollments);
+        // 정렬: 1. 취소 가능(PAID) 우선, 2. 최신 강습 순
+        const sortedEnrollments = filteredEnrollments.sort((a, b) => {
+          const isACancellable = a.status === "PAID";
+          const isBCancellable = b.status === "PAID";
+
+          // 취소 가능 여부로 정렬 (가능한 것이 위로)
+          if (isACancellable !== isBCancellable) {
+            return isACancellable ? -1 : 1;
+          }
+
+          // 강습 시작일로 정렬 (최신순)
+          const dateA = new Date(a.lesson.startDate).getTime();
+          const dateB = new Date(b.lesson.startDate).getTime();
+          return dateB - dateA;
+        });
+
+        setEnrollments(sortedEnrollments);
         setDataLoaded((prev) => ({ ...prev, enrollments: true }));
       } else {
         console.warn(
