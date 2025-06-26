@@ -39,10 +39,10 @@ import { Dialog } from "@chakra-ui/react";
 import KISPGPaymentFrame, {
   KISPGPaymentFrameRef,
 } from "@/components/payment/KISPGPaymentFrame";
-import { EnrollInitiationResponseDto } from "@/types/api";
 import { KISPGPaymentInitResponseDto } from "@/types/api";
 import { displayStatusConfig } from "@/lib/utils/statusUtils"; // Import the centralized config
 import { UiDisplayStatus } from "@/types/statusTypes";
+import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 // Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
 const formatDate = (dateString: string | undefined | null): string => {
@@ -1136,10 +1136,6 @@ export default function MyPage() {
                               <Text>{payment.lessonTime}</Text>
                             </Flex>
                             <Flex justify="space-between">
-                              <Text color="gray.600">강사:</Text>
-                              <Text>{payment.instructorName}</Text>
-                            </Flex>
-                            <Flex justify="space-between">
                               <Text color="gray.600">장소:</Text>
                               <Text>{payment.locationName}</Text>
                             </Flex>
@@ -1224,11 +1220,9 @@ export default function MyPage() {
                               </Text>
                             </Flex>
                             <Flex justify="space-between">
-                              <Text color="gray.600">회원 유형:</Text>
+                              <Text color="gray.600">할인 유형:</Text>
                               <Text>
-                                {payment.membershipType === "GENERAL"
-                                  ? "일반 회원"
-                                  : payment.membershipType}
+                                {getMembershipLabel(payment.membershipType)}
                               </Text>
                             </Flex>
                             {payment.usesLocker && (
