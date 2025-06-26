@@ -96,7 +96,11 @@ const IntroSection = ({
         >
           {title}
         </Text>
-        <Text color="#373636" fontSize={{ base: "lg", md: "2xl", lg: "2xl" }}>
+        <Text
+          color="#373636"
+          fontSize={{ base: "lg", md: "2xl", lg: "2xl" }}
+          whiteSpace="pre-line"
+        >
           {description}
         </Text>
       </Box>
