@@ -222,7 +222,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           </Text>
         </Button>
       );
-    } else if (status === "PARTIALLY_REFUNDED") {
+    } else if (status === "PARTIAL_REFUNDED") {
       actionButtons = (
         <Button variant="outline" colorPalette="gray" w="100%" disabled>
           <Text color="gray.500" fontSize="sm">

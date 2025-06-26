@@ -3,7 +3,7 @@ import { UiDisplayStatus } from "@/types/statusTypes";
 // export type PayStatus = // Original PayStatus type is removed
 //   | "UNPAID"
 //   | "PAID"
-//   | "PARTIALLY_REFUNDED"
+//   | "PARTIAL_REFUNDED"
 //   | "CANCELED_UNPAID"
 //   | "PAYMENT_TIMEOUT"
 //   | "REFUND_PENDING_ADMIN_CANCEL"
@@ -44,11 +44,6 @@ export const displayStatusConfig: Record<
     badgeVariant: "outline",
   },
   PARTIAL_REFUNDED: {
-    label: "부분환불",
-    colorPalette: "orange",
-    badgeVariant: "solid",
-  },
-  PARTIALLY_REFUNDED: {
     label: "부분환불",
     colorPalette: "orange",
     badgeVariant: "solid",
@@ -109,4 +104,3 @@ export const getDisplayStatusInfo = (status: UiDisplayStatus | string) => {
   }
   return { label: "알 수 없음", color: "gray", variant: "outline" }; // Default for unknown statuses
 };
-

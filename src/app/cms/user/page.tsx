@@ -27,7 +27,7 @@ const PAY_STATUS_OPTIONS = [
   { value: "", label: "전체상태" },
   { value: "PAID", label: "결제완료" },
   { value: "REFUNDED", label: "환불" },
-  { value: "PARTIALLY_REFUNDED", label: "부분환불" },
+  { value: "PARTIAL_REFUNDED", label: "부분환불" },
   { value: "UNPAID", label: "미결제" },
 ];
 

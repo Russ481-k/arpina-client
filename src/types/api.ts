@@ -609,7 +609,7 @@ export interface EnrollAdminResponseDto {
   userId: string; // Assuming user's UUID or username
   userName: string;
   status: EnrollmentApplicationStatus | string; // Main enrollment status // Allow string
-  // payStatus from enroll table: UNPAID, PAID, PARTIALLY_REFUNDED, PAYMENT_TIMEOUT, CANCELED_UNPAID
+  // payStatus from enroll table: UNPAID, PAID, PARTIAL_REFUNDED, PAYMENT_TIMEOUT, CANCELED_UNPAID
   payStatus: EnrollmentPayStatus | string; // Allow string
   usesLocker: boolean;
   userGender?: "MALE" | "FEMALE" | "OTHER"; // From user profile

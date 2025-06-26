@@ -156,7 +156,7 @@ export const EnrollmentManagementTab = ({
       })
     );
 
-    return [{ value: "", label: "전체 납부상태" }, ...specificStatusOptions];
+    return specificStatusOptions;
   }, []);
 
   const {
