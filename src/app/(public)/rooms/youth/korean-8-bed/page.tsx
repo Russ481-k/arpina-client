@@ -6,8 +6,10 @@ import ListStyle01, { ListItem } from "@/components/contents/listStyle01";
 import ListStyle02, { ServiceItem } from "@/components/contents/listStyle02";
 import OperGuide from "@/components/contents/operGuide";
 import { Mark, useBreakpointValue } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/8bed_img01.jpg",
     "/images/contents/8bed_img02.jpg",
@@ -430,6 +432,7 @@ export default function ParticipantsPage() {
         description="총 8명이 이용 가능한 코리안 유스룸은 온돌 바닥에 이부자리를 펴는 전통 숙박 방식의 편안함과 아늑함을 갖춘 객실로, 국내외 청소년 단체 전용 숙박 공간입니다."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />

@@ -6,8 +6,10 @@ import ListStyle01, { ListItem } from "@/components/contents/listStyle01";
 import ListStyle02, { ServiceItem } from "@/components/contents/listStyle02";
 import OperGuide from "@/components/contents/operGuide";
 import { Mark, useBreakpointValue } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/twin_img01.jpg",
     "/images/contents/twin_img02.jpg",
@@ -456,6 +458,7 @@ export default function ParticipantsPage() {
         description="슈페리어 트윈은 2인 이용에 적합한 객실로, 비즈니스 고객은 물론 단체 여행을 인솔하는 지도자나 장애인을 위한 전용 객실도 마련되어있어 보다 편리하고 쾌적한 투숙이 가능합니다."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />

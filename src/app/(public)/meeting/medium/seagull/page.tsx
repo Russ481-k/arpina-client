@@ -7,8 +7,10 @@ import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
 import { Box, Text } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/seagull_img01.jpg",
     "/images/contents/seagull_img02.jpg",
@@ -61,6 +63,7 @@ export default function ParticipantsPage() {
 ※ 시걸룸이 있는 8층 중앙에 위치한 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과 바다를 아우르는 탁 트인 조망을 경험하실 수 있습니다."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("/meeting/estimate")}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (8층 시걸)</HeadingH4>

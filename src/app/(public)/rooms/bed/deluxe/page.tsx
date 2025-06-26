@@ -6,8 +6,10 @@ import ListStyle01, { ListItem } from "@/components/contents/listStyle01";
 import ListStyle02, { ServiceItem } from "@/components/contents/listStyle02";
 import OperGuide from "@/components/contents/operGuide";
 import { Mark, useBreakpointValue } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/deluxe_img01.jpg",
     "/images/contents/deluxe_img02.jpg",
@@ -456,6 +458,7 @@ export default function ParticipantsPage() {
         description="넓고 쾌적한 공간을 갖춘 슈페리어 디럭스는 실용적인 구조와 아늑한 분위기를 갖추어, 가족이나 친구와 함께하는 여행에 안성맞춤인 4인용 객실입니다. 머무는 동안 여유롭고 편안한 휴식을 누려보세요."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />
