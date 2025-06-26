@@ -122,6 +122,8 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
       const searchTermLower = paymentFilters.searchTerm.toLowerCase();
       const matchesSearch =
         payment.userName.toLowerCase().includes(searchTermLower) ||
+        (payment.userId &&
+          payment.userId.toLowerCase().includes(searchTermLower)) ||
         (payment.userPhone && payment.userPhone.includes(searchTermLower)) ||
         (payment.tid && payment.tid.toLowerCase().includes(searchTermLower)); // Check if tid exists
       const matchesStatus =
@@ -237,7 +239,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         onSearchTermChange={(e) =>
           setPaymentFilters((prev) => ({ ...prev, searchTerm: e.target.value }))
         }
-        searchTermPlaceholder="검색 (이름/번호/주문ID)"
+        searchTermPlaceholder="검색 (이름/회원ID/번호/주문ID)"
         onExport={handleExportPayments}
         exportButtonLabel="엑셀 다운로드"
         selectFilters={[
