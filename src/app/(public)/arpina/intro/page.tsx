@@ -167,7 +167,7 @@ export default function ParticipantsPage() {
       description: "클로버, 자스민, 시걸",
     },
     {
-      src: "/images/contents/intro_floor_img09.jpg",
+      src: "/images/contents/intro_floor_img09.png",
       description: "편의점",
     },
     { src: "/images/contents/intro_floor_img10.jpg", description: "주차장" },

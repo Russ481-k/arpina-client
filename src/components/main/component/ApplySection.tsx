@@ -66,7 +66,7 @@ export function ApplySection() {
                       수영
                     </Text>
                     <Link
-                      href="..."
+                      href="/sports/swimming/lesson"
                       display={"flex"}
                       alignItems={"center"}
                       gap={2}

@@ -60,7 +60,7 @@ export default function ParticipantsPage() {
 새롭게 전자교탁이 설치되고, 세미나 테이블과 의자가 교체되어 보다 쾌적하고 효율적인 회의 환경을 제공합니다. 세련된 분위기 속에서 한층 완성도 높은 비즈니스 시간을 경험해보시기 바랍니다. 
 ※ 시걸룸이 있는 8층 중앙에 위치한 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과 바다를 아우르는 탁 트인 조망을 경험하실 수 있습니다."
         images={images}
-        showReservation={false}
+        showReservation={true}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (8층 시걸)</HeadingH4>
