@@ -256,6 +256,7 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
                       <AgGridReact<EnrollmentData>
                         rowData={userEnrollmentsHistoryData}
                         columnDefs={userEnrollmentHistoryColDefs}
+                        enableCellTextSelection={true}
                         defaultColDef={{
                           sortable: true,
                           resizable: true,

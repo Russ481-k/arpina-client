@@ -74,6 +74,7 @@ export function EquipmentSection() {
       <AgGridReact
         className="ag-theme-quartz"
         theme={colorMode === "dark" ? themeDarkMode : themeLightMode}
+        enableCellTextSelection={true}
         {...defaultGridOptions}
         columnDefs={columnDefs}
         rowData={rowData}

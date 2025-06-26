@@ -403,6 +403,7 @@ export const CancellationRefundTab = ({
               columnDefs={colDefs}
               defaultColDef={defaultColDef}
               context={agGridContext}
+              enableCellTextSelection={true}
               headerHeight={36}
               rowHeight={40}
               animateRows

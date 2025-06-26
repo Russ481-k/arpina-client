@@ -141,6 +141,7 @@ export const UserGrid = forwardRef<UserGridRef, UserGridProps>(
           }}
           rowSelection="single"
           defaultColDef={defaultColDef}
+          enableCellTextSelection={true}
           headerHeight={36}
           rowHeight={40}
           overlayLoadingTemplate={

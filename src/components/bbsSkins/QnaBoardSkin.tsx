@@ -272,6 +272,7 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
             rowData={posts}
             columnDefs={colDefs}
             defaultColDef={defaultColDef}
+            enableCellTextSelection={true}
             domLayout="autoHeight"
             headerHeight={40}
             rowHeight={50} // Adjust as needed
