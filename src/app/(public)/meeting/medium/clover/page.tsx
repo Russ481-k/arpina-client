@@ -10,9 +10,9 @@ import { Box, Text } from "@chakra-ui/react";
 
 export default function ParticipantsPage() {
   const images = [
-    "/images/contents/clover_img01.png",
-    "/images/contents/clover_img02.png",
-    "/images/contents/clover_img03.png",
+    "/images/contents/clover_img01.jpg",
+    "/images/contents/clover_img02.jpg",
+    "/images/contents/clover_img03.jpg",
   ];
 
   const meetingRoomRows = [
