@@ -6,8 +6,10 @@ import ListStyle01, { ListItem } from "@/components/contents/listStyle01";
 import ListStyle02, { ServiceItem } from "@/components/contents/listStyle02";
 import OperGuide from "@/components/contents/operGuide";
 import { Mark, useBreakpointValue } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/6bed_img01.jpg",
     "/images/contents/6bed_img02.jpg",
@@ -438,6 +440,7 @@ export default function ParticipantsPage() {
         description="유스룸은 국내·외 수학여행단이나 학생 단체들의 숙박 또는 유스호스텔러를 위한 2층 침대로 구성되어있습니다."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />

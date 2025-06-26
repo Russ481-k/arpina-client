@@ -6,8 +6,10 @@ import ListStyle01, { ListItem } from "@/components/contents/listStyle01";
 import ListStyle02, { ServiceItem } from "@/components/contents/listStyle02";
 import OperGuide from "@/components/contents/operGuide";
 import { Mark, useBreakpointValue } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/triple_img01.jpg",
     "/images/contents/triple_img02.jpg",
@@ -456,6 +458,7 @@ export default function ParticipantsPage() {
         description="슈페리어 트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한 분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며, 머무시는 동안 편안하고 안락한 휴식을 제공합니다."
         images={images}
         showReservation={true}
+        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />
