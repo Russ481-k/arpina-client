@@ -191,7 +191,7 @@ export default function MyPage() {
           (enrollmentsApiResponse.content as MypageEnrollDto[]) || [];
 
         // '활성' 상태를 명확히 정의합니다 (취소/환불된 상태 제외).
-        const activeStatuses = ["PAID", "PAYMENT_PENDING", "UNPAID"];
+        const activeStatuses = ["PAID", "PAYMENT_PENDING"];
 
         // 활성 신청 내역에 대해 "강습ID_시작일" 형태의 고유 키를 생성합니다.
         // 이를 통해 다른 기간의 동일 강습을 구분할 수 있습니다.
