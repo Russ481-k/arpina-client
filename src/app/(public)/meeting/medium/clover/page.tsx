@@ -10,9 +10,9 @@ import { Box, Text } from "@chakra-ui/react";
 
 export default function ParticipantsPage() {
   const images = [
-    "/images/contents/clover_img01.jpg",
-    "/images/contents/clover_img02.jpg",
-    "/images/contents/clover_img03.jpg",
+    "/images/contents/clover_img01.png",
+    "/images/contents/clover_img02.png",
+    "/images/contents/clover_img03.png",
   ];
 
   const meetingRoomRows = [
@@ -59,7 +59,7 @@ export default function ParticipantsPage() {
         description="클로버룸은 아늑하고 모던한 인테리어에 첨단 회의 설비를 갖춘 다목적 비즈니스 공간입니다. 국제회의, 기업 간담회, 세미나 등 다양한 목적의 행사를 품격 있게 연출할 수 있으며, 세심하게 구성된 실내 분위기가 한층 더 집중도 높은 시간을 선사합니다. 
 ※ 클로버룸이 있는 8층 중앙에 위치한 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과 바다를 아우르는 탁 트인 조망을 경험하실 수 있습니다."
         images={images}
-        showReservation={false}
+        showReservation={true}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (8층 클로버)</HeadingH4>
