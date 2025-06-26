@@ -5,7 +5,6 @@
  */
 export type PaymentStatus =
   | "PAID" // 결제 완료
-  | "UNPAID" // 미결제
   | "FAILED" // 결제 실패
   | "CANCELED" // 전액 환불 완료
   | "PARTIAL_REFUNDED"; // 부분 환불 완료
@@ -47,14 +46,12 @@ export type EnrollmentCancellationProgressStatus =
 
  */
 export type EnrollmentPayStatus =
-  | "UNPAID" // 미결제
   | "PAID" // 결제 완료
   | "EXPIRED" // 만료
   | "REFUND_REQUESTED" // 환불 요청
   | "REFUND_PENDING_ADMIN_CANCEL" // 환불 대기 (관리자 취소)
   | "PARTIAL_REFUNDED" // 부분 환불 완료
-  | "REFUNDED" // 전액 환불 완료
-  | "CANCELED_UNPAID"; // 미결제 취소
+  | "REFUNDED"; // 전액 환불 완료
 
 // Status of the enrollment application itself, separate from payment.
 export type EnrollmentApplicationStatus =

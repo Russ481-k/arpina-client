@@ -101,7 +101,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
     value: PaymentStatus | "";
     label: string;
   }[] = [
-    { value: "", label: "전체" },
     { value: "PAID", label: displayStatusConfig.PAID.label },
     { value: "FAILED", label: displayStatusConfig.FAILED.label },
     { value: "CANCELED", label: displayStatusConfig.CANCELED.label },

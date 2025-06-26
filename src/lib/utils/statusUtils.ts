@@ -1,10 +1,8 @@
 import { UiDisplayStatus } from "@/types/statusTypes";
 
 // export type PayStatus = // Original PayStatus type is removed
-//   | "UNPAID"
 //   | "PAID"
 //   | "PARTIAL_REFUNDED"
-//   | "CANCELED_UNPAID"
 //   | "PAYMENT_TIMEOUT"
 //   | "REFUND_PENDING_ADMIN_CANCEL"
 //   | "REFUNDED";
@@ -26,11 +24,6 @@ export const displayStatusConfig: Record<
   PAID: {
     label: "결제완료",
     colorPalette: "green",
-    badgeVariant: "solid",
-  },
-  UNPAID: {
-    label: "미결제",
-    colorPalette: "red",
     badgeVariant: "solid",
   },
   FAILED: {
@@ -78,11 +71,6 @@ export const displayStatusConfig: Record<
   },
   EXPIRED: {
     label: "만료",
-    colorPalette: "gray",
-    badgeVariant: "outline",
-  },
-  CANCELED_UNPAID: {
-    label: "미결제 취소",
     colorPalette: "gray",
     badgeVariant: "outline",
   },

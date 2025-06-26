@@ -78,7 +78,7 @@ export interface EnrollDTO {
   lessonId: number;
   lockerId?: number;
   status: string; // General status of the enrollment, could be EnrollmentApplicationStatus
-  payStatus: EnrollmentPayStatus | string; // UNPAID, PAID, CANCELED_UNPAID // Allow string
+  payStatus: EnrollmentPayStatus | string; //  PAID// Allow string
   expireDt: string;
   userName: string;
   lessonTitle: string;
@@ -244,12 +244,12 @@ export interface MypageEnrollDto {
     // If this needs to be more specific, it should align with LessonStatus from statusTypes.ts
     status: string;
   };
-  status: EnrollmentPayStatus | string; // pay_status from enroll table // Allow string
+  status: EnrollmentPayStatus; // pay_status from enroll table // Allow string
   applicationDate: string; // ISO 8601 datetime string
   paymentExpireDt: string | null; // enroll.expire_dt (KISPG 결제 페이지 만료 시간)
   usesLocker: boolean;
   isRenewal: boolean;
-  cancelStatus: EnrollmentCancellationProgressStatus | string; // from enroll.cancel_status // Allow string
+  cancelStatus: EnrollmentCancellationProgressStatus; // from enroll.cancel_status // Allow string
   cancelReason: string | null;
   renewalWindow?: {
     // Optional
