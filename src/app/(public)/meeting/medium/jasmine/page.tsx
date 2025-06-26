@@ -59,7 +59,7 @@ export default function ParticipantsPage() {
         description="자스민룸은 회의와 세미나에 적합한 음향·영상 설비를 갖춘 다목적 비즈니스 공간입니다. 아늑하고 쾌적한 실내 분위기 속에서 기업 간담회, 워크숍, 소규모 국제회의 등 다양한 행사를 효율적으로 운영하실 수 있으며, 창 너머로 보이는 바깥 풍경이 공간에 여유로움을 더합니다. 
 ※ 자스민룸이 있는 8층 중앙에 위치한 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과 바다를 아우르는 탁 트인 조망을 경험하실 수 있습니다."
         images={images}
-        showReservation={false}
+        showReservation={true}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (8층 자스민)</HeadingH4>
