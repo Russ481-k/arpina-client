@@ -39,10 +39,10 @@ import { Dialog } from "@chakra-ui/react";
 import KISPGPaymentFrame, {
   KISPGPaymentFrameRef,
 } from "@/components/payment/KISPGPaymentFrame";
-import { EnrollInitiationResponseDto } from "@/types/api";
 import { KISPGPaymentInitResponseDto } from "@/types/api";
 import { displayStatusConfig } from "@/lib/utils/statusUtils"; // Import the centralized config
 import { UiDisplayStatus } from "@/types/statusTypes";
+import { getMembershipLabel } from "@/lib/utils/displayUtils";
 
 // Helper to format date strings "YYYY-MM-DD" to "YY년MM월DD일"
 const formatDate = (dateString: string | undefined | null): string => {
@@ -187,7 +187,51 @@ export default function MyPage() {
         enrollmentsApiResponse &&
         Array.isArray(enrollmentsApiResponse.content)
       ) {
-        setEnrollments(enrollmentsApiResponse.content as MypageEnrollDto[]);
+        const rawEnrollments =
+          (enrollmentsApiResponse.content as MypageEnrollDto[]) || [];
+
+        // '활성' 상태를 명확히 정의합니다 (취소/환불된 상태 제외).
+        const activeStatuses = ["PAID", "PAYMENT_PENDING"];
+
+        // 활성 신청 내역에 대해 "강습ID_시작일" 형태의 고유 키를 생성합니다.
+        // 이를 통해 다른 기간의 동일 강습을 구분할 수 있습니다.
+        const activeEnrollmentKeys = new Set(
+          rawEnrollments
+            .filter(
+              (e) => !e.renewal && activeStatuses.includes(e.status || "")
+            )
+            .map((e) => `${e.lesson.lessonId}_${e.lesson.startDate}`)
+        );
+
+        // 재수강 카드와 활성 신청 카드를 비교하여 필터링합니다.
+        const filteredEnrollments = rawEnrollments.filter((e) => {
+          // 재수강 카드의 경우,
+          if (e.renewal) {
+            // 동일한 기간의 활성 신청 내역이 존재하면 숨깁니다.
+            const renewalKey = `${e.lesson.lessonId}_${e.lesson.startDate}`;
+            return !activeEnrollmentKeys.has(renewalKey);
+          }
+          // 재수강 카드가 아니면 항상 표시합니다.
+          return true;
+        });
+
+        // 정렬: 1. 취소 가능(PAID) 우선, 2. 최신 강습 순
+        const sortedEnrollments = filteredEnrollments.sort((a, b) => {
+          const isACancellable = a.status === "PAID";
+          const isBCancellable = b.status === "PAID";
+
+          // 취소 가능 여부로 정렬 (가능한 것이 위로)
+          if (isACancellable !== isBCancellable) {
+            return isACancellable ? -1 : 1;
+          }
+
+          // 강습 시작일로 정렬 (최신순)
+          const dateA = new Date(a.lesson.startDate).getTime();
+          const dateB = new Date(b.lesson.startDate).getTime();
+          return dateB - dateA;
+        });
+
+        setEnrollments(sortedEnrollments);
         setDataLoaded((prev) => ({ ...prev, enrollments: true }));
       } else {
         console.warn(
@@ -652,7 +696,7 @@ export default function MyPage() {
         description: "취소 요청이 접수되었습니다.",
         type: "success",
       });
-      await fetchEnrollments();
+      await refreshEnrollmentData();
     } catch (error: any) {
       console.error("[Mypage] Failed to request cancellation:", error);
       toaster.create({
@@ -696,35 +740,39 @@ export default function MyPage() {
     }
   };
 
-  const handleRenewLesson = async (lessonId: number) => {
-    try {
-      const renewalResponse = await swimmingPaymentService.renewalLesson({
-        lessonId,
-        wantsLocker: false, // Or allow user to choose
-      });
-
-      if (renewalResponse) {
-        toaster.create({
-          title: "재등록 성공",
-          description: "강습 재등록이 완료되었습니다.",
-          type: "success",
-        });
-
-        // Refresh enrollments data
-        setDataLoaded((prev) => ({ ...prev, enrollments: false }));
-        await fetchEnrollments();
-      }
-    } catch (error) {
-      console.error("[Mypage] Failed to renew lesson:", error);
+  const handleRenewLesson = async (enrollment: MypageEnrollDto) => {
+    if (!enrollment || !enrollment.lesson) {
       toaster.create({
-        title: "재등록 실패",
-        description: getApiErrorMessage(
-          error,
-          "강습 재등록에 실패했습니다. 다시 시도해주세요."
-        ),
+        title: "오류",
+        description: "재수강할 강습 정보가 없습니다.",
         type: "error",
       });
+      return;
     }
+
+    const { lesson } = enrollment;
+
+    // Logic is copied from LessonCard.tsx's handleApplyClick
+    toaster.create({
+      title: "재수강 신청",
+      description: "신청 정보 확인 페이지로 이동합니다.",
+      type: "info",
+      duration: 1500,
+    });
+
+    const queryParams = new URLSearchParams({
+      lessonId: lesson.lessonId.toString(),
+      lessonTitle: lesson.title,
+      lessonPrice: lesson.price.toString(),
+      lessonStartDate: lesson.startDate,
+      lessonEndDate: lesson.endDate,
+      lessonTime: lesson.timeSlot || "",
+      lessonDays: lesson.days || "",
+      lessonTimePrefix: lesson.timePrefix || "",
+      isRenewal: "true", // Add a flag to indicate this is a renewal
+    });
+
+    router.push(`/application/confirm?${queryParams.toString()}`);
   };
 
   // Function to refresh enrollment data (useful after payment completion)
@@ -1011,7 +1059,7 @@ export default function MyPage() {
 
                 return (
                   <LessonCard
-                    key={enroll.enrollId}
+                    key={enroll.enrollId ?? `renewal-${enroll.lesson.lessonId}`}
                     lesson={lessonDataForCard}
                     context="mypage" // Set context to "mypage"
                     enrollment={enroll} // Pass the full enrollment object
@@ -1104,10 +1152,6 @@ export default function MyPage() {
                               <Text>{payment.lessonTime}</Text>
                             </Flex>
                             <Flex justify="space-between">
-                              <Text color="gray.600">강사:</Text>
-                              <Text>{payment.instructorName}</Text>
-                            </Flex>
-                            <Flex justify="space-between">
                               <Text color="gray.600">장소:</Text>
                               <Text>{payment.locationName}</Text>
                             </Flex>
@@ -1192,11 +1236,9 @@ export default function MyPage() {
                               </Text>
                             </Flex>
                             <Flex justify="space-between">
-                              <Text color="gray.600">회원 유형:</Text>
+                              <Text color="gray.600">할인 유형:</Text>
                               <Text>
-                                {payment.membershipType === "GENERAL"
-                                  ? "일반 회원"
-                                  : payment.membershipType}
+                                {getMembershipLabel(payment.membershipType)}
                               </Text>
                             </Flex>
                             {payment.usesLocker && (

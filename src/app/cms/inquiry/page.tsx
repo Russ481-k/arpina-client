@@ -312,6 +312,7 @@ export default function InquiryManagementPage() {
               columnDefs={columnDefs}
               onGridReady={onGridReady}
               onRowClicked={handleRowClick}
+              enableCellTextSelection={true}
               defaultColDef={{
                 sortable: true,
                 filter: true,

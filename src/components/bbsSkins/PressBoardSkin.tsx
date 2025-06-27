@@ -354,6 +354,7 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
             suppressCellFocus={true}
             context={agGridContext}
             gridOptions={gridOptions}
+            enableCellTextSelection={true}
             getRowStyle={() => ({
               // Rely on ag-theme for row background, or set explicitly if needed for perfect match
               // backgroundColor: useColorModeValue('white', colors.gray_800 || '#1A202C'),

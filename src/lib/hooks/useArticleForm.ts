@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import dayjs from "dayjs";
 import { boardApi } from "@/lib/api/board";
 import { Article, articleApi, type AttachmentInfoDto } from "@/lib/api/article";
 import { fileApi } from "@/lib/api/file";
@@ -19,6 +20,9 @@ export interface ArticleFormData {
   publishState: string;
   publishStartDt: string | null;
   publishEndDt: string | null;
+  hits?: number;
+  displayWriter?: string;
+  postedAt?: string | null;
 }
 
 export interface UseArticleFormProps {
@@ -57,7 +61,10 @@ export function useArticleForm({
     noticeEndDt: initialData?.noticeEndDt || null,
     publishState: initialData?.publishState || "Y",
     publishStartDt: initialData?.publishStartDt || null,
-    publishEndDt: initialData?.publishEndDt || null
+    publishEndDt: initialData?.publishEndDt || null,
+    hits: initialData?.hits || 0,
+    displayWriter: initialData?.displayWriter || "",
+    postedAt: initialData?.postedAt || dayjs().format(),
   }));
 
   const [newlyAddedFiles, setNewlyAddedFiles] = useState<File[]>([]);
@@ -108,7 +115,12 @@ export function useArticleForm({
           ? await boardApi.getBoard(bbsId)
           : await boardApi.getPublicBoardInfo(bbsId);
 
-        if (response && response.data && response.data.success && response.data.data) {
+        if (
+          response &&
+          response.data &&
+          response.data.success &&
+          response.data.data
+        ) {
           const boardData: BoardMaster = response.data.data;
           setBoardInfo(boardData);
 
@@ -120,7 +132,10 @@ export function useArticleForm({
             );
           }
         } else {
-          console.error(`Failed to fetch valid board info for bbsId ${bbsId}. Received:`, response);
+          console.error(
+            `Failed to fetch valid board info for bbsId ${bbsId}. Received:`,
+            response
+          );
           setError("게시판 정보를 불러오는데 실패했습니다.");
           setBoardInfo(null);
         }
@@ -242,7 +257,10 @@ export function useArticleForm({
         publishState: formData.publishState,
         publishStartDt: formData.publishStartDt,
         publishEndDt: formData.publishEndDt,
-        externalLink: formData.externalLink || null
+        externalLink: formData.externalLink || null,
+        hits: formData.hits,
+        displayWriter: formData.displayWriter,
+        postedAt: formData.postedAt,
       };
 
       // 2. Create FormData
@@ -261,7 +279,7 @@ export function useArticleForm({
 
       // 5. Append 'mediaLocalIds' for each item
       const allMediaLocalIds = Array.from(pendingMedia.keys());
-      allMediaLocalIds.forEach(id => {
+      allMediaLocalIds.forEach((id) => {
         dataToSend.append("mediaLocalIds", id);
       });
 

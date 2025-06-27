@@ -7,6 +7,7 @@ import React, {
   forwardRef,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import {
   VStack,
@@ -108,6 +109,12 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
     },
     ref
   ) => {
+    const usernameInputRef = useRef<HTMLInputElement>(null);
+    const passwordInputRef = useRef<HTMLInputElement>(null);
+    const emailInputRef = useRef<HTMLInputElement>(null);
+    const carNumberInputRef = useRef<HTMLInputElement>(null);
+    const addressDetailInputRef = useRef<HTMLInputElement>(null);
+
     const [postcode, setPostcode] = useState("");
     const [address, setAddress] = useState("");
     const [addressDetail, setAddressDetail] = useState("");
@@ -392,7 +399,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           });
 
           // 사용자 ID 입력란에 포커스
-          document.getElementsByName("username")[0]?.focus();
+          usernameInputRef.current?.focus();
         } else {
           toaster.create({
             title: "회원가입 실패",
@@ -431,14 +438,15 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
         });
         setUsernameError(currentUsernameError);
         setUsernameSuccessMessage("");
-        hasError = true;
+        usernameInputRef.current?.focus();
+        return;
       } else if (isCheckingUsername) {
         toaster.create({
           title: "확인 중",
           description: "사용자 ID를 확인 중입니다. 잠시 후 다시 시도해주세요.",
           type: "warning",
         });
-        hasError = true;
+        return;
       } else if (usernameAvailable === false) {
         const message =
           usernameCheckMessage ||
@@ -450,7 +458,8 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           type: "error",
         });
         if (!usernameError) setUsernameError(message);
-        hasError = true;
+        usernameInputRef.current?.focus();
+        return;
       } else if (usernameInput && usernameAvailable === null) {
         const message = "사용자 ID 중복 확인을 진행해주세요.";
         toaster.create({
@@ -459,7 +468,8 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           type: "warning",
         });
         setUsernameError(message);
-        hasError = true;
+        usernameInputRef.current?.focus();
+        return;
       }
 
       const currentEmailError = validateEmail(email);
@@ -470,7 +480,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           description: currentEmailError,
           type: "error",
         });
-        document.getElementsByName("email")[0]?.focus();
+        emailInputRef.current?.focus();
         hasError = true;
       } else if (!isEmailVerified) {
         toaster.create({
@@ -478,7 +488,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           description: "이메일 인증을 완료해주세요.",
           type: "warning",
         });
-        document.getElementsByName("email")[0]?.focus();
+        emailInputRef.current?.focus();
         hasError = true;
       }
 
@@ -506,7 +516,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           description: currentEmailError,
           type: "error",
         });
-        document.getElementsByName("email")[0]?.focus();
+        emailInputRef.current?.focus();
         return;
       }
 
@@ -516,7 +526,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           description: "이메일 인증을 완료해주세요.",
           type: "error",
         });
-        document.getElementsByName("email")[0]?.focus();
+        emailInputRef.current?.focus();
         return;
       }
 
@@ -527,7 +537,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
             "비밀번호를 확인해주세요. 모든 복잡도 조건을 만족하고, 비밀번호 확인이 일치해야 합니다.",
           type: "error",
         });
-        document.getElementsByName("password")[0]?.focus();
+        passwordInputRef.current?.focus();
         return;
       }
 
@@ -537,7 +547,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
           description: currentCarNumberError,
           type: "error",
         });
-        document.getElementsByName("carNumber")[0]?.focus();
+        carNumberInputRef.current?.focus();
         return;
       }
 
@@ -636,7 +646,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
       }
       setPostcode(data.zonecode);
       setAddress(fullAddress);
-      document.getElementById("addressDetailInput")?.focus();
+      addressDetailInputRef.current?.focus();
     };
 
     const handleSearchAddress = () => {
@@ -768,6 +778,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                 <Field.Root id="username">
                   <Field.Label fontWeight="semibold">사용자 ID</Field.Label>
                   <Input
+                    ref={usernameInputRef}
                     type="text"
                     placeholder="4~16자 영문, 숫자"
                     name="username"
@@ -824,6 +835,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                       }}
                     >
                       <PasswordInput
+                        ref={passwordInputRef}
                         name="password"
                         value={passwordInput}
                         onChange={handlePasswordChange}
@@ -919,6 +931,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                 <Field.Root id="addressDetailField">
                   <Field.Label fontWeight="semibold">상세주소</Field.Label>
                   <Input
+                    ref={addressDetailInputRef}
                     id="addressDetailInput"
                     placeholder="상세 주소를 입력해주세요."
                     name="address_detail"
@@ -936,6 +949,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                   <Field.Label fontWeight="semibold">이메일</Field.Label>
                   <HStack>
                     <Input
+                      ref={emailInputRef}
                       type="email"
                       placeholder="이메일을 입력해주세요."
                       name="email"
@@ -1024,6 +1038,7 @@ export const Step3UserInfo = forwardRef<Step3UserInfoRef, Step3UserInfoProps>(
                 <Field.Root id="carNumber" invalid={!!carNumberError}>
                   <Field.Label fontWeight="semibold">차량번호</Field.Label>
                   <Input
+                    ref={carNumberInputRef}
                     placeholder="차량번호를 입력해주세요 (예: 12가 1234)"
                     name="carNumber"
                     value={carNumber}

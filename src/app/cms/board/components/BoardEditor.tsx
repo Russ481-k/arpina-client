@@ -13,6 +13,7 @@ import {
   createListCollection,
   SimpleGrid,
   Switch,
+  Separator,
 } from "@chakra-ui/react";
 import { AuthType } from "@/types/common";
 import { BoardMaster, Menu } from "@/types/api";
@@ -174,7 +175,7 @@ export const BoardEditor = React.memo(function BoardEditor({
             />
           </Box>
         </Flex>
-
+        <Separator />
         <Box>
           <Text fontSize="sm" fontWeight="medium" mb={2}>
             권한 설정
@@ -272,6 +273,8 @@ export const BoardEditor = React.memo(function BoardEditor({
             </Box>
           </Flex>
         </Box>
+
+        <Separator />
 
         <Box>
           <Text fontSize="sm" fontWeight="medium" mb={2}>
@@ -385,6 +388,9 @@ export const BoardEditor = React.memo(function BoardEditor({
               </Select.Root>
             </Box>
           </SimpleGrid>
+
+          <Separator my={4} />
+
           <Box mt={4}>
             <Text fontSize="sm" fontWeight="medium" mb={2}>
               첨부파일 설정

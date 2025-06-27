@@ -13,32 +13,14 @@ export function useHeroSectionData(boardUrl?: string) {
     const originalPath = boardUrl || pathname;
     const keyPath = getBasePath(originalPath);
 
-    const initialData = heroSectionData[keyPath] || {
-      header: "기본 헤더",
-      title: "기본 타이틀",
-      image: "/images/default.png",
-      breadcrumb: [
-        { label: "홈", url: "/" },
-        { label: "기본", url: originalPath },
-      ],
-    };
-
-    return initialData;
+    return heroSectionData[keyPath];
   });
 
   useEffect(() => {
     const originalPath = boardUrl || pathname;
     const keyPath = getBasePath(originalPath);
 
-    const newData = heroSectionData[keyPath] || {
-      header: "기본 헤더",
-      title: "기본 타이틀",
-      image: "/images/default.png",
-      breadcrumb: [
-        { label: "홈", url: "/" },
-        { label: "기본", url: originalPath },
-      ],
-    };
+    const newData = heroSectionData[keyPath];
 
     setData(newData);
   }, [boardUrl, pathname]);

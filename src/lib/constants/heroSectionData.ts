@@ -30,7 +30,7 @@ export const heroSectionData: Record<
   },
   "/rooms/bed/twin": {
     header: "객실",
-    title: "트윈",
+    title: "슈페리어 트윈",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -40,7 +40,7 @@ export const heroSectionData: Record<
   },
   "/rooms/bed/triple": {
     header: "객실",
-    title: "트리플",
+    title: "슈페리어 트리플",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -50,7 +50,7 @@ export const heroSectionData: Record<
   },
   "/rooms/bed/deluxe": {
     header: "객실",
-    title: "디럭스",
+    title: "슈페리어 디럭스",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -60,7 +60,7 @@ export const heroSectionData: Record<
   },
   "/rooms/ondol/korean-deluxe": {
     header: "객실",
-    title: "온돌객실",
+    title: "코리안 슈페리어",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -70,7 +70,7 @@ export const heroSectionData: Record<
   },
   "/rooms/family": {
     header: "객실",
-    title: "패밀리",
+    title: "패밀리스위트",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -80,7 +80,7 @@ export const heroSectionData: Record<
   },
   "/rooms/youth/6-bed": {
     header: "객실",
-    title: "유스 6인실",
+    title: "유스룸",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -90,7 +90,7 @@ export const heroSectionData: Record<
   },
   "/rooms/youth/korean-8-bed": {
     header: "객실",
-    title: "코리안 유스 8인실",
+    title: "코리안 유스룸",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -130,12 +130,12 @@ export const heroSectionData: Record<
   },
   "/meeting/grand": {
     header: "회의실",
-    title: "대회의실",
+    title: "그랜드볼룸",
     image: "/images/meeting/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "대회의실", url: "/meeting/grand" },
+      { label: "그랜드볼룸", url: "/meeting/grand" },
     ],
   },
   "/meeting/medium/seagull": {
@@ -168,24 +168,14 @@ export const heroSectionData: Record<
       { label: "중회의실", url: "/meeting/medium/seagull" },
     ],
   },
-  "/meeting/small/garam": {
+  "/meeting/small/garam-nuri": {
     header: "회의실",
-    title: "가람",
+    title: "가람&누리",
     image: "/images/meeting/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/small/garam" },
-    ],
-  },
-  "/meeting/small/nuri": {
-    header: "회의실",
-    title: "누리",
-    image: "/images/meeting/sub_visual.png",
-    breadcrumbBorderColor: "#2E3192",
-    breadcrumb: [
-      { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/small/garam" },
+      { label: "소회의실", url: "/meeting/small/garam-nuri" },
     ],
   },
   "/meeting/small/ocean": {
@@ -195,7 +185,17 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "소회의실", url: "/meeting/small/garam" },
+      { label: "소회의실", url: "/meeting/small/garam-nuri" },
+    ],
+  },
+  "/meeting/estimate": {
+    header: "회의실",
+    title: "회의실 단체예약 문의",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "회의실", url: "/meeting/estimate" },
     ],
   },
   "/sports/futsal": {
@@ -258,14 +258,34 @@ export const heroSectionData: Record<
       { label: "스포츠", url: "/sports/swimming/futsal" },
     ],
   },
-  "/youth": {
-    header: " ",
-    title: "청소년",
+  "/youth/committee": {
+    header: "부대시설설",
+    title: "청소년 운영위원회회",
     image: "/images/youth/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/youth" },
+      { label: "청소년", url: "/youth/committee" },
+    ],
+  },
+  "/youth/training": {
+    header: "청소년",
+    title: "청소년 수련활동동",
+    image: "/images/youth/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/youth/committee" },
+    ],
+  },
+  "/youth/fee": {
+    header: "청소년",
+    title: "청소년 이용요금",
+    image: "/images/youth/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "청소년", url: "/youth/committee" },
     ],
   },
   "/facilities/restaurant-jj": {
@@ -275,27 +295,27 @@ export const heroSectionData: Record<
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/facilities/restaurant-jj" },
+      { label: "부대시설", url: "/facilities/restaurant-jj" },
     ],
   },
   "/facilities/ediya-coffee": {
-    header: " ",
-    title: "청소년",
+    header: "부대시설",
+    title: "이디야 커피",
     image: "/images/facilities/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/facilities/restaurant-jj" },
+      { label: "부대시설", url: "/facilities/restaurant-jj" },
     ],
   },
   "/facilities/seven-eleven": {
-    header: " ",
-    title: "청소년",
+    header: "부대시설",
+    title: "편의점(세븐일레븐)",
     image: "/images/facilities/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
-      { label: "청소년", url: "/facilities/restaurant-jj" },
+      { label: "부대시설", url: "/facilities/restaurant-jj" },
     ],
   },
   "/mypage": {
@@ -380,6 +400,16 @@ export const heroSectionData: Record<
     ],
   },
   "/bbs/voice": {
+    header: "알림",
+    title: "고객의소리",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "알림", url: "/bbs/voice" },
+    ],
+  },
+  "/bbs/voice/write": {
     header: "알림",
     title: "고객의소리",
     image: "/images/bbs/sub_visual.png",

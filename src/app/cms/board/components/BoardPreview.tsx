@@ -796,6 +796,7 @@ const BoardPreview = React.memo(function BoardPreview({
               headerHeight={40}
               rowHeight={60}
               suppressCellFocus
+              enableCellTextSelection={true}
               getRowStyle={() => ({
                 color: textColor,
                 background: bg,

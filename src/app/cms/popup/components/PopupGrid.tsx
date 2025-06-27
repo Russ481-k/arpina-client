@@ -162,6 +162,7 @@ export const PopupGrid = ({
         columnDefs={colDefs}
         onRowClicked={(e) => e.data && onRowSelected(e.data)}
         defaultColDef={defaultColDef}
+        enableCellTextSelection={true}
         headerHeight={36}
         rowHeight={40}
         overlayLoadingTemplate={

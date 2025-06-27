@@ -7,8 +7,10 @@ import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
 import { Box, Text } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/seagull_img01.jpg",
     "/images/contents/seagull_img02.jpg",
@@ -56,18 +58,20 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="시걸 Seagull"
         titleHighlight="시걸"
-        description="국제회의 및 학회부터 소규모 교육과 워크숍까지! <br />
-다양한 규모의 회의실을 갖추어 성공적인 비즈니스를 지원합니다."
+        description="시걸룸은 해운대 바다 풍경을 일부 조망할 수 있는 차분하고 품격 있는 비즈니스 공간입니다. 3m의 높은 층고와 최대 100명까지 수용 가능한 넉넉한 규모를 갖춘 세미나실로, 기업 간담회, 워크숍, 소규모 국제회의 등 다양한 비즈니스 행사를 안정적으로 운영하실 수 있습니다. 
+새롭게 전자교탁이 설치되고, 세미나 테이블과 의자가 교체되어 보다 쾌적하고 효율적인 회의 환경을 제공합니다. 세련된 분위기 속에서 한층 완성도 높은 비즈니스 시간을 경험해보시기 바랍니다. 
+※ 시걸룸이 있는 8층 중앙에 위치한 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과 바다를 아우르는 탁 트인 조망을 경험하실 수 있습니다."
         images={images}
-        showReservation={false}
+        showReservation={true}
+        buttonOnClick={() => router.push("/meeting/estimate")}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (8층 시걸)</HeadingH4>
         <Text
           mt="10px"
-          mb="60px"
+          mb={{ base: 4, md: 10, lg: 25 }}
           color="#FAB20B"
-          fontSize="3xl"
+          fontSize={{ base: "xl", md: "2xl", lg: "3xl" }}
           fontWeight="medium"
         >
           출장뷔페 및 외부 음식물 반입금지

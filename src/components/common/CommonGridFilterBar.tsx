@@ -67,6 +67,13 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
   showSearchButton = true,
   children,
 }) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      onSearchButtonClick?.();
+    }
+  };
+
   return (
     <Box>
       <Flex gap={1.5} wrap="nowrap" align="center">
@@ -79,6 +86,7 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
           >
             <NativeSelect.Field
               id={filter.id}
+              name={filter.id}
               value={filter.value}
               onChange={filter.onChange}
               fontSize="xs"
@@ -103,6 +111,7 @@ export const CommonGridFilterBar: React.FC<CommonGridFilterBarProps> = ({
           placeholder={searchTermPlaceholder}
           value={searchTerm}
           onChange={onSearchTermChange}
+          onKeyDown={handleKeyDown}
           fontSize="xs"
           flexGrow={1}
           minW="150px"

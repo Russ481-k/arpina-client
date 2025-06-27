@@ -304,6 +304,8 @@ export const ReviewCancelRequestDialog: React.FC<
         type: "success",
       });
       queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] });
+      // 신청자 관리 리스트도 리프레시
+      queryClient.invalidateQueries({ queryKey: ["adminEnrollments"] });
       onClose();
     },
     onError: (error) => {
@@ -333,6 +335,8 @@ export const ReviewCancelRequestDialog: React.FC<
         type: "success",
       });
       queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] });
+      // 신청자 관리 리스트도 리프레시
+      queryClient.invalidateQueries({ queryKey: ["adminEnrollments"] });
       onClose();
     },
     onError: (error) => {

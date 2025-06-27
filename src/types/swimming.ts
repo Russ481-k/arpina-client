@@ -39,7 +39,13 @@ export interface LockerDTO {
 // 강습 신청 요청 DTO
 export interface EnrollRequestDto {
   lessonId: number;
-  wantsLocker: boolean;
+  usesLocker: boolean;
+}
+
+// 수강 신청 자격 확인 응답 DTO
+export interface EnrollmentEligibility {
+  eligible: boolean;
+  message: string;
 }
 
 // 강습 신청 응답 DTO
@@ -72,7 +78,7 @@ export interface EnrollDTO {
   lessonId: number;
   lockerId?: number;
   status: string; // General status of the enrollment, could be EnrollmentApplicationStatus
-  payStatus: EnrollmentPayStatus | string; // UNPAID, PAID, CANCELED_UNPAID // Allow string
+  payStatus: EnrollmentPayStatus | string; //  PAID// Allow string
   expireDt: string;
   userName: string;
   lessonTitle: string;
@@ -113,7 +119,7 @@ export interface RenewalDTO {
 // 재등록 요청 DTO
 export interface RenewalRequestDto {
   lessonId: number;
-  carryLocker: boolean;
+  usesLocker: boolean;
 }
 
 /**
@@ -201,7 +207,7 @@ export interface KISPGInitParamsDto {
  */
 export interface PaymentConfirmRequestDto {
   pgToken: string; // The token or transaction ID from KISPG
-  wantsLocker: boolean; // Final confirmation of locker choice
+  usesLocker: boolean; // Final confirmation of locker choice
 }
 
 /**
@@ -236,14 +242,14 @@ export interface MypageEnrollDto {
     price: number;
     // lesson.status field from api.ts MypageEnrollDto.lesson has 'string', not specific LessonStatus yet.
     // If this needs to be more specific, it should align with LessonStatus from statusTypes.ts
-    status: string; 
+    status: string;
   };
-  status: EnrollmentPayStatus | string; // pay_status from enroll table // Allow string
+  status: EnrollmentPayStatus; // pay_status from enroll table // Allow string
   applicationDate: string; // ISO 8601 datetime string
   paymentExpireDt: string | null; // enroll.expire_dt (KISPG 결제 페이지 만료 시간)
   usesLocker: boolean;
   isRenewal: boolean;
-  cancelStatus: EnrollmentCancellationProgressStatus | string; // from enroll.cancel_status // Allow string
+  cancelStatus: EnrollmentCancellationProgressStatus; // from enroll.cancel_status // Allow string
   cancelReason: string | null;
   renewalWindow?: {
     // Optional
@@ -260,7 +266,7 @@ export interface MypageEnrollDto {
  */
 export interface MypageRenewalRequestDto {
   lessonId: number;
-  carryLocker: boolean; // 희망 여부, 결제페이지에서 최종선택
+  usesLocker: boolean; // 희망 여부, 결제페이지에서 최종선택
 }
 // Response for POST /mypage/renewal is EnrollInitiationResponseDto
 

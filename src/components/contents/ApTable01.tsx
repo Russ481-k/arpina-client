@@ -21,7 +21,7 @@ export default function ApTable01({ rows }: ApTable01Props) {
               <Table.ColumnHeader
                 py={5}
                 color="#2E3192"
-                fontSize="xl"
+                fontSize={{ base: "md", md: "lg", lg: "xl" }}
                 fontWeight="bold"
               >
                 {row.header}
@@ -29,7 +29,7 @@ export default function ApTable01({ rows }: ApTable01Props) {
               <Table.Cell
                 py={5}
                 color="#4B4B4B"
-                fontSize="lg"
+                fontSize={{ base: "sm", md: "md", lg: "lg" }}
                 fontWeight="medium"
               >
                 {row.content}

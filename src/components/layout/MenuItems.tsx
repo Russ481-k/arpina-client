@@ -17,5 +17,5 @@ export const MenuItems = [
   // { icon: LuFiles, label: "파일관리", path: "/cms/file" },
   { icon: LuMessageCircle, label: "문의관리", path: "/cms/inquiry" },
   { icon: LuLayers3, label: "팝업관리", path: "/cms/popup" },
-  { icon: LuUser, label: "사용자관리", path: "/cms/user" },
+  { icon: LuUser, label: "회원관리", path: "/cms/user" },
 ];

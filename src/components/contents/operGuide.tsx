@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, List, Text } from "@chakra-ui/react";
+import { Box, List, Text, useBreakpointValue } from "@chakra-ui/react";
 import { ReactNode } from "react";
 
 // 리스트 아이템 스타일을 위한 공통 컴포넌트
@@ -14,27 +14,36 @@ const StyledListItem = ({
   children,
   color = "#393939",
   isNested = false,
-}: StyledListItemProps) => (
-  <List.Item
-    _marker={{ fontSize: "0" }}
-    color={color}
-    fontSize="lg"
-    style={{
-      display: "flex",
-      flexFlow: "row wrap",
-      alignItems: "center",
-      marginTop: "10px",
-    }}
-    _before={{
-      content: '"·"',
-      alignSelf: "flex-start",
-      marginRight: "10px",
-    }}
-  >
-    {children}
-    {isNested && <List.Root ps="3" w={"100%"} />}
-  </List.Item>
-);
+}: StyledListItemProps) => {
+  // 반응형 폰트 크기 설정
+  const fontSize = useBreakpointValue({
+    base: "sm", // sm 이하: 2단계 줄임 (lg -> md)
+    md: "md", // md: 1단계 줄임 (lg -> lg)
+    lg: "lg", // lg: 1단계 줄임 (2xl -> xl)
+  });
+
+  return (
+    <List.Item
+      _marker={{ fontSize: "0" }}
+      color={color}
+      fontSize={fontSize}
+      style={{
+        display: "flex",
+        flexFlow: "row wrap",
+        alignItems: "center",
+        marginTop: "10px",
+      }}
+      _before={{
+        content: '"·"',
+        alignSelf: "flex-start",
+        marginRight: "10px",
+      }}
+    >
+      <Text flex={"1 1 0"}>{children}</Text>
+      {isNested && <List.Root ps="3" w={"100%"} flexBasis="100%" />}
+    </List.Item>
+  );
+};
 
 // 이용안내 데이터 (계층 구조)
 interface GuideItem {
@@ -65,17 +74,30 @@ const guideItems: GuideItem[] = [
 ];
 
 const OperGuide: React.FC = () => {
+  // 반응형 폰트 크기 설정
+  const titleFontSize = useBreakpointValue({
+    base: "lg", // sm 이하: 2단계 줄임 (2xl -> lg)
+    md: "xl", // md: 1단계 줄임 (2xl -> xl)
+    lg: "2xl", // lg: 원래 크기 (2xl)
+  });
+
+  const bottomTextFontSize = useBreakpointValue({
+    base: "md", // sm 이하: 2단계 줄임 (lg -> md)
+    md: "lg", // md: 1단계 줄임 (lg -> lg)
+    lg: "lg", // lg: 원래 크기 (lg)
+  });
+
   return (
     <Box
       className="oper-guide"
+      mt={{ base: 4, md: 10, lg: 15 }}
+      p={{ base: 2, md: 3, lg: 5 }}
       style={{
         backgroundColor: "#F7F8FB",
         borderRadius: "20px",
-        marginTop: "60px",
-        padding: "20px",
       }}
     >
-      <Text color="#393939" fontSize="2xl" fontWeight="medium">
+      <Text color="#393939" fontSize={titleFontSize} fontWeight="medium">
         - 이용안내
       </Text>
       <List.Root>
@@ -97,7 +119,12 @@ const OperGuide: React.FC = () => {
           </StyledListItem>
         ))}
       </List.Root>
-      <Text mt="10px" color="#FAB20B" fontWeight="semibold" fontSize="lg">
+      <Text
+        mt="10px"
+        color="#FAB20B"
+        fontWeight="semibold"
+        fontSize={bottomTextFontSize}
+      >
         객실 판매 상황에 따라 거절 될수 있음.
       </Text>
     </Box>

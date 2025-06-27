@@ -117,6 +117,7 @@ export interface User {
   lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
+  socialType?: "KAKAO" | "NAVER" | "GOOGLE";
 }
 
 // API 요청 데이터 타입
@@ -274,6 +275,7 @@ export interface Company {
   extra?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
+  uuid: string;
 }
 
 export interface CompanyQueryParams {
@@ -477,7 +479,7 @@ export interface KISPGPaymentInitResponseDto {
  */
 export interface PaymentConfirmRequestDto {
   pgToken: string;
-  wantsLocker: boolean;
+  usesLocker: boolean;
 }
 
 /**
@@ -527,6 +529,7 @@ export interface MypageEnrollDto {
   paymentExpireDt: string | null;
   usesLocker: boolean;
   isRenewal?: boolean;
+  renewal?: boolean;
   cancelStatus: EnrollmentCancellationProgressStatus | string; // Allow string
   cancelReason: string | null;
   renewalWindow?: {
@@ -545,7 +548,7 @@ export interface MypageEnrollDto {
  */
 export interface MypageRenewalRequestDto {
   lessonId: number;
-  wantsLocker: boolean;
+  usesLocker: boolean;
 }
 
 /**
@@ -605,14 +608,14 @@ export interface EnrollAdminResponseDto {
   enrollId: number;
   userId: string; // Assuming user's UUID or username
   userName: string;
-  status: EnrollmentApplicationStatus | string; // Main enrollment status // Allow string
-  // payStatus from enroll table: UNPAID, PAID, PARTIALLY_REFUNDED, PAYMENT_TIMEOUT, CANCELED_UNPAID
-  payStatus: EnrollmentPayStatus | string; // Allow string
+  status: EnrollmentApplicationStatus; // Main enrollment status // Allow string
+  payStatus: EnrollmentPayStatus; // Allow string
   usesLocker: boolean;
   userGender?: "MALE" | "FEMALE" | "OTHER"; // From user profile
   createdAt: string; // ISO DateTime
   expireDt?: string | null; // Payment expiration from enroll.expire_dt
   lessonTitle: string;
+  lessonTime?: string | null;
   lessonId: number;
   payment_tid?: string | null; // KISPG TID from payment table
   paid_amt?: number | null; // Initial paid amount from payment table
@@ -755,11 +758,14 @@ export interface UpdateDiscountStatusRequestDto {
 
 export interface UserMemoDto {
   memoId?: number; // Optional, present if updating/fetching existing
-  userId: string;
-  memoText: string;
-  createdAt?: string; // ISO DateTime string
-  updatedAt?: string; // ISO DateTime string
-  adminId?: string; // ID of admin who wrote/updated memo
+  userUuid: string;
+  memo: string;
+  memoUpdatedAt?: string; // ISO DateTime string
+  memoUpdatedBy?: string; // ID of admin who wrote/updated memo
+}
+
+export interface CreateUserMemoRequestDto {
+  memo: string;
 }
 
 // Represents the structure of an object within the 'paymentInfo' field of the API response
@@ -1044,7 +1050,8 @@ export interface PaginatedData<T> {
   totalElements: number;
   size: number;
   number: number; // current page number (0-indexed)
-  sort: { // This sort is for the whole page, pageable.sort is for individual items
+  sort: {
+    // This sort is for the whole page, pageable.sort is for individual items
     sorted: boolean;
     unsorted: boolean;
     empty: boolean;
@@ -1139,6 +1146,9 @@ export interface InquiryRoomReservation {
   startDate?: string;
   endDate?: string;
   usageTimeDesc?: string;
+  lessonId: number;
+  paymentPageUrl: string;
+  paymentExpiresAt: string;
 }
 
 export interface MypageRenewalResponseDto {
@@ -1146,4 +1156,55 @@ export interface MypageRenewalResponseDto {
   lessonId: number;
   paymentPageUrl: string;
   paymentExpiresAt: string;
+}
+
+export interface EnrollmentDetailDto {
+  enrollmentId: string;
+  lessonTitle: string;
+  lessonMonth: string;
+  lessonTime: string;
+  payStatus: string;
+  paymentDate: string;
+}
+
+export interface UserEnrollmentHistoryDto {
+  index: number;
+  uuid: string;
+  username: string;
+  name: string;
+  phone: string;
+  status: string;
+  lastEnrollment: EnrollmentDetailDto | null;
+  enrollmentHistory: EnrollmentDetailDto[];
+}
+
+export interface Page<T> {
+  content: T[];
+  number: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+}
+
+export interface UserCreationDto {
+  username?: string;
+  name?: string;
+  phone?: string;
+}
+
+export interface UserUpdateDto {
+  name?: string;
+  phone?: string;
+  status?: string;
+}
+
+export interface MainMediaDto {
+  id: number;
+  type: "IMAGE" | "VIDEO";
+  title: string;
+  thumbnailUrl?: string;
+  fileUrl: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
 }

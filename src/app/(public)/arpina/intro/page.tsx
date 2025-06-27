@@ -96,7 +96,11 @@ const IntroSection = ({
         >
           {title}
         </Text>
-        <Text color="#373636" fontSize={{ base: "lg", md: "2xl", lg: "2xl" }}>
+        <Text
+          color="#373636"
+          fontSize={{ base: "lg", md: "2xl", lg: "2xl" }}
+          whiteSpace="pre-line"
+        >
           {description}
         </Text>
       </Box>
@@ -135,7 +139,7 @@ export default function ParticipantsPage() {
   // 시설 규모 데이터
   const facilityScaleItems = [
     "객실 : 110실(3~7F)",
-    "회의실 : 대회의실 1실, 중회의실 3실, 소회의실 3실",
+    "회의실 : 그랜드볼룸 1실, 중회의실 3실, 소회의실 3실",
     "주차 : 지하 209대, 지상 88대 (대형버스 주차 가능) 각종",
     "편의시설",
   ];
@@ -155,7 +159,7 @@ export default function ParticipantsPage() {
     },
     {
       src: "/images/contents/intro_floor_img02.jpg",
-      description: "골프연습장, 스포츠센터, 오션/마리나, 그랜드 볼룸",
+      description: "골프연습장, 스포츠센터, 오션, 그랜드 볼룸",
     },
     { src: "/images/contents/intro_floor_img03.jpg", description: "객실" },
     { src: "/images/contents/intro_floor_img04.jpg", description: "객실" },
@@ -164,11 +168,11 @@ export default function ParticipantsPage() {
     { src: "/images/contents/intro_floor_img07.jpg", description: "객실" },
     {
       src: "/images/contents/intro_floor_img08.jpg",
-      description: "클로버, 쟈스민, 시걸",
+      description: "클로버, 자스민, 시걸",
     },
     {
-      src: "/images/contents/intro_floor_img09.jpg",
-      description: "편의점, 스포츠놀이학교",
+      src: "/images/contents/intro_floor_img09.png",
+      description: "편의점",
     },
     { src: "/images/contents/intro_floor_img10.jpg", description: "주차장" },
     { src: "/images/contents/intro_floor_img11.jpg", description: "주차장" },
@@ -179,26 +183,36 @@ export default function ParticipantsPage() {
       <IntroSection
         number="01"
         title="아르피나 소개"
-        description="부산의 자연환경과 다양한 문화시설이 조화롭게 공존하는 이곳 해운대아르피나 에서 항상 고객을 최우선으로 생각하는 부산도시공사 아르피나에서 편안함과 즐거움을 찾아가시기 바랍니다."
+        description={`광안리 · 해운대 · 센텀시티를 잇는 이상적인 허브
+        도심 속 합리적인 컨벤션 & 스테이
+        '아름답게 피어나다'라는 뜻을 지닌 아르피나는 광안리, 해운대, 부산전시컨벤션센터(BEXCO), 센텀시티, 마린시티의 중앙에 위치하고 있어 관광과 해양 레저, 고품격 쇼핑은물론 비즈니스와 워케이션까지 진행할 수 있는 최적의 공간입니다. 다양한 타입의 객실과 회의실, 스포츠센터를 갖춘 아르피나에서 여유로운 시간을 즐겨보시기 바랍니다.
+        `}
         imageSrc="/images/contents/intro_img01.jpg"
         imageAlt="아르피나 소개 이미지"
       />
 
       <IntroSection
         number="02"
-        title="아르피나 위치"
-        description="부산의 자연환경과 다양한 문화시설이 조화롭게 공존하는 이곳 해운대아르피나 에서 항상 고객을 최우선으로 생각하는 부산도시공사 아르피나에서 편안함과 즐거움을 찾아가시기 바랍니다."
+        title="아르피나 시설"
+        description="부산도시공사 아르피나는 고객의 편의를 위해 다양한 객실과 회의실은 물론, 스포츠센터,
+        커피라운지, 편의점, 예약제 대식당 등을 운영하고 있습니다. 청소년 문화센터에서는 청소년
+        들이 참여할 수 있는 다양한 수련 및 체험 활동도 마련되어 있습니다.
+        "
         imageSrc="/images/contents/intro_img02.jpg"
-        imageAlt="아르피나 위치 이미지"
+        imageAlt="아르피나 시설 이미지"
         reverse={true}
       />
 
       <IntroSection
         number="03"
-        title="아르피나 시설"
-        description="부산의 자연환경과 다양한 문화시설이 조화롭게 공존하는 이곳 해운대아르피나 에서 항상 고객을 최우선으로 생각하는 부산도시공사 아르피나에서 편안함과 즐거움을 찾아가시기 바랍니다."
+        title="아르피나 입지"
+        description="수영만 요트경기장, 광안리, 해운대에 인접한 아르피나는 부산의 풍요로운 자연을
+        만끽하기에 최적의 공간입니다. 벡스코, 시립미술관, 센텀시티 대형 백화점 등 주요 문화·상업
+        시설과도 가까워 자연과 도심의 조화를 동시에 누릴 수 있습니다. 아르피나에서 여유롭고 특
+        별한 시간을 경험해보시기 바랍니다.
+        "
         imageSrc="/images/contents/intro_img03.jpg"
-        imageAlt="아르피나 시설 이미지"
+        imageAlt="아르피나 입지 이미지"
       />
 
       <Box className="intro-box" mb={{ base: 10, md: 15, lg: 20 }}>

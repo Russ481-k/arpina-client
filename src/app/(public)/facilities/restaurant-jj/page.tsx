@@ -122,7 +122,7 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="대식당(제이엔제이) J&J"
         titleHighlight="대식당(제이엔제이)"
-        description="아르피나 프론트를 마주보고 오른편 맨 끝에 위치한 다이닝홀 제이앤제이는 총 240석 규모의 프리미엄 뷔페형 레스토랑으로, 부산·경남 지역 최대 수준의 시설을 갖춘 공간입니다. <br />매일 정성스럽게 운영되며, 단체 손님과 행사 진행을 위한 완벽한 식사 공간을 제공합니다."
+        description="아르피나 프론트 오른편 끝에 위치한 대식당 ‘제이앤제이’는 총 240석 규모의 뷔페형 식당으로, 사전 예약제로 운영됩니다. 단체 손님과 행사 진행에 적합한 쾌적하고 편안한 식사 공간을 제공합니다."
         images={images}
         showReservation={false}
       />

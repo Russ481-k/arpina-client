@@ -61,18 +61,11 @@ const PaymentLifecycleStatusCellRenderer: React.FC<
 
   // New logic based on the guide
   if (processingStatus === "ADMIN_CANCELED") {
-    const config =
-      paymentStatus === "REFUND_PENDING_ADMIN_CANCEL"
-        ? {
-            label: "관리자 취소 (환불필요)",
-            colorPalette: "red",
-            variant: "solid",
-          }
-        : {
-            label: "관리자 취소 (미결제)",
-            colorPalette: "gray",
-            variant: "outline",
-          };
+    const config = {
+      label: "관리자 취소 (환불필요)",
+      colorPalette: "red",
+      variant: "outline",
+    };
     return (
       <Badge
         colorPalette={config.colorPalette as any}
@@ -267,7 +260,6 @@ export const CancellationRefundTab = ({
 
   const statusFilterOptions = useMemo(
     () => [
-      { label: "전체", value: "" },
       {
         label: displayStatusConfig.REFUND_REQUESTED.label,
         value: "REFUND_REQUESTED",
@@ -403,6 +395,7 @@ export const CancellationRefundTab = ({
               columnDefs={colDefs}
               defaultColDef={defaultColDef}
               context={agGridContext}
+              enableCellTextSelection={true}
               headerHeight={36}
               rowHeight={40}
               animateRows

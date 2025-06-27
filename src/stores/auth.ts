@@ -141,7 +141,7 @@ export const useAuthActions = () => {
         localStorage.setItem(USER_KEY, JSON.stringify(appUser));
         setAuth({ isAuthenticated: true, user: appUser, isLoading: false });
       } catch (error) {
-        // 토큰이 유효하지 않은 경우
+        // 토큰이 유효하지 않은 경우 (재발급 실패 포함)
         removeToken();
         setAuth({ isAuthenticated: false, user: null, isLoading: false });
       }

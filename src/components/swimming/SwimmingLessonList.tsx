@@ -7,6 +7,7 @@ import {
   Grid,
   GridItem,
   useBreakpointValue,
+  Icon,
 } from "@chakra-ui/react";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useLessons } from "@/lib/hooks/useSwimming";
@@ -15,9 +16,31 @@ import { LessonFilterControls } from "./LessonFilterControls";
 import { LessonCard } from "./LessonCard";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { FiClock } from "react-icons/fi";
 
 // dayjs 커스텀 파싱 플러그인 추가
 dayjs.extend(customParseFormat);
+
+const parseKSTDateString = (
+  kstDateStringWithSuffix: string | undefined
+): Date | null => {
+  if (!kstDateStringWithSuffix) {
+    return null;
+  }
+
+  // "YYYY.MM.DD HH:MM:SS 까지"와 같은 포맷을 파싱
+  let parsableDateStr = kstDateStringWithSuffix
+    .replace(/부터|까지/g, "")
+    .trim();
+  parsableDateStr = parsableDateStr.replace(/\./g, "-"); // "YYYY-MM-DD HH:MM:SS" 형태로 변환
+
+  const date = dayjs(parsableDateStr);
+
+  if (!date.isValid()) {
+    return null;
+  }
+  return date.toDate();
+};
 
 // Updated FilterState to support multi-select (array-based)
 interface FilterState {
@@ -84,8 +107,11 @@ export const SwimmingLessonList = () => {
     const currentMonth = now.month() + 1;
     const allowedMonthsByDate = [currentMonth];
 
-    // If it's the 25th or later, allow viewing next month's lessons.
-    if (now.date() >= 25) {
+    // 25일 오전 10시부터 다음 달 강습이 보이도록 설정합니다.
+    const isAfterOpeningTime =
+      (now.date() === 25 && now.hour() >= 10) || now.date() > 25;
+
+    if (isAfterOpeningTime) {
       const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
       allowedMonthsByDate.push(nextMonth);
     }
@@ -100,7 +126,7 @@ export const SwimmingLessonList = () => {
       // 한글 날짜 형식 파싱 (예: "25년06월09일" -> "2025-06-09")
       const koreanDateRegex = /(\d{2})년(\d{2})월(\d{2})일/;
       const match = lesson.startDate.match(koreanDateRegex);
-      
+
       if (!match) {
         return false;
       }
@@ -119,8 +145,17 @@ export const SwimmingLessonList = () => {
       }
 
       // Rule 2: Show Available and Remaining (user toggle)
-      if (showAvailableOnly && lesson.remaining === 0) {
-        return false;
+      if (showAvailableOnly) {
+        // 정원이 마감된 경우 필터링
+        if (lesson.remaining === 0) {
+          return false;
+        }
+
+        // 접수 기간이 마감된 경우 필터링
+        const applicationEndTime = parseKSTDateString(lesson.receiptId);
+        if (applicationEndTime && now.isAfter(dayjs(applicationEndTime))) {
+          return false;
+        }
       }
 
       // Rule 3: Month Match (user filter from UI)

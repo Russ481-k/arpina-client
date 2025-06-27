@@ -3,9 +3,9 @@ import { Button, Text, Box, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { MypageEnrollDto } from "@/types/api";
 import { LessonDTO } from "@/types/swimming";
-import { mypageApi } from "@/lib/api/mypageApi";
 import { toaster } from "@/components/ui/toaster";
 import dayjs from "dayjs";
+import { Dialog, CloseButton } from "@chakra-ui/react";
 
 // Helper function to parse KST date strings like "YYYY.MM.DD HH:MM부터" or "YYYY.MM.DD HH:MM까지"
 // and return a Date object.
@@ -56,6 +56,7 @@ interface LessonCardActionsProps {
   onRequestCancel?: (enrollId: number) => void;
   onApplyClick?: () => void;
   onGoToPayment?: (enrollId: number) => void;
+  onRenewLesson?: (enrollment: MypageEnrollDto) => void;
 }
 
 const LessonCardActions: React.FC<LessonCardActionsProps> = ({
@@ -64,6 +65,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   onRequestCancel,
   onApplyClick,
   onGoToPayment,
+  onRenewLesson,
 }) => {
   const router = useRouter();
 
@@ -79,6 +81,8 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   const [timeRemaining, setTimeRemaining] = useState(getInitialTimeRemaining);
   // isCountingDown is true if there was an initial time remaining (i.e., reservationId is in the future)
   const [isCountingDown, setIsCountingDown] = useState(!!timeRemaining);
+
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined = undefined;
@@ -140,13 +144,17 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
   }, [lesson.id, lesson.reservationId, enrollment, isCountingDown]);
 
   if (enrollment) {
-    if (
-      enrollment.isRenewal === true &&
-      enrollment.status === "RENEWAL_AVAILABLE"
-    ) {
-      const handleRenewal = async () => {
-        if (!enrollment.lesson?.lessonId) {
-          console.error("재수강할 강습 정보가 없습니다.");
+    const { enrollId, status, lesson } = enrollment;
+    const isCourseExpired: boolean = lesson.endDate
+      ? dayjs().isAfter(dayjs(lesson.endDate), "day")
+      : false;
+
+    let actionButtons = null;
+
+    if (status === "RENEWAL_AVAILABLE" && enrollment.renewal === true) {
+      const handleRenewal = () => {
+        if (!enrollment) {
+          console.error("재수강할 신청 정보가 없습니다.");
           toaster.create({
             title: "오류",
             description: "재수강할 강습 정보를 찾을 수 없습니다.",
@@ -154,121 +162,68 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           });
           return;
         }
-
-        try {
-          const response = await mypageApi.requestRenewal({
-            lessonId: enrollment.lesson.lessonId,
-            wantsLocker: false, // 사물함 선택 UI 추가 전까지 false로 고정
-          });
-
-          if (response && response.paymentPageUrl) {
-            router.push(response.paymentPageUrl);
-          } else {
-            throw new Error("결제 페이지 URL을 받지 못했습니다.");
-          }
-        } catch (error) {
-          console.error("재수강 신청 처리 중 오류 발생:", error);
-          toaster.create({
-            title: "재수강 신청 실패",
-            description:
-              "재수강 신청 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
-            type: "error",
-          });
+        if (onRenewLesson) {
+          onRenewLesson(enrollment);
         }
       };
-
-      return (
+      actionButtons = (
         <Flex direction="column" align="center" gap={2} w="100%">
-          <Button colorScheme="teal" w="100%" onClick={handleRenewal}>
-            재수강 신청하기
-          </Button>
           <Text fontSize="xs" color="gray.500">
             {enrollment.renewalWindow?.open
-              ? `${dayjs(enrollment.renewalWindow.open).format("M/D")}~${dayjs(
-                  enrollment.renewalWindow.close
-                ).format("M/D")}`
+              ? `${dayjs(enrollment.renewalWindow.open)
+                  .subtract(9, "hour")
+                  .format("M/D")}~${dayjs(enrollment.renewalWindow.close)
+                  .subtract(9, "hour")
+                  .format("M/D")}`
               : "재수강 신청 기간"}
           </Text>
-        </Flex>
-      );
-    }
-    const enrollStatus = enrollment.status;
-    const { enrollId } = enrollment;
-
-    if (enrollStatus === "CANCELED_UNPAID") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              취소 완료
-            </Text>
+          <Button colorPalette="teal" w="100%" onClick={handleRenewal}>
+            재수강 신청하기
           </Button>
         </Flex>
       );
-    }
-    // '취소' 관련 상태들을 우선적으로 처리합니다.
-    if (enrollStatus === "REFUNDED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              환불 완료
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "REFUNDED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
+          <Text color="gray.500" fontSize="sm">
+            환불 완료
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "ADMIN_CANCELED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="red" w="100%" disabled>
-            <Text color="red.500" fontSize="sm">
-              관리자 취소
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "ADMIN_CANCELED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="red" w="100%" disabled>
+          <Text color="red.500" fontSize="sm">
+            관리자 취소
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "REFUND_REQUESTED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="blue" w="100%" disabled>
-            <Text color="blue.500" fontSize="sm">
-              환불 요청됨 : 진행사항 및 완료 여부는 안내데스크에 문의
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "REFUND_REQUESTED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="blue" w="100%" disabled>
+          <Text color="blue.500" fontSize="sm">
+            환불 요청됨 : 진행사항 및 완료 여부는 안내데스크에 문의
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "REFUND_PENDING_ADMIN_CANCEL") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="blue" w="100%" disabled>
-            <Text color="blue.500" fontSize="sm">
-              환불 처리중
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "REFUND_PENDING_ADMIN_CANCEL") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="blue" w="100%" disabled>
+          <Text color="blue.500" fontSize="sm">
+            환불 처리중
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "PARTIALLY_REFUNDED") {
-      return (
-        <Flex direction="column" align="center" gap={2} w="100%">
-          <Button variant="outline" colorPalette="gray" w="100%" disabled>
-            <Text color="gray.500" fontSize="sm">
-              부분 환불 완료
-            </Text>
-          </Button>
-        </Flex>
+    } else if (status === "PARTIAL_REFUNDED") {
+      actionButtons = (
+        <Button variant="outline" colorPalette="gray" w="100%" disabled>
+          <Text color="gray.500" fontSize="sm">
+            부분 환불 완료
+          </Text>
+        </Button>
       );
-    }
-
-    if (enrollStatus === "PAYMENT_PENDING" || enrollStatus === "UNPAID") {
-      return (
+    } else if (status === "PAYMENT_PENDING") {
+      actionButtons = (
         <Flex align="center" gap={3} w="100%">
           <Flex direction="column" align="center" gap={2} w="50%">
             <Button
@@ -296,38 +251,79 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
             <Button
               colorPalette="red"
               w="50%"
-              onClick={() => enrollId && onRequestCancel(enrollId)}
+              onClick={() => setIsCancelDialogOpen(true)}
+              disabled={isCourseExpired}
             >
               취소 신청
             </Button>
           )}
         </Flex>
       );
-    }
-
-    if (enrollStatus === "PAID") {
-      return (
+    } else if (status === "PAID") {
+      actionButtons = (
         <Flex align="center" gap={3} w="100%">
           {onRequestCancel && (
             <Button
               colorPalette="red"
               w="100%"
-              onClick={() => enrollId && onRequestCancel(enrollId)}
+              onClick={() => setIsCancelDialogOpen(true)}
+              disabled={isCourseExpired}
             >
               취소 신청
             </Button>
           )}
         </Flex>
       );
+    } else {
+      actionButtons = (
+        <Flex direction="column" align="center" gap={2} w="100%">
+          <Text fontSize="sm" color="gray.500" textAlign="center">
+            상태: {status}
+          </Text>
+        </Flex>
+      );
     }
 
-    // Handle other statuses: FAILED, etc.
     return (
-      <Flex direction="column" align="center" gap={2} w="100%">
-        <Text fontSize="sm" color="gray.500" textAlign="center">
-          상태: {enrollment.status}
-        </Text>
-      </Flex>
+      <>
+        {actionButtons}
+        <Dialog.Root
+          open={isCancelDialogOpen}
+          onOpenChange={(details) => {
+            if (!details.open) setIsCancelDialogOpen(false);
+          }}
+        >
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>취소 신청 확인</Dialog.Title>
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton />
+                </Dialog.CloseTrigger>
+              </Dialog.Header>
+              <Dialog.Body>정말로 강습 취소를 신청하시겠습니까?</Dialog.Body>
+              <Dialog.Footer>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCancelDialogOpen(false)}
+                >
+                  닫기
+                </Button>
+                <Button
+                  colorPalette="red"
+                  onClick={() => {
+                    if (enrollId) onRequestCancel?.(enrollId);
+                    setIsCancelDialogOpen(false);
+                  }}
+                >
+                  취소 신청
+                </Button>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Dialog.Root>
+      </>
     );
   } else {
     // Listing context (no enrollment) - Purely time and capacity based
@@ -389,6 +385,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
     } else if (!applicationStartTime || !applicationEndTime) {
       // 5. Dates are invalid or missing
       buttonContent = "정보확인필요";
+
       buttonDisabled = true;
       buttonBgColor = "#A0AEC0";
       hoverBgColor = "#A0AEC0";

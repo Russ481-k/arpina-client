@@ -1,10 +1,8 @@
 import { UiDisplayStatus } from "@/types/statusTypes";
 
 // export type PayStatus = // Original PayStatus type is removed
-//   | "UNPAID"
 //   | "PAID"
-//   | "PARTIALLY_REFUNDED"
-//   | "CANCELED_UNPAID"
+//   | "PARTIAL_REFUNDED"
 //   | "PAYMENT_TIMEOUT"
 //   | "REFUND_PENDING_ADMIN_CANCEL"
 //   | "REFUNDED";
@@ -28,11 +26,6 @@ export const displayStatusConfig: Record<
     colorPalette: "green",
     badgeVariant: "solid",
   },
-  UNPAID: {
-    label: "미결제",
-    colorPalette: "red",
-    badgeVariant: "solid",
-  },
   FAILED: {
     label: "결제실패",
     colorPalette: "red",
@@ -44,11 +37,6 @@ export const displayStatusConfig: Record<
     badgeVariant: "outline",
   },
   PARTIAL_REFUNDED: {
-    label: "부분환불",
-    colorPalette: "orange",
-    badgeVariant: "solid",
-  },
-  PARTIALLY_REFUNDED: {
     label: "부분환불",
     colorPalette: "orange",
     badgeVariant: "solid",
@@ -86,11 +74,6 @@ export const displayStatusConfig: Record<
     colorPalette: "gray",
     badgeVariant: "outline",
   },
-  CANCELED_UNPAID: {
-    label: "미결제 취소",
-    colorPalette: "gray",
-    badgeVariant: "outline",
-  },
 };
 
 /**
@@ -109,4 +92,3 @@ export const getDisplayStatusInfo = (status: UiDisplayStatus | string) => {
   }
   return { label: "알 수 없음", color: "gray", variant: "outline" }; // Default for unknown statuses
 };
-

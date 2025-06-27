@@ -7,8 +7,10 @@ import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
 import { Box, Text } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
+  const router = useRouter();
   const images = [
     "/images/contents/jasmine_img01.jpg",
     "/images/contents/jasmine_img02.jpg",
@@ -56,18 +58,19 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="자스민 jasmine"
         titleHighlight="자스민"
-        description="국제회의 및 학회부터 소규모 교육과 워크숍까지! <br />
-다양한 규모의 회의실을 갖추어 성공적인 비즈니스를 지원합니다."
+        description="자스민룸은 회의와 세미나에 적합한 음향·영상 설비를 갖춘 다목적 비즈니스 공간입니다. 아늑하고 쾌적한 실내 분위기 속에서 기업 간담회, 워크숍, 소규모 국제회의 등 다양한 행사를 효율적으로 운영하실 수 있으며, 창 너머로 보이는 바깥 풍경이 공간에 여유로움을 더합니다. 
+※ 자스민룸이 있는 8층 중앙에 위치한 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과 바다를 아우르는 탁 트인 조망을 경험하실 수 있습니다."
         images={images}
-        showReservation={false}
+        showReservation={true}
+        buttonOnClick={() => router.push("/meeting/estimate")}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (8층 자스민)</HeadingH4>
         <Text
           mt="10px"
-          mb="60px"
+          mb={{ base: 4, md: 10, lg: 25 }}
           color="#FAB20B"
-          fontSize="3xl"
+          fontSize={{ base: "xl", md: "2xl", lg: "3xl" }}
           fontWeight="medium"
         >
           출장뷔페 및 외부 음식물 반입금지

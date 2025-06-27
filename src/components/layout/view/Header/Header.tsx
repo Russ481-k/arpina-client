@@ -18,6 +18,29 @@ import { UtilityIcons } from "./UtilityIcons";
 import MobileMenuDrawer from "./MobileMenuDrawer";
 import SitemapDrawer from "./SitemapDrawer";
 
+const buildVisibleMenuTree = (menus: Menu[]): Menu[] => {
+  if (!menus) {
+    return [];
+  }
+
+  const filterAndSortRecursive = (nodes: Menu[]): Menu[] => {
+    return nodes
+      .map((node) => {
+        const newNode = { ...node };
+        if (node.children && node.children.length > 0) {
+          newNode.children = filterAndSortRecursive(node.children);
+        } else {
+          newNode.children = [];
+        }
+        return newNode;
+      })
+      .filter((node) => node.visible !== false)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  };
+
+  return filterAndSortRecursive(menus);
+};
+
 interface HeaderProps {
   currentPage: string;
   menus?: Menu[];
@@ -53,7 +76,7 @@ export const Header = memo(function Header({
     return pathname === menuUrl || pathname.startsWith(menuUrl + "/");
   };
 
-  const visibleMenus = menus.filter((menu) => menu.visible !== false);
+  const visibleMenus = buildVisibleMenuTree(menus);
   const menusWithLastFlag = visibleMenus.map((menu, index) => ({
     ...menu,
     isLastMenuItem: index === visibleMenus.length - 1,

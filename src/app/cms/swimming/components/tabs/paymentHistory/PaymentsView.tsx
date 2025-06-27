@@ -101,7 +101,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
     value: PaymentStatus | "";
     label: string;
   }[] = [
-    { value: "", label: "전체" },
     { value: "PAID", label: displayStatusConfig.PAID.label },
     { value: "FAILED", label: displayStatusConfig.FAILED.label },
     { value: "CANCELED", label: displayStatusConfig.CANCELED.label },
@@ -122,6 +121,8 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
       const searchTermLower = paymentFilters.searchTerm.toLowerCase();
       const matchesSearch =
         payment.userName.toLowerCase().includes(searchTermLower) ||
+        (payment.userId &&
+          payment.userId.toLowerCase().includes(searchTermLower)) ||
         (payment.userPhone && payment.userPhone.includes(searchTermLower)) ||
         (payment.tid && payment.tid.toLowerCase().includes(searchTermLower)); // Check if tid exists
       const matchesStatus =
@@ -135,7 +136,6 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
       {
         headerName: "이름",
         field: "userName",
-        flex: 1,
         minWidth: 100,
         sortable: true,
         filter: "agTextColumnFilter",
@@ -151,14 +151,19 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
       {
         headerName: "주문ID",
         field: "tid",
-        width: 180,
         sortable: true,
+        flex: 1,
+        minWidth: 180,
         filter: "agTextColumnFilter",
+        cellStyle: {
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        } as any,
       },
       {
         headerName: "강습명",
         field: "lessonTitle",
-        flex: 1.5,
         minWidth: 200,
         sortable: true,
         filter: "agTextColumnFilter",
@@ -237,7 +242,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
         onSearchTermChange={(e) =>
           setPaymentFilters((prev) => ({ ...prev, searchTerm: e.target.value }))
         }
-        searchTermPlaceholder="검색 (이름/번호/주문ID)"
+        searchTermPlaceholder="검색 (이름/회원ID/번호/주문ID)"
         onExport={handleExportPayments}
         exportButtonLabel="엑셀 다운로드"
         selectFilters={[
@@ -271,6 +276,7 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
           headerHeight={36}
           rowHeight={40}
           suppressCellFocus={true}
+          enableCellTextSelection={true}
           getRowStyle={() => ({
             color: textColor,
             background: bg,

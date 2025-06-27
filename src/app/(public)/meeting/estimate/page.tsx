@@ -25,17 +25,14 @@ import {
   Portal,
   Grid,
 } from "@chakra-ui/react";
-import {
-  useGroupReservationForm,
-  RoomValidationErrors,
-} from "@/hooks/useGroupReservationForm";
+import { useGroupReservationForm } from "@/hooks/useGroupReservationForm";
 import { AgreementItem } from "@/app/(public)/signup/components/AgreementItem";
 import { CheckCircle2, MinusIcon, PlusIcon } from "lucide-react";
 import Image from "next/image";
 import { SIGNUP_AGREEMENT_TEMPLATES } from "@/data/agreements";
 
 const seminarRoomsData = {
-  대회의실: ["대회의실"],
+  대회의실: ["그랜드볼룸"],
   중회의실: ["시걸", "클로버", "자스민"],
   소회의실: ["가람", "누리", "오션"],
 };

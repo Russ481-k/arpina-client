@@ -39,9 +39,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="이디야 EDIYA"
-        titleHighlight="이디야"
-        description="부산도시공사 아르피나에서는 시민들의 편의를 위해 1층에서 이디야 카페를 운영중입니다."
+        title="이디야 커피 EDIYA COFFEE"
+        titleHighlight="이디야 커피"
+        description="아르피나 1층에서는 이용객 및 시민 편의를 위한 이디야커피 매장이 마련되어 있습니다. 쾌적한 공간에서 커피와 음료를 즐기며 여유로운 시간을 보내보세요. 세미나 전후 휴식이나 간단한 미팅 장소로도 이용하실 수 있습니다."
         images={images}
         showReservation={false}
       />
@@ -57,10 +57,6 @@ export default function ParticipantsPage() {
           />
           <Text fontSize="2xl">경찰대학교 지휘부 워크샵 케이터링 사진</Text>
         </Flex>
-      </Box>
-      <Box mt="100px">
-        <HeadingH4>메뉴안내</HeadingH4>
-        <Image src="/images/contents/ediya_menu_img.jpg" alt="이디야 메뉴" />
       </Box>
     </PageContainer>
   );

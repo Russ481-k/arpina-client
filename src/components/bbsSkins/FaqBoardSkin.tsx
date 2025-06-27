@@ -138,16 +138,6 @@ const FaqBoardSkin: React.FC<FaqBoardSkinProps> = ({
           등록된 FAQ 항목이 없습니다.
         </Text>
       )}
-      {posts.length > 0 && pagination.totalPages > 1 && (
-        <CustomPagination
-          currentPage={pagination.currentPage - 1}
-          totalPages={pagination.totalPages}
-          onPageChange={handlePageChange}
-          pageSize={pagination.pageSize}
-          onPageSizeChange={handlePageSizeChange}
-          availablePageSizes={AVAILABLE_PAGE_SIZES_FAQ}
-        />
-      )}
     </Box>
   );
 };
