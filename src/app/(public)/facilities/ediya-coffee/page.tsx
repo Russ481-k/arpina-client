@@ -44,6 +44,10 @@ export default function ParticipantsPage() {
         description="아르피나 1층에서는 이용객 및 시민 편의를 위한 이디야커피 매장이 마련되어 있습니다. 쾌적한 공간에서 커피와 음료를 즐기며 여유로운 시간을 보내보세요. 세미나 전후 휴식이나 간단한 미팅 장소로도 이용하실 수 있습니다."
         images={images}
         showReservation={false}
+        descriptionStyle={{
+          textAlign: "justify",
+          lineHeight: "1.3",
+        }}
       />
       <Box mt="100px">
         <HeadingH4>이디야 케이터링 서비스안내</HeadingH4>
