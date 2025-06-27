@@ -55,15 +55,9 @@ export default function Layout({
   const colors = useColors();
   return (
     <Box bg={colors.bg} minHeight="100vh" fontFamily="'Paperlogy', sans-serif">
-      <MemoizedHeader
-        currentPage={currentPage}
-        menus={menus}
-        isPreview={isPreview}
-      />
       <Box>
         <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
       </Box>
-      <MemoizedFooter />
     </Box>
   );
 }

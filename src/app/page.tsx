@@ -6,13 +6,14 @@ import Layout from "@/components/layout/view/Layout";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useMenu } from "@/lib/hooks/useMenu";
 import { sortMenus } from "@/lib/api/menu";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import { PopupManager } from "@/components/common/PopupManager";
 import MainSection from "@/components/main/MainSection";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { colorMode } = useColorMode();
@@ -38,6 +39,11 @@ export default function Home() {
       return [];
     }
   }, [menus]);
+
+  const router = useRouter();
+  useEffect(() => {
+    router.push("/test2");
+  }, []);
 
   return (
     <Layout menus={treeMenus} currentPage="홈">

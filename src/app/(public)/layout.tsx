@@ -66,7 +66,7 @@ export default function RoutesLayout({
       >
         <Global styles={[getScrollbarStyle(isDark)]} />
         {children}
-        <FloatingButtons />
+        {/* <FloatingButtons /> */}
       </Box>
     </Layout>
   );
