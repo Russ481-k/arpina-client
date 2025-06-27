@@ -413,7 +413,7 @@ export default function ParticipantsPage() {
               성수기 주말 : 143,000원
             </Mark>
             <br />
-            으로 운영하고 있습니다
+            으로 운영하고 있습니다.
           </ListStyle01.StyledText>
         </>
       ),

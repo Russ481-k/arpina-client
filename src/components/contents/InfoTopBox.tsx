@@ -59,7 +59,18 @@ export default function InfoTopBox({
         { label: "예약실(학교 및 기업)", number: "051-740-9800" },
       ];
     }
-
+    if (pathname?.includes("/sports/golf")) {
+      return [
+        { label: "문의", number: "051-740-3271~2" },
+        { label: "운영시간", number: "06:00~22:00" },
+      ];
+    }
+    if (pathname?.includes("/sports/swimming")) {
+      return [
+        { label: "문의", number: "051-740-3271~2" },
+        { label: "운영시간", number: "06:00~22:00" },
+      ];
+    }
     let number;
     let label = "문의 및 예약";
     if (pathname?.includes("/meeting/")) {
