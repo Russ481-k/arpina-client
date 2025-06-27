@@ -55,7 +55,7 @@ export default function InfoTopBox({
   const getPhoneNumbers = () => {
     if (pathname?.includes("/rooms/")) {
       return [
-        { label: "문의 및 예약", number: "051-740-3201" },
+        { label: "객실 프론트", number: "051-740-3201" },
         { label: "예약실(학교 및 기업)", number: "051-740-9800" },
       ];
     }

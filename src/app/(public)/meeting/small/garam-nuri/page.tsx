@@ -80,7 +80,7 @@ export default function ParticipantsPage() {
         title="가람/누리 GARAM&NURI"
         titleHighlight="가람/누리"
         description="가람&누리룸은 접근성이 용이한 1층에 위치한 회의실로 최대 30명 까지 수용 가능한 규모로,
-        소규모 기업 간담회, 워크숍, 세미나 등 다양한 비즈니스 행사를 안정적으로 운영하실 수 있습니다"
+        소규모 기업 간담회, 워크숍, 세미나 등 다양한 비즈니스 행사를 안정적으로 운영하실 수 있습니다."
         images={images}
         showReservation={true}  
         buttonOnClick={() => router.push("/meeting/estimate")}

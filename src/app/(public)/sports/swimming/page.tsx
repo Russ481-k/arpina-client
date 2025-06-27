@@ -22,7 +22,7 @@ export default function ParticipantsPage() {
           content: (
             <Box lineHeight={1.5}>
               수영 강습 <br />
-              (월,화,수,목,금)
+              (월, 화, 수, 목, 금)
             </Box>
           ),
         },
@@ -50,7 +50,7 @@ export default function ParticipantsPage() {
           header: "강습일",
           content: (
             <Box lineHeight={1.5}>
-              월요일~금요일 <br />
+              월요일 ~ 금요일 <br />
               주 5회
             </Box>
           ),
@@ -66,9 +66,9 @@ export default function ParticipantsPage() {
           content: (
             <Box lineHeight={1.5}>
               자유수영 가능시간 <br />
-              (평일 12~14시)
+              (평일 12 ~ 14시)
               <br />
-              (토.공휴일 09~17시) <br />
+              (토.공휴일 09 ~ 17시) <br />
               <Box as="span" color="red.500" fontSize="sm">
                 매월 두 번째 화요일 및 <></>
                 매주 일요일은 휴관입니다
@@ -177,6 +177,10 @@ export default function ParticipantsPage() {
         description="쾌적한 실내환경과 철저한 수질 관리, 전문 강사의 체계적인 강습이 어우러진 아르피나 수영장은 다양한 프로그램으로 건강한 일상을 함께합니다."
         images={images}
         showReservation={false}
+        descriptionStyle={{
+          textAlign: "justify",
+          lineHeight: "1.3",
+        }}
         // downloadInfo={{
         //   text: "수영장 이용규정 다운로드",
         //   url: "/files/futsal_regulations.pdf",
