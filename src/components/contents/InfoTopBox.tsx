@@ -10,7 +10,6 @@ import {
   Mark,
   Image,
   useBreakpointValue,
-  SystemStyleObject,
 } from "@chakra-ui/react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Thumbs } from "swiper/modules";
@@ -26,11 +25,10 @@ import "swiper/css/thumbs";
 interface InfoTopBoxProps {
   title: string;
   titleHighlight: string;
-  description: React.ReactNode;
+  description: string;
   images: string[];
   buttonOnClick?: () => void;
   showReservation?: boolean; // 실시간 예약 섹션 표시 유무
-  descriptionStyle?: SystemStyleObject;
   downloadInfo?: {
     text: string;
     url: string;
@@ -46,37 +44,28 @@ export default function InfoTopBox({
   buttonOnClick,
   showReservation = true, // 기본값은 true로 설정
   downloadInfo,
-  descriptionStyle,
 }: InfoTopBoxProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const pathname = usePathname();
 
   // 라우트 경로에 따른 전화번호 설정
-  const getPhoneNumbers = () => {
-    if (pathname?.includes("/rooms/")) {
-      return [
-        { label: "문의 및 예약", number: "051-740-3201" },
-        { label: "예약실(학교 및 기업)", number: "051-740-9800" },
-      ];
-    }
-
-    let number;
-    let label = "문의 및 예약";
+  const getPhoneNumber = () => {
     if (pathname?.includes("/meeting/")) {
-      number = "051-740-9800"; // 세미나 섹션 전화번호
+      return "051-740-9800"; // 세미나 섹션 전화번호
+    } else if (pathname?.includes("/rooms/")) {
+      return "051-731-9802"; // 베드룸 섹션 전화번호
     } else if (pathname?.includes("/sports/futsal")) {
-      number = "051-740-3271"; // 풋살장 섹션 전화번호
+      return "051-740-3271"; // 풋살장 섹션 전화번호
     } else if (pathname?.includes("/facilities/restaurant-jj")) {
-      number = "010-3394-7114"; // 제이엔제이 전화번호
+      return "010-3394-7114"; // 제이엔제이 전화번호
     } else if (pathname?.includes("/facilities/ediya-coffee")) {
-      number = "0507-1404-9915"; // 이디야 커피 전화번호
+      return "0507-1404-9915"; // 이디야 커피 전화번호
     } else {
-      number = "051-731-9800"; // 기본 전화번호
+      return "051-731-9800"; // 기본 전화번호
     }
-    return [{ label, number }];
   };
 
-  const phoneNumbers = getPhoneNumbers();
+  const phoneNumber = getPhoneNumber();
 
   // 다운로드 버튼 클릭 핸들러
   const handleDownload = () => {
@@ -121,12 +110,6 @@ export default function InfoTopBox({
     lg: "lg",
     xl: "2xl",
   });
-  const labelFontSize = useBreakpointValue({
-    base: "xs",
-    md: "sm",
-    lg: "md",
-    xl: "lg",
-  });
   const phoneFontSize = useBreakpointValue({
     base: "md",
     md: "lg",
@@ -156,7 +139,7 @@ export default function InfoTopBox({
     md: "42.8125%",
   });
   const gap = useBreakpointValue({ base: "15px", md: "5.9375%" });
-  console.log(descriptionStyle?.fontWeight);
+
   return (
     <Box className="info-top-box">
       <Flex
@@ -165,10 +148,7 @@ export default function InfoTopBox({
         gap={gap}
         flexDirection={flexDir}
       >
-        <Box
-          width={images.length > 1 ? textBoxW : "100%"}
-          order={{ base: 2, md: 1 }}
-        >
+        <Box width={textBoxW} order={{ base: 2, md: 1 }}>
           <Flex justifyContent="space-between" alignItems="center">
             <Heading
               as="h3"
@@ -210,26 +190,18 @@ export default function InfoTopBox({
               textAlign="right"
               fontSize={infoFontSize}
             >
-              {phoneNumbers.map((phone, index) => (
-                <Box key={index} mb={index < phoneNumbers.length - 1 ? 4 : 0}>
-                  <Text fontSize={labelFontSize}>{phone.label}</Text>
-                  <Text fontSize={phoneFontSize}>{phone.number}</Text>
-                </Box>
-              ))}
+              <Text fontSize={infoFontSize}>문의 및 예약</Text>
+              <Text fontSize={phoneFontSize}>{phoneNumber}</Text>
             </Box>
           </Flex>
           <Text
             mt={{ base: "14px", md: "30px", lg: "95px" }}
             color="#393939"
-            fontWeight="normal"
-            textAlign={descriptionStyle?.textAlign}
-            lineHeight="1.3"
+            fontWeight="semibold"
+            lineHeight="1.2"
             fontSize={descSize}
-            whiteSpace="pre-line"
-            {...descriptionStyle}
-          >
-            {description}
-          </Text>
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
 
           {/* 다운로드 버튼 */}
           {downloadInfo && (
@@ -301,11 +273,7 @@ export default function InfoTopBox({
             </Box>
           )}
         </Box>
-        <Box
-          display={images.length > 1 ? "block" : "none"}
-          width={imgBoxW}
-          order={{ base: 1, md: 2 }}
-        >
+        <Box width={imgBoxW} order={{ base: 1, md: 2 }}>
           {/* 메인 슬라이더 */}
           <Swiper
             modules={[Thumbs]}

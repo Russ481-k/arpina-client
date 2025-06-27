@@ -100,7 +100,6 @@ const IntroSection = ({
           color="#373636"
           fontSize={{ base: "lg", md: "2xl", lg: "2xl" }}
           whiteSpace="pre-line"
-          textAlign="justify"
         >
           {description}
         </Text>
@@ -186,7 +185,6 @@ export default function ParticipantsPage() {
         title="아르피나 소개"
         description={`광안리 · 해운대 · 센텀시티를 잇는 이상적인 허브
         도심 속 합리적인 컨벤션 & 스테이
-        
         '아름답게 피어나다'라는 뜻을 지닌 아르피나는 광안리, 해운대, 부산전시컨벤션센터(BEXCO), 센텀시티, 마린시티의 중앙에 위치하고 있어 관광과 해양 레저, 고품격 쇼핑은물론 비즈니스와 워케이션까지 진행할 수 있는 최적의 공간입니다. 다양한 타입의 객실과 회의실, 스포츠센터를 갖춘 아르피나에서 여유로운 시간을 즐겨보시기 바랍니다.
         `}
         imageSrc="/images/contents/intro_img01.jpg"

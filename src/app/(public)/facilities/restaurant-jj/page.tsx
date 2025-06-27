@@ -125,10 +125,6 @@ export default function ParticipantsPage() {
         description="아르피나 프론트 오른편 끝에 위치한 대식당 ‘제이앤제이’는 총 240석 규모의 뷔페형 식당으로, 사전 예약제로 운영됩니다. 단체 손님과 행사 진행에 적합한 쾌적하고 편안한 식사 공간을 제공합니다."
         images={images}
         showReservation={false}
-        descriptionStyle={{
-          textAlign: "justify",
-          lineHeight: "1.3",
-        }}
       />
       <Box mt="100px">
         <HeadingH4>제이엔제이 공간 안내</HeadingH4>

@@ -30,14 +30,13 @@ function Layout({ children }: { children: React.ReactNode }) {
   const isRootPath = pathname === "/";
   const isCMSPath = pathname?.startsWith("/cms");
   const isLoginPage = pathname === "/cms/login";
-  const isTestPage = pathname === "/cms/test" || pathname === "/cms/test2";
 
   useEffect(() => {
     setIsSidebarOpen(!!isLargerThanLg);
   }, [isLargerThanLg]);
 
   const shouldShowCMSLayout =
-    isCMSPath && !isRootPath && isAuthenticated && !isLoginPage && !isTestPage;
+    isCMSPath && !isRootPath && isAuthenticated && !isLoginPage;
 
   return (
     <Box

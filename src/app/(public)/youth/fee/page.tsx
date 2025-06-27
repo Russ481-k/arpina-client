@@ -64,7 +64,7 @@ export default function YouthFeePage() {
         { content: "식 비", style: { textAlign: "center" as const } },
         {
           content:
-            "1식= 청소년(초·중·고) 11,000원 / 성인 14,000원<span style='color: red; font-size: 0.8em; display: block; margin-top: 15px;'>※ 식당은 외주업체가 운영하는 관계로 별도 예약 및 결제가 필요합니다.</span>",
+            "1식= 청소년(초·중·고) 11,000원 / 성인 14,000원<br><span style='color: red;'>※ 식당은 외주업체가 운영하는 관계로 별도 예약 및 결제가 필요합니다.</span>",
           colSpan: 3,
           style: { textAlign: "center" as const },
         },
