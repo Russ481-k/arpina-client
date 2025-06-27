@@ -13,7 +13,7 @@ import { ReactNode } from "react";
 // 서비스 아이템 인터페이스
 export interface ServiceItem {
   title: string;
-  description: string;
+  description: React.ReactNode;
   imageSrc: string;
 }
 
