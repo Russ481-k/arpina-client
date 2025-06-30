@@ -1,9 +1,10 @@
 "use client";
 
 import { Box, List, Heading, VStack, Text } from "@chakra-ui/react";
+import { ReactNode } from "react";
 
 interface InfoBoxList01Props {
-  items: string[];
+  items: ReactNode[];
   title?: string;
   subtitle?: string;
 }
