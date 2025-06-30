@@ -69,6 +69,7 @@ export const UserGrid = forwardRef<UserGridRef, UserGridProps>(
         { headerName: "ID", field: "username", flex: 1, minWidth: 180 },
         { headerName: "이름", field: "name", width: 120 },
         { headerName: "연락처", field: "phone", width: 150 },
+        { headerName: "차량번호", field: "carNo", width: 120 },
         {
           headerName: "상태",
           field: "status",

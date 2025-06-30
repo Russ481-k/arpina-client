@@ -1173,6 +1173,7 @@ export interface UserEnrollmentHistoryDto {
   username: string;
   name: string;
   phone: string;
+  carNo: string;
   status: string;
   lastEnrollment: EnrollmentDetailDto | null;
   enrollmentHistory: EnrollmentDetailDto[];
