@@ -84,7 +84,6 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
   borderColor,
   colors,
 }) => {
-  console.log("Selected User in Dialog:", selectedUser);
   const [userMemoText, setUserMemoText] = useState("");
   const queryClient = useQueryClient();
 

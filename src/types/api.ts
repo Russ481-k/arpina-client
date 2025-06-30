@@ -624,6 +624,7 @@ export interface EnrollAdminResponseDto {
   userPhone: string | null; // User phone number from user table
   userLoginId: string | null; // User login ID from user table
   membershipType?: string; // Added field for discount/membership type
+  renewalFlag: boolean;
 }
 
 // CancelRequestDto for GET /admin/swimming/enrolls/cancel-requests
