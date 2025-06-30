@@ -6,12 +6,11 @@ import InfoTopBox from "@/components/contents/InfoTopBox";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
 
-
 export default function ParticipantsPage() {
   const images = [
-   "/images/contents/swim_img01.jpg",
-   "/images/contents/swim_img02.jpg",
-   "/images/contents/swim_img03.jpg",
+    "/images/contents/swim_img01.jpg",
+    "/images/contents/swim_img02.jpg",
+    "/images/contents/swim_img03.jpg",
   ];
 
   const tableRows03 = [
@@ -50,8 +49,7 @@ export default function ParticipantsPage() {
           header: "강습일",
           content: (
             <Box lineHeight={1.5}>
-              월요일 ~ 금요일 <br />
-              주 5회
+              월요일 ~ 금요일 <br />주 5회
             </Box>
           ),
           rowSpan: 5,
@@ -84,8 +82,7 @@ export default function ParticipantsPage() {
         { header: "시간", content: "09:00 / 10:00 / 11:00" },
         { header: "강습일", content: null },
         { header: "1개월 이용료", content: null },
-        { header: "비 고", 
-          content: null },
+        { header: "비 고", content: null },
       ],
     },
     {
@@ -119,14 +116,17 @@ export default function ParticipantsPage() {
       columns: [
         { header: "구분", content: "성인" },
         { header: "자유수영 이용요금", content: "8,000원" },
-        { header: "비고", content: (
-          <Box lineHeight={1.5}>
-            자유수영 가능시간 <br />
-            평일 12:00 ~ 14:00 <br />
-            토, 공휴일 09:00 ~ 17:00
-          </Box>
-        ),
-        rowSpan: 6,},
+        {
+          header: "비고",
+          content: (
+            <Box lineHeight={1.5}>
+              자유수영 가능시간 <br />
+              평일 12:00 ~ 14:00 <br />
+              토, 공휴일 09:00 ~ 17:00
+            </Box>
+          ),
+          rowSpan: 6,
+        },
       ],
     },
     {
@@ -156,18 +156,15 @@ export default function ParticipantsPage() {
         { header: "자유수영 이용요금", content: "4,000원" },
         { header: "비고", content: null },
       ],
-    }
-    ,
+    },
     {
       columns: [
         { header: "구분", content: "(객실투숙객)유아" },
         { header: "자유수영 이용요금", content: "3,500원" },
         { header: "비고", content: null },
       ],
-    }
+    },
   ];
-
-
 
   return (
     <PageContainer>

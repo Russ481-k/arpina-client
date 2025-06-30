@@ -140,8 +140,8 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="골프장 대관안내 Golf"
-        titleHighlight="골프장 대관안내"
+        title="골프장 Golf"
+        titleHighlight="골프장"
         description={`푸른 창공을 향해 쏘아올리는 상쾌한 샷!
 
         해운대 바닷바람이 스치는 전망 좋은 아르피나 골프연습장은 쾌적한 환경 속에서 골프 연습의 즐거움을 누릴 수 있는 공간입니다.
