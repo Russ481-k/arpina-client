@@ -2,7 +2,16 @@
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import InfoTopBox from "@/components/contents/InfoTopBox";
-import { Box, Heading, List, Tabs, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  List,
+  Tabs,
+  Text,
+  useBreakpointValue,
+} from "@chakra-ui/react";
+import ApTable01 from "@/components/contents/ApTable01";
+import ApTable02 from "@/components/contents/ApTable02";
 
 const CheckInGuide = () => (
   <Box p={{ base: 4, md: 8 }}>
@@ -356,6 +365,13 @@ const AccommodationTerms = () => (
 );
 
 export default function GuidePage() {
+  const descSize = useBreakpointValue({
+    base: "lg",
+    md: "xl",
+    lg: "2xl",
+    xl: "3xl",
+  });
+
   return (
     <PageContainer>
       <InfoTopBox
@@ -370,7 +386,7 @@ export default function GuidePage() {
         fontWeight="normal"
         textAlign="justify"
         lineHeight="1.3"
-        fontSize="30px"
+        fontSize={descSize}
         whiteSpace="pre-line"
       >
         아르피나 유스호스텔 이용에 대한 안내사항입니다. 방문 전 반드시

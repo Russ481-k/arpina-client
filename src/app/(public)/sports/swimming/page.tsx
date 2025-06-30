@@ -24,6 +24,8 @@ export default function ParticipantsPage() {
               수영 강습 <br />
               (월, 화, 수, 목, 금)
             </Box>
+
+
           ),
         },
         { header: "1개월 이용료", content: "105,000원" },
@@ -172,8 +174,8 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="수영장 대관안내 Swimming"
-        titleHighlight="수영장 대관안내"
+        title="수영장 Swimming"
+        titleHighlight="수영장"
         description="쾌적한 실내환경과 철저한 수질 관리, 전문 강사의 체계적인 강습이 어우러진 아르피나 수영장은 다양한 프로그램으로 건강한 일상을 함께합니다."
         images={images}
         showReservation={false}

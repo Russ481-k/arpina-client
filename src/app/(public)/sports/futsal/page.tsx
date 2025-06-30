@@ -133,6 +133,7 @@ export default function ParticipantsPage() {
           url: "/files/futsal_regulations.pdf",
           fileName: "futsal_regulations.pdf",
         }}
+        descriptionStyle={{ textAlign: "justify" }}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>현황안내</HeadingH4>
