@@ -478,16 +478,6 @@ export const EnrollmentManagementTab = ({
     );
   }
 
-  if (gridData.length === 0 && lessonIdFilter) {
-    return (
-      <Box p={4} textAlign="center">
-        <Text color={colors.text.secondary}>
-          선택된 강습에 대한 신청 내역이 없습니다.
-        </Text>
-      </Box>
-    );
-  }
-
   return (
     <Box
       h="full"
@@ -504,21 +494,6 @@ export const EnrollmentManagementTab = ({
         searchTermPlaceholder="검색 (이름/ID/번호)"
         onExport={handleExportEnrollments}
         exportButtonLabel="엑셀 다운로드"
-        selectFilters={[
-          {
-            id: "payStatusFilter",
-            label: "결제상태",
-            value: filters.payStatus,
-            onChange: (e) =>
-              setFilters((prev) => ({
-                ...prev,
-                payStatus: e.target.value as UiDisplayStatus | "",
-              })),
-            options: payStatusOptionsForFilter,
-            maxWidth: "120px",
-            placeholder: "전체",
-          },
-        ]}
         showSearchButton={true}
       ></CommonGridFilterBar>
       <Flex my={2} justifyContent="space-between" alignItems="center">

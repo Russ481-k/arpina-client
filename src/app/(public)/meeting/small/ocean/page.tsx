@@ -58,10 +58,15 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="오션 Ocean"
         titleHighlight="오션"
-        description="아르피나 2층에 위치한 오션 회의실은 기업 및 각종 단체의 소규모 세미나와 간담회에 적합한 공간으로, 쾌적하고 집중도 높은 환경을 제공하여 원활한 행사 운영을 지원합니다."
+        description="오션룸은 2층에 위치한 회의실로 최대20명 까지 수용 가능한 규모로, 소규모 기업 간담회, 워크숍, 
+        세미나 등 다양한 비즈니스 행사를 안정적으로 운영하실 수 있습니다."
         images={images}
         showReservation={true}
         buttonOnClick={() => router.push("/meeting/estimate")}
+        descriptionStyle={{
+          textAlign: "justify",
+          lineHeight: "1.3",
+        }}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>회의실안내 (2층 오션)</HeadingH4>

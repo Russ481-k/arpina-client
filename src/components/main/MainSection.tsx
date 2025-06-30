@@ -33,7 +33,7 @@ const MainSection = () => {
       <MarqueeSection />
       <NoticeSection />
       <ApplySection />
-      <EstimateSection />
+      {/* <EstimateSection /> */}
     </Box>
   );
 };

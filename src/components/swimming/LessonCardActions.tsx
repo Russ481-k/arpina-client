@@ -182,14 +182,6 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           </Button>
         </Flex>
       );
-    } else if (status === "CANCELED_UNPAID") {
-      actionButtons = (
-        <Button variant="outline" colorPalette="gray" w="100%" disabled>
-          <Text color="gray.500" fontSize="sm">
-            취소 완료
-          </Text>
-        </Button>
-      );
     } else if (status === "REFUNDED") {
       actionButtons = (
         <Button variant="outline" colorPalette="gray" w="100%" disabled>
@@ -230,7 +222,7 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
           </Text>
         </Button>
       );
-    } else if (status === "PAYMENT_PENDING" || status === "UNPAID") {
+    } else if (status === "PAYMENT_PENDING") {
       actionButtons = (
         <Flex align="center" gap={3} w="100%">
           <Flex direction="column" align="center" gap={2} w="50%">
