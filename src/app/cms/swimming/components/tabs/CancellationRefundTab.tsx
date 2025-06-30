@@ -31,6 +31,7 @@ import {
   getDisplayStatusInfo,
 } from "@/lib/utils/statusUtils";
 import { InfoIcon } from "@chakra-ui/icons";
+import { formatDateTime } from "@/app/cms/schedule/utils";
 
 interface CancellationRefundTabProps {
   lessonIdFilter?: number | null;
@@ -308,7 +309,7 @@ export const CancellationRefundTab = ({
       {
         headerName: "요청일시",
         field: "requestedAt",
-        valueFormatter: (p) => formatDate(p.value),
+        valueFormatter: (p) => formatDateTime(p.value),
         width: 160,
       },
       {
