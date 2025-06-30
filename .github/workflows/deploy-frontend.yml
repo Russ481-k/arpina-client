@@ -36,4 +36,4 @@ jobs:
           cd ${{ secrets.DEPLOY_PATH }}
           cd ./client && git pull origin dev && cd ..
           docker compose build --no-cache client
-          docker compose up -d --force-recreate client 
+          docker compose up -d --force-recreate --remove-orphans client 
