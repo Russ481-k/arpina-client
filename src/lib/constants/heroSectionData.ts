@@ -30,7 +30,7 @@ export const heroSectionData: Record<
   },
   "/rooms/bed/twin": {
     header: "객실",
-    title: "슈페리어 트윈",
+    title: "트윈",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -40,7 +40,7 @@ export const heroSectionData: Record<
   },
   "/rooms/bed/triple": {
     header: "객실",
-    title: "슈페리어 트리플",
+    title: "트리플",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -50,7 +50,7 @@ export const heroSectionData: Record<
   },
   "/rooms/bed/deluxe": {
     header: "객실",
-    title: "슈페리어 디럭스",
+    title: "디럭스",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -60,7 +60,7 @@ export const heroSectionData: Record<
   },
   "/rooms/ondol/korean-deluxe": {
     header: "객실",
-    title: "코리안 슈페리어",
+    title: "코리안",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -70,7 +70,7 @@ export const heroSectionData: Record<
   },
   "/rooms/family": {
     header: "객실",
-    title: "패밀리스위트",
+    title: "패밀리",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -90,7 +90,7 @@ export const heroSectionData: Record<
   },
   "/rooms/youth/korean-8-bed": {
     header: "객실",
-    title: "코리안 유스룸",
+    title: "8인온돌",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [

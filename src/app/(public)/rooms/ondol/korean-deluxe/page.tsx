@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            코리안 슈페리어는 4인 이용이 가능한 온돌형 객실로 바닥에 이부자리를
+            코리안은 4인 이용이 가능한 온돌형 객실로 바닥에 이부자리를
             깔아 머무는 전통적인 숙박 형태를 선호하는 분들께 적합합니다.
             가족단위 또는 어르신을 포함한 투숙객에게 깔끔하고 편안한 휴식 공간을
             제공합니다.
@@ -432,9 +432,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="코리안 슈페리어 Korean Superior"
-        titleHighlight="코리안 슈페리어"
-        description="코리안 슈페리어는 4인 이용이 가능한 온돌형 객실로 바닥에 이부자리를 깔아 머무는 전통적인 숙박 형태를 선호하는 분들께 적합합니다. 가족단위 또는 어르신을 포함한 투숙객에게 깔끔하고 편안한 휴식 공간을 제공합니다."
+        title="코리안 Korean"
+        titleHighlight="코리안"
+        description="코리안은 4인 이용이 가능한 온돌형 객실로 바닥에 이부자리를 깔아 머무는 전통적인 숙박 형태를 선호하는 분들께 적합합니다. 가족단위 또는 어르신을 포함한 투숙객에게 깔끔하고 편안한 휴식 공간을 제공합니다."
         images={images}
         showReservation={true}
         buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}

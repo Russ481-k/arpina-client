@@ -33,10 +33,16 @@ const FloorImageBox = ({
   description,
   marginStart,
 }: FloorImageBoxProps) => (
-  <Box w={"17%"} maxW={"275px"} marginStart={marginStart}>
-    <Image src={src} alt={alt} objectFit="cover" />
+  <Flex
+    direction="column"
+    w={{ base: "100%", md: "17%" }}
+    maxW={{ base: "100%", md: "275px" }}
+    marginStart={marginStart}
+    flex={{ base: "1", md: "none" }}
+  >
+    <Image src={src} alt={alt} objectFit="cover" flex="1" />
     <Text
-      mt={{ base: 3, md: 4, lg: 4 }}
+      mt={{ base: 3.4, md: 4, lg: 4 }}
       color="#5B5B5B"
       fontSize={{ base: "lg", md: "xl", lg: "xl" }}
       fontWeight="600"
@@ -44,7 +50,7 @@ const FloorImageBox = ({
     >
       {description}
     </Text>
-  </Box>
+  </Flex>
 );
 
 // 소개 섹션 컴포넌트
@@ -231,7 +237,7 @@ export default function ParticipantsPage() {
       <Box className="intro-box">
         <Box>
           <Flex
-            direction={"row"}
+            direction={{ base: "column", md: "row" }}
             wrap="wrap"
             justifyContent={{ base: "flex-start", lg: "flex-end" }}
             gap={{ base: 5, md: 8, lg: 10 }}
@@ -252,7 +258,7 @@ export default function ParticipantsPage() {
                 mb={{ base: 5, md: 6, lg: 7 }}
                 display="flex"
                 alignItems="center"
-                gap={{ base: 3, md: 5, lg: 5 }}
+                gap={{ base: 5, md: 5, lg: 5 }}
                 _after={{
                   content: '""',
                   display: "block",
@@ -279,7 +285,7 @@ export default function ParticipantsPage() {
 
           {/* 두 번째 행 이미지 */}
           <Flex
-            direction={"row"}
+            direction={{ base: "column", md: "row" }}
             wrap="wrap"
             gap={{ base: 5, md: 8, lg: 10 }}
             mt={{ base: 5, md: 8, lg: 10 }}

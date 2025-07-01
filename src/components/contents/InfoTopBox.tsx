@@ -230,7 +230,7 @@ export default function InfoTopBox({
             </Box>
           </Flex>
           <Text
-            mt={{ base: "14px", md: "30px", lg: "95px" }}
+            mt={{ base: "30px", md: "50px", lg: "95px" }}
             color="#393939"
             fontWeight="normal"
             textAlign={descriptionStyle?.textAlign}
