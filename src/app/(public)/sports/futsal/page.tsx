@@ -20,8 +20,7 @@ export default function ParticipantsPage() {
       header: "시설규모",
       content: (
         <>
-          야외운동장: 1,350㎡ (약 408평) <br />
-          실내연습장: 134㎡ (약 40.5평, 우천 시 이용 가능)
+          야외운동장: 1,350㎡ (약 408평)
         </>
       ),
     },
@@ -133,6 +132,7 @@ export default function ParticipantsPage() {
           url: "/files/futsal_regulations.pdf",
           fileName: "futsal_regulations.pdf",
         }}
+        descriptionStyle={{ textAlign: "justify" }}
       />
       <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
         <HeadingH4>현황안내</HeadingH4>

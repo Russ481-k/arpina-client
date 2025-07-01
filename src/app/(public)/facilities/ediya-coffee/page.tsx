@@ -56,10 +56,12 @@ export default function ParticipantsPage() {
           <Image
             src="/images/contents/ediya_work_img.jpg"
             alt="경찰대학교 지휘부 워크샵 케이터링 사진"
-            maxW="1093px"
+            maxW="100%"
             fit="contain"
           />
-          <Text fontSize="2xl">경찰대학교 지휘부 워크샵 케이터링 사진</Text>
+          <Text fontSize={{ base: "14px", md: "18px", lg: "24px" }}>
+            경찰대학교 지휘부 워크샵 케이터링 사진
+          </Text>
         </Flex>
       </Box>
     </PageContainer>

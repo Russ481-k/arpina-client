@@ -1,6 +1,7 @@
 "use client";
 
-import { Box } from "@chakra-ui/react";
+import { Box, Flex, Image, Text } from "@chakra-ui/react";
+import Link from "next/link";
 import { PageContainer } from "@/components/layout/PageContainer";
 import InfoTopBox from "@/components/contents/InfoTopBox";
 import ApTable01 from "@/components/contents/ApTable01";
@@ -39,8 +40,19 @@ export default function ParticipantsPage() {
       header: "특징",
       content: (
         <>
-          야외운동장: 1,350㎡ (약 408평) <br />
-          실내연습장: 134㎡ (약 40.5평, 우천 시 이용 가능)
+          <Link
+            href="https://m.blog.naver.com/3chonbapcha/223202325368"
+            style={{ color: "#2B6CB0", textDecoration: "underline" }}
+          >
+            조식 안내
+          </Link>{" "}
+          <br />
+          <Link
+            href="https://m.blog.naver.com/3chonbapcha/223299526344"
+            style={{ color: "#2B6CB0", textDecoration: "underline" }}
+          >
+            식사 구성
+          </Link>
         </>
       ),
     },
@@ -122,7 +134,7 @@ export default function ParticipantsPage() {
       <InfoTopBox
         title="대식당(제이엔제이) J&J"
         titleHighlight="대식당(제이엔제이)"
-        description="아르피나 프론트 오른편 끝에 위치한 대식당 ‘제이앤제이’는 총 240석 규모의 뷔페형 식당으로, 사전 예약제로 운영됩니다. 단체 손님과 행사 진행에 적합한 쾌적하고 편안한 식사 공간을 제공합니다."
+        description="아르피나 프론트 오른편 끝에 위치한 대식당 '제이앤제이'는 총 240석 규모의 뷔페형 식당으로, 사전 예약제로 운영됩니다. 단체 손님과 행사 진행에 적합한 쾌적하고 편안한 식사 공간을 제공합니다."
         images={images}
         showReservation={false}
         descriptionStyle={{
@@ -141,6 +153,45 @@ export default function ParticipantsPage() {
       <Box mt="100px">
         <HeadingH4>메뉴 및 베이 구성</HeadingH4>
         <ApTable01 rows={tableRows03} />
+        <Flex
+          flexDir={{ base: "column", lg: "row" }}
+          align="center"
+          justify="center"
+          gap={{ base: 10, lg: 20 }}
+          mt="60px"
+        >
+          {/* 첫 번째 이미지와 텍스트 */}
+          <Flex flexDir="column" align="center" gap={5}>
+            <Image
+              src="/images/contents/jj_work_img.jpg"
+              alt="제이엔제이 샌드위치 박스"
+              maxW="100%"
+              fit="contain"
+            />
+            <Text
+              fontSize={{ base: "14px", md: "18px", lg: "24px" }}
+              textAlign="center"
+            >
+              제이엔제이 샌드위치 박스
+            </Text>
+          </Flex>
+
+          {/* 두 번째 이미지와 텍스트 */}
+          <Flex flexDir="column" align="center" gap={5}>
+            <Image
+              src="/images/contents/jj_work_img02.jpg"
+              alt="제이엔제이 한방삼계탕"
+              maxW="100%"
+              fit="contain"
+            />
+            <Text
+              fontSize={{ base: "14px", md: "18px", lg: "24px" }}
+              textAlign="center"
+            >
+              제이엔제이 한방삼계탕
+            </Text>
+          </Flex>
+        </Flex>
       </Box>
     </PageContainer>
   );

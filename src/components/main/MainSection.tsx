@@ -16,7 +16,7 @@ const MainSection = () => {
     >
       <Heading
         as="h3"
-        mb={6}
+        mb={{ base: 5, md: 6, lg: 7 }}
         fontSize="40px"
         fontWeight="bold"
         color={"#444445"}
