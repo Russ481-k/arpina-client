@@ -79,6 +79,7 @@ export interface Post {
   parentNttId: number | null;
   threadDepth: number;
   writer: string;
+  displayWriter: string;
   title: string;
   content: string; // HTML 또는 JSON 문자열일 수 있음
   hasImageInContent: boolean;
@@ -95,6 +96,7 @@ export interface Post {
   attachments?: File[] | null; // 변경: File 객체 배열 사용
   thumbnailUrl?: string; // Optional thumbnail URL for press/card layouts
   createdAt: string;
+  postedAt: string;
   updatedAt: string;
 
   // Fields for QnA functionality, used by QnaBoardSkin

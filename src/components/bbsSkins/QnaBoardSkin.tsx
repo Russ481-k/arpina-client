@@ -208,14 +208,14 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
       },
       {
         headerName: "작성자",
-        field: "writer",
+        field: "displayWriter",
         width: 120,
         sortable: true,
         cellStyle: { justifyContent: "center" },
       },
       {
         headerName: "등록일",
-        field: "createdAt",
+        field: "postedAt",
         width: 120,
         valueFormatter: dateFormatter,
         sortable: true,

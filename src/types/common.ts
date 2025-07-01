@@ -17,7 +17,9 @@ export interface CommonCardData {
   id: string | number; // For React key
   title: string;
   thumbnailUrl?: string | null; // Derived thumbnail URL
+  displayWriter?: string | null;
   writer?: string | null;
+  postedAt?: string; // Could be pre-formatted or ISO string
   createdAt: string; // Could be pre-formatted or ISO string
   hits?: number; // Optional as some contexts might not show it
   detailUrl: string; // URL for the card to link to

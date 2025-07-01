@@ -485,14 +485,14 @@ const BoardPreview = React.memo(function BoardPreview({
       },
       {
         headerName: "작성자",
-        field: "writer",
+        field: "displayWriter",
         width: 120,
         sortable: true,
         cellStyle: centeredCellTextStyle,
       },
       {
         headerName: "등록일",
-        field: "createdAt",
+        field: "postedAt",
         width: 120,
         valueFormatter: dateFormatter,
         sortable: true,
@@ -532,14 +532,14 @@ const BoardPreview = React.memo(function BoardPreview({
         },
         {
           headerName: "작성자",
-          field: "writer",
+          field: "displayWriter",
           width: 120,
           sortable: true,
           cellStyle: centeredCellTextStyle as CellStyle,
         },
         {
           headerName: "등록일",
-          field: "createdAt",
+          field: "postedAt",
           width: 120,
           valueFormatter: pressDateFormatter,
           sortable: true,

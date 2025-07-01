@@ -258,14 +258,14 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
       },
       {
         headerName: "작성자",
-        field: "writer",
+        field: "displayWriter",
         width: 150,
         cellStyle: writerDateCellStyle,
         headerClass: ["press-list-header", "ag-header-cell-centered"],
       },
       {
         headerName: "등록일",
-        field: "createdAt",
+        field: "postedAt",
         width: 150,
         valueFormatter: dateFormatter,
         cellStyle: writerDateCellStyle,
