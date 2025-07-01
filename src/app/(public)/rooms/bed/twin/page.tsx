@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            슈페리어 트윈룸은 2인 이용에 적합한 객실로 비즈니스 고객은 물론 단체
+            트윈룸은 2인 이용에 적합한 객실로 비즈니스 고객은 물론 단체
             여행을 인솔하는 지도자나 장애인을 위한 전용 객실도 마련되어있어 보다
             편리하고 쾌적한 투숙이 가능합니다.
           </ListStyle01.StyledText>
@@ -451,9 +451,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="슈페리어 트윈 Superior Twin"
-        titleHighlight="슈페리어 트윈"
-        description="슈페리어 트윈은 2인 이용에 적합한 객실로, 비즈니스 고객은 물론 단체 여행을 인솔하는 지도자나 장애인을 위한 전용 객실도 마련되어있어 보다 편리하고 쾌적한 투숙이 가능합니다."
+        title="트윈 Twin"
+        titleHighlight="트윈"
+        description="트윈은 2인 이용에 적합한 객실로, 비즈니스 고객은 물론 단체 여행을 인솔하는 지도자나 장애인을 위한 전용 객실도 마련되어있어 보다 편리하고 쾌적한 투숙이 가능합니다."
         images={images}
         showReservation={true}
         buttonOnClick={() =>

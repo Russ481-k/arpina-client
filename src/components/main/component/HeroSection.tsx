@@ -102,12 +102,7 @@ export function HeroSection() {
                 }}
               >
                 <SwiperSlide>
-                  <Link
-                    href="/sports/swimming/lesson"
-                    w="100%"
-                    position="relative"
-                    display="block"
-                  >
+                  <Box w="100%" position="relative" display="block">
                     <AspectRatio ratio={1088 / 620} w="100%">
                       <Image
                         src="/images/contents/msec01_sld_img02.png"
@@ -126,7 +121,7 @@ export function HeroSection() {
                       left="0"
                       zIndex="2"
                     >
-                      <Box bg="transparent" p={6}>
+                      <Box bg="transparent" pt={6} pr={6} pb={6} pl={0}>
                         <Text
                           fontSize="30px"
                           fontWeight="semibold"
@@ -136,7 +131,7 @@ export function HeroSection() {
                         </Text>
                       </Box>
                     </Box>
-                  </Link>
+                  </Box>
                 </SwiperSlide>
               </Swiper>
             </Box>
@@ -147,7 +142,7 @@ export function HeroSection() {
               overflow="hidden"
             >
               <Box>
-                <Link href="/bbs/notices/read/179">
+                <Link href="https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA">
                   <Image
                     src="/images/contents/main_3.png"
                     alt="호텔 실시간 예약"

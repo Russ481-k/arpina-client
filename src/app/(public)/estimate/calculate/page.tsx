@@ -619,7 +619,7 @@ const Seminars: SeminarInfoProps[] = [
 // 객실 데이터
 const rooms: RoomInfoProps[] = [
   {
-    name: "슈페리어 트윈",
+    name: "트윈",
     roomType: "2인실",
     bedType: "싱글 1개 & 더블 1개",
     area: "23.1",
@@ -650,7 +650,7 @@ const rooms: RoomInfoProps[] = [
     ],
   },
   {
-    name: "슈페리어 트리플",
+    name: "트리플",
     roomType: "3인실",
     bedType: "싱글 3개",
     area: "23.1",
@@ -681,7 +681,7 @@ const rooms: RoomInfoProps[] = [
     ],
   },
   {
-    name: "슈페리어 디럭스",
+    name: "디럭스",
     roomType: "4인실",
     bedType: "싱글 2개 & 더블 1개",
     area: "23.1",
@@ -711,7 +711,7 @@ const rooms: RoomInfoProps[] = [
     ],
   },
   {
-    name: "코리안 슈페리어",
+    name: "코리안",
     roomType: "5인실",
     bedType: "온돌 1개 & 침구세트 4개",
     area: "23.1",
@@ -742,7 +742,7 @@ const rooms: RoomInfoProps[] = [
     ],
   },
   {
-    name: "패밀리스위트",
+    name: "패밀리",
     roomType: "5인실",
     bedType: "더블 1개 & 1인 침구세트 3개",
     area: "39.7",
@@ -1153,11 +1153,11 @@ export default function EstimatePage() {
     "클로버",
   ];
   const roomList = [
-    "슈페리얼 트윈",
-    "슈페리얼 트리플",
-    "슈페리얼 디럭스",
-    "코리안 슈페리어",
-    "패밀리스위트",
+    "트윈",
+    "트리플",
+    "디럭스",
+    "코리안",
+    "패밀리",
   ];
   const [hallDays, setHallDays] = React.useState(
     Array(hallList.length).fill(0)

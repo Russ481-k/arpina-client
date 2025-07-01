@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            국내·외 학생 단체, 수학여행단 및 유스호스텔러를 위한 유스룸은 2층
+            국내·외 학생 단체, 수학여행단 및 유스호스텔러를 위한 코리안유스룸은 2층
             침대가 마련되어 있어 다수의 인원이 편리하고 쾌적하게 머물 수 있는
             객실입니다.
           </ListStyle01.StyledText>
@@ -434,9 +434,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="유스 Yourth"
-        titleHighlight="유스"
-        description="유스룸은 국내·외 수학여행단이나 학생 단체들의 숙박 또는 유스호스텔러를 위한 2층 침대로 구성되어있습니다."
+        title="코리안유스룸 Korean Yourth"
+        titleHighlight="코리안유스룸"
+        description="코리안유스룸은 국내·외 수학여행단이나 학생 단체들의 숙박 또는 유스호스텔러를 위한 2층 침대로 구성되어있습니다."
         images={images}
         showReservation={true}
         buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}

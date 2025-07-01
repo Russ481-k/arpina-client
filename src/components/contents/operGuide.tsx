@@ -39,7 +39,9 @@ const StyledListItem = ({
         marginRight: "10px",
       }}
     >
-      <Text flex={"1 1 0"}>{children}</Text>
+      <Text flex={"1 1 0"} textAlign="justify">
+        {children}
+      </Text>
       {isNested && <List.Root ps="3" w={"100%"} flexBasis="100%" />}
     </List.Item>
   );
@@ -102,8 +104,8 @@ const OperGuide: React.FC = () => {
   return (
     <Box
       className="oper-guide"
-      mt={{ base: 4, md: 10, lg: 15 }}
-      p={{ base: 2, md: 3, lg: 5 }}
+      mt={{ base: 10, md: 30, lg: 50 }}
+      p={{ base: 5, md: 7, lg: 10 }}
       style={{
         backgroundColor: "#F7F8FB",
         borderRadius: "20px",
