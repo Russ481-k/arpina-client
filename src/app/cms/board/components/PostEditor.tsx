@@ -39,6 +39,7 @@ export function PostEditor({
     title: "",
     content: "",
     writer: "",
+    displayWriter: "",
     publishStartDt: new Date().toISOString(),
     noticeState: "N",
     noticeStartDt: new Date().toISOString(),
@@ -51,6 +52,7 @@ export function PostEditor({
     hits: 0,
     categories: [],
     parentNttId: null,
+    postedAt: new Date().toISOString(),
   });
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export function PostEditor({
         title: post.title,
         content: post.content,
         writer: post.writer,
+        displayWriter: post.displayWriter,
         publishStartDt: post.publishStartDt,
         noticeState: post.noticeState,
         noticeStartDt: post.noticeStartDt,
@@ -73,6 +76,7 @@ export function PostEditor({
         hits: post.hits,
         categories: post.categories,
         parentNttId: post.parentNttId,
+        postedAt: post.postedAt,
       });
     } else {
       setFormData({
@@ -81,6 +85,7 @@ export function PostEditor({
         title: "",
         content: "",
         writer: "",
+        displayWriter: "",
         publishStartDt: new Date().toISOString(),
         noticeState: "N",
         noticeStartDt: new Date().toISOString(),
@@ -93,6 +98,7 @@ export function PostEditor({
         hits: 0,
         categories: [],
         parentNttId: null,
+        postedAt: new Date().toISOString(),
       });
     }
   }, [post, boardId]);
@@ -157,6 +163,16 @@ export function PostEditor({
             </Field.Root>
 
             <Field.Root>
+              <Field.Label>표시 작성자</Field.Label>
+              <Input
+                name="displayWriter"
+                value={formData.displayWriter || ""}
+                onChange={handleChange}
+                placeholder="화면에 표시될 작성자 이름"
+              />
+            </Field.Root>
+
+            <Field.Root>
               <Field.Label>내용</Field.Label>
               <Textarea
                 name="content"
@@ -193,6 +209,16 @@ export function PostEditor({
                 type="datetime-local"
                 name="publishStartDt"
                 value={formData.publishStartDt}
+                onChange={handleChange}
+              />
+            </Field.Root>
+
+            <Field.Root>
+              <Field.Label>게시일</Field.Label>
+              <Input
+                type="datetime-local"
+                name="postedAt"
+                value={formData.postedAt || ""}
                 onChange={handleChange}
               />
             </Field.Root>

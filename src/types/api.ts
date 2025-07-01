@@ -311,6 +311,7 @@ export interface PostData {
   title: string;
   content: string;
   writer: string;
+  displayWriter?: string;
   publishStartDt: string;
   noticeState: "Y" | "N" | "P";
   noticeStartDt: string;
@@ -323,6 +324,7 @@ export interface PostData {
   nttId: number;
   threadDepth: number;
   hits: number;
+  postedAt?: string;
 }
 
 export interface BoardMaster {

@@ -79,7 +79,7 @@ export const boardApi = {
     return privateApi.get<Post>(`/cms/bbs/${bbsId}/${nttId}`);
   },
 
-  createPost: (postData: Omit<Post, "id" | "createdAt" | "updatedAt">) => {
+  createPost: (postData: Omit<Post, "createdAt" | "updatedAt">) => {
     return privateApi.post<Post>("/bbs", postData);
   },
 
