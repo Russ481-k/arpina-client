@@ -266,17 +266,30 @@ export function NoticeSection() {
               >
                 배너존
               </Heading>
-              <Box borderRadius="20px" overflow="hidden">
-                <Link href="/meeting/estimate">
-                  <Image
-                    src="/images/main/msec02_bnr_img02.png"
-                    alt="부산 유스호스텔 아르피나 배너"
-                    w="100%"
-                    h="auto"
-                    objectFit="cover"
-                  />
-                </Link>
-              </Box>
+              <Flex direction="column" gap={5}>
+                <Box borderRadius="20px" overflow="hidden">
+                  <Link href="/meeting/estimate">
+                    <Image
+                      src="/images/main/msec02_bnr_01.png"
+                      alt="부산 유스호스텔 아르피나 배너"
+                      w="100%"
+                      h="auto"
+                      objectFit="cover"
+                    />
+                  </Link>
+                </Box>
+                <Box borderRadius="20px" overflow="hidden">
+                  <Link href="/rooms/estimate/calculate">
+                    <Image
+                      src="/images/main/msec02_bnr_02.png"
+                      alt="부산 유스호스텔 아르피나 배너 2"
+                      w="100%"
+                      h="auto"
+                      objectFit="cover"
+                    />
+                  </Link>
+                </Box>
+              </Flex>
             </Box>
           </Flex>
         </Box>

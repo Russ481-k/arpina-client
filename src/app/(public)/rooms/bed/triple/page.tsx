@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            슈페리어 트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한
+            트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한
             분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며,
             머무시는 동안 편안하고 안락한 휴식을 제공합니다.
           </ListStyle01.StyledText>
@@ -451,9 +451,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="슈페리어 트리플 Superior Triple"
-        titleHighlight="슈페리어 트리플"
-        description="슈페리어 트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한 분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며, 머무시는 동안 편안하고 안락한 휴식을 제공합니다."
+        title="트리플 Triple"
+        titleHighlight="트리플"
+        description="트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한 분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며, 머무시는 동안 편안하고 안락한 휴식을 제공합니다."
         images={images}
         showReservation={true}
         buttonOnClick={() =>
