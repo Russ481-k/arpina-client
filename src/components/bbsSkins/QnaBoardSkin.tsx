@@ -160,6 +160,8 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
   const { colorMode } = useColorMode(); // For theme
   const colors = useColors(); // For theme
 
+  console.log(posts);
+
   const canWrite =
     pageDetails.boardWriteAuth &&
     pageDetails.boardWriteAuth !== "NONE_OR_SIMILAR_RESTRICTIVE_VALUE";
