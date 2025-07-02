@@ -142,15 +142,15 @@ export default function ParticipantsPage() {
           lineHeight: "1.3",
         }}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>제이엔제이 공간 안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>이용요금 안내 (2025년 1월 1일 기준)</HeadingH4>
         <ApTable02 rows={tableRows02} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>메뉴 및 베이 구성</HeadingH4>
         <ApTable01 rows={tableRows03} />
         <Flex

@@ -270,7 +270,7 @@ export function NoticeSection() {
                 <Box borderRadius="20px" overflow="hidden">
                   <Link href="/meeting/estimate">
                     <Image
-                      src="/images/main/msec02_bnr_01.png"
+                      src="/images/main/msec02_bnr_001.png"
                       alt="부산 유스호스텔 아르피나 배너"
                       w="100%"
                       h="auto"
@@ -281,7 +281,7 @@ export function NoticeSection() {
                 <Box borderRadius="20px" overflow="hidden">
                   <Link href="/rooms/estimate/calculate">
                     <Image
-                      src="/images/main/msec02_bnr_02.png"
+                      src="/images/main/msec02_bnr_002.png"
                       alt="부산 유스호스텔 아르피나 배너 2"
                       w="100%"
                       h="auto"

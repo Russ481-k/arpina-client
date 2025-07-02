@@ -49,7 +49,7 @@ export default function ParticipantsPage() {
           lineHeight: "1.3",
         }}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>이디야 케이터링 서비스안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
         <Flex flexDir="column" align="center" gap={10} mt="60px">

@@ -105,7 +105,11 @@ export default function YouthTrainingPage() {
           content:
             "• 청소년 꿈과 비젼\n• 올바른 회의진행법 & 토의\n• 도전! 하이파이브\n• 유토피아 만들기\n• 창의력 쑥쑥",
           rowSpan: 6,
-          style: { textAlign: "left" as const, whiteSpace: "pre-line" },
+          style: {
+            textAlign: "center" as const,
+            whiteSpace: "pre-line",
+            lineHeight: "1.5",
+          },
         },
       ],
     },
@@ -548,7 +552,7 @@ export default function YouthTrainingPage() {
 
       <Box mt={10}>
         <HeadingH401>일정표</HeadingH401>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             1일 스포츠체험
           </Heading>
@@ -558,7 +562,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="1일 스포츠체험 표로 시간, 소요시간, 단위프로그램명 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             1일 청소년수련활동
           </Heading>
@@ -568,7 +572,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="1일 청소년수련활동 표로 시간, 소요시간, 단위프로그램명 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             1박2일 청소년수련활동
           </Heading>
@@ -578,7 +582,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="1박2일 청소년수련활동 표로 시간, 소요시간, 1일차, 2일차 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             간부수련활동
           </Heading>
@@ -588,7 +592,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="간부수련활동 표로 시간, 소요시간, 1일차, 2일차 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             2박3일 청소년수련활동
           </Heading>
