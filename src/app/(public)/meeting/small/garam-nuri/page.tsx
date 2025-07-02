@@ -6,7 +6,7 @@ import MeetingSeatInfo from "@/components/contents/MeetingSeatInfo";
 import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Text, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
@@ -129,6 +129,12 @@ export default function ParticipantsPage() {
           "& .mr-seat-box": {
             marginTop: "0 !important",
           },
+          "& .mr-seat-list": {
+            "@media (min-width: 1024px)": {
+              justifyContent: "space-between !important",
+              gap: "0 !important",
+            },
+          },
         }}
       >
         <MeetingSeatInfo seats={customSeats} />
@@ -137,89 +143,104 @@ export default function ParticipantsPage() {
       {/* 평면도 섹션 */}
       <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>가람 / 누리 평면도</HeadingH4>
-        <Box
+
+        {/* 평면도 이미지와 이용안내 박스를 나란히 배치 */}
+        <Flex
+          direction={{ base: "column", lg: "row" }}
+          gap={{ base: 6, md: 8, lg: 10 }}
+          align={{ base: "center", lg: "flex-start" }}
           mt={{ base: "15px", md: "20px", lg: "25px" }}
-          display="flex"
-          flexDirection={{ base: "column", md: "row" }}
-          gap={{ base: "30px", md: "40px", lg: "50px" }}
-          maxW={{ base: "100%", md: "80%", lg: "70%" }}
         >
-          {/* 가람 평면도 */}
-          <Box flex="1">
+          {/* 평면도 이미지들 */}
+          <Box
+            flex={{ base: "none", lg: "0 0 50%" }}
+            w={{ base: "100%", lg: "auto" }}
+          >
             <Box
-              borderRadius="10px"
-              overflow="hidden"
-              boxShadow="0 2px 8px rgba(0,0,0,0.1)"
-              mb={{ base: "10px", md: "15px" }}
+              display="flex"
+              flexDirection={{ base: "column", md: "row" }}
+              gap={{ base: "30px", md: "20px", lg: "30px" }}
             >
-              <img
-                src={floorImage01.src}
-                alt={floorImage01.alt}
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
+              {/* 가람 평면도 */}
+              <Box flex="1">
+                <Box
+                  borderRadius="10px"
+                  overflow="hidden"
+                  boxShadow="0 2px 8px rgba(0,0,0,0.1)"
+                  mb={{ base: "10px", md: "15px" }}
+                >
+                  <img
+                    src={floorImage01.src}
+                    alt={floorImage01.alt}
+                    style={{ width: "100%", height: "auto", display: "block" }}
+                  />
+                </Box>
+                <Text
+                  fontSize={{ base: "16px", md: "18px", lg: "20px" }}
+                  fontWeight="medium"
+                  textAlign="center"
+                  color="#393939"
+                >
+                  &lt;가람&gt;
+                </Text>
+              </Box>
+
+              {/* 누리 평면도 */}
+              <Box flex="1">
+                <Box
+                  borderRadius="10px"
+                  overflow="hidden"
+                  boxShadow="0 2px 8px rgba(0,0,0,0.1)"
+                  mb={{ base: "10px", md: "15px" }}
+                >
+                  <img
+                    src={floorImage02.src}
+                    alt={floorImage02.alt}
+                    style={{ width: "100%", height: "auto", display: "block" }}
+                  />
+                </Box>
+                <Text
+                  fontSize={{ base: "16px", md: "18px", lg: "20px" }}
+                  fontWeight="medium"
+                  textAlign="center"
+                  color="#393939"
+                >
+                  &lt;누리&gt;
+                </Text>
+              </Box>
             </Box>
-            <Text
-              fontSize={{ base: "16px", md: "18px", lg: "20px" }}
-              fontWeight="medium"
-              textAlign="center"
-              color="#393939"
-            >
-              &lt;가람&gt;
-            </Text>
           </Box>
 
-          {/* 누리 평면도 */}
-          <Box flex="1">
-            <Box
-              borderRadius="10px"
-              overflow="hidden"
-              boxShadow="0 2px 8px rgba(0,0,0,0.1)"
-              mb={{ base: "10px", md: "15px" }}
-            >
-              <img
-                src={floorImage02.src}
-                alt={floorImage02.alt}
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
-            </Box>
+          {/* 이용안내 텍스트 박스 */}
+          <Box
+            p={{ base: "20px", md: "30px", lg: "40px" }}
+            bg="#F7F8FB"
+            borderRadius="20px"
+            flex={{ base: "none", lg: "1" }}
+            w={{ base: "100%", lg: "auto" }}
+          >
             <Text
               fontSize={{ base: "16px", md: "18px", lg: "20px" }}
-              fontWeight="medium"
-              textAlign="center"
               color="#393939"
+              lineHeight="1.8"
+              fontWeight="medium"
+              mb={{ base: "15px", md: "20px" }}
             >
-              &lt;누리&gt;
+              - 이용안내
+            </Text>
+            <Text
+              fontSize={{ base: "14px", md: "16px", lg: "18px" }}
+              color="#393939"
+              lineHeight="1.6"
+              whiteSpace="pre-line"
+            >
+              • 현수막 사이즈는 5,000*700mm{"\n"}• 실외 현수막 사이즈
+              6,200*700mm
+              {"\n"}• 유선마이크 1, 무선마이크 2{"\n"}• 빔 프로젝터, 와이파이,
+              냉온수기{"\n"}• 출장뷔페 및 외부 음식물 반입 불가
             </Text>
           </Box>
-        </Box>
-
-        {/* 이용안내 텍스트 박스 */}
-        <Box
-          mt={{ base: "30px", md: "40px", lg: "50px" }}
-          p={{ base: "20px", md: "30px", lg: "40px" }}
-          bg="#F7F8FB"
-          borderRadius="20px"
-        >
-          <Text
-            fontSize={{ base: "16px", md: "18px", lg: "20px" }}
-            color="#393939"
-            lineHeight="1.8"
-            fontWeight="medium"
-            mb={{ base: "15px", md: "20px" }}
-          >
-            - 이용안내
-          </Text>
-          <Text
-            fontSize={{ base: "14px", md: "16px", lg: "18px" }}
-            color="#393939"
-            lineHeight="1.6"
-            whiteSpace="pre-line"
-          >
-            • 현수막 사이즈는 5,000*700mm{"\n"}• 실외 현수막 사이즈 6,200*700mm
-            {"\n"}• 유선마이크 1, 무선마이크 2{"\n"}• 빔 프로젝터, 와이파이, 냉온수기{"\n"}• 출장뷔페 및 외부 음식물
-            반입 불가
-          </Text>
-        </Box>
+        </Flex>
       </Box>
     </PageContainer>
   );
