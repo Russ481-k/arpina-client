@@ -184,24 +184,18 @@ export default function ParticipantsPage() {
         //   fileName: "futsal_regulations.pdf",
         // }}
       />
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>수영강습 이용 요금표</HeadingH4>
         <ApTable02 rows={tableRows03} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>수영 프로그램 시간표(성인반 / 50분 수업진행)</HeadingH4>
         <ApTable02 rows={tableRows04} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>1회 입장 이용요금표 </HeadingH4>
         <ApTable02 rows={oneTimeFeeRows} />
       </Box>
-      <Box
-        mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      ></Box>
     </PageContainer>
   );
 }
