@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Flex, Image, Text } from "@chakra-ui/react";
+import { Box, Flex, Image, Text, Button } from "@chakra-ui/react";
 import Link from "next/link";
 import { PageContainer } from "@/components/layout/PageContainer";
 import InfoTopBox from "@/components/contents/InfoTopBox";
@@ -17,6 +17,11 @@ export default function ParticipantsPage() {
     "/images/contents/jj_img05.jpg",
     "/images/contents/jj_img06.jpg",
   ];
+
+  // 다운로드 버튼 클릭 핸들러
+  const handleDownload = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   const tableRows01 = [
     {
@@ -35,25 +40,79 @@ export default function ParticipantsPage() {
       header: "동시 수용 인원",
       content: "회차별 식사 로테이션(3,4회 기준), 약 700 ~ 800명 수용 가능",
     },
-
     {
-      header: "특징",
+      header: "식사 안내",
       content: (
-        <>
-          <Link
-            href="https://m.blog.naver.com/3chonbapcha/223202325368"
-            style={{ color: "#2B6CB0", textDecoration: "underline" }}
+        <Flex gap={3} align="center" wrap="wrap">
+          <Button
+            size="sm"
+            rounded="xl"
+            variant="solid"
+            px={4}
+            py={2}
+            fontWeight="bold"
+            fontSize="sm"
+            onClick={() =>
+              handleDownload(
+                "https://m.blog.naver.com/3chonbapcha/223202325368"
+              )
+            }
+            backgroundColor="#FAB20B"
+            color="white"
+            _hover={{
+              backgroundColor: "#E4A30D",
+            }}
           >
             조식 안내
-          </Link>{" "}
-          <br />
-          <Link
-            href="https://m.blog.naver.com/3chonbapcha/223299526344"
-            style={{ color: "#2B6CB0", textDecoration: "underline" }}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{ marginLeft: "8px" }}
+            >
+              <path
+                d="M14 3V5H17.59L7.76 14.83L9.17 16.24L19 6.41V10H21V3H14ZM19 19H5V5H12V3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V12H19V19Z"
+                fill="white"
+              />
+            </svg>
+          </Button>
+          <Button
+            size="sm"
+            rounded="xl"
+            variant="solid"
+            px={4}
+            py={2}
+            fontWeight="bold"
+            fontSize="sm"
+            onClick={() =>
+              handleDownload(
+                "https://m.blog.naver.com/3chonbapcha/223299526344"
+              )
+            }
+            backgroundColor="#FAB20B"
+            color="white"
+            _hover={{
+              backgroundColor: "#E4A30D",
+            }}
           >
             식사 구성
-          </Link>
-        </>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{ marginLeft: "8px" }}
+            >
+              <path
+                d="M14 3V5H17.59L7.76 14.83L9.17 16.24L19 6.41V10H21V3H14ZM19 19H5V5H12V3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V12H19V19Z"
+                fill="white"
+              />
+            </svg>
+          </Button>
+        </Flex>
       ),
     },
     {
@@ -142,15 +201,15 @@ export default function ParticipantsPage() {
           lineHeight: "1.3",
         }}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>제이엔제이 공간 안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>이용요금 안내 (2025년 1월 1일 기준)</HeadingH4>
         <ApTable02 rows={tableRows02} />
       </Box>
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>메뉴 및 베이 구성</HeadingH4>
         <ApTable01 rows={tableRows03} />
         <Flex

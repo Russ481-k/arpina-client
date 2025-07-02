@@ -68,9 +68,21 @@ export default function MeetingSeatInfo({
     >
       <HeadingH4>{title}</HeadingH4>
 
-      <Flex className="mr-seat-list" justifyContent="space-between" gap="10px">
+      <Flex
+        className="mr-seat-list"
+        justifyContent={{ base: "space-between", md: "flex-start" }}
+        gap={{ base: "10px", md: "80px" }}
+        wrap="wrap"
+      >
         {seats.map((seat, index) => (
-          <Box key={index} textAlign="center">
+          <Flex
+            key={index}
+            direction="column"
+            align="center"
+            textAlign="center"
+            w={{ base: "calc(50% - 5px)", md: "auto" }}
+            mb={{ base: 4, md: 0 }}
+          >
             <Image
               src={seat.imageSrc}
               alt={seat.alt}
@@ -85,7 +97,7 @@ export default function MeetingSeatInfo({
             >
               {seat.title}
             </Text>
-          </Box>
+          </Flex>
         ))}
       </Flex>
     </Box>

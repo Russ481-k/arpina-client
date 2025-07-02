@@ -172,7 +172,7 @@ export default function InfoTopBox({
     <Box className="info-top-box">
       <Flex
         justifyContent="space-between"
-        alignItems="center"
+        alignItems="flex-start"
         gap={gap}
         flexDirection={flexDir}
       >

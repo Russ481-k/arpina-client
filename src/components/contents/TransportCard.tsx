@@ -26,9 +26,9 @@ export default function TransportCard({
 }: TransportCardProps) {
   // 반응형 값들
   const maxWidth = useBreakpointValue({
-    base: "calc(50% - 5px)",
-    md: "calc(50% - 15px)",
-    lg: "calc(25% - 15px)",
+    base: "48%",
+    md: "23%",
+    lg: "23%",
   });
   const padding = useBreakpointValue({ base: 3, md: 4, lg: 5 });
   const fontSize = useBreakpointValue({ base: "lg", md: "xl" });
@@ -41,7 +41,7 @@ export default function TransportCard({
 
   return (
     <Box
-      flex="1 1 0"
+      w={maxWidth}
       bg="#fff"
       border={`3px solid ${borderColor}`}
       borderRadius="20px"
@@ -49,7 +49,6 @@ export default function TransportCard({
       display="flex"
       flexDirection="column"
       alignItems="center"
-      maxW={maxWidth}
       color="#3A3A3A"
       fontSize={fontSize}
     >

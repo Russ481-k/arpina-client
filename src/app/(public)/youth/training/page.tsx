@@ -37,7 +37,7 @@ export default function YouthTrainingPage() {
       columns: [
         { content: "09:30~10:20" },
         { content: "50분" },
-        { content: "스포츠체험(1교시)" },
+        { content: "스포츠체험 1교시 (암벽등반, 양궁, 펜싱, 창작도미노 등)" },
       ],
     },
     {
@@ -45,7 +45,7 @@ export default function YouthTrainingPage() {
       columns: [
         { content: "10:20~11:10" },
         { content: "50분" },
-        { content: "스포츠체험(2교시)" },
+        { content: "스포츠체험 2교시(암벽등반, 양궁, 펜싱, 창작도미노 등)" },
       ],
     },
     {
@@ -53,7 +53,7 @@ export default function YouthTrainingPage() {
       columns: [
         { content: "11:10~12:00" },
         { content: "50분" },
-        { content: "스포츠체험(3교시)" },
+        { content: "스포츠체험 3교시(암벽등반, 양궁, 펜싱, 창작도미노 등)" },
       ],
     },
     {
@@ -69,7 +69,7 @@ export default function YouthTrainingPage() {
       columns: [
         { content: "13:00~13:50" },
         { content: "50분" },
-        { content: "스포츠체험(4교시)" },
+        { content: "스포츠체험 4교시(암벽등반, 양궁, 펜싱, 창작도미노 등)" },
       ],
     },
     {
@@ -105,7 +105,11 @@ export default function YouthTrainingPage() {
           content:
             "• 청소년 꿈과 비젼\n• 올바른 회의진행법 & 토의\n• 도전! 하이파이브\n• 유토피아 만들기\n• 창의력 쑥쑥",
           rowSpan: 6,
-          style: { textAlign: "left" as const, whiteSpace: "pre-line" },
+          style: {
+            textAlign: "center" as const,
+            whiteSpace: "pre-line",
+            lineHeight: "1.5",
+          },
         },
       ],
     },
@@ -205,26 +209,25 @@ export default function YouthTrainingPage() {
         { content: "13:30~15:00" },
         { content: "90분" },
         { content: "우리반이 최고" },
-        { content: "11:00", rowSpan: 2 },
-        { content: "", rowSpan: 2 },
-        { content: "정리 및 귀가", rowSpan: 2 },
+        { content: "11:00" },
+        { content: "" },
+        { content: "정리 및 귀가" },
       ],
     },
     {
       isHeader: false,
       columns: [
-        { content: "15:00~17:00", rowSpan: 2 },
-        { content: "120분", rowSpan: 2 },
-        { content: "도전! 하이파이브", rowSpan: 2 },
+        { content: "15:00~17:00" },
+        { content: "120분" },
+        { content: "도전! 하이파이브" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
       isHeader: false,
-      columns: [
-        { content: "", rowSpan: 6 },
-        { content: "", rowSpan: 6 },
-        { content: "", rowSpan: 6 },
-      ],
+      columns: [],
     },
     {
       isHeader: false,
@@ -232,6 +235,9 @@ export default function YouthTrainingPage() {
         { content: "17:00~18:00" },
         { content: "60분" },
         { content: "방 배정 및 휴식" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -240,6 +246,9 @@ export default function YouthTrainingPage() {
         { content: "18:00~19:30" },
         { content: "90분" },
         { content: "저녁식사" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -248,6 +257,9 @@ export default function YouthTrainingPage() {
         { content: "19:30~21:00" },
         { content: "90분" },
         { content: "우리들의 자랑<br>(레크리에이션)" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -256,11 +268,21 @@ export default function YouthTrainingPage() {
         { content: "21:00~23:00" },
         { content: "120분" },
         { content: "자유시간/취침준비/세면" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
       isHeader: false,
-      columns: [{ content: "23:00~" }, { content: "" }, { content: "취침" }],
+      columns: [
+        { content: "23:00~" },
+        { content: "" },
+        { content: "취침" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
+      ],
     },
   ];
 
@@ -315,9 +337,9 @@ export default function YouthTrainingPage() {
     {
       isHeader: false,
       columns: [
-        { content: "13:30~14:30", rowSpan: 2 },
-        { content: "60분", rowSpan: 2 },
-        { content: "나를 소개합니다", rowSpan: 2 },
+        { content: "13:30~14:30" },
+        { content: "60분" },
+        { content: "나를 소개합니다" },
         { content: "11:00" },
         { content: "" },
         { content: "정리 및 귀가" },
@@ -326,17 +348,12 @@ export default function YouthTrainingPage() {
     {
       isHeader: false,
       columns: [
-        { content: "", rowSpan: 8 },
-        { content: "", rowSpan: 8 },
-        { content: "", rowSpan: 8 },
-      ],
-    },
-    {
-      isHeader: false,
-      columns: [
         { content: "14:30~15:30" },
         { content: "60분" },
         { content: "행동유형별 리더찾기" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -345,6 +362,9 @@ export default function YouthTrainingPage() {
         { content: "15:30~17:00" },
         { content: "90분" },
         { content: "도전! 하이파이브" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -353,6 +373,9 @@ export default function YouthTrainingPage() {
         { content: "17:00~18:00" },
         { content: "60분" },
         { content: "방 배정 및 휴식" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -361,6 +384,9 @@ export default function YouthTrainingPage() {
         { content: "18:00~19:30" },
         { content: "90분" },
         { content: "저녁식사" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -369,6 +395,9 @@ export default function YouthTrainingPage() {
         { content: "19:30~21:00" },
         { content: "90분" },
         { content: "우리들의 자랑<br>(레크리에이션)" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -377,11 +406,21 @@ export default function YouthTrainingPage() {
         { content: "21:00~23:00" },
         { content: "120분" },
         { content: "자유시간/취침준비/세면" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
       isHeader: false,
-      columns: [{ content: "23:00~" }, { content: "" }, { content: "취침" }],
+      columns: [
+        { content: "23:00~" },
+        { content: "" },
+        { content: "취침" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
+      ],
     },
   ];
 
@@ -445,23 +484,15 @@ export default function YouthTrainingPage() {
     {
       isHeader: false,
       columns: [
-        { content: "12:00~13:30", rowSpan: 2 },
-        { content: "90분", rowSpan: 2 },
-        { content: "점심식사", rowSpan: 2 },
-        { content: "12:00~13:30", rowSpan: 2 },
-        { content: "90분", rowSpan: 2 },
-        { content: "점심식사", rowSpan: 2 },
+        { content: "12:00~13:30" },
+        { content: "90분" },
+        { content: "점심식사" },
+        { content: "12:00~13:30" },
+        { content: "90분" },
+        { content: "점심식사" },
         { content: "11:00" },
         { content: "" },
         { content: "정리 및 귀가" },
-      ],
-    },
-    {
-      isHeader: false,
-      columns: [
-        { content: "", rowSpan: 8 },
-        { content: "", rowSpan: 8 },
-        { content: "", rowSpan: 8 },
       ],
     },
     {
@@ -473,6 +504,9 @@ export default function YouthTrainingPage() {
         { content: "13:30~17:00", rowSpan: 2 },
         { content: "210분", rowSpan: 2 },
         { content: "스포츠체험활동", rowSpan: 2 },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -481,6 +515,9 @@ export default function YouthTrainingPage() {
         { content: "15:00~17:00" },
         { content: "120분" },
         { content: "도전! 하이파이브" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -492,6 +529,9 @@ export default function YouthTrainingPage() {
         { content: "17:00~18:00" },
         { content: "60분" },
         { content: "휴식시간" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -503,6 +543,9 @@ export default function YouthTrainingPage() {
         { content: "18:00~19:30" },
         { content: "90분" },
         { content: "저녁식사" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -514,6 +557,9 @@ export default function YouthTrainingPage() {
         { content: "19:30~21:00" },
         { content: "90분" },
         { content: "우리들의 자랑<br>(레크리에이션)" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -525,6 +571,9 @@ export default function YouthTrainingPage() {
         { content: "21:00~23:00" },
         { content: "120분" },
         { content: "자유시간/<br>취침준비/세면" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
     {
@@ -536,6 +585,9 @@ export default function YouthTrainingPage() {
         { content: "23:00~" },
         { content: "" },
         { content: "취침" },
+        { content: "" },
+        { content: "" },
+        { content: "" },
       ],
     },
   ];
@@ -548,7 +600,7 @@ export default function YouthTrainingPage() {
 
       <Box mt={10}>
         <HeadingH401>일정표</HeadingH401>
-        <Box mt={5}>
+        <Box>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             1일 스포츠체험
           </Heading>
@@ -558,7 +610,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="1일 스포츠체험 표로 시간, 소요시간, 단위프로그램명 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             1일 청소년수련활동
           </Heading>
@@ -568,7 +620,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="1일 청소년수련활동 표로 시간, 소요시간, 단위프로그램명 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             1박2일 청소년수련활동
           </Heading>
@@ -578,7 +630,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="1박2일 청소년수련활동 표로 시간, 소요시간, 1일차, 2일차 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             간부수련활동
           </Heading>
@@ -588,7 +640,7 @@ export default function YouthTrainingPage() {
             visuallyHiddenText="간부수련활동 표로 시간, 소요시간, 1일차, 2일차 정보 제공"
           />
         </Box>
-        <Box mt={5}>
+        <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
           <Heading as="h5" fontSize="2xl" fontWeight="bold" mb={4}>
             2박3일 청소년수련활동
           </Heading>
