@@ -154,34 +154,18 @@ export default function ParticipantsPage() {
         //   fileName: "futsal_regulations.pdf",
         // }}
       />
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>골프 시설 안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>골프연습장 이용 요금표</HeadingH4>
         <ApTable02 rows={tableRows03} />
         <InfoBoxList01 items={infoItems01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>1회 입장 이용요금표</HeadingH4>
         <ApTable02 rows={tableRows04} />
-      </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
-      </Box>{" "}
-      <Box
-        mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      >
-        {/* <Image
-          src="/images/contents/image.png"
-          alt="준비중입니다."
-          width={800}
-          height={800}
-          style={{ objectFit: "contain" }}
-        /> */}
       </Box>
     </PageContainer>
   );

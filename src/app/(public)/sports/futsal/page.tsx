@@ -134,25 +134,25 @@ export default function ParticipantsPage() {
         }}
         descriptionStyle={{ textAlign: "justify" }}
       />
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>현황안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>이용시 유의사항</HeadingH4>
         <ApTable01 rows={tableRows02} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>이용요금 예약 및 절차</HeadingH4>
         <ApTable02 rows={tableRows03} />
         <InfoBoxList01 items={infoItems01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>예약 취소 및 환불규정</HeadingH4>
         <ApTable02 rows={tableRows04} />
         <InfoBoxList01 items={infoItems02} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>승인조건 및 유의사항</HeadingH4>
         <InfoBoxList01 items={infoItems03} />
       </Box>
