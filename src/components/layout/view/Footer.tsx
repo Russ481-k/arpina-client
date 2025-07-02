@@ -77,16 +77,26 @@ export function Footer() {
                 </Link>
               ))}
             </Flex>
-            <Link
-              href="https://www.instagram.com" // Replace with your actual Instagram URL
-              aria-label="인스타그램 방문"
-            >
-              <Image
-                src="/images/icons/instagram_icon.png" // Replace with your actual icon path
-                alt="인스타그램 로고"
-                boxSize={{ base: "28px", md: "32px" }}
-              />
-            </Link>
+            <Flex gap={3} align="center">
+              <Link href="/" aria-label="호스텔링 인터내셔널">
+                <Image
+                  src="/images/icons/hostelling international.png" // Replace with your actual icon path
+                  alt="호스텔링 인터내셔널 로고"
+                  boxSize={{ base: "28px", md: "32px" }}
+                />
+              </Link>
+              <Link
+                href="https://www.instagram.com/bmc_arpina"
+                target="_blank"
+                aria-label="인스타그램 방문"
+              >
+                <Image
+                  src="/images/icons/instagram_icon.png" // Replace with your actual icon path
+                  alt="인스타그램 로고"
+                  boxSize={{ base: "28px", md: "32px" }}
+                />
+              </Link>
+            </Flex>
           </Flex>
         </Flex>
 
