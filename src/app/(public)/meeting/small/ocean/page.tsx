@@ -6,7 +6,7 @@ import MeetingSeatInfo from "@/components/contents/MeetingSeatInfo";
 import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Text, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
@@ -103,6 +103,12 @@ export default function ParticipantsPage() {
           "& .mr-seat-box": {
             marginTop: "0 !important",
           },
+          "& .mr-seat-list": {
+            "@media (min-width: 1024px)": {
+              justifyContent: "space-between !important",
+              gap: "0 !important",
+            },
+          },
         }}
       >
         <MeetingSeatInfo seats={customSeats} />
@@ -110,15 +116,22 @@ export default function ParticipantsPage() {
 
       {/* 평면도 및 시설정보 */}
       <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
-        {/* 평면도 이미지 */}
-        <Box mb={{ base: "20px", md: "30px", lg: "40px" }}>
-          <HeadingH4>평면도</HeadingH4>
+        <HeadingH4>평면도</HeadingH4>
+
+        {/* 평면도 이미지와 이용안내 박스를 나란히 배치 */}
+        <Flex
+          direction={{ base: "column", lg: "row" }}
+          gap={{ base: 6, md: 8, lg: 10 }}
+          align={{ base: "center", lg: "flex-start" }}
+          mt={{ base: "15px", md: "20px", lg: "25px" }}
+        >
+          {/* 평면도 이미지 */}
           <Box
-            mt={{ base: "15px", md: "20px", lg: "25px" }}
             borderRadius="10px"
             overflow="hidden"
             boxShadow="0 2px 8px rgba(0,0,0,0.1)"
-            maxW={{ base: "100%", md: "80%", lg: "30%" }}
+            maxW={{ base: "100%", md: "80%", lg: "40%" }}
+            flex={{ base: "none", lg: "0 0 40%" }}
           >
             <img
               src={floorImage.src}
@@ -126,32 +139,34 @@ export default function ParticipantsPage() {
               style={{ width: "100%", height: "auto", display: "block" }}
             />
           </Box>
-        </Box>
 
-        {/* 시설정보 텍스트 박스 */}
-        <Box
-          p={{ base: "20px", md: "30px", lg: "40px" }}
-          bg="#F7F8FB"
-          borderRadius="20px"
-        >
-          <Text
-            fontSize={{ base: "16px", md: "18px", lg: "20px" }}
-            color="#393939"
-            lineHeight="1.8"
-            fontWeight="medium"
-            mb={{ base: "15px", md: "20px" }}
+          {/* 이용안내 텍스트 박스 */}
+          <Box
+            p={{ base: "20px", md: "30px", lg: "40px" }}
+            bg="#F7F8FB"
+            borderRadius="20px"
+            flex={{ base: "none", lg: "1" }}
+            w={{ base: "100%", lg: "auto" }}
           >
-            - 이용안내
-          </Text>
-          <Text
-            fontSize={{ base: "14px", md: "16px", lg: "18px" }}
-            color="#393939"
-            lineHeight="1.6"
-            whiteSpace="pre-line"
-          >
-            {floorInfoItems.map((item, index) => item.text).join("\n")}
-          </Text>
-        </Box>
+            <Text
+              fontSize={{ base: "16px", md: "18px", lg: "20px" }}
+              color="#393939"
+              lineHeight="1.8"
+              fontWeight="medium"
+              mb={{ base: "15px", md: "20px" }}
+            >
+              - 이용안내
+            </Text>
+            <Text
+              fontSize={{ base: "14px", md: "16px", lg: "18px" }}
+              color="#393939"
+              lineHeight="1.6"
+              whiteSpace="pre-line"
+            >
+              {floorInfoItems.map((item, index) => item.text).join("\n")}
+            </Text>
+          </Box>
+        </Flex>
       </Box>
     </PageContainer>
   );
