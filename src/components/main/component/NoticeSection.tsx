@@ -199,7 +199,13 @@ export function NoticeSection() {
         }}
       />
       <Box className="msec02" mb={sectionMarginBottom}>
-        <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
+        <Box
+          w={"100%"}
+          maxW={"1600px"}
+          mx="auto"
+          my={0}
+          px={{ base: 4, md: 0 }}
+        >
           <Flex gap={5} direction={flexDirection}>
             <Box flex="1" minW="0">
               <Heading

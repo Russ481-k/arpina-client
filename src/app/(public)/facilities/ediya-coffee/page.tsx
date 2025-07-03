@@ -55,12 +55,12 @@ export default function ParticipantsPage() {
         <Flex flexDir="column" align="center" gap={10} mt="60px">
           <Image
             src="/images/contents/ediya_work_img.jpg"
-            alt="워크샵 케이터링 참고 사진"
+            alt="경찰대학교 지휘부 워크샵 케이터링 사진"
             maxW="100%"
             fit="contain"
           />
           <Text fontSize={{ base: "14px", md: "18px", lg: "24px" }}>
-            워크샵 케이터링 참고 사진
+            경찰대학교 지휘부 워크샵 케이터링 사진
           </Text>
         </Flex>
       </Box>

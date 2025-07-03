@@ -116,7 +116,7 @@ export default function ParticipantsPage() {
 
       {/* 평면도 및 시설정보 */}
       <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
-        <HeadingH4>오션 평면도</HeadingH4>
+        <HeadingH4>평면도</HeadingH4>
 
         {/* 평면도 이미지와 이용안내 박스를 나란히 배치 */}
         <Flex
@@ -149,16 +149,16 @@ export default function ParticipantsPage() {
             w={{ base: "100%", lg: "auto" }}
           >
             <Text
-              fontSize={{ base: "16px", md: "20px", lg: "30px" }}
+              fontSize={{ base: "16px", md: "18px", lg: "20px" }}
               color="#393939"
               lineHeight="1.8"
               fontWeight="medium"
-              mb={{ base: "15px", md: "30px", lg: "50px" }}
+              mb={{ base: "15px", md: "20px" }}
             >
               - 이용안내
             </Text>
             <Text
-              fontSize={{ base: "14px", md: "20px", lg: "24px" }}
+              fontSize={{ base: "14px", md: "16px", lg: "18px" }}
               color="#393939"
               lineHeight="1.6"
               whiteSpace="pre-line"

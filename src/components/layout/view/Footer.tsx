@@ -11,13 +11,8 @@ export function Footer() {
   ];
 
   return (
-    <Box
-      as="footer"
-      bg="white"
-      color="#333333"
-      mt={{ base: "80px", md: "120px", lg: "180px" }}
-    >
-      <Container maxW={{ base: "90%", "2xl": "1600px" }} px={0}>
+    <Box as="footer" bg="white" color="#333333" mt="auto">
+      <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
         {/* Main Content Area */}
         <Flex
           direction={{ base: "column", md: "row" }}

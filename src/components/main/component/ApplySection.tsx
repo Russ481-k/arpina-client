@@ -19,11 +19,11 @@ export function ApplySection() {
   const headingFontSize = useBreakpointValue({ base: "30px", md: "40px" });
   const linkFontSize = useBreakpointValue({ base: "16px", md: "30px" });
   const linkPadding = useBreakpointValue({
-    base: { px: 2, py: 0 },
+    base: { px: 4, py: 2 },
     md: { px: 8, py: 4 },
   });
   const flexContainerDirection = useBreakpointValue<"row" | "column">({
-    base: "row",
+    base: "column",
     md: "row",
   });
   const flexAlignItems = useBreakpointValue({
@@ -31,14 +31,14 @@ export function ApplySection() {
     md: "center",
   });
   const flexJustifyContent = useBreakpointValue({
-    base: "space-between",
+    base: "flex-start",
     md: "space-between",
   });
   const flexGap = useBreakpointValue({ base: 4, md: 0 });
 
   return (
     <Box className="msec03" mb={sectionMarginBottom}>
-      <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
+      <Box w={"100%"} maxW={"1600px"} mx="auto" my={0} px={{ base: 4, md: 0 }}>
         <Box className="mapply-box">
           <Box position="relative">
             <Swiper
@@ -72,7 +72,7 @@ export function ApplySection() {
                       gap={2}
                       bg={"#F1F2F3"}
                       border={"1px solid #F1F2F3"}
-                      borderRadius={"20px"}
+                      borderRadius={"40px"}
                       px={linkPadding?.px}
                       py={linkPadding?.py}
                       color={"#333"}
@@ -101,12 +101,11 @@ export function ApplySection() {
                   </Flex>
                   <Box>
                     <Image
-                      borderRadius="20px"
+                      borderRadius="50px"
                       overflow="hidden"
                       src="/images/contents/mapply_img01.jpg"
                       alt="수영장이미지"
                       w="100%"
-                      height={{ base: "300px", md: "auto" }}
                       objectFit="cover"
                     />
                   </Box>

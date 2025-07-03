@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, IconButton, Menu, Portal, Box } from "@chakra-ui/react";
+import { Flex, IconButton, Menu, Portal } from "@chakra-ui/react";
 import { useCallback } from "react";
 import { Grid3x3, Search, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -46,19 +46,17 @@ export const UtilityIcons = ({
     <Flex
       alignItems="center"
       gap={{ base: 2, md: 3 }}
-      display="flex"
+      display={{ base: "none", lg: "flex" }}
       zIndex={1001}
     >
-      <Box display={{ base: "none", sm: "block" }}>
-        <Image
-          src="/images/logo/부산도시공사_logo.png"
-          width={120}
-          height={40}
-          alt="부산도시공사 로고"
-          style={{ cursor: "pointer" }}
-          onClick={() => router.push("/")}
-        />
-      </Box>
+      <Image
+        src="/images/logo/부산도시공사_logo.png"
+        width={120}
+        height={40}
+        alt="부산도시공사 로고"
+        style={{ cursor: "pointer" }}
+        onClick={() => router.push("/")}
+      />
 
       {/* User Menu */}
       <Menu.Root>
@@ -69,7 +67,6 @@ export const UtilityIcons = ({
             color={iconColor}
             size="sm"
             borderRadius="full"
-            display={{ base: "none", sm: "flex" }}
           >
             <User2Icon />
           </IconButton>
@@ -127,7 +124,6 @@ export const UtilityIcons = ({
         color={iconColor}
         size="sm"
         borderRadius="full"
-        display={{ base: "none", sm: "flex" }}
         // TODO: Implement search functionality or drawer
       >
         <Search />
