@@ -183,17 +183,21 @@ export const Header = memo(function Header({
       >
         <Container
           position="relative"
-          py={0}
-          px={{ base: 2, md: 4, lg: 8, xl: 0 }}
+          p={0}
           transition="all 0.3s"
           m={0}
           w="100%"
-          maxW="1600px"
+          maxW={{ base: "90%", "2xl": "1600px" }}
           margin="0 auto"
           height="100%"
         >
           <Flex position="relative" direction="column" height="100%">
-            <Flex position="relative" align="center" minH={headerHeight}>
+            <Flex
+              position="relative"
+              align="center"
+              justify="space-between"
+              minH={headerHeight}
+            >
               <Flex zIndex={1000} align="center" h={headerHeight}>
                 <Link
                   as={NextLink}
@@ -261,14 +265,14 @@ export const Header = memo(function Header({
         overflow="hidden"
         boxShadow={isNavHovered ? "0 4px 20px rgba(0, 0, 0, 0.1)" : "none"}
       />
-      <MobileMenuDrawer
+      {/* <MobileMenuDrawer
         menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}
         isDark={isDark}
         isPreview={isPreview}
         width={logoWidth}
         height={logoHeight}
-      />
+      /> */}
       <SitemapDrawer
         isOpen={isSitemapDrawerOpen}
         onClose={() => setIsSitemapDrawerOpen(false)}

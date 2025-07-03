@@ -71,7 +71,7 @@ export default function MeetingSeatInfo({
       <Flex
         className="mr-seat-list"
         justifyContent={{ base: "space-between", md: "flex-start" }}
-        gap={{ base: "10px", md: "80px" }}
+        gap={{ base: "10px", md: "100px" }}
         wrap="wrap"
       >
         {seats.map((seat, index) => (

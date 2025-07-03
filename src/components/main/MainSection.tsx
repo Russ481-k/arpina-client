@@ -13,11 +13,13 @@ const MainSection = () => {
       pt={100}
       fontFamily="'Paperlogy', sans-serif"
       lineHeight="1"
+      maxW={{ base: "90%", "2xl": "1600px" }}
+      mx="auto"
     >
       <Heading
         as="h3"
         mb={{ base: 5, md: 6, lg: 7 }}
-        fontSize="40px"
+        fontSize={{ base: "24px", md: "32px", lg: "40px" }}
         fontWeight="bold"
         color={"#444445"}
         lineHeight={"1"}
