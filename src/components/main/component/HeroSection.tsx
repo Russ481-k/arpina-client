@@ -27,7 +27,8 @@ export function HeroSection() {
     base: "column",
     lg: "row",
   });
-  const heroBoxWidth = useBreakpointValue({ base: "100%", lg: "480px" });
+  const heroBoxWidth = useBreakpointValue({ base: "100%", lg: "30%" });
+  const imageBoxWidth = useBreakpointValue({ base: "100%", lg: "69%" });
 
   return (
     <>
@@ -44,8 +45,8 @@ export function HeroSection() {
             },
           },
           ".slide-content": {
-            opacity: 0,
-            transform: "translateY(50px)",
+            opacity: 1,
+            transform: "translateY(0)",
           },
           ".slide-content.active": {
             animation: "slideUp 0.8s ease-out forwards",
@@ -53,16 +54,15 @@ export function HeroSection() {
         }}
       />
       <Box className="msec01" mb={{ base: "25px", md: "45px" }}>
-        <Box
-          w={"100%"}
-          maxW={"1600px"}
-          mx="auto"
-          my={0}
-          px={{ base: 4, md: 0 }}
-        >
-          <Flex className="msec01-box" gap={5} direction={flexDirection}>
+        <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
+          <Flex
+            className="msec01-box"
+            gap={5}
+            direction={flexDirection}
+            justifyContent="space-between"
+          >
             <Box
-              flex="1 1 0"
+              w={imageBoxWidth}
               position="relative"
               overflow="hidden"
               className="swiper-container"
@@ -123,7 +123,7 @@ export function HeroSection() {
                     >
                       <Box bg="transparent" pt={6} pr={6} pb={6} pl={0}>
                         <Text
-                          fontSize="30px"
+                          fontSize={{ base: "14px", md: "20px", lg: "28px" }}
                           fontWeight="semibold"
                           color="#1F2732"
                         >
@@ -150,6 +150,7 @@ export function HeroSection() {
                     h="auto"
                     objectFit="cover"
                     cursor="pointer"
+                    margin="auto"
                   />
                 </Link>
               </Box>

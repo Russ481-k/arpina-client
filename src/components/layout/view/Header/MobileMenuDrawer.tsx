@@ -92,7 +92,7 @@ export const MobileMenuDrawer = memo(
           <Drawer.Backdrop />
           <Drawer.Positioner>
             <Drawer.Content>
-              <Drawer.Header>
+              <Drawer.Header p={3}>
                 <Drawer.Title flex="1">
                   <Link
                     as={NextLink}
@@ -173,8 +173,8 @@ export const MobileMenuDrawer = memo(
                           href={menu.url || "#"}
                           display="block"
                           py={2} // Adjusted padding for tighter feel
-                          fontSize="2xl" // Slightly smaller for more items
-                          fontWeight="medium"
+                          fontSize="18px" // Slightly smaller for more items
+                          fontWeight="bold"
                           color={
                             isActive
                               ? isDark
@@ -195,7 +195,7 @@ export const MobileMenuDrawer = memo(
                         </Link>
 
                         {menu.children && menu.children.length > 0 && (
-                          <VStack gap={1} align="stretch" pl={4} mt={1}>
+                          <VStack gap={0.3} align="stretch" mt={1}>
                             {menu.children.map((child) => {
                               const isChildActive = isMenuActive(child.url);
                               return (
@@ -205,9 +205,9 @@ export const MobileMenuDrawer = memo(
                                   href={child.url || "#"}
                                   display="block"
                                   py={1.5}
-                                  fontSize={isChildActive ? "lg" : "md"}
+                                  fontSize={isChildActive ? "16px" : "14px"}
                                   fontWeight={
-                                    isChildActive ? "semibold" : "normal"
+                                    isChildActive ? "bold" : "normal"
                                   }
                                   color={
                                     isChildActive
