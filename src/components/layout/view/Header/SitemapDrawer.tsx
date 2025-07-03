@@ -15,7 +15,7 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import Image from "next/image";
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import NextLink from "next/link";
 import { Menu } from "@/types/api";
 import {
@@ -83,6 +83,22 @@ export const SitemapDrawer = memo(
       }
     };
 
+    // Hide body scroll when drawer is open
+    useEffect(() => {
+      if (isOpen) {
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      }
+
+      return () => {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      };
+    }, [isOpen]);
+
     return (
       <Drawer.Root
         open={isOpen}
@@ -91,6 +107,7 @@ export const SitemapDrawer = memo(
         }}
         placement="end"
         size="full"
+        modal={true}
       >
         <Portal>
           <Drawer.Backdrop
@@ -101,234 +118,243 @@ export const SitemapDrawer = memo(
               <Flex
                 as="header"
                 align="center"
-                justify="space-between"
-                p={4}
+                justify="center"
                 borderBottomWidth="1px"
                 borderColor={isDark ? "gray.700" : "gray.200"}
-                h="80px"
+                h={{ base: "60px", lg: "70px" }}
               >
-                <Link as={NextLink} href="/" onClick={onClose}>
-                  <Image
-                    src={
-                      isDark
-                        ? "/images/logo/logo_w.png"
-                        : "/images/logo/logo.png"
-                    }
-                    width={width * 1.2}
-                    height={height * 1.2}
-                    alt="logo"
-                  />
-                </Link>
-                <HStack gap={3}>
-                  <Image
-                    src="/images/logo/부산도시공사_logo.png"
-                    width={120}
-                    height={40}
-                    alt="부산도시공사 로고"
-                  />
+                <Flex
+                  align="center"
+                  justify="space-between"
+                  maxW={{ base: "90%", "2xl": "1600px" }}
+                  w="full"
+                >
+                  <Link as={NextLink} href="/" onClick={onClose}>
+                    <Image
+                      src={
+                        isDark
+                          ? "/images/logo/logo_w.png"
+                          : "/images/logo/logo.png"
+                      }
+                      width={width}
+                      height={height}
+                      alt="logo"
+                    />
+                  </Link>
+                  <HStack gap={3}>
+                    <Image
+                      src="/images/logo/부산도시공사_logo.png"
+                      width={120}
+                      height={40}
+                      alt="부산도시공사 로고"
+                      style={{ display: width < 600 ? "none" : "block" }}
+                    />
 
-                  <Icon
-                    as={Globe}
-                    boxSize={5}
-                    color={isDark ? "gray.400" : "gray.600"}
-                  />
-                  <Icon
-                    as={Type}
-                    boxSize={5}
-                    color={isDark ? "gray.400" : "gray.600"}
-                  />
-                  <Icon
-                    as={Smile}
-                    boxSize={5}
-                    color={isDark ? "gray.400" : "gray.600"}
-                  />
-                  <IconButton
-                    aria-label="Close sitemap"
-                    onClick={onClose}
-                    variant="ghost"
-                    size="lg"
-                    color={isDark ? "white" : "black"}
-                  >
-                    <LargeCloseIcon />
-                  </IconButton>
-                </HStack>
+                    <Icon
+                      as={Globe}
+                      boxSize={5}
+                      color={isDark ? "gray.400" : "gray.600"}
+                      display={{ base: "none", md: "block" }}
+                    />
+                    <Icon
+                      as={Type}
+                      boxSize={5}
+                      color={isDark ? "gray.400" : "gray.600"}
+                      display={{ base: "none", md: "block" }}
+                    />
+                    <Icon
+                      as={Smile}
+                      boxSize={5}
+                      color={isDark ? "gray.400" : "gray.600"}
+                      display={{ base: "none", md: "block" }}
+                    />
+                    <IconButton
+                      aria-label="Close sitemap"
+                      onClick={onClose}
+                      variant="ghost"
+                      size="lg"
+                      color={isDark ? "white" : "black"}
+                    >
+                      <LargeCloseIcon />
+                    </IconButton>
+                  </HStack>
+                </Flex>
               </Flex>
 
-              <Drawer.Body p={0} overflowY="hidden">
-                <Flex h="calc(100vh - 80px - 50px)">
-                  <VStack
-                    as="aside"
-                    w="280px"
-                    bg={isDark ? "gray.750" : "gray.50"}
-                    p={6}
-                    gap={5}
-                    align="flex-start"
-                    borderRightWidth="1px"
-                    borderColor={isDark ? "gray.700" : "gray.200"}
-                    overflowY="auto"
+              <Drawer.Body p={0}>
+                <Box
+                  h={{
+                    base: "calc(100vh - 60px - 50px)",
+                    lg: "calc(100vh - 70px - 50px)",
+                  }}
+                  overflowY="scroll"
+                  css={{
+                    "&::-webkit-scrollbar": {
+                      width: "8px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: isDark ? "#2D3748" : "#F7FAFC",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: isDark ? "#4A5568" : "#CBD5E0",
+                      borderRadius: "6px",
+                    },
+                    "&::-webkit-scrollbar-thumb:hover": {
+                      background: isDark ? "#718096" : "#A0AEC0",
+                    },
+                  }}
+                >
+                  <Flex
+                    h="auto"
+                    justify="center"
+                    minH={{
+                      base: "calc(100vh - 60px - 50px)",
+                      lg: "calc(100vh - 70px - 50px)",
+                    }}
                   >
-                    {topLevelMenus.map((menu) => (
-                      <ChakraText
-                        key={menu.id}
-                        fontSize="xl"
-                        fontWeight={
-                          selectedCategoryKey === menu.id ? "bold" : "medium"
-                        }
-                        color={
-                          selectedCategoryKey === menu.id
-                            ? isDark
-                              ? "blue.300"
-                              : "blue.600"
-                            : isDark
-                            ? "gray.100"
-                            : "gray.700"
-                        }
-                        onClick={() => handleCategoryClick(menu.id)}
-                        cursor="pointer"
-                        _hover={{ color: isDark ? "blue.200" : "blue.500" }}
-                        w="full"
-                      >
-                        {menu.name}
-                      </ChakraText>
-                    ))}
-                    <Box flex={1} />
-                    <Link
-                      href="https://instagram.com"
-                      onClick={onClose}
-                      display="flex"
-                      alignItems="center"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <VStack
+                      as="aside"
+                      w="full"
+                      maxW="1200px"
+                      bg={isDark ? "gray.800" : "white"}
+                      p={10}
+                      gap={8}
+                      align="flex-start"
                     >
-                      <Icon
-                        boxSize={6}
-                        color={isDark ? "gray.400" : "gray.600"}
-                      >
-                        <Instagram />
-                      </Icon>
-                      <ChakraText
-                        ml={2}
-                        fontSize="sm"
-                        color={isDark ? "gray.300" : "gray.500"}
-                      >
-                        Instagram
-                      </ChakraText>
-                    </Link>
-                  </VStack>
-
-                  {/* Right Content (All Menu Items with 3-depth structure) */}
-                  <Box flex="1" p={8} overflowY="auto" id="sitemapRightPanel">
-                    {topLevelMenus.length > 0 ? (
-                      <Grid
-                        templateColumns={{
-                          base: "repeat(1, 1fr)",
-                          sm: "repeat(2, 1fr)",
-                          md: "repeat(3, 1fr)",
-                          lg: "repeat(4, 1fr)",
-                        }} // Allow up to 4 columns for all content
-                        gap={{ base: 6, md: 8 }}
-                      >
-                        {topLevelMenus.map((level1Menu) => (
-                          <GridItem
-                            key={level1Menu.id}
-                            id={`sitemap-section-${level1Menu.id}`}
-                            minW="160px"
+                      {topLevelMenus.map((menu) => (
+                        <Box key={menu.id} w="full">
+                          <ChakraText
+                            fontSize={{ base: "24px", md: "2xl", lg: "3xl" }}
+                            fontFamily="paperlogy"
+                            fontWeight={
+                              selectedCategoryKey === menu.id ? "700" : "600"
+                            }
+                            color={isDark ? "gray.100" : "gray.700"}
+                            onClick={() => handleCategoryClick(menu.id)}
+                            cursor="pointer"
+                            position="relative"
+                            zIndex={2}
+                            _after={{
+                              content: '""',
+                              position: "absolute",
+                              bottom: "-8px",
+                              left: "55px",
+                              transform: "translateX(-50%)",
+                              width: "120px",
+                              height: "20px",
+                              bg:
+                                selectedCategoryKey === menu.id
+                                  ? "rgba(224, 225, 255, 0.5)"
+                                  : "rgba(224, 225, 255, 0)",
+                              borderRadius: "1px",
+                              transition: "all 0.3s ease",
+                              zIndex: 1,
+                            }}
+                            _hover={{
+                              _after: {
+                                content: '""',
+                                position: "absolute",
+                                bottom: "-8px",
+                                left: "55px",
+                                transform: "translateX(-50%)",
+                                width: "120px",
+                                height: "20px",
+                                bg: "rgba(224, 225, 255, 0.5)",
+                                borderRadius: "1px",
+                              },
+                            }}
+                            w="full"
+                            transition="all 0.2s ease"
+                            mb={6}
                           >
-                            <VStack align="flex-start" gap={3} h="100%">
-                              {/* Level 1 Menu Name as a non-clickable header for the column/section if needed, though image implies Level 2 are the first headers shown in right panel */}
-                              {/* For now, directly proceed to Level 2 items as headers */}
-                              {level1Menu.children &&
-                                level1Menu.children.length > 0 &&
-                                level1Menu.children.map((level2Menu) => (
-                                  <Box key={level2Menu.id} w="full" mb={2}>
+                            {menu.name}
+                          </ChakraText>
+
+                          {/* Child menus displayed under each top-level menu */}
+                          {menu.children && menu.children.length > 0 && (
+                            <Flex
+                              wrap="wrap"
+                              gap={
+                                menu.children.some(
+                                  (child) =>
+                                    child.children && child.children.length > 0
+                                )
+                                  ? 7
+                                  : { base: 4, md: 7 }
+                              }
+                              align="flex-start"
+                              w="full"
+                              pb={4}
+                              borderBottomWidth="1px"
+                              borderBottomColor={
+                                isDark ? "gray.600" : "gray.300"
+                              }
+                              mb={6}
+                            >
+                              {menu.children.map((level2Menu) => (
+                                <Box key={level2Menu.id} minW="150px">
+                                  {level2Menu.url ? (
+                                    <Link
+                                      as={NextLink}
+                                      href={level2Menu.url}
+                                      onClick={onClose}
+                                      fontWeight="medium"
+                                      fontSize={{ base: "md", md: "lg" }}
+                                      fontFamily="paperlogy"
+                                      mb={3}
+                                      color={isDark ? "gray.100" : "gray.800"}
+                                      _hover={{
+                                        fontWeight: "semibold",
+                                      }}
+                                      display="block"
+                                    >
+                                      {level2Menu.name}
+                                    </Link>
+                                  ) : (
                                     <ChakraText
-                                      fontWeight="bold"
-                                      fontSize="lg"
-                                      mb={2}
+                                      fontWeight="medium"
+                                      fontSize={{ base: "md", md: "lg" }}
+                                      fontFamily="paperlogy"
+                                      mb={3}
                                       color={isDark ? "gray.100" : "gray.800"}
                                     >
-                                      {level2Menu.name}{" "}
-                                      {/* Level 2 item as Section Header */}
+                                      {level2Menu.name}
                                     </ChakraText>
-                                    {level2Menu.children &&
-                                    level2Menu.children.length > 0 ? (
-                                      <VStack
-                                        align="flex-start"
-                                        gap={1.5}
-                                        pl={0}
-                                      >
-                                        {level2Menu.children.map(
-                                          (level3Link) => (
-                                            <Link
-                                              key={level3Link.id}
-                                              as={NextLink}
-                                              href={level3Link.url || "#"}
-                                              onClick={onClose}
-                                              fontSize="md"
-                                              color={
-                                                isDark ? "gray.300" : "gray.600"
-                                              }
-                                              _hover={{
-                                                color: isDark
-                                                  ? "blue.300"
-                                                  : "blue.500",
-                                                textDecoration: "underline",
-                                              }}
-                                              display="block"
-                                            >
-                                              {level3Link.name}{" "}
-                                              {/* Level 3 item as Link */}
-                                            </Link>
-                                          )
-                                        )}
-                                      </VStack>
-                                    ) : level2Menu.url ? ( // If Level 2 item itself is a link and has no children
-                                      <Link
-                                        as={NextLink}
-                                        href={level2Menu.url}
-                                        onClick={onClose}
-                                        fontSize="md"
-                                        color={isDark ? "gray.300" : "gray.600"}
-                                        _hover={{
-                                          color: isDark
-                                            ? "blue.300"
-                                            : "blue.500",
-                                          textDecoration: "underline",
-                                        }}
-                                        display="block"
-                                        pl={0} // Align with other potential level 3 links
-                                      >
-                                        {/* Display Level 2 item as a link if it has no children but has a URL */}
-                                        {/* This case is not explicitly in the image for Level 2 headers that are also links without Level 3 items */}
-                                        {/* The image shows Level 2 as headers, then Level 3 as links. We are adhering to that. */}
-                                        {/* If level2Menu.url should be displayed, it implies it's a link itself. */}
-                                        {/* Let's assume level2Menu items are primarily headers for level3 links as per image style. */}
-                                        {/* If a level2Menu has a URL but no children, it won't show as a link with current logic. */}
-                                        {/* The task is to replicate the image. The image shows Level 2 names as headers, then Level 3 names as links. */}
-                                        {/* The provided screenshot has "이용안내" under "객실" as a Level 2. It doesn't show Level 3 items. */}
-                                        {/* Let's assume if Level 2 has a URL AND NO Level 3 children, it should appear as a link itself under its own name (as a header) */}
-                                        {/* For now, this path (level2Menu.url && !level2Menu.children) is not explicitly rendering a link if we treat Level 2 as headers. */}
-                                        {/* Re-evaluating: if a level 2 menu item has no children but has a URL, it acts as a direct link of that section. */}
-                                        {/* The image shows "이용안내" as a Level 2 item. It probably directly links. */}
-                                        {/* The current structure makes level2Menu.name a header. If it's also a link, it should be clickable. */}
-                                        {/* For simplicity, if Level2 has a URL AND NO children, we display ONLY the link, not a header + link. */}
-                                        {/* No, this is wrong. The image clearly shows Level 2 items as headers.  If they are also links, the header itself should be a link. */}
-                                        {/* Let's make the Level 2 ChakraText a Link if level2Menu.url exists. */}
-                                      </Link>
-                                    ) : null}
-                                  </Box>
-                                ))}
-                            </VStack>
-                          </GridItem>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <ChakraText color={isDark ? "gray.400" : "gray.600"}>
-                        No sub-menu items to display.
-                      </ChakraText>
-                    )}
-                  </Box>
-                </Flex>
+                                  )}
+                                  {level2Menu.children &&
+                                  level2Menu.children.length > 0 ? (
+                                    <VStack align="flex-start" gap={1.5} pl={0}>
+                                      {level2Menu.children.map((level3Link) => (
+                                        <Link
+                                          key={level3Link.id}
+                                          as={NextLink}
+                                          href={level3Link.url || "#"}
+                                          onClick={onClose}
+                                          fontSize={{ base: "sm", md: "md" }}
+                                          fontFamily="paperlogy"
+                                          color={
+                                            isDark ? "gray.300" : "gray.600"
+                                          }
+                                          _hover={{
+                                            fontWeight: "semibold",
+                                          }}
+                                          display="block"
+                                        >
+                                          {level3Link.name}
+                                        </Link>
+                                      ))}
+                                    </VStack>
+                                  ) : null}
+                                </Box>
+                              ))}
+                            </Flex>
+                          )}
+                        </Box>
+                      ))}
+                      <Box flex={1} />
+                    </VStack>
+                  </Flex>
+                </Box>
               </Drawer.Body>
 
               <Flex
@@ -336,20 +362,40 @@ export const SitemapDrawer = memo(
                 align="center"
                 justify="center"
                 p={4}
-                borderTopWidth="1px"
                 borderColor={isDark ? "gray.700" : "gray.200"}
                 h="50px"
               >
                 <Link
-                  href="#"
+                  href="https://www.instagram.com/bmc_arpina"
                   onClick={onClose}
-                  fontSize="sm"
-                  color={isDark ? "blue.300" : "blue.600"}
-                  _hover={{ textDecoration: "underline" }}
+                  display="flex"
+                  alignItems="center"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  아르피나의 특별한 순간, SNS에서 실시간으로 확인하세요
+                  <HStack gap={3} align="center">
+                    <Image
+                      src="/images/icons/instagram_icon.png"
+                      alt="Instagram"
+                      width={32}
+                      height={32}
+                    />
+                    <Box
+                      style={{
+                        background:
+                          "linear-gradient(90deg, #0C8EA4 0%, #2E3192 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                        color: "transparent",
+                      }}
+                      fontSize="sm"
+                      fontFamily="paperlogy"
+                      fontWeight="bold"
+                    >
+                      아르피나의 특별한 순간, SNS에서 실시간으로 확인하세요
+                    </Box>
+                  </HStack>
                 </Link>
               </Flex>
             </Drawer.Content>
