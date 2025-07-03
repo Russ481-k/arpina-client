@@ -56,7 +56,7 @@ export default function InfoTopBox({
     if (pathname?.includes("/rooms/")) {
       return [
         { label: "객실 프론트", number: "051-740-3201" },
-        { label: "예약실(학교 및 기업)", number: "051-740-9800" },
+        { label: "예약실(학교 및 기업)", number: "051-731-9800" },
       ];
     }
     if (pathname?.includes("/sports/golf")) {
