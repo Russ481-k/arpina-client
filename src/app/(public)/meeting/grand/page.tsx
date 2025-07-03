@@ -94,13 +94,11 @@ export default function ParticipantsPage() {
       </Box>
       <Box
         mt={{ base: "80px", md: "120px", lg: "180px" }}
-        gap={{ base: 5, md: 10, lg: 10 }}
+        gap={{ base: 8, md: 15, lg: 20 }}
       >
         <MeetingSeatInfo seats={customSeats} />
       </Box>
-      <Box
-        mt={{ base: "80px", md: "120px", lg: "180px" }}
-      >
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         {/* 평면도 섹션 */}
         <HeadingH4>그랜드 볼룸 평면도</HeadingH4>
 
@@ -135,7 +133,7 @@ export default function ParticipantsPage() {
             w={{ base: "100%", lg: "auto" }}
           >
             <Text
-              fontSize={{ base: "16px", md: "18px", lg: "20px" }}
+              fontSize={{ base: "16px", md: "20px", lg: "24px" }}
               color="#393939"
               lineHeight="1.8"
               fontWeight="medium"
@@ -144,7 +142,7 @@ export default function ParticipantsPage() {
               - 이용안내
             </Text>
             <Text
-              fontSize={{ base: "14px", md: "16px", lg: "18px" }}
+              fontSize={{ base: "14px", md: "20px", lg: "24px" }}
               color="#393939"
               lineHeight="1.6"
               whiteSpace="pre-line"

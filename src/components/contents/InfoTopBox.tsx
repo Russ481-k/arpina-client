@@ -74,7 +74,7 @@ export default function InfoTopBox({
     let number;
     let label = "문의 및 예약";
     if (pathname?.includes("/meeting/")) {
-      number = "051-740-9800"; // 세미나 섹션 전화번호
+      number = "051-731-9800"; // 세미나 섹션 전화번호
     } else if (pathname?.includes("/sports/futsal")) {
       number = "051-740-3271"; // 풋살장 섹션 전화번호
     } else if (pathname?.includes("/facilities/restaurant-jj")) {
