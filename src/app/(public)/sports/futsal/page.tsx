@@ -9,7 +9,11 @@ import ApTable02 from "@/components/contents/ApTable02";
 import InfoBoxList01 from "@/components/contents/InfoBoxList01";
 
 export default function ParticipantsPage() {
-  const images = ["/images/contents/futsal_img01.jpg"];
+  const images = [
+    "/images/contents/futsal_img01.jpg",
+    "/images/contents/futsal_img02.jpg",
+    "/images/contents/futsal_img03.jpg",
+  ];
 
   const tableRows01 = [
     {
@@ -18,11 +22,7 @@ export default function ParticipantsPage() {
     },
     {
       header: "시설규모",
-      content: (
-        <>
-          야외운동장: 1,350㎡ (약 408평)
-        </>
-      ),
+      content: <>야외운동장: 1,350㎡ (약 408평)</>,
     },
     {
       header: "운영시간",
