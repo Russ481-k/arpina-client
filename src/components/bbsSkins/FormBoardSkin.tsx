@@ -27,6 +27,7 @@ import {
   FaFileArchive,
   FaFileAlt,
 } from "react-icons/fa";
+import PostTitleDisplay from "@/components/common/PostTitleDisplay";
 
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
@@ -99,11 +100,13 @@ const TitleRenderer: React.FC<
       href={`${currentPathId}/read/${data.nttId}`}
       fontWeight={data.noticeState === "Y" ? "bold" : "normal"}
       color={data.noticeState === "Y" ? "blue.600" : "inherit"}
-      display="inline-block"
+      display="flex"
+      alignItems="center"
+      h="100%"
       py={1}
       _hover={{ textDecoration: "underline" }}
     >
-      {data.title}
+      <PostTitleDisplay title={data.title} postData={data} />
     </ChakraLink>
   );
 };

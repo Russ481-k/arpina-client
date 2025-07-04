@@ -1,5 +1,6 @@
 import { privateApi } from "./client";
 import { publicApi } from "./client";
+import { BoardArticleCommon } from "@/types/api";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -18,36 +19,6 @@ export interface AttachmentInfoDto {
   downloadUrl: string;
 }
 
-export interface Article {
-  nttId: number;
-  bbsId: number;
-  no: number;
-  parentNttId: number | null;
-  threadDepth: number;
-  writer: string;
-  title: string;
-  content: string;
-  hasImageInContent: boolean;
-  hasAttachment: boolean;
-  noticeState: string;
-  noticeStartDt: string;
-  noticeEndDt: string;
-  publishState: string;
-  publishStartDt: string;
-  publishEndDt: string;
-  externalLink: string | null;
-  hits: number;
-  displayWriter?: string;
-  postedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  attachments: AttachmentInfoDto[] | null;
-  skinType: string | null;
-  menuId: number;
-  status?: string;
-  thumbnailUrl?: string;
-}
-
 export interface ArticleListParams {
   bbsId: number;
   menuId: number;
@@ -58,7 +29,7 @@ export interface ArticleListParams {
 }
 
 export interface ArticleListResponse {
-  content: Article[];
+  content: BoardArticleCommon[];
   pageable: {
     sort: {
       empty: boolean;
@@ -143,8 +114,10 @@ export const articleApi = {
   },
 
   // 게시글 상세 조회
-  getArticle: async (nttId: number): Promise<ApiResponse<Article>> => {
-    const response = await privateApi.get<ApiResponse<Article>>(
+  getArticle: async (
+    nttId: number
+  ): Promise<ApiResponse<BoardArticleCommon>> => {
+    const response = await privateApi.get<ApiResponse<BoardArticleCommon>>(
       `/cms/bbs/article/${nttId}`
     );
     return response.data;

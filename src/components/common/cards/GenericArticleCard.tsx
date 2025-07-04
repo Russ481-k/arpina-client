@@ -10,18 +10,15 @@ import {
   Link as ChakraLink,
   Icon,
   Flex,
+  Box,
 } from "@chakra-ui/react";
 import { CommonCardData } from "@/types/common"; // Import CommonCardData
-import {
-  LuEye,
-  LuImage,
-  LuPaperclip,
-  LuImageOff,
-  LuExternalLink,
-} from "react-icons/lu";
+import { LuEye, LuImageOff, LuExternalLink } from "react-icons/lu";
 import { useColors } from "@/styles/theme";
 import Image from "next/image";
 import { useColorMode as useColorModeComponent } from "@/components/ui/color-mode"; // Correct alias usage
+import PostTitleDisplay from "@/components/common/PostTitleDisplay"; // PostTitleDisplay 임포트
+import { ArticleDisplayData } from "@/components/common/PostTitleDisplay"; // ArticleDisplayData 임포트
 
 interface GenericArticleCardProps {
   cardData: CommonCardData;
@@ -116,12 +113,19 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
         </AspectRatio>
       )}
 
-      <Flex p={4} gap={2} align="stretch" alignItems="center" flex={1}>
-        <Flex gap={2} flex={1} alignItems="center" overflow="hidden">
+      <Box p={2} gap={2} alignItems="center" flex={1}>
+        <Flex
+          gap={2}
+          flex={1}
+          alignItems="center"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+        >
           {/* Title always links internally */}
-          <Flex>
+          <Flex flex={1} minW={0}>
             <ChakraLink
-              href={externalLinkHref}
+              href={internalDetailUrl}
               flex={1}
               minW={0}
               title={cardData.title}
@@ -129,9 +133,10 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
               display="flex"
               alignItems="center"
             >
-              <Text fontWeight="bold" color={titleColor} truncate>
-                {cardData.title}
-              </Text>
+              <PostTitleDisplay
+                title={cardData.title}
+                postData={cardData as ArticleDisplayData}
+              />
             </ChakraLink>
 
             {/* External link icon, only if externalLinkHref exists */}
@@ -142,42 +147,23 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
                 rel="noopener noreferrer"
                 display="inline-flex"
                 aria-label={`Open external link: ${externalLinkHref}`}
-                ml={1} // Small margin from the title
-                onClick={(e) => e.stopPropagation()} // Prevent LinkBox click if icon is clicked
+                onClick={(e) => e.stopPropagation()}
               >
                 <Icon
                   as={LuExternalLink}
                   color={iconColor}
                   _hover={{ color: iconHoverColor }}
                   cursor="pointer"
-                  boxSize={4} // Consistent with preview renderer
+                  boxSize={4}
                 />
               </ChakraLink>
             )}
           </Flex>
-
-          <HStack
-            gap={1}
-            alignItems="center"
-            color={colors.text.secondary}
-            fontSize="sm"
-          >
-            {cardData.hasImageInContent && (
-              <Icon as={LuImage} boxSize="1em" aria-label="Image in content" />
-            )}
-            {cardData.hasAttachment && (
-              <Icon
-                as={LuPaperclip}
-                boxSize="1em"
-                aria-label="Has attachments"
-              />
-            )}
-          </HStack>
         </Flex>
-        <Text fontSize="xs" color={colors.text.tertiary}>
+        <Text fontSize="xs" color={colors.text.tertiary} textAlign="right">
           {formattedDate}
         </Text>
-      </Flex>
+      </Box>
 
       <HStack
         justify="space-between"
