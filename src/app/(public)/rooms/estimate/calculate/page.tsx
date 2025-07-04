@@ -1141,13 +1141,7 @@ export default function EstimatePage() {
     "자스민",
     "클로버",
   ];
-  const roomList = [
-    "트윈",
-    "트리플",
-    "디럭스",
-    "코리안",
-    "패밀리",
-  ];
+  const roomList = ["트윈", "트리플", "디럭스", "코리안", "패밀리"];
   const [hallDays, setHallDays] = React.useState(
     Array(hallList.length).fill(0)
   );
@@ -1576,7 +1570,7 @@ export default function EstimatePage() {
               </Text>
             </Box>
             {/* 발행 버튼 */}
-            <Button
+            {/* <Button
               w="100%"
               bg="#2E3192"
               color="white"
@@ -1600,7 +1594,7 @@ export default function EstimatePage() {
                   fill="white"
                 />
               </svg>
-            </Button>
+            </Button> */}
           </Box>
         </Box>
       </Box>

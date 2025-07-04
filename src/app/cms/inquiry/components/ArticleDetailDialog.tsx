@@ -42,7 +42,7 @@ export const ArticleDetailDialog = ({
   useEffect(() => {
     if (inquiry) {
       setStatus(inquiry.status || "");
-      setMemo(inquiry.memo || "");
+      setMemo(inquiry.adminMemo || inquiry.memo || "");
     }
   }, [inquiry]);
 

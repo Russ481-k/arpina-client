@@ -48,6 +48,8 @@ function mapArticleToPost(article: Article): Post {
     bbsId: article.bbsId,
     parentNttId: article.parentNttId,
     threadDepth: article.threadDepth,
+    displayWriter: article.displayWriter || "",
+    postedAt: article.postedAt || "",
     writer: article.writer,
     title: article.title,
     content: article.content,

@@ -124,6 +124,8 @@ export default function PostManagementPage() {
           no: 0,
           hasImageInContent: false,
           hasAttachment: false,
+          displayWriter: postData.displayWriter || postData.writer,
+          postedAt: postData.postedAt || new Date().toISOString(),
         };
         await createPostMutation.mutateAsync(dataToSend);
       }

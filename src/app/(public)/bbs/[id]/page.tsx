@@ -91,6 +91,8 @@ function mapArticleToPost(article: Article): Post {
     publishEndDt: article.publishEndDt,
     externalLink: article.externalLink,
     hits: article.hits,
+    displayWriter: article.displayWriter || "",
+    postedAt: article.postedAt || "",
     createdAt: article.createdAt,
     updatedAt: article.updatedAt,
     thumbnailUrl: article.thumbnailUrl,
