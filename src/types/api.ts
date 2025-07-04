@@ -79,6 +79,7 @@ export interface Post {
   parentNttId: number | null;
   threadDepth: number;
   writer: string;
+  displayWriter: string;
   title: string;
   content: string; // HTML 또는 JSON 문자열일 수 있음
   hasImageInContent: boolean;
@@ -95,6 +96,7 @@ export interface Post {
   attachments?: File[] | null; // 변경: File 객체 배열 사용
   thumbnailUrl?: string; // Optional thumbnail URL for press/card layouts
   createdAt: string;
+  postedAt: string;
   updatedAt: string;
 
   // Fields for QnA functionality, used by QnaBoardSkin
@@ -309,6 +311,7 @@ export interface PostData {
   title: string;
   content: string;
   writer: string;
+  displayWriter?: string;
   publishStartDt: string;
   noticeState: "Y" | "N" | "P";
   noticeStartDt: string;
@@ -321,6 +324,7 @@ export interface PostData {
   nttId: number;
   threadDepth: number;
   hits: number;
+  postedAt?: string;
 }
 
 export interface BoardMaster {
@@ -624,6 +628,7 @@ export interface EnrollAdminResponseDto {
   userPhone: string | null; // User phone number from user table
   userLoginId: string | null; // User login ID from user table
   membershipType?: string; // Added field for discount/membership type
+  renewalFlag: boolean;
 }
 
 // CancelRequestDto for GET /admin/swimming/enrolls/cancel-requests
@@ -1173,6 +1178,7 @@ export interface UserEnrollmentHistoryDto {
   username: string;
   name: string;
   phone: string;
+  carNo: string;
   status: string;
   lastEnrollment: EnrollmentDetailDto | null;
   enrollmentHistory: EnrollmentDetailDto[];

@@ -134,7 +134,9 @@ export function mapPostToCommonCardData(
     title: post.title,
     thumbnailUrl: displayThumbnailUrl,
     writer: post.writer,
+    displayWriter: post.displayWriter,
     createdAt: post.createdAt,
+    postedAt: post.postedAt,
     hits: post.hits,
     detailUrl: `${currentPathId}/read/${post.nttId}`,
     hasImageInContent: post.hasImageInContent,
@@ -179,6 +181,8 @@ export function mapArticleToCommonCardData(
     title: article.title,
     thumbnailUrl: displayThumbnailUrl,
     writer: article.writer,
+    displayWriter: article.displayWriter,
+    postedAt: article.postedAt,
     createdAt: article.createdAt,
     hits: article.hits,
     detailUrl: `${menuPath}/read/${article.nttId}`, // Verify this path structure

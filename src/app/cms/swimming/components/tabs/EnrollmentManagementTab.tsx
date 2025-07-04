@@ -87,7 +87,7 @@ const UsesLockerCellRenderer: React.FC<
 };
 
 const RenewalCellRenderer: React.FC<
-  ICellRendererParams<EnrollmentData, boolean | undefined>
+  ICellRendererParams<EnrollmentData, boolean>
 > = (params) => {
   return (
     <Badge
@@ -302,7 +302,7 @@ export const EnrollmentManagementTab = ({
       },
       {
         headerName: "구분",
-        field: "isRenewal",
+        field: "renewalFlag",
         cellRenderer: RenewalCellRenderer,
         width: 70,
         cellStyle: {

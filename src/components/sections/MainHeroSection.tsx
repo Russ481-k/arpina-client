@@ -69,7 +69,7 @@ export const MainHeroSection = () => {
           lineHeight={"1"}
           fontFamily="'Paperlogy', sans-serif"
         >
-          광안리 - 해운대 - 센텀시티를 잇는 이상적인 허브
+          광안리 · 해운대 · 센텀시티를 잇는 이상적인 허브
         </Heading>
         <Flex
           className="msec01-box"

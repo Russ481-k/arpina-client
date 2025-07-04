@@ -22,12 +22,6 @@ import { PageDetailsDto } from "@/types/menu";
 import { findMenuByPath } from "@/lib/menu-utils";
 import { Menu } from "@/types/api";
 
-// Interface for URL parameters
-interface ArticleDetailPageParams {
-  id: string;
-  articleId: string;
-}
-
 interface PrevNextArticleInfo {
   nttId: number;
   title: string;

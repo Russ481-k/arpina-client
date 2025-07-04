@@ -35,8 +35,8 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
 
   // Assuming cardData.createdAt is a string parsable by new Date()
   // If it's already formatted, this logic can be removed or adapted.
-  const formattedDate = cardData.createdAt
-    ? new Date(cardData.createdAt).toLocaleDateString("ko-KR", {
+  const formattedDate = cardData.postedAt
+    ? new Date(cardData.postedAt).toLocaleDateString("ko-KR", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -186,9 +186,9 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
         borderColor={colors.border}
         mt="auto"
       >
-        {cardData.writer && (
+        {cardData.displayWriter && (
           <Text fontSize="xs" color={colors.text.tertiary}>
-            {cardData.writer}
+            {cardData.displayWriter}
           </Text>
         )}
         <HStack gap={2} alignItems="center">
