@@ -9,7 +9,11 @@ import ApTable02 from "@/components/contents/ApTable02";
 import InfoBoxList01 from "@/components/contents/InfoBoxList01";
 
 export default function ParticipantsPage() {
-  const images = ["/images/contents/futsal_img01.jpg"];
+  const images = [
+    "/images/contents/futsal_img01.jpg",
+    "/images/contents/futsal_img02.jpg",
+    "/images/contents/futsal_img03.jpg",
+  ];
 
   const tableRows01 = [
     {
@@ -18,12 +22,7 @@ export default function ParticipantsPage() {
     },
     {
       header: "시설규모",
-      content: (
-        <>
-          야외운동장: 1,350㎡ (약 408평) <br />
-          실내연습장: 134㎡ (약 40.5평, 우천 시 이용 가능)
-        </>
-      ),
+      content: <>야외운동장: 1,350㎡ (약 408평)</>,
     },
     {
       header: "운영시간",
@@ -133,26 +132,27 @@ export default function ParticipantsPage() {
           url: "/files/futsal_regulations.pdf",
           fileName: "futsal_regulations.pdf",
         }}
+        descriptionStyle={{ textAlign: "justify" }}
       />
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>현황안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>이용시 유의사항</HeadingH4>
         <ApTable01 rows={tableRows02} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>이용요금 예약 및 절차</HeadingH4>
         <ApTable02 rows={tableRows03} />
         <InfoBoxList01 items={infoItems01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>예약 취소 및 환불규정</HeadingH4>
         <ApTable02 rows={tableRows04} />
         <InfoBoxList01 items={infoItems02} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
         <HeadingH4>승인조건 및 유의사항</HeadingH4>
         <InfoBoxList01 items={infoItems03} />
       </Box>

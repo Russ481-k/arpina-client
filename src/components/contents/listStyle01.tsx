@@ -44,14 +44,14 @@ const CollapsibleItem = ({
         <Text
           display="flex"
           alignItems="center"
-          gap={{ base: "10px", md: "20px", lg: "100px" }}
+          gap={{ base: "20px", md: "40px", lg: "100px" }}
           w="100%"
           maxW="1400px"
           margin="0 auto"
-          py={{ base: 2, md: 3, lg: 0 }}
+          py={{ base: 3, md: 4, lg: 5 }}
           color="#393939"
           fontSize={titleSize}
-          fontWeight="Bold"
+          fontWeight="medium"
         >
           <Mark color="#EFEFF1" fontSize={numberSize} fontWeight="extrabold">
             {number}
@@ -59,8 +59,8 @@ const CollapsibleItem = ({
           {title}
           <chakra.svg
             xmlns="http://www.w3.org/2000/svg"
-            width={{ base: "20px", md: "40px", lg: "80px" }}
-            height={{ base: "20px", md: "40px", lg: "81px" }}
+            width={{ base: "16px", md: "24px", lg: "32px" }}
+            height={{ base: "16px", md: "24px", lg: "32px" }}
             viewBox="0 0 80 81"
             fill="none"
             ml="auto"
@@ -79,16 +79,20 @@ const CollapsibleItem = ({
       </Collapsible.Trigger>
       <Collapsible.Content>
         <Box
-          display="flex"
-          alignItems="center"
-          gap={10}
           w="100%"
           maxW="1400px"
           margin="0 auto"
           py={{ base: 2, md: 3, lg: 7 }}
-          pl={{ base: "0", md: "40px", lg: "140px" }}
+          pl={{ base: "0", md: "40px", lg: "60px" }}
         >
-          {content}
+          <Box
+            display="flex"
+            flexDirection={{ base: "column", md: "row" }}
+            alignItems={{ base: "center", md: "flex-start" }}
+            gap={{ base: 4, md: 6, lg: 8 }}
+          >
+            {content}
+          </Box>
         </Box>
       </Collapsible.Content>
     </Collapsible.Root>
@@ -113,7 +117,7 @@ export interface ListStyle01Props {
 export const StyledText = ({ children }: { children: ReactNode }) => {
   const textSize = useBreakpointValue({ base: "md", md: "lg", lg: "xl" });
   return (
-    <Text color="#393939" fontSize={textSize}>
+    <Text color="#393939" fontSize={textSize} flex="1" textAlign="justify">
       {children}
     </Text>
   );
@@ -139,10 +143,13 @@ function ListStyle01({ title, items }: ListStyle01Props) {
   const headingSize = useBreakpointValue({ base: "2xl", md: "3xl", lg: "5xl" });
 
   return (
-    <Box className="room-info-box" mt="100px">
+    <Box
+      className="room-info-box"
+      mt={{ base: "80px", md: "120px", lg: "180px" }}
+    >
       <Heading
         as="h4"
-        mb={{ base: "20px", md: "30px", lg: "60px" }}
+        mb={{ base: "30px", md: "40px", lg: "60px" }}
         color="#393939"
         fontSize={headingSize}
         fontWeight="bold"

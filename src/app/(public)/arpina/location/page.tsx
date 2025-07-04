@@ -188,12 +188,13 @@ export default function ParticipantsPage() {
 
   // 반응형 값들
   const gap = useBreakpointValue({ base: 4, md: 10, lg: 20 });
-  const cardGap = useBreakpointValue({ base: 3, md: 5, lg: 7 });
+  const cardGap = useBreakpointValue({ base: 2, md: 3, lg: 4 });
   const sectionGap = useBreakpointValue({ base: 6, md: 8, lg: 10 });
   const headingSize = useBreakpointValue({ base: "xl", md: "2xl", lg: "3xl" });
   const titleSize = useBreakpointValue({ base: "lg", md: "xl", lg: "2xl" });
   const textSize = useBreakpointValue({ base: "sm", md: "md", lg: "lg" });
   const iconSize = useBreakpointValue({ base: "16px", md: "18px", lg: "20px" });
+  const svgSize = useBreakpointValue({ base: "35", md: "40", lg: "45" });
   const mapHeight = useBreakpointValue({
     base: "300px",
     md: "350px",
@@ -354,7 +355,7 @@ export default function ParticipantsPage() {
             </Box>
           </Box>
           <Box className="location-txt" flex="1">
-            <Box mb={sectionGap}>
+            <Box>
               <Heading
                 as="h3"
                 fontSize={titleSize}
@@ -450,7 +451,7 @@ export default function ParticipantsPage() {
           </Box>
         </Flex>
       </Box>
-        <Box>
+      <Box>
         <Box className="location-box">
           <Heading
             display="flex"
@@ -460,11 +461,12 @@ export default function ParticipantsPage() {
             fontSize={headingSize}
             fontWeight="600"
             mb={4}
+            mt={{ base: "80px", md: "120px", lg: "180px" }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="35"
-              height="35"
+              width={svgSize}
+              height={svgSize}
               viewBox="0 0 35 35"
               fill="none"
             >
@@ -484,7 +486,8 @@ export default function ParticipantsPage() {
             <Flex
               gap={cardGap}
               flex="1 1 0"
-              direction={useBreakpointValue({ base: "column", md: "row" })}
+              direction="row"
+              wrap="wrap"
               width="100%"
             >
               {/* 자가용 */}
@@ -544,11 +547,12 @@ export default function ParticipantsPage() {
             fontSize={headingSize}
             fontWeight="600"
             mb={4}
+            mt={{ base: "80px", md: "120px", lg: "180px" }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="35"
-              height="35"
+              width={svgSize}
+              height={svgSize}
               viewBox="0 0 35 35"
               fill="none"
             >
@@ -565,7 +569,13 @@ export default function ParticipantsPage() {
             direction={useBreakpointValue({ base: "column", lg: "row" })}
           >
             {/* 카드 4개 */}
-            <Flex gap={cardGap} flex="1 1 0">
+            <Flex
+              gap={cardGap}
+              flex="1 1 0"
+              direction="row"
+              wrap="wrap"
+              width="100%"
+            >
               {/* 자가용 */}
               <TransportCard
                 iconSrc="/images/contents/location_ico_car.jpg"
@@ -627,11 +637,12 @@ export default function ParticipantsPage() {
             fontSize={headingSize}
             fontWeight="600"
             mb={4}
+            mt={{ base: "80px", md: "120px", lg: "180px" }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="35"
-              height="35"
+              width={svgSize}
+              height={svgSize}
               viewBox="0 0 35 35"
               fill="none"
             >
@@ -648,7 +659,13 @@ export default function ParticipantsPage() {
             direction={useBreakpointValue({ base: "column", lg: "row" })}
           >
             {/* 카드 4개 */}
-            <Flex gap={cardGap} flex="1 1 0">
+            <Flex
+              gap={cardGap}
+              flex="1 1 0"
+              direction="row"
+              wrap="wrap"
+              width="100%"
+            >
               {/* 자가용 */}
               <TransportCard
                 iconSrc="/images/contents/location_ico_car.jpg"
@@ -710,11 +727,12 @@ export default function ParticipantsPage() {
             fontSize={headingSize}
             fontWeight="600"
             mb={4}
+            mt={{ base: "80px", md: "120px", lg: "180px" }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="35"
-              height="35"
+              width={svgSize}
+              height={svgSize}
               viewBox="0 0 35 35"
               fill="none"
             >
@@ -731,7 +749,13 @@ export default function ParticipantsPage() {
             direction={useBreakpointValue({ base: "column", lg: "row" })}
           >
             {/* 카드 4개 */}
-            <Flex gap={cardGap} flex="1 1 0">
+            <Flex
+              gap={cardGap}
+              flex="1 1 0"
+              direction="row"
+              wrap="wrap"
+              width="100%"
+            >
               {/* 자가용 */}
               <TransportCard
                 iconSrc="/images/contents/location_ico_car.jpg"
@@ -770,11 +794,12 @@ export default function ParticipantsPage() {
             fontSize={headingSize}
             fontWeight="600"
             mb={4}
+            mt={{ base: "80px", md: "120px", lg: "180px" }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="35"
-              height="35"
+              width={svgSize}
+              height={svgSize}
               viewBox="0 0 35 35"
               fill="none"
             >
@@ -791,7 +816,13 @@ export default function ParticipantsPage() {
             direction={useBreakpointValue({ base: "column", lg: "row" })}
           >
             {/* 카드 4개 */}
-            <Flex gap={cardGap} flex="1 1 0">
+            <Flex
+              gap={cardGap}
+              flex="1 1 0"
+              direction="row"
+              wrap="wrap"
+              width="100%"
+            >
               {/* 지하철 */}
               <TransportCard
                 iconSrc="/images/contents/location_ico_subway.jpg"
@@ -831,7 +862,7 @@ export default function ParticipantsPage() {
               title="- 교통편 이용안내 (도보)"
               items={transportInfo05}
             />
-      </Flex>
+          </Flex>
         </Box>
       </Box>
     </PageContainer>

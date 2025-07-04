@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            넓고 쾌적한 공간을 갖춘 슈페리어 디럭스는 실용적인 구조와 아늑한
+            넓고 쾌적한 공간을 갖춘 디럭스는 실용적인 구조와 아늑한
             분위기를 갖추어, 가족이나 친구와 함께하는 여행에 안성맞춤인 4인용
             객실입니다. 머무는 동안 여유롭고 편안한 휴식을 누려보세요.
           </ListStyle01.StyledText>
@@ -291,9 +291,8 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            기준인원은 <Mark variant="text">4명</Mark>이며, 추가인원은{" "}
-            <Mark variant="text">1명당 20,000원</Mark>입니다. <br />
-            객실 요금은 <Mark variant="text">180,000원</Mark>부터 시작됩니다.
+            기준인원은 <Mark variant="text">4명</Mark>이며, 객실 요금은{" "}
+            <Mark variant="text">77,000원</Mark>부터 시작됩니다.
           </ListStyle01.StyledText>
         </>
       ),
@@ -407,14 +406,8 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            성수기 주말 반영일은{" "}
-            <Mark variant="text">
-              (7월) 18, 19, 25, 26 (8월) 1, 2, 8, 9, 14, 15, 16, 22, 23
-              불꽃축제일, 12/31 입니다.{" "}
-            </Mark>
-            <br />
-            성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며, 불꽃축제일은 추후
-            공지 예정입니다.
+            25년도 성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며,
+            불꽃축제일은 추후 공지 예정입니다.
             <br />
             <Mark variant="text">
               성수기 주중 : 132,000원 <br />
@@ -444,8 +437,14 @@ export default function ParticipantsPage() {
     },
     {
       title: "시설",
-      description:
-        "스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능",
+      description: (
+        <>
+          스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능
+          <br />
+          자유수영 12시 ~ 14시까지 가능 수모,수경 착용가능(레쉬가드 및
+          튜브사용금지)
+        </>
+      ),
       imageSrc: "/images/contents/room_ico03.jpg",
     },
   ];
@@ -453,14 +452,22 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="슈페리어 디럭스 Superior Deluxe"
-        titleHighlight="슈페리어 디럭스"
-        description="넓고 쾌적한 공간을 갖춘 슈페리어 디럭스는 실용적인 구조와 아늑한 분위기를 갖추어, 가족이나 친구와 함께하는 여행에 안성맞춤인 4인용 객실입니다. 머무는 동안 여유롭고 편안한 휴식을 누려보세요."
+        title="디럭스 Deluxe"
+        titleHighlight="디럭스"
+        description="넓고 쾌적한 공간을 갖춘 디럭스는 실용적인 구조와 아늑한 분위기를 갖추어, 가족이나 친구와 함께하는 여행에 안성맞춤인 4인용 객실입니다. 머무는 동안 여유롭고 편안한 휴식을 누려보세요."
         images={images}
         showReservation={true}
-        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
+        buttonOnClick={() =>
+          router.push(
+            "https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA"
+          )
+        }
+        descriptionStyle={{
+          textAlign: "justify",
+          lineHeight: "1.3",
+        }}
       />
-      <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
+      <ListStyle01 title="객실정보에 대해 알려드릴게요" items={ listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />
       <OperGuide />
     </PageContainer>

@@ -44,18 +44,24 @@ export default function ParticipantsPage() {
         description="아르피나 1층에서는 이용객 및 시민 편의를 위한 이디야커피 매장이 마련되어 있습니다. 쾌적한 공간에서 커피와 음료를 즐기며 여유로운 시간을 보내보세요. 세미나 전후 휴식이나 간단한 미팅 장소로도 이용하실 수 있습니다."
         images={images}
         showReservation={false}
+        descriptionStyle={{
+          textAlign: "justify",
+          lineHeight: "1.3",
+        }}
       />
-      <Box mt="100px">
+      <Box mt={{ base: "80px", md: "120px", lg: "180px" }}>
         <HeadingH4>이디야 케이터링 서비스안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
         <Flex flexDir="column" align="center" gap={10} mt="60px">
           <Image
             src="/images/contents/ediya_work_img.jpg"
-            alt="경찰대학교 지휘부 워크샵 케이터링 사진"
-            maxW="1093px"
+            alt="워크샵 케이터링 참고 사진"
+            maxW="100%"
             fit="contain"
           />
-          <Text fontSize="2xl">경찰대학교 지휘부 워크샵 케이터링 사진</Text>
+          <Text fontSize={{ base: "14px", md: "18px", lg: "24px" }}>
+            워크샵 케이터링 참고 사진
+          </Text>
         </Flex>
       </Box>
     </PageContainer>

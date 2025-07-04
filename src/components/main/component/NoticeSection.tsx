@@ -199,13 +199,7 @@ export function NoticeSection() {
         }}
       />
       <Box className="msec02" mb={sectionMarginBottom}>
-        <Box
-          w={"100%"}
-          maxW={"1600px"}
-          mx="auto"
-          my={0}
-          px={{ base: 4, md: 0 }}
-        >
+        <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
           <Flex gap={5} direction={flexDirection}>
             <Box flex="1" minW="0">
               <Heading
@@ -266,17 +260,30 @@ export function NoticeSection() {
               >
                 배너존
               </Heading>
-              <Box borderRadius="20px" overflow="hidden">
-                <Link href="/meeting/estimate">
-                  <Image
-                    src="/images/main/msec02_bnr_img02.png"
-                    alt="부산 유스호스텔 아르피나 배너"
-                    w="100%"
-                    h="auto"
-                    objectFit="cover"
-                  />
-                </Link>
-              </Box>
+              <Flex direction="column" gap={5}>
+                <Box borderRadius="20px" overflow="hidden">
+                  <Link href="/meeting/estimate">
+                    <Image
+                      src="/images/main/msec02_bnr_001.png"
+                      alt="부산 유스호스텔 아르피나 배너"
+                      w="100%"
+                      h="auto"
+                      objectFit="cover"
+                    />
+                  </Link>
+                </Box>
+                <Box borderRadius="20px" overflow="hidden">
+                  <Link href="/rooms/estimate/calculate">
+                    <Image
+                      src="/images/main/msec02_bnr_002.png"
+                      alt="부산 유스호스텔 아르피나 배너 2"
+                      w="100%"
+                      h="auto"
+                      objectFit="cover"
+                    />
+                  </Link>
+                </Box>
+              </Flex>
             </Box>
           </Flex>
         </Box>

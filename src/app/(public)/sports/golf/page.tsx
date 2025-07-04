@@ -10,30 +10,24 @@ import InfoBoxList01 from "@/components/contents/InfoBoxList01";
 import Image from "next/image";
 
 export default function ParticipantsPage() {
-  const images = ["/images/contents/futsal_img01.jpg"];
+  const images = [
+    "/images/contents/golf_img01.jpg",
+    "/images/contents/golf_img03.jpg",
+    "/images/contents/golf_img02.jpg",
+  ];
 
   const tableRows01 = [
     {
-      header: "위치",
-      content: "부산도시공사 아르피나",
+      header: "연습장",
+      content: "2층부터 4층까지 총 48타석의 연습장",
     },
     {
-      header: "시설규모",
-      content: (
-        <>
-          야외운동장: 1,350㎡ (약 408평) <br />
-          실내연습장: 134㎡ (약 40.5평, 우천 시 이용 가능)
-        </>
-      ),
+      header: "드라이버레인지",
+      content: "90미터 비거리 드라이버레인지",
     },
     {
-      header: "운영시간",
-      content: (
-        <>
-          하계(3월~10월): 07:00 ~ 22:00 (야간 기준 19시 이후) <br />
-          동계(11월~2월): 08:00 ~ 22:00 (야간 기준 18시 이후)
-        </>
-      ),
+      header: "특징",
+      content:"부산 최고의 어프로치, 퍼팅 실전 연습장",
     },
     {
       header: "휴관일",
@@ -64,9 +58,22 @@ export default function ParticipantsPage() {
   const tableRows03 = [
     {
       columns: [
-        { header: "이용장소", content: "골프장(야외운동장)" },
-        { header: "기본요금", content: "50,000원 / 시간당" },
-        { header: "야간조명 이용료", content: "10,000원 / 시간당 (초과 시)" },
+        { header: "종목", content: "골프 연습장" },
+        { header: "1개월", content: "200,000원" },
+        { header: "3개월(5% DC)", content: "570,000원" },
+        {
+          header: "비 고",
+          content: (
+            <Box lineHeight={1.5}>
+              휴회 규정 <br />
+              1개월 등록시(7일/1회) <br />
+              3개월 등록시(7~30일) <br />
+              <Box as="span" color="red.500" fontSize="sm">
+                매월 두 번째 화요일은 휴관입니다.
+              </Box>
+            </Box>
+          ),
+        },
       ],
     },
   ];
@@ -74,34 +81,43 @@ export default function ParticipantsPage() {
   const tableRows04 = [
     {
       columns: [
-        { header: "취소기준", content: "사용일 4일 이전" },
-        { header: "취소 가능여부", content: "취소 가능" },
-        { header: "취소 수수료", content: "0%" },
+        { header: "구분", content: "성인" },
+        { header: "70분", content: "17,000원" },
+        { header: "90분", content: "20,000원" },
       ],
     },
     {
       columns: [
-        { header: "취소기준", content: "사용일 3일 이내" },
-        { header: "취소 가능여부", content: "수수료부과" },
-        { header: "취소 수수료", content: "20%" },
+        { header: "구분", content: "초 중 고" },
+        { header: "70분", content: "12,000원" },
+        { header: "90분", content: "-" },
       ],
     },
     {
       columns: [
-        { header: "취소기준", content: "사용일 당일" },
-        { header: "취소 가능여부", content: "취소불가능" },
-        { header: "취소 수수료", content: "100%" },
+        { header: "구분", content: "(객실 투숙객) 성인" },
+        { header: "70분분", content: "13,000원" },
+        { header: "90분", content: "-" },
+      ],
+    },
+    {
+      columns: [
+        { header: "구분", content: "(객실 투숙객) 초 중 고" },
+        { header: "70분분", content: "10,000원" },
+        { header: "90분", content: "-" },
       ],
     },
   ];
 
   const infoItems01 = [
-    "주중, 주말 상관없이 시간당 요금이 부과되며, 예약시간 30분 전·후 운동장을 개방·폐쇄함",
-    "예약은 전화로만 가능 (☎ 051-740-3271)",
-    "당일(연장 포함) 예약은 불가합니다.",
-    "사용일 30일전부터 ~ 1일전까지 예약신청 가능 (단, 1개월 이상의 장기 예약의 경우 6개월 전부터 예약 가능하며, 장기 예약의 경우 별도의 계약서를 작성하여야 합니다.)",
-    "현금 또는 신용(체크)카드 결제 (사용료 납부까지 완료하여야 예약 확정됩니다.)",
-    "취소 및 환불 : 아르피나 운동장(골프장) 환불정책에 따름.",
+    <>국가유공자(본인) 10%</>,
+    <Box>
+      다자녀, 다문화 가정(성인) 등록 시 10%
+      <Box color="red.500" fontSize="sm">
+        ※ 증빙서류 제출해주셔야 할인 가능합니다.
+      </Box>
+    </Box>,
+    <>휴회·탈회 신청은 방문하여 신청서 작성 및 회원카드 반납하셔야 합니다.</>,
   ];
 
   const infoItems02 = [
@@ -123,53 +139,33 @@ export default function ParticipantsPage() {
 
   return (
     <PageContainer>
-      {/* <InfoTopBox
-        title="골프장 대관안내 Futsal"
-        titleHighlight="골프장 대관안내"
-        description="부산도시공사 아르피나에서는 시민들의 건강과 편익 증진을 도모 하고자 골프장 대관을 다음과 같이 운영하고 있습니다."
+      <InfoTopBox
+        title="골프장 Golf"
+        titleHighlight="골프장"
+        description={`푸른 창공을 향해 쏘아올리는 상쾌한 샷!
+
+        해운대 바닷바람이 스치는 전망 좋은 아르피나 골프연습장은 쾌적한 환경 속에서 골프 연습의 즐거움을 누릴 수 있는 공간입니다.
+        `}
         images={images}
         showReservation={false}
-        downloadInfo={{
-          text: "골프장 이용규정 다운로드",
-          url: "/files/futsal_regulations.pdf",
-          fileName: "futsal_regulations.pdf",
-        }}
+        // downloadInfo={{
+        //   text: "골프장 이용규정 다운로드",
+        //   url: "/files/futsal_regulations.pdf",
+        //   fileName: "futsal_regulations.pdf",
+        // }}
       />
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
-        <HeadingH4>현황안내</HeadingH4>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
+        <HeadingH4>골프 시설 안내</HeadingH4>
         <ApTable01 rows={tableRows01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
-        <HeadingH4>이용시 유의사항</HeadingH4>
-        <ApTable01 rows={tableRows02} />
-      </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
-        <HeadingH4>이용요금 예약 및 절차</HeadingH4>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
+        <HeadingH4>골프연습장 이용 요금표</HeadingH4>
         <ApTable02 rows={tableRows03} />
         <InfoBoxList01 items={infoItems01} />
       </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
-        <HeadingH4>예약 취소 및 환불규정</HeadingH4>
+      <Box mt={{ base: "80px", md: "100px", lg: "120px", "2xl": "180px" }}>
+        <HeadingH4>1회 입장 이용요금표</HeadingH4>
         <ApTable02 rows={tableRows04} />
-        <InfoBoxList01 items={infoItems02} />
-      </Box>
-      <Box mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}>
-        <HeadingH4>승인조건 및 유의사항</HeadingH4>
-        <InfoBoxList01 items={infoItems03} />
-      </Box> */}{" "}
-      <Box
-        mt={{ base: "20px", md: "30px", lg: "50px", "2xl": "100px" }}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Image
-          src="/images/contents/image.png"
-          alt="준비중입니다."
-          width={800}
-          height={800}
-          style={{ objectFit: "contain" }}
-        />
       </Box>
     </PageContainer>
   );

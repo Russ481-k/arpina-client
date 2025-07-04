@@ -2,7 +2,16 @@
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import InfoTopBox from "@/components/contents/InfoTopBox";
-import { Box, Heading, List, Tabs, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  List,
+  Tabs,
+  Text,
+  useBreakpointValue,
+} from "@chakra-ui/react";
+import ApTable01 from "@/components/contents/ApTable01";
+import ApTable02 from "@/components/contents/ApTable02";
 
 const CheckInGuide = () => (
   <Box p={{ base: 4, md: 8 }}>
@@ -33,6 +42,25 @@ const CheckInGuide = () => (
       <List.Item>
         객실 내 발생되는 음식물쓰레기 및 재활용쓰레기는 3층복도끝 세탁실옆
         재활용 분리수거함에 분리수거 바랍니다.
+      </List.Item>
+      <List.Item>
+        객실,내외(복도,로비,베란다)에서는 화기사용, 과도한음주,
+        소란행위(고성방가), 베란다에 매달리는 행위, 객실외부로 쓰레기투척 등
+        타인에게 피해를 주는 행위를 금합니다
+      </List.Item>
+      <List.Item>
+        또한 규격에 맞지 않는 보조배터리 사용은 화재의 위험이 있어 엄격히 금지
+        됩니다.
+      </List.Item>
+      <List.Item>
+        건물내에서는 금연이며, 흡연이 적발될 경우 즉시 강제 퇴실 조치됩니다.
+        또한, 시설물 손괴 등 공공시설에 피해를 가할 경우에는 배상의 책임이
+        있음을 안내드립니다.
+      </List.Item>
+      <List.Item>욕실에서는 염색이나 색소입욕제 사용을 금지합니다.</List.Item>
+      <List.Item>
+        귀중품은 프런트에 보관바랍니다. 보관하지 않은 분실문은 당사의 책임이
+        없습니다. 또한 습 득한 분실물은 1개월 보관 후 폐기처리 됩니다.
       </List.Item>
     </List.Root>
   </Box>
@@ -337,15 +365,33 @@ const AccommodationTerms = () => (
 );
 
 export default function GuidePage() {
+  const descSize = useBreakpointValue({
+    base: "lg",
+    md: "xl",
+    lg: "2xl",
+    xl: "3xl",
+  });
+
   return (
     <PageContainer>
       <InfoTopBox
         title="이용안내"
         titleHighlight="이용안내"
-        description="아르피나 유스호스텔 이용에 대한 안내사항입니다. 방문 전 반드시 숙지해주시기 바랍니다."
+        description=""
         images={[]}
         showReservation={false}
       />
+      <Text
+        color="#393939"
+        fontWeight="normal"
+        textAlign="justify"
+        lineHeight="1.3"
+        fontSize={descSize}
+        whiteSpace="pre-line"
+      >
+        아르피나 유스호스텔 이용에 대한 안내사항입니다. 방문 전 반드시
+        숙지해주시기 바랍니다.
+      </Text>
       <Box mt={{ base: 6, md: 8, lg: 10 }}>
         <Tabs.Root defaultValue="guide" variant="enclosed">
           <Tabs.List>

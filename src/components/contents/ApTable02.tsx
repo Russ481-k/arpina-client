@@ -5,7 +5,8 @@ import { ReactNode } from "react";
 
 interface TableColumn {
   header: string;
-  content: string | ReactNode;
+  content: string | ReactNode | null;
+  rowSpan?: number;
 }
 
 interface TableRow {
@@ -58,16 +59,23 @@ export default function ApTable02({ rows }: ApTable02Props) {
               fontSize={bodyFontSize}
               fontWeight="medium"
             >
-              {row.columns.map((column, colIndex) => (
-                <Table.Cell
-                  key={`cell-${rowIndex}-${colIndex}`}
-                  borderBottom="0"
-                  py={{ base: 1, md: 3, lg: 5 }}
-                  textAlign="center"
-                >
-                  {column.content}
-                </Table.Cell>
-              ))}
+              {row.columns.map((column, colIndex) => {
+                if (column.content === null) {
+                  return null;
+                }
+                return (
+                  <Table.Cell
+                    key={`cell-${rowIndex}-${colIndex}`}
+                    borderBottom="0"
+                    py={{ base: 1, md: 3, lg: 5 }}
+                    textAlign="center"
+                    rowSpan={column.rowSpan}
+                    verticalAlign="middle"
+                  >
+                    {column.content}
+                  </Table.Cell>
+                );
+              })}
             </Table.Row>
           ))}
         </Table.Body>

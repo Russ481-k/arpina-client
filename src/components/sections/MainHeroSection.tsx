@@ -59,16 +59,10 @@ export const MainHeroSection = () => {
 
   return (
     <Box className="msec01" mb={{ base: "15px", md: "20px", lg: "45px" }}>
-      <Box
-        w={"100%"}
-        maxW={"1600px"}
-        mx="auto"
-        my={0}
-        px={{ base: 2, md: 5, lg: 7, "2xl": 0 }}
-      >
+      <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
         <Heading
           as="h3"
-          mb={{ base: 4, md: 5, lg: 6 }}
+          mb={{ base: 5, md: 5, lg: 7 }}
           fontSize={{ base: "24px", md: "32px", lg: "40px" }}
           fontWeight="bold"
           color={"#444445"}
@@ -139,7 +133,8 @@ export const MainHeroSection = () => {
                     bottom="0"
                     left="0"
                     zIndex="1"
-                    px={{ base: 4, md: 5, lg: 6 }}
+                    pr={{ base: 4, md: 5, lg: 6 }}
+                    pl={0}
                   >
                     <Text
                       py={{ base: 4, md: 5, lg: 6 }}

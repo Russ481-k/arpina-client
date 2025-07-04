@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            총 8명이 이용 가능한 코리안 유스룸은 온돌 바닥에 이부자리를 펴는
+            총 8명이 이용 가능한 8인온돌 룸은 온돌 바닥에 이부자리를 펴는
             전통 숙박 방식의 편안함과 아늑함을 갖춘 객실로, 국내외 청소년 단체
             전용 숙박 공간입니다.
           </ListStyle01.StyledText>
@@ -386,14 +386,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            성수기 주말 반영일은{" "}
-            <Mark variant="text">
-              (7월) 18, 19, 25, 26 (8월) 1, 2, 8, 9, 14, 15, 16, 22, 23
-              불꽃축제일, 12/31 입니다.{" "}
-            </Mark>
-            <br />
-            성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며, 불꽃축제일은 추후
-            공지 예정입니다.
+            25년도 성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며, 불꽃축제일은 추후 공지 예정입니다.
             <br />
             <Mark variant="text">요금은 전화문의 바랍니다.</Mark>
           </ListStyle01.StyledText>
@@ -418,8 +411,14 @@ export default function ParticipantsPage() {
     },
     {
       title: "시설",
-      description:
-        "스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능",
+      description: (
+        <>
+          스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능
+          <br />
+          자유수영 12시 ~ 14시까지 가능 수모,수경 착용가능(레쉬가드 및
+          튜브사용금지)
+        </>
+      ),
       imageSrc: "/images/contents/room_ico03.jpg",
     },
   ];
@@ -427,12 +426,16 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="코리안 유스룸 Korean Yourth"
-        titleHighlight="코리안 유스룸"
-        description="총 8명이 이용 가능한 코리안 유스룸은 온돌 바닥에 이부자리를 펴는 전통 숙박 방식의 편안함과 아늑함을 갖춘 객실로, 국내외 청소년 단체 전용 숙박 공간입니다."
+        title="8인온돌 8 Person Ondol"
+        titleHighlight="8인온돌"
+        description="총 8명이 이용 가능한 8인온돌 룸은 온돌 바닥에 이부자리를 펴는 전통 숙박 방식의 편안함과 아늑함을 갖춘 객실로, 국내외 청소년 단체 전용 숙박 공간입니다."
         images={images}
         showReservation={true}
         buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
+        descriptionStyle={{
+          textAlign: "justify",
+          lineHeight: "1.3",
+        }}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />

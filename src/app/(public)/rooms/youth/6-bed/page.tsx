@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            국내·외 학생 단체, 수학여행단 및 유스호스텔러를 위한 유스룸은 2층
+            국내·외 학생 단체, 수학여행단 및 유스호스텔러를 위한 코리안유스룸은 2층
             침대가 마련되어 있어 다수의 인원이 편리하고 쾌적하게 머물 수 있는
             객실입니다.
           </ListStyle01.StyledText>
@@ -279,7 +279,7 @@ export default function ParticipantsPage() {
               <br />
               국제유스호스텔회원 카드 소지자 본인 한정
               <br />
-              요금 : 청소년 11,000원 / 성인 : 20,000원
+              요금 : 청소년 15,000원 / 만 24세까지 (대학생 포함)
             </Mark>
           </ListStyle01.StyledText>
         </>
@@ -394,14 +394,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            성수기 주말 반영일은{" "}
-            <Mark variant="text">
-              (7월) 18, 19, 25, 26 (8월) 1, 2, 8, 9, 14, 15, 16, 22, 23
-              불꽃축제일, 12/31 입니다.{" "}
-            </Mark>
-            <br />
-            성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며, 불꽃축제일은 추후
-            공지 예정입니다.
+            25년도 성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며, 불꽃축제일은 추후 공지 예정입니다.
             <br />
             <Mark variant="text">요금은 전화문의 바랍니다.</Mark>
           </ListStyle01.StyledText>
@@ -426,8 +419,14 @@ export default function ParticipantsPage() {
     },
     {
       title: "시설",
-      description:
-        "스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능",
+      description: (
+        <>
+          스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능
+          <br />
+          자유수영 12시 ~ 14시까지 가능 수모,수경 착용가능(레쉬가드 및
+          튜브사용금지)
+        </>
+      ),
       imageSrc: "/images/contents/room_ico03.jpg",
     },
   ];
@@ -435,9 +434,9 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="유스 Yourth"
-        titleHighlight="유스"
-        description="유스룸은 국내·외 수학여행단이나 학생 단체들의 숙박 또는 유스호스텔러를 위한 2층 침대로 구성되어있습니다."
+        title="코리안유스룸 Korean Yourth"
+        titleHighlight="코리안유스룸"
+        description="코리안유스룸은 국내·외 수학여행단이나 학생 단체들의 숙박 또는 유스호스텔러를 위한 2층 침대로 구성되어있습니다."
         images={images}
         showReservation={true}
         buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}

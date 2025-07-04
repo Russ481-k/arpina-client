@@ -14,7 +14,6 @@ import { useState } from "react";
 
 export function EstimateSection() {
   const headingFontSize = useBreakpointValue({ base: "30px", md: "40px" });
-  const containerPadding = useBreakpointValue({ base: 4, md: 0 });
   const innerContainerPadding = useBreakpointValue({ base: 4, md: 10 });
   const flexDirection = useBreakpointValue<"column" | "row">({
     base: "column",
@@ -357,7 +356,7 @@ export function EstimateSection() {
         }}
       />
       <Box className="msec04">
-        <Box w={"100%"} maxW={"1600px"} mx="auto" my={0} px={containerPadding}>
+        <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
           <Box className="mprice-box">
             <Heading
               as="h3"

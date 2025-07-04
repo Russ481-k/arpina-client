@@ -7,11 +7,10 @@ interface PageContainerProps {
 
 export const PageContainer: React.FC<PageContainerProps> = ({ children }) => {
   return (
-    <Container
-      maxW="1600px"
-      padding={{ base: "0 10px", sm: "0 15px", md: "0 20px", xl: "0 30px" }}
-    >
-      <Box mb={10}>{children}</Box>
+    <Container maxW="1600px">
+      <Box mt={{ base: "50px", sm: "80px", md: "100px", lg: "120px" }} mb={10}>
+        {children}
+      </Box>
     </Container>
   );
 };

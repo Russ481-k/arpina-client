@@ -11,8 +11,13 @@ export function Footer() {
   ];
 
   return (
-    <Box as="footer" bg="white" color="#333333" mt="auto">
-      <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
+    <Box
+      as="footer"
+      bg="white"
+      color="#333333"
+      mt={{ base: "80px", md: "120px", lg: "180px" }}
+    >
+      <Container maxW={{ base: "90%", "2xl": "1600px" }} px={0}>
         {/* Main Content Area */}
         <Flex
           direction={{ base: "column", md: "row" }}
@@ -77,16 +82,26 @@ export function Footer() {
                 </Link>
               ))}
             </Flex>
-            <Link
-              href="https://www.instagram.com" // Replace with your actual Instagram URL
-              aria-label="인스타그램 방문"
-            >
-              <Image
-                src="/images/icons/instagram_icon.png" // Replace with your actual icon path
-                alt="인스타그램 로고"
-                boxSize={{ base: "28px", md: "32px" }}
-              />
-            </Link>
+            <Flex gap={3} align="center">
+              <Link href="/" aria-label="호스텔링 인터내셔널">
+                <Image
+                  src="/images/icons/hostelling international.png" // Replace with your actual icon path
+                  alt="호스텔링 인터내셔널 로고"
+                  boxSize={{ base: "28px", md: "32px" }}
+                />
+              </Link>
+              <Link
+                href="https://www.instagram.com/bmc_arpina"
+                target="_blank"
+                aria-label="인스타그램 방문"
+              >
+                <Image
+                  src="/images/icons/instagram_icon.png" // Replace with your actual icon path
+                  alt="인스타그램 로고"
+                  boxSize={{ base: "28px", md: "32px" }}
+                />
+              </Link>
+            </Flex>
           </Flex>
         </Flex>
 

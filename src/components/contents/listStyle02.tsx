@@ -13,7 +13,7 @@ import { ReactNode } from "react";
 // 서비스 아이템 인터페이스
 export interface ServiceItem {
   title: string;
-  description: string;
+  description: React.ReactNode;
   imageSrc: string;
 }
 
@@ -58,10 +58,13 @@ function ListStyle02({ title, items }: ListStyle02Props) {
   });
 
   return (
-    <Box className="fac-list-box" mt="100px">
+    <Box
+      className="fac-list-box"
+      mt={{ base: "80px", md: "120px", lg: "180px" }}
+    >
       <Heading
         as="h4"
-        mb="60px"
+        mb={{ base: "30px", md: "40px", lg: "60px" }}
         color="#393939"
         fontSize={titleFontSize}
         fontWeight="bold"
@@ -78,7 +81,6 @@ function ListStyle02({ title, items }: ListStyle02Props) {
               mb={index !== items.length - 1 ? 10 : 0}
               style={{
                 display: "flex",
-                alignItems: "center",
                 gap: gapSize,
               }}
             >

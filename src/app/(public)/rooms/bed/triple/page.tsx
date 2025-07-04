@@ -187,7 +187,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            슈페리어 트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한
+            트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한
             분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며,
             머무시는 동안 편안하고 안락한 휴식을 제공합니다.
           </ListStyle01.StyledText>
@@ -291,9 +291,8 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            기준인원은 <Mark variant="text">3명</Mark>이며, 추가인원은{" "}
-            <Mark variant="text">1명당 20,000원</Mark>입니다. <br />
-            객실 요금은 <Mark variant="text">150,000원</Mark>부터 시작됩니다.
+            기준인원은 <Mark variant="text">3명</Mark>이며,
+            객실 요금은 <Mark variant="text">66,000원</Mark>부터 시작됩니다.
           </ListStyle01.StyledText>
         </>
       ),
@@ -407,14 +406,7 @@ export default function ParticipantsPage() {
             />
           </svg>
           <ListStyle01.StyledText>
-            성수기 주말 반영일은{" "}
-            <Mark variant="text">
-              (7월) 18, 19, 25, 26 (8월) 1, 2, 8, 9, 14, 15, 16, 22, 23
-              불꽃축제일, 12/31 입니다.{" "}
-            </Mark>
-            <br />
-            성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며, 불꽃축제일은 추후
-            공지 예정입니다.
+            25년도 성수기 기간은 7/18(금) ~ 8/23(토), 12/31(수) 이며, 불꽃축제일은 추후 공지 예정입니다.
             <br />
             <Mark variant="text">
               성수기 주중 : 121,000원 <br />
@@ -444,8 +436,14 @@ export default function ParticipantsPage() {
     },
     {
       title: "시설",
-      description:
-        "스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능",
+      description: (
+        <>
+          스포츠센터 이용시 할인혜택 제공(수영, 골프연습장), 무선인터넷 가능
+          <br />
+          자유수영 12시 ~ 14시까지 가능 수모,수경 착용가능(레쉬가드 및
+          튜브사용금지)
+        </>
+      ),
       imageSrc: "/images/contents/room_ico03.jpg",
     },
   ];
@@ -453,12 +451,19 @@ export default function ParticipantsPage() {
   return (
     <PageContainer>
       <InfoTopBox
-        title="슈페리어 트리플 Superior Triple"
-        titleHighlight="슈페리어 트리플"
-        description="슈페리어 트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한 분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며, 머무시는 동안 편안하고 안락한 휴식을 제공합니다."
+        title="트리플 Triple"
+        titleHighlight="트리플"
+        description="트리플은 3인이 함께 머물기에 알맞은 실용적인 구조와 아늑한 분위기를 갖춘 객실입니다. 가족 또는 친구와의 여행에 적합하며, 머무시는 동안 편안하고 안락한 휴식을 제공합니다."
         images={images}
         showReservation={true}
-        buttonOnClick={() => router.push("https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA")}
+        buttonOnClick={() =>
+          router.push(
+            "https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA"
+          )
+        }
+        descriptionStyle={{
+          textAlign: "justify",
+        }}
       />
       <ListStyle01 title="객실정보에 대해 알려드릴게요" items={listItems} />
       <ListStyle02 title="제공 서비스" items={serviceItems} />
