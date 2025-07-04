@@ -54,6 +54,19 @@ export const SitemapDrawer = memo(
     height,
   }: SitemapDrawerProps) => {
     const router = useRouter();
+
+    // 모바일과 데스크톱에서 다른 푸터 텍스트 표시
+    const footerText = useBreakpointValue({
+      base: (
+        <>
+          아르피나의 특별한 순간,
+          <br />
+          SNS에서 실시간으로 확인하세요
+        </>
+      ),
+      md: "아르피나의 특별한 순간, SNS에서 실시간으로 확인하세요",
+    });
+
     const [selectedCategoryKey, setSelectedCategoryKey] = useState<
       number | null
     >(
@@ -468,7 +481,7 @@ export const SitemapDrawer = memo(
                       fontFamily="paperlogy"
                       fontWeight="bold"
                     >
-                      아르피나의 특별한 순간, SNS에서 실시간으로 확인하세요
+                      {footerText}
                     </Box>
                   </HStack>
                 </Link>
