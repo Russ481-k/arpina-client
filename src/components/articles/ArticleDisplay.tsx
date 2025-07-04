@@ -159,7 +159,7 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
             </HStack>
             <Flex justify="end" align="center" gap={4} mt={1}>
               <Text color="gray.500" fontSize="sm">
-                {article.writer}
+                {article.displayWriter}
               </Text>
               <HStack align="center" gap={1}>
                 <Icon as={LuEye} boxSize={4} color="gray.500" />
@@ -169,7 +169,7 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
               </HStack>
 
               <Text color="gray.400" fontSize="sm">
-                {article.createdAt?.slice(0, 10)}
+                {article.postedAt?.slice(0, 10)}
               </Text>
             </Flex>
           </Flex>

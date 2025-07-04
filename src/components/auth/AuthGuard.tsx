@@ -147,7 +147,6 @@ export const AuthGuard = ({
       <Flex justify="center" align="center" minH={"100vh"}>
         <Box textAlign="center">
           <Spinner size="xl" color="blue.500" mb={4} />
-          <Text>사용자 정보를 확인 중입니다...</Text>
         </Box>
       </Flex>
     );
@@ -155,11 +154,9 @@ export const AuthGuard = ({
 
   // 로딩이 끝났고, 인증되지 않았지만, 아직 리디렉션이 실행되기 전이라면
   // children을 렌더링하지 않기 위해 null을 반환하여 깜빡임을 방지합니다.
-  //   if (!isLoading && !isAuthenticated) {
-  //     return null;
-  //   }
-  console.log("isAuthenticated", isAuthenticated);
-  console.log("isLoading", isLoading);
+  // if (!isLoading && !isAuthenticated) {
+  //   return null;
+  // }
 
   return <>{children}</>;
 };

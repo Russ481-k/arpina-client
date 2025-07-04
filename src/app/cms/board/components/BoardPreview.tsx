@@ -485,14 +485,14 @@ const BoardPreview = React.memo(function BoardPreview({
       },
       {
         headerName: "작성자",
-        field: "writer",
+        field: "displayWriter",
         width: 120,
         sortable: true,
         cellStyle: centeredCellTextStyle,
       },
       {
         headerName: "등록일",
-        field: "createdAt",
+        field: "postedAt",
         width: 120,
         valueFormatter: dateFormatter,
         sortable: true,
@@ -532,14 +532,14 @@ const BoardPreview = React.memo(function BoardPreview({
         },
         {
           headerName: "작성자",
-          field: "writer",
+          field: "displayWriter",
           width: 120,
           sortable: true,
           cellStyle: centeredCellTextStyle as CellStyle,
         },
         {
           headerName: "등록일",
-          field: "createdAt",
+          field: "postedAt",
           width: 120,
           valueFormatter: pressDateFormatter,
           sortable: true,
@@ -548,7 +548,43 @@ const BoardPreview = React.memo(function BoardPreview({
       ];
     }
     if (board?.skinType === "QNA") {
-      /* ... QNA logic ... */ return [];
+      return [
+        {
+          headerName: "번호",
+          field: "no",
+          width: 80,
+          sortable: true,
+          cellRenderer: NoticeNumberRenderer,
+          cellStyle: centeredCellTextStyle as CellStyle,
+        },
+        {
+          headerName: "제목",
+          field: "title",
+          flex: 1,
+          cellRenderer: PressTitleRenderer_Preview,
+          cellStyle: {
+            ...baseCellTextStyle,
+            paddingLeft: "10px",
+            paddingRight: "10px",
+          } as CellStyle,
+          minWidth: 300,
+        },
+        {
+          headerName: "작성자",
+          field: "displayWriter",
+          width: 120,
+          sortable: true,
+          cellStyle: centeredCellTextStyle as CellStyle,
+        },
+        {
+          headerName: "등록일",
+          field: "postedAt",
+          width: 120,
+          valueFormatter: pressDateFormatter,
+          sortable: true,
+          cellStyle: centeredCellTextStyle as CellStyle,
+        },
+      ];
     }
     return baseColDefs;
   }, [board?.skinType, colors.text, textColor]);
@@ -670,7 +706,7 @@ const BoardPreview = React.memo(function BoardPreview({
 
   const currentSkinType = board?.skinType;
   const articlesData = articlesApiResponse?.data;
-
+  console.log(articles);
   return (
     <Layout currentPage="홈" isPreview={true} menus={menus}>
       <HeroSection slideContents={[heroData]} />
@@ -736,7 +772,7 @@ const BoardPreview = React.memo(function BoardPreview({
                 minWidth="32px"
                 px={2}
                 onClick={refetchArticles}
-                disabled={!refetchArticles}
+                // disabled={!refetchArticles}
                 aria-label="Refresh article list"
               >
                 <LuRefreshCw />

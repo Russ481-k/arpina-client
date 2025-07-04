@@ -211,13 +211,13 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
       },
       {
         headerName: "작성자",
-        field: "writer",
+        field: "displayWriter",
         width: 120,
         cellStyle: { textAlign: "center" },
       },
       {
         headerName: "등록일",
-        field: "createdAt",
+        field: "postedAt",
         width: 120,
         cellStyle: { textAlign: "center" },
         valueFormatter: dateFormatter,

@@ -64,7 +64,7 @@ export function useArticleForm({
     publishEndDt: initialData?.publishEndDt || null,
     hits: initialData?.hits || 0,
     displayWriter: initialData?.displayWriter || "",
-    postedAt: initialData?.postedAt || dayjs().format(),
+    postedAt: initialData?.postedAt || null,
   }));
 
   const [newlyAddedFiles, setNewlyAddedFiles] = useState<File[]>([]);
@@ -260,7 +260,7 @@ export function useArticleForm({
         externalLink: formData.externalLink || null,
         hits: formData.hits,
         displayWriter: formData.displayWriter,
-        postedAt: formData.postedAt,
+        postedAt: formData.postedAt || dayjs().format("YYYY-MM-DDTHH:mm:ss"),
       };
 
       // 2. Create FormData

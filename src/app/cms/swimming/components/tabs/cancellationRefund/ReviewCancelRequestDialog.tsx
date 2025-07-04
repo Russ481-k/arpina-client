@@ -499,6 +499,17 @@ export const ReviewCancelRequestDialog: React.FC<
                 <Fieldset.Root>
                   <Fieldset.Content>
                     <Stack gap={4}>
+                      <Checkbox.Root
+                        checked={isFullRefund}
+                        onCheckedChange={(details) =>
+                          handleFullRefundChange(!!details.checked)
+                        }
+                        colorScheme="blue"
+                      >
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                        <Checkbox.Label>전액 환불 처리</Checkbox.Label>
+                      </Checkbox.Root>
                       {currentRefundDetails && (
                         <Box
                           p={4}

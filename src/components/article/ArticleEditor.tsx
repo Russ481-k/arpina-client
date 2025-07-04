@@ -165,25 +165,11 @@ export function ArticleEditor({
       return;
     }
 
-    // Handle success/warning toast
-    if (
-      result.message &&
-      result.message !== "게시글이 성공적으로 등록되었습니다."
-    ) {
-      toaster.warning({
-        // Use warning for partial success
-        title: "처리 완료 (주의)",
-        description: result.message,
-        duration: 5000,
-      });
-    } else {
-      // Default success message
-      toaster.success({
-        title: "성공",
-        description: result.message || "게시글이 성공적으로 등록되었습니다.", // Use message if available
-        duration: 3000,
-      });
-    }
+    toaster.success({
+      title: "성공",
+      description: result.message || "게시글이 성공적으로 등록되었습니다.", // Use message if available
+      duration: 3000,
+    });
 
     // Call the onSubmit prop AFTER showing the toast
     if (onSubmit) {
