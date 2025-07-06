@@ -201,7 +201,7 @@ export const heroSectionData: Record<
   "/sports/futsal": {
     header: "스포츠",
     title: "풋살",
-    image: "/images/sports/sub_visual.png",
+    image: "/images/sports/futsal_bg.jpg",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
@@ -211,7 +211,7 @@ export const heroSectionData: Record<
   "/sports/golf": {
     header: "스포츠",
     title: "골프",
-    image: "/images/sports/sub_visual.png",
+    image: "/images/sports/golf_bg.jpg",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
