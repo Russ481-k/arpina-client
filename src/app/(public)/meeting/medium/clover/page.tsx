@@ -130,7 +130,7 @@ export default function ParticipantsPage() {
         {/* 평면도 이미지와 이용안내 박스를 나란히 배치 */}
         <Flex
           direction={{ base: "column", lg: "row" }}
-          gap={{ base: 6, md: 8, lg: 10 }}
+          gap={{ base: 5, md: 10, lg: 20 }}
           align={{ base: "center", lg: "flex-start" }}
           mt={{ base: "15px", md: "20px", lg: "25px" }}
         >
@@ -167,7 +167,7 @@ export default function ParticipantsPage() {
               - 이용안내
             </Text>
             <Text
-              fontSize={{ base: "14px", md: "20px", lg: "24px" }}
+              fontSize={{ base: "14px", md: "18px", lg: "20px" }}
               color="#393939"
               lineHeight="1.6"
               whiteSpace="pre-line"

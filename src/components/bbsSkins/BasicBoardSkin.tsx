@@ -29,11 +29,12 @@ import dayjs from "dayjs";
 
 import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api";
-import { LuImage, LuPaperclip, LuEye } from "react-icons/lu";
+import { LuEye } from "react-icons/lu";
 
 // Import GenericArticleCard and the mapping function
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapPostToCommonCardData } from "@/lib/card-utils";
+import TitleCellRenderer from "@/components/common/TitleCellRenderer";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -57,44 +58,6 @@ const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
       {content}
     </Flex>
-  );
-};
-
-const TitleRenderer = (params: ICellRendererParams<Post>) => {
-  const postData = params.data;
-  if (!postData) {
-    return (
-      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-        <span>{params.value}</span>
-      </Flex>
-    );
-  }
-  return (
-    <HStack
-      gap={0.5}
-      alignItems="center"
-      justifyContent="flex-start"
-      h="100%"
-      w="100%"
-      cursor="pointer"
-      title={params.value}
-      flex="1"
-    >
-      <Text truncate fontSize="16px">
-        {params.value}
-      </Text>
-      {postData.hasImageInContent && (
-        <Icon as={LuImage} boxSize="1em" aria-label="Image in content" ml={1} />
-      )}
-      {postData.hasAttachment && (
-        <Icon
-          as={LuPaperclip}
-          boxSize="0.9em"
-          aria-label="Has attachments"
-          ml={1}
-        />
-      )}
-    </HStack>
   );
 };
 
@@ -137,20 +100,43 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
         width: 80,
         sortable: true,
         cellRenderer: NoticeNumberRenderer,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "제목",
         field: "title",
         flex: 1,
         sortable: true,
-        cellRenderer: TitleRenderer,
+        cellRenderer: TitleCellRenderer,
+        cellStyle: {
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        },
       },
       {
         headerName: "작성자",
         field: "displayWriter",
         width: 120,
         sortable: true,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "등록일",
@@ -158,7 +144,14 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
         width: 120,
         valueFormatter: dateFormatter,
         sortable: true,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "조회",
@@ -166,6 +159,14 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
         width: 80,
         cellRenderer: ViewsRenderer,
         sortable: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
     ],
     []

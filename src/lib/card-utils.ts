@@ -1,6 +1,5 @@
-import { Post } from "@/types/api";
+import { Post, BoardArticleCommon } from "@/types/api";
 import { CommonCardData } from "@/types/common";
-import { Article } from "@/lib/api/article";
 import { getPublicFileDownloadUrl } from "@/lib/utils";
 
 // Helper to extract the first image src (full URL) from Lexical content string
@@ -147,7 +146,7 @@ export function mapPostToCommonCardData(
 }
 
 export function mapArticleToCommonCardData(
-  article: Article,
+  article: BoardArticleCommon,
   menuPath: string
 ): CommonCardData {
   let displayThumbnailUrl: string | null = null;

@@ -2,11 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { menuApi } from "@/lib/api/menu";
-import { articleApi, Article } from "@/lib/api/article";
+import { articleApi } from "@/lib/api/article";
 import { PageDetailsDto } from "@/types/menu";
-import { Post } from "@/types/api"; // Keep Post for mapping
+import { BoardArticleCommon, Post, FileDto } from "@/types/api"; // FileDto 임포트 추가
 import { PaginationData } from "@/types/common";
-import { File } from "@/app/cms/file/types"; // Explicitly import File type
 import { findMenuByPath } from "@/lib/menu-utils"; // Import findMenuByPath
 import { Box, Flex, Heading, Text, Button } from "@chakra-ui/react"; // Chakra UI 컴포넌트 임포트
 import React, { useState, useEffect, useCallback } from "react"; // React 훅 임포트
@@ -37,11 +36,11 @@ const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_SORT_ORDER = "createdAt,desc"; // Default sort for articles
 
 // Helper to map Article to Post
-function mapArticleToPost(article: Article): Post {
-  // Explicitly type attachments to satisfy Post.attachments?: File[] | null
-  const mappedAttachments: File[] | null = article.attachments
-    ? article.attachments.map((att): File => {
-        // Use the imported File type for the return type of the map callback
+function mapArticleToPost(article: BoardArticleCommon): Post {
+  // Explicitly type attachments to satisfy Post.attachments?: FileDto[] | null
+  const mappedAttachments: FileDto[] | null = article.attachments
+    ? article.attachments.map((att): FileDto => {
+        // Use the imported FileDto type for the return type of the map callback
         const savedNameDerived =
           att.downloadUrl.substring(att.downloadUrl.lastIndexOf("/") + 1) ||
           att.originName;
@@ -52,22 +51,23 @@ function mapArticleToPost(article: Article): Post {
           mimeType: att.mimeType,
           size: att.size,
           ext: att.ext,
+          downloadUrl: att.downloadUrl, // downloadUrl 추가
 
-          // Fields from File interface requiring mapping/defaults
-          menu: "BBS", // Default module
-          menuId: article.menuId, // from article context
-          savedName: savedNameDerived, // derived or default
-          version: 1, // default
-          publicYn: "Y", // default
-          fileOrder: 0, // default
+          // Fields from File interface requiring mapping/defaults (이제 FileDto에 맞게 조정)
+          // menu: "BBS", // FileDto에는 없음
+          // menuId: article.menuId, // FileDto에는 없음
+          // savedName: savedNameDerived, // FileDto에는 없음
+          // version: 1, // FileDto에는 없음
+          // publicYn: "Y", // FileDto에는 없음
+          // fileOrder: 0, // FileDto에는 없음
 
-          // Audit fields (nullable in File interface, set to null)
-          createdBy: null,
-          createdDate: null,
-          createdIp: null,
-          updatedBy: null,
-          updatedDate: null,
-          updatedIp: null,
+          // Audit fields (FileDto에는 없음)
+          // createdBy: null,
+          // createdDate: null,
+          // createdIp: null,
+          // updatedBy: null,
+          // updatedDate: null,
+          // updatedIp: null,
         };
       })
     : null;

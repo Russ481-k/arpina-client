@@ -24,6 +24,7 @@ import {
   LuPaperclip,
 } from "react-icons/lu";
 import { getPublicFileDownloadUrl } from "@/lib/utils";
+import PostTitleDisplay from "@/components/common/PostTitleDisplay";
 
 interface PostListItemProps {
   post: Post;
@@ -85,16 +86,7 @@ const PostListItem: React.FC<PostListItemProps> = ({
             ) : (
               <Box boxSize="50px" mr={3} bg="gray.100" borderRadius="md" />
             )}
-            <Text
-              fontSize="lg"
-              fontWeight="bold"
-              title={post.title}
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
-            >
-              {post.title}
-            </Text>
+            <PostTitleDisplay title={post.title} postData={post} />
             {post.hasImageInContent && (
               <LuImage
                 size="1.1em"

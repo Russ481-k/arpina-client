@@ -6,11 +6,24 @@ import MeetingSeatInfo from "@/components/contents/MeetingSeatInfo";
 import MeetingFloorInfo from "@/components/contents/MeetingFloorInfo";
 import HeadingH4 from "@/components/contents/HeadingH4";
 import ApTable02 from "@/components/contents/ApTable02";
-import { Box, Text, Flex } from "@chakra-ui/react";
+import { Box, Text, Flex, useBreakpointValue } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 
 export default function ParticipantsPage() {
   const router = useRouter();
+
+  // 모바일과 데스크톱에서 다른 표준요금 표시
+  const standardFeeContent = useBreakpointValue({
+    base: (
+      <>
+        1,980,
+        <br />
+        000원
+      </>
+    ),
+    md: "1,980,000원",
+  });
+
   const images = [
     "/images/contents/grand_img01.jpg",
     "/images/contents/grand_img02.jpg",
@@ -24,7 +37,7 @@ export default function ParticipantsPage() {
         { header: "사이즈", content: "가로 20.715m * 세로 26.22.m * 높이 4m" },
         { header: "스크린", content: "200Inch" },
         { header: "정원", content: "250명" },
-        { header: "표준요금", content: "1,980,000원" },
+        { header: "표준요금", content: standardFeeContent },
       ],
     },
   ];
@@ -142,7 +155,7 @@ export default function ParticipantsPage() {
               - 이용안내
             </Text>
             <Text
-              fontSize={{ base: "14px", md: "20px", lg: "24px" }}
+              fontSize={{ base: "14px", md: "18px", lg: "20px" }}
               color="#393939"
               lineHeight="1.6"
               whiteSpace="pre-line"

@@ -12,10 +12,11 @@ import {
 } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
 import { useEffect, useState } from "react";
-import { articleApi, Article } from "@/lib/api/article";
+import { articleApi } from "@/lib/api/article";
+import { BoardArticleCommon } from "@/types/api";
 
 export function NoticeSection() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<BoardArticleCommon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function NoticeSection() {
   const noticeDateFontSize = useBreakpointValue({ base: "14px", md: "20px" });
   const noticeDateWidth = useBreakpointValue({ base: "auto", md: "140px" });
 
-  const renderNoticeList = (items: Article[]) => {
+  const renderNoticeList = (items: BoardArticleCommon[]) => {
     if (isLoading) {
       return <Text>Loading...</Text>;
     }

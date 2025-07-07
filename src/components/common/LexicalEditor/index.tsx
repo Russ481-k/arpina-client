@@ -369,9 +369,11 @@ export function LexicalEditor({
     () => ({
       ...baseInitialConfig,
       editorState: initialContent ? initialContent : undefined,
-      namespace: "LexicalEditorInstance",
+      namespace: `LexicalEditorInstance-${
+        articleId || initialContent?.substring(0, 10) || Date.now()
+      }`,
     }),
-    [initialContent]
+    [initialContent, articleId]
   );
 
   const onLexicalChange = useCallback(

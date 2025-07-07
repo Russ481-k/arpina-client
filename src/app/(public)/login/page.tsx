@@ -103,20 +103,6 @@ export default function LoginPage() {
     }
   }, [searchParams]);
 
-  // 로그인 상태 확인 및 리디렉션 로직 추가
-  useEffect(() => {
-    // AuthContext의 로딩이 완료되었고, 사용자가 이미 로그인한 상태라면
-    if (!authLoading && isAuthenticated) {
-      toaster.create({
-        title: "이미 로그인됨",
-        description: "메인 페이지로 이동합니다.",
-        type: "info",
-        duration: 2000,
-      });
-      router.push("/"); // 메인 페이지로 리디렉션
-    }
-  }, [authLoading, isAuthenticated, router]); // 의존성 배열에 authLoading, isAuthenticated, router 추가
-
   // Check if the form is in loading state
   const isLoading = isSubmitting || authLoading;
 

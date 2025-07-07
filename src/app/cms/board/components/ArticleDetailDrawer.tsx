@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
-import { Article } from "@/lib/api/article";
+import { BoardArticleCommon } from "@/types/api";
 
 import { ArticleDisplay } from "@/components/articles/ArticleDisplay";
 import { toaster } from "@/components/ui/toaster";
@@ -22,7 +22,7 @@ import { authState } from "@/stores/auth";
 interface ArticleDetailDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  article: Article | null;
+  article: BoardArticleCommon | null;
   isFaq?: boolean;
   previousArticle?: { nttId: number; title: string } | null;
   nextArticle?: { nttId: number; title: string } | null;
@@ -30,8 +30,8 @@ interface ArticleDetailDrawerProps {
   onNavigateToPrevious?: () => void;
   onNavigateToNext?: () => void;
   onWriteNew?: (bbsId: number, menuId: number) => void;
-  onEditArticle?: (articleToEdit: Article) => void;
-  onDeleteArticle?: (articleToDelete: Article) => Promise<void>;
+  onEditArticle?: (articleToEdit: BoardArticleCommon) => void;
+  onDeleteArticle?: (articleToDelete: BoardArticleCommon) => Promise<void>;
   canWrite?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
@@ -75,7 +75,7 @@ export const ArticleDetailDrawer = ({
 
   const handleWriteClick = () => {
     if (onWriteNew && article) {
-      onWriteNew(article.bbsId, article.menuId);
+      onWriteNew(article.bbsId, article.menuId!);
     } else if (onWriteNew && !article) {
       console.warn(
         "onWriteNew called without article context for bbsId/menuId."

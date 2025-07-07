@@ -36,6 +36,7 @@ import { useColorMode } from "@/components/ui/color-mode"; // For theme switchin
 import { useColors } from "@/styles/theme"; // For custom theme colors
 import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config"; // Theme styles
 import { LuImage, LuPaperclip, LuEye } from "react-icons/lu"; // Icons
+import TitleCellRenderer from "@/components/common/TitleCellRenderer"; // TitleCellRenderer 임포트
 
 ModuleRegistry.registerModules([AllCommunityModule]); // Register AG Grid modules
 
@@ -193,6 +194,14 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 80,
         sortable: true,
         cellRenderer: NoticeNumberRenderer,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "상태",
@@ -200,20 +209,43 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 100,
         sortable: true,
         cellRenderer: StatusRenderer,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "제목",
         field: "title",
         flex: 1,
         sortable: true,
-        cellRenderer: TitleRenderer,
+        cellRenderer: TitleCellRenderer,
+        cellStyle: {
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        },
       },
       {
         headerName: "작성자",
         field: "displayWriter",
         width: 120,
         sortable: true,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "등록일",
@@ -221,7 +253,14 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 120,
         valueFormatter: dateFormatter,
         sortable: true,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "조회",
@@ -229,6 +268,14 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 80,
         cellRenderer: ViewsRenderer,
         sortable: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
     ],
     []
