@@ -35,6 +35,7 @@ export const DesktopNav = memo(
         flex={1}
         width="100%"
         justifyContent="space-between"
+        zIndex={1000}
       >
         <Box>
           <Flex

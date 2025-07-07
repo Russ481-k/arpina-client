@@ -69,10 +69,10 @@ export function MenuItem({
   const topLevelHoverFocusColor = isDark ? "blue.200" : "blue.500";
 
   const childColor = isDark ? "gray.300" : "#373636";
-  const childHoverFocusColor = isDark ? "blue.200" : "#4CCEC6";
+  const childHoverFocusColor = isDark ? "blue.200" : "#2E3192";
 
   const grandChildColor = isDark ? "gray.400" : "gray.500";
-  const grandChildHoverFocusColor = isDark ? "blue.200" : "#4CCEC6";
+  const grandChildHoverFocusColor = isDark ? "blue.200" : "#2E3192";
 
   return (
     <Box
@@ -84,31 +84,10 @@ export function MenuItem({
       }}
       onMouseLeave={() => {
         setIsSelfHovered(false);
+        onMenuLeave?.();
       }}
     >
-      <Box
-        position="relative"
-        role="group"
-        textAlign="center"
-        _before={{
-          content: '""',
-          position: "absolute",
-          bottom: "-2px",
-          left: lastHoveredMenuId === menu.id && isNavHovered ? "0" : "50%",
-          width: lastHoveredMenuId === menu.id && isNavHovered ? "100%" : "0",
-          height: "2px",
-          bg: isMainPage ? "#0D344E" : isDark ? "blue.200" : "blue.500",
-          transition: "all 0.3s ",
-          opacity: lastHoveredMenuId === menu.id && isNavHovered ? "1" : "0",
-        }}
-        _hover={{
-          _before: {
-            left: "0",
-            width: "100%",
-            opacity: "1",
-          },
-        }}
-      >
+      <Box position="relative" role="group" textAlign="center">
         <Link
           as={NextLink}
           href={menuUrl}
@@ -117,6 +96,7 @@ export function MenuItem({
           fontSize={{ base: "xs", md: "sm", lg: "md" }}
           fontWeight={isRoot ? "bold" : "medium"}
           color={topLevelColor}
+          position="relative"
           _hover={{
             textDecoration: "none",
             color: topLevelHoverFocusColor,
@@ -136,6 +116,50 @@ export function MenuItem({
           whiteSpace="nowrap"
           overflow="hidden"
           textOverflow="ellipsis"
+          _before={{
+            content: '""',
+            position: "absolute",
+            width: "10px",
+            height: "10px",
+            background: "radial-gradient(circle, #FAB20B 0%, #ffffff 100%)",
+            borderRadius: "50%",
+            bottom: "-1px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 999,
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            opacity:
+              (isSelfHovered && isNavHovered) ||
+              (lastHoveredMenuId === menu.id && isNavHovered)
+                ? 1
+                : 0,
+            visibility:
+              (isSelfHovered && isNavHovered) ||
+              (lastHoveredMenuId === menu.id && isNavHovered)
+                ? "visible"
+                : "hidden",
+          }}
+          _after={{
+            content: '""',
+            position: "absolute",
+            bottom: "1px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "1px",
+            height: "20px",
+            bg: "black",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            opacity:
+              (isSelfHovered && isNavHovered) ||
+              (lastHoveredMenuId === menu.id && isNavHovered)
+                ? 1
+                : 0,
+            visibility:
+              (isSelfHovered && isNavHovered) ||
+              (lastHoveredMenuId === menu.id && isNavHovered)
+                ? "visible"
+                : "hidden",
+          }}
         >
           {menu.name}
         </Link>
@@ -145,7 +169,7 @@ export function MenuItem({
       <Box
         position="absolute"
         top="100%"
-        left={0}
+        left="0%"
         zIndex={10}
         w="100%"
         opacity={
@@ -162,7 +186,14 @@ export function MenuItem({
             ? "visible"
             : "hidden"
         }
-        transition="all 0.3s ease"
+        transform={
+          ((isSelfHovered && isNavHovered) ||
+            (lastHoveredMenuId === menu.id && isNavHovered)) &&
+          hasChildren
+            ? "translateY(0)"
+            : "translateY(-20px)"
+        }
+        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
         pointerEvents={
           ((isSelfHovered && isNavHovered) ||
             (lastHoveredMenuId === menu.id && isNavHovered)) &&
@@ -201,13 +232,13 @@ export function MenuItem({
                       _hover={{
                         textDecoration: "none",
                         color: childHoverFocusColor,
-                        bg: isDark ? "gray.700" : "gray.100",
+                        fontWeight: "bold",
                         borderRadius: "md",
                       }}
                       _focus={{
                         boxShadow: "none",
                         color: childHoverFocusColor,
-                        bg: isDark ? "gray.700" : "gray.100",
+                        fontWeight: "bold",
                         borderRadius: "md",
                         outline: "none",
                         border: "none",
@@ -252,7 +283,7 @@ export function MenuItem({
                               color={grandChildColor}
                               _hover={{
                                 color: grandChildHoverFocusColor,
-                                bg: isDark ? "gray.600" : "gray.50",
+                                fontWeight: "bold",
                               }}
                               display="block"
                               w="100%"
