@@ -469,7 +469,7 @@ export function EstimateSection() {
                             borderTopLeftRadius="20px"
                             borderTopRightRadius="20px"
                           >
-                            선택하신 연회장 정보가 표시됩니다
+                            선택하신 세미나실 정보가 표시됩니다
                           </Text>
                           <Flex
                             px={6}
@@ -480,20 +480,20 @@ export function EstimateSection() {
                             fontSize="md"
                             borderBottom="1.5px solid #E0E0E0"
                           >
-                            <Box flex="1">연회장명</Box>
+                            <Box flex="1">세미나실명</Box>
                             <Box w="160px" textAlign="center">
                               이용기간(일)
                             </Box>
                           </Flex>
-                          {/* 연회장 리스트 */}
+                          {/* 세미나실 리스트 */}
                           {[
-                            "누리",
-                            "가람",
-                            "오션",
                             "그랜드볼룸",
                             "시걸",
-                            "자스민",
                             "클로버",
+                            "자스민",
+                            "가람",
+                            "누리",
+                            "오션",
                           ].map((name, idx) => (
                             <Flex
                               key={name}
