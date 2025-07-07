@@ -13,9 +13,11 @@ import {
   Grid,
   GridItem,
   IconButton,
+  Button,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import Image from "next/image";
-import { memo, useState, useEffect } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import NextLink from "next/link";
 import { Menu } from "@/types/api";
 import {
@@ -24,7 +26,12 @@ import {
   Type,
   Smile,
   X as LargeCloseIcon,
+  User2Icon,
+  LogOutIcon,
 } from "lucide-react";
+import { useRecoilValue } from "recoil";
+import { authState, useAuthActions } from "@/stores/auth";
+import { useRouter } from "next/navigation";
 
 interface SitemapDrawerProps {
   isOpen: boolean;
@@ -46,6 +53,20 @@ export const SitemapDrawer = memo(
     width,
     height,
   }: SitemapDrawerProps) => {
+    const router = useRouter();
+
+    // 모바일과 데스크톱에서 다른 푸터 텍스트 표시
+    const footerText = useBreakpointValue({
+      base: (
+        <>
+          아르피나의 특별한 순간,
+          <br />
+          SNS에서 실시간으로 확인하세요
+        </>
+      ),
+      md: "아르피나의 특별한 순간, SNS에서 실시간으로 확인하세요",
+    });
+
     const [selectedCategoryKey, setSelectedCategoryKey] = useState<
       number | null
     >(
@@ -55,9 +76,29 @@ export const SitemapDrawer = memo(
         null
     );
 
+    const { isAuthenticated } = useRecoilValue(authState);
+    const { logout } = useAuthActions();
+
     const topLevelMenus = menusWithLastFlag.filter(
       (menu) => !menu.parentId || menu.parentId === 0
     );
+    const handleNavigate = useCallback(
+      (path: string) => {
+        router.push(path);
+        onClose(); // Close drawer after navigation
+      },
+      [router]
+    );
+    const handleLogout = useCallback(async () => {
+      try {
+        await logout();
+        onClose(); // Close drawer after logout
+      } catch (error) {
+        console.error("Logout error:", error);
+        // logout() already handles error cases and cleans up local state
+        onClose(); // Still close drawer even if logout fails
+      }
+    }, [logout]);
 
     // The right panel will display content based on ALL topLevelMenus, not just the selected one.
     // The selectedCategoryKey is now mainly for styling the left sidebar.
@@ -141,15 +182,62 @@ export const SitemapDrawer = memo(
                       alt="logo"
                     />
                   </Link>
-                  <HStack gap={3}>
-                    <Image
+                  <HStack>
+                    {/* <Image
                       src="/images/logo/부산도시공사_logo.png"
                       width={120}
                       height={40}
                       alt="부산도시공사 로고"
-                      style={{ display: width < 600 ? "none" : "block" }}
-                    />
-
+                    /> */}
+                    <VStack>
+                      {isAuthenticated ? (
+                        <Flex gap={2}>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleNavigate("/mypage")}
+                            color={isDark ? "gray.200" : "gray.700"}
+                            justifyContent="flex-start"
+                            size="xs"
+                          >
+                            <User2Icon size={18} />
+                            마이페이지
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            colorPalette="red"
+                            onClick={handleLogout}
+                            justifyContent="flex-start"
+                            size="xs"
+                          >
+                            <LogOutIcon size={18} />
+                            로그아웃
+                          </Button>
+                        </Flex>
+                      ) : (
+                        <Flex gap={2}>
+                          <Button
+                            flex={1}
+                            justifyContent="center"
+                            variant="outline"
+                            onClick={() => handleNavigate("/login")}
+                            color={isDark ? "gray.200" : "gray.700"}
+                            size="xs"
+                          >
+                            로그인
+                          </Button>
+                          <Button
+                            flex={1}
+                            justifyContent="center"
+                            variant="solid"
+                            colorPalette="blue"
+                            onClick={() => handleNavigate("/signup")}
+                            size="xs"
+                          >
+                            회원가입
+                          </Button>
+                        </Flex>
+                      )}
+                    </VStack>
                     <Icon
                       as={Globe}
                       boxSize={5}
@@ -393,7 +481,7 @@ export const SitemapDrawer = memo(
                       fontFamily="paperlogy"
                       fontWeight="bold"
                     >
-                      아르피나의 특별한 순간, SNS에서 실시간으로 확인하세요
+                      {footerText}
                     </Box>
                   </HStack>
                 </Link>
