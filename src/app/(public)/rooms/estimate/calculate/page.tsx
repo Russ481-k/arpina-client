@@ -541,6 +541,7 @@ const Seminars: SeminarInfoProps[] = [
     images: [
       { src: "/images/contents/seminar01_img01.jpg" },
       { src: "/images/contents/seminar01_img02.jpg" },
+      { src: "/images/contents/seminar01_img03.jpg" },
     ],
   },
   {
@@ -552,6 +553,7 @@ const Seminars: SeminarInfoProps[] = [
     images: [
       { src: "/images/contents/seminar01_img01.jpg" },
       { src: "/images/contents/seminar01_img02.jpg" },
+      { src: "/images/contents/seminar01_img03.jpg" },
     ],
   },
   {
@@ -560,7 +562,11 @@ const Seminars: SeminarInfoProps[] = [
     maxPeople: 20,
     area: "59.28",
     price: 154000,
-    images: [{ src: "/images/contents/seminar02_img01.jpg" }],
+    images: [
+      { src: "/images/contents/seminar02_img01.jpg" },
+      { src: "/images/contents/seminar02_img02.jpg" },
+      { src: "/images/contents/seminar02_img03.jpg" },
+    ],
   },
   {
     name: "그랜드볼룸",
