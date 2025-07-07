@@ -53,7 +53,7 @@ export type FileModule = "BBS" | "POPUP" | "PAGE" | "PROGRAM";
 export interface File {
   fileId: number;
   menu: string;
-  menuId: number;
+  menuId?: number;
   originName: string;
   savedName: string;
   mimeType: string;

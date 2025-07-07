@@ -1,5 +1,4 @@
 import { AuthType, SkinType, YesNoType } from "./common";
-import { File } from "@/app/cms/file/types"; // Ensure File type is imported
 import {
   EnrollmentApplicationStatus,
   EnrollmentCancellationProgressStatus,
@@ -65,7 +64,11 @@ export interface FileDto {
   mimeType: string;
   size: number; // bytes
   ext: string;
+  downloadUrl: string;
+  publicYn?: string;
 }
+
+export type ArticleStatusFlag = "Y" | "N" | "P";
 
 export interface BoardArticleCommon {
   no: number;
@@ -78,10 +81,10 @@ export interface BoardArticleCommon {
   content: string; // HTML 또는 JSON 문자열일 수 있음
   hasImageInContent: boolean;
   hasAttachment: boolean;
-  noticeState: string;
+  noticeState: ArticleStatusFlag;
   noticeStartDt: string;
   noticeEndDt: string;
-  publishState: string;
+  publishState: ArticleStatusFlag;
   publishStartDt: string;
   publishEndDt: string | null;
   externalLink: string | null;
@@ -311,10 +314,10 @@ export interface PostData {
   writer: string;
   displayWriter?: string;
   publishStartDt: string;
-  noticeState: "Y" | "N" | "P";
+  noticeState: ArticleStatusFlag;
   noticeStartDt: string;
   noticeEndDt: string;
-  publishState: "Y" | "N" | "P";
+  publishState: ArticleStatusFlag;
   publishEndDt: string | null;
   externalLink: string | null;
   parentNttId: number | null;

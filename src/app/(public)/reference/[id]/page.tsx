@@ -2,11 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { menuApi } from "@/lib/api/menu";
-import { articleApi, Article } from "@/lib/api/article";
+import { articleApi } from "@/lib/api/article";
 import { PageDetailsDto } from "@/types/menu";
-import { Post } from "@/types/api"; // Keep Post for mapping
+import { Post, BoardArticleCommon, FileDto } from "@/types/api"; // BoardArticleCommon, FileDto 임포트 추가
 import { PaginationData } from "@/types/common";
-import { File } from "@/app/cms/file/types"; // Explicitly import File type
 import { findMenuByPath } from "@/lib/menu-utils"; // Import findMenuByPath
 import {
   Input,
@@ -42,37 +41,23 @@ const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_SORT_ORDER = "createdAt,desc"; // Default sort for articles
 
 // Helper to map Article to Post
-function mapArticleToPost(article: Article): Post {
-  // Explicitly type attachments to satisfy Post.attachments?: File[] | null
-  const mappedAttachments: File[] | null = article.attachments
-    ? article.attachments.map((att): File => {
-        // Use the imported File type for the return type of the map callback
+function mapArticleToPost(article: BoardArticleCommon): Post {
+  // Explicitly type attachments to satisfy Post.attachments?: FileDto[] | null
+  const mappedAttachments: FileDto[] | null = article.attachments
+    ? article.attachments.map((att): FileDto => {
+        // Use the imported FileDto type for the return type of the map callback
         const savedNameDerived =
           att.downloadUrl.substring(att.downloadUrl.lastIndexOf("/") + 1) ||
           att.originName;
         return {
-          // Fields from AttachmentInfoDto
+          // Fields from AttachmentInfoDto (FileDto에 필요한 필드만 포함)
           fileId: att.fileId,
           originName: att.originName,
           mimeType: att.mimeType,
           size: att.size,
           ext: att.ext,
-
-          // Fields from File interface requiring mapping/defaults
-          menu: "BBS", // Default module
-          menuId: article.menuId, // from article context
-          savedName: savedNameDerived, // derived or default
-          version: 1, // default
-          publicYn: "Y", // default
-          fileOrder: 0, // default
-
-          // Audit fields (nullable in File interface, set to null)
-          createdBy: null,
-          createdDate: null,
-          createdIp: null,
-          updatedBy: null,
-          updatedDate: null,
-          updatedIp: null,
+          downloadUrl: att.downloadUrl,
+          publicYn: att.publicYn,
         };
       })
     : null;
@@ -135,7 +120,7 @@ async function getBoardPageData(
       menuId: menuId, // Pass menuId as well
       page: currentPage - 1, // API is 0-indexed
       size: pageSizeToUse,
-      keyword: keyword, // Pass keyword
+      keyword: keyword,
       sort: DEFAULT_SORT_ORDER, // Add sort order
     });
 
@@ -151,7 +136,7 @@ async function getBoardPageData(
 
     const articlesData = apiResponse.data; // This is ArticleListResponse
 
-    const articles = articlesData.content || [];
+    const articles = articlesData.content as BoardArticleCommon[]; // 타입 캐스팅
     // Map Article[] to Post[]
     const posts: Post[] = articles.map(mapArticleToPost);
 

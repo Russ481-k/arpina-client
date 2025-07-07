@@ -15,8 +15,7 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { useColors } from "@/styles/theme";
-import { Post } from "@/types/api";
-import { File } from "@/app/cms/file/types";
+import { FileDto, Post } from "@/types/api";
 import {
   LuFolderGit2,
   LuTrash2,
@@ -135,7 +134,7 @@ export function PostDetail({
               첨부파일 ({post.attachments.length})
             </Text>
             <VStack align="stretch" gap={2}>
-              {post.attachments.map((file: File) => {
+              {post.attachments.map((file: FileDto) => {
                 const FileIcon = getFileIcon(file.mimeType, file.ext);
                 const downloadUrl = getPublicFileDownloadUrl(file.fileId);
                 return (

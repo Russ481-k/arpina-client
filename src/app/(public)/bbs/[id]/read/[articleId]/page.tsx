@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import NextLink from "next/link";
 import {
   Box,
@@ -16,11 +16,11 @@ import {
 } from "@chakra-ui/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ArticleDisplay } from "@/components/articles/ArticleDisplay";
-import { articleApi, Article } from "@/lib/api/article";
+import { articleApi } from "@/lib/api/article";
 import { menuApi } from "@/lib/api/menu";
 import { PageDetailsDto } from "@/types/menu";
 import { findMenuByPath } from "@/lib/menu-utils";
-import { Menu } from "@/types/api";
+import { Menu, BoardArticleCommon } from "@/types/api";
 
 interface PrevNextArticleInfo {
   nttId: number;
@@ -28,7 +28,6 @@ interface PrevNextArticleInfo {
 }
 
 export default function ArticleDetailPage() {
-  const router = useRouter();
   const routeParams = useParams();
 
   const id = typeof routeParams.id === "string" ? routeParams.id : undefined;
@@ -37,7 +36,7 @@ export default function ArticleDetailPage() {
       ? routeParams.articleId
       : undefined;
 
-  const [article, setArticle] = useState<Article | null>(null);
+  const [article, setArticle] = useState<BoardArticleCommon | null>(null);
   const [pageDetails, setPageDetails] = useState<PageDetailsDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,13 +73,14 @@ export default function ArticleDetailPage() {
             try {
               const articlesResponse = await articleApi.getArticles({
                 bbsId: articleResponse.data.bbsId,
-                menuId: articleResponse.data.menuId,
+                menuId: articleResponse.data.menuId ?? 0,
                 sort: "createdAt,desc",
                 size: 9999,
               });
 
               if (articlesResponse.success && articlesResponse.data) {
-                const articles = articlesResponse.data.content;
+                const articles = articlesResponse.data
+                  .content as BoardArticleCommon[];
                 const currentIndex = articles.findIndex(
                   (a) => a.nttId === numericArticleId
                 );
