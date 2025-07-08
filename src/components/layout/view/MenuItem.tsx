@@ -114,7 +114,6 @@ export function MenuItem({
           transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
           borderRadius="md"
           whiteSpace="nowrap"
-          overflow="hidden"
           textOverflow="ellipsis"
           _before={{
             content: '""',
@@ -123,10 +122,10 @@ export function MenuItem({
             height: "10px",
             background: "radial-gradient(circle, #FAB20B 0%, #ffffff 100%)",
             borderRadius: "50%",
-            bottom: "-1px",
+            bottom: "-4px",
             left: "50%",
             transform: "translateX(-50%)",
-            zIndex: 999,
+            zIndex: 9,
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             opacity:
               (isSelfHovered && isNavHovered) ||
