@@ -1236,7 +1236,7 @@ export default function EstimatePage() {
 
   return (
     <PageContainer>
-      <Heading mb="-50px" color="#373636" fontSize="2xl" fontWeight="700">
+      <Heading color="#373636" fontSize="2xl" fontWeight="700">
         가견적 산출방법
       </Heading>
       <InfoBoxList01 items={infoItems01} />

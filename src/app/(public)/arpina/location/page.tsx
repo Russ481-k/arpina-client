@@ -27,7 +27,7 @@ export default function ParticipantsPage() {
       content: (
         <>
           현재위치 → 아르피나
-          <br />▸ 부산 해운대구 해운대로 35 (우동 1417번지) 네비게이션:
+          <br />▸ 부산 해운대구 해운대로 35 (우동 1417번지)
         </>
       ),
     },
