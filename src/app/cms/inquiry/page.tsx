@@ -91,8 +91,7 @@ export default function InquiryManagementPage() {
       { headerName: "행사명", field: "eventName", minWidth: 200, flex: 1 },
       { headerName: "단체명", field: "customerGroupName", minWidth: 200 },
       { headerName: "담당자", field: "contactPersonName", minWidth: 120 },
-      { headerName: "연락처", field: "contactPersonTel", minWidth: 150 },
-      { headerName: "휴대전화", field: "contactPersonPhone", minWidth: 150 },
+      { headerName: "연락처", field: "contactPersonPhone", minWidth: 150 },
       { headerName: "이메일", field: "contactPersonEmail", minWidth: 200 },
       {
         headerName: "참석 인원",
@@ -172,9 +171,9 @@ export default function InquiryManagementPage() {
     }
 
     const finalColumnDefs = [
-      ...baseColDefs.slice(0, 7), // 상태 ~ 휴대전화
-      ...dynamicColDefs, // 세미나실 관련 컬럼들
-      ...baseColDefs.slice(7), // 이메일 ~ 문의일
+      ...baseColDefs.slice(0, 6),
+      ...dynamicColDefs,
+      ...baseColDefs.slice(6),
     ];
 
     return {
@@ -301,8 +300,7 @@ export default function InquiryManagementPage() {
                     { value: "eventName", label: "행사명" },
                     { value: "customerGroupName", label: "단체명" },
                     { value: "contactPersonName", label: "담당자" },
-                    { value: "contactPersonPhone", label: "휴대전화" },
-                    { value: "contactPersonTel", label: "연락처" },
+                    { value: "contactPersonPhone", label: "연락처" },
                   ],
                 },
               ]}

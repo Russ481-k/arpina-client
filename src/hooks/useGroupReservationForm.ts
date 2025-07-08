@@ -58,8 +58,7 @@ const fieldLabels: { [key: string]: string } = {
   adultAttendees: "성인 인원수",
   customerGroupName: "단체명",
   contactPersonName: "담당자명",
-  contactPersonPhone: "담당자 휴대전화",
-  contactPersonTel: "담당자 연락처",
+  contactPersonPhone: "담당자 연락처",
   contactPersonEmail: "담당자 이메일",
   roomSizeDesc: "세미나실 크기",
   roomTypeDesc: "세미나실 종류",
@@ -81,7 +80,6 @@ const initialFormData: GroupReservationInquiryData = {
   contactPersonName: "",
   contactPersonDpt: "",
   contactPersonPhone: "",
-  contactPersonTel: "",
   contactPersonEmail: "",
   privacyAgreed: false,
   marketingAgreed: false,
@@ -112,13 +110,12 @@ export function useGroupReservationForm() {
       field: K,
       value: GroupReservationInquiryData[K]
     ) => {
-      if ((field === "contactPersonPhone" || field === "contactPersonTel") && typeof value === "string") {
+      if (field === "contactPersonPhone" && typeof value === "string") {
         const cleaned = value.replace(/\D/g, "");
         if (cleaned.length > 11) {
           return;
         }
         const formattedPhone = formatPhoneNumberWithHyphen(cleaned);
-        console.log(`${field} 값 변경:`, { 입력값: value, 포맷된값: formattedPhone });
         setFormData((prev) => ({ ...prev, [field]: formattedPhone }));
       } else {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -278,14 +275,9 @@ export function useGroupReservationForm() {
     if (!data.contactPersonName?.trim())
       newErrors.contactPersonName = "담당자명을 입력해주세요.";
     if (!data.contactPersonPhone?.trim())
-      newErrors.contactPersonPhone = "담당자 휴대전화를 입력해주세요.";
+      newErrors.contactPersonPhone = "담당자 연락처를 입력해주세요.";
     else if (!isValidKoreanPhoneNumber(data.contactPersonPhone))
       newErrors.contactPersonPhone =
-        "올바른 형식의 휴대전화를 입력해주세요. (예: 010-1234-5678)";
-    if (!data.contactPersonTel?.trim())
-      newErrors.contactPersonTel = "담당자 연락처를 입력해주세요.";
-    else if (!isValidKoreanPhoneNumber(data.contactPersonTel))
-      newErrors.contactPersonTel =
         "올바른 형식의 연락처를 입력해주세요. (예: 010-1234-5678)";
     const emailError = validateEmail(data.contactPersonEmail);
     if (emailError) newErrors.contactPersonEmail = emailError;
@@ -332,7 +324,6 @@ export function useGroupReservationForm() {
       "customerGroupName",
       "contactPersonName",
       "contactPersonPhone",
-      "contactPersonTel",
       "contactPersonEmail",
     ];
 

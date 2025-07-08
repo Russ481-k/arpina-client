@@ -815,30 +815,9 @@ export default function GroupReservationPage() {
                     }
                   />
                 </Field.Root>
-                <Field.Root required invalid={!!errors.contactPersonTel}>
-                  <Field.Label>
-                    담당자 연락처{" "}
-                    <Text as="span" color="red.500">
-                      *
-                    </Text>
-                  </Field.Label>
-                  <Input
-                    ref={(el) => {
-                      if (el) fieldRefs.current.set("contactPersonTel", el);
-                    }}
-                    type="tel"
-                    placeholder="연락처를 입력해주세요"
-                    value={formData.contactPersonTel}
-                    onChange={(e) =>
-                      updateField("contactPersonTel", e.target.value)
-                    }
-                    onBlur={() => handleBlur("contactPersonTel")}
-                  />
-                  <Field.ErrorText>{errors.contactPersonTel}</Field.ErrorText>
-                </Field.Root>
                 <Field.Root required invalid={!!errors.contactPersonPhone}>
                   <Field.Label>
-                    담당자 휴대전화{" "}
+                    담당자 연락처{" "}
                     <Text as="span" color="red.500">
                       *
                     </Text>
@@ -848,7 +827,7 @@ export default function GroupReservationPage() {
                       if (el) fieldRefs.current.set("contactPersonPhone", el);
                     }}
                     type="tel"
-                    placeholder="휴대전화를 입력해주세요 (예: 010-1234-5678)"
+                    placeholder="연락처를 입력해주세요 (예: 010-1234-5678)"
                     value={formData.contactPersonPhone}
                     onChange={(e) =>
                       updateField("contactPersonPhone", e.target.value)
@@ -857,11 +836,7 @@ export default function GroupReservationPage() {
                   />
                   <Field.ErrorText>{errors.contactPersonPhone}</Field.ErrorText>
                 </Field.Root>
-                <Field.Root
-                  required
-                  invalid={!!errors.contactPersonEmail}
-                  gridColumn="span 2"
-                >
+                <Field.Root required invalid={!!errors.contactPersonEmail}>
                   <Field.Label>
                     담당자 이메일{" "}
                     <Text as="span" color="red.500">
