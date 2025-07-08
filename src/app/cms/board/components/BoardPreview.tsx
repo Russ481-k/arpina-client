@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
-import { BoardMaster, Menu } from "@/types/api";
+import { BoardMaster, Menu, BoardArticleCommon } from "@/types/api";
 import { AgGridReact } from "ag-grid-react";
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
@@ -43,11 +43,7 @@ import { menuKeys, menuApi, sortMenus } from "@/lib/api/menu";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useHeroSectionData } from "@/lib/hooks/useHeroSectionData";
 import { HeroSection } from "@/components/sections/HeroSection";
-import {
-  articleApi,
-  type Article,
-  type ArticleListResponse,
-} from "@/lib/api/article";
+import { articleApi, type ArticleListResponse } from "@/lib/api/article";
 import React from "react";
 import { ArticleDetailDrawer } from "./ArticleDetailDrawer";
 import { ArticleWriteDrawer } from "./ArticleWriteDrawer";
@@ -57,6 +53,8 @@ import { LucideEdit } from "lucide-react";
 import CustomPagination from "@/components/common/CustomPagination";
 import { toaster } from "@/components/ui/toaster";
 import dayjs from "dayjs";
+import TitleCellRenderer from "@/components/common/TitleCellRenderer";
+import PostTitleDisplay from "@/components/common/PostTitleDisplay";
 
 // Import GenericArticleCard and the mapping function
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
@@ -66,7 +64,9 @@ import { mapArticleToCommonCardData } from "@/lib/card-utils";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 // NEW: Custom Cell Renderer for "번호" (Number) column
-const NoticeNumberRenderer = (params: ICellRendererParams<Article>) => {
+const NoticeNumberRenderer = (
+  params: ICellRendererParams<BoardArticleCommon>
+) => {
   if (params.data && params.data.no === 0) {
     return (
       <Badge colorPalette="orange" variant="subtle">
@@ -77,58 +77,7 @@ const NoticeNumberRenderer = (params: ICellRendererParams<Article>) => {
   return <span>{params.value}</span>; // params.value will be data.no
 };
 
-const TitleRenderer = (params: ICellRendererParams<Article>) => {
-  const articleData = params.data;
-  const colors = useColors();
-
-  if (!articleData) {
-    return <span>{params.value}</span>;
-  }
-
-  return (
-    <HStack
-      gap={0.5}
-      alignItems="center"
-      justifyContent="start"
-      h="100%"
-      w="100%"
-      cursor="pointer"
-      title={params.value}
-      flex="1"
-      className="title-renderer"
-    >
-      <Text
-        title={params.value}
-        fontSize="sm"
-        fontWeight="medium"
-        overflow="hidden"
-        textOverflow="ellipsis"
-      >
-        {params.value}
-      </Text>
-      {articleData.hasImageInContent && (
-        <Icon
-          as={LuImage}
-          boxSize="1em"
-          color={colors.text.secondary}
-          aria-label="Image in content"
-          ml={1}
-        />
-      )}
-      {articleData.hasAttachment && (
-        <Icon
-          as={LuPaperclip}
-          boxSize="0.9em"
-          color={colors.text.secondary}
-          aria-label="Has attachments"
-          ml={1}
-        />
-      )}
-    </HStack>
-  );
-};
-
-const ViewsRenderer = (params: ICellRendererParams) => (
+const ViewsRenderer = (params: ICellRendererParams<BoardArticleCommon>) => (
   <span
     style={{
       display: "flex",
@@ -144,7 +93,7 @@ const ViewsRenderer = (params: ICellRendererParams) => (
 );
 
 // Date formatter
-const dateFormatter = (params: ValueFormatterParams) => {
+const dateFormatter = (params: ValueFormatterParams<BoardArticleCommon>) => {
   if (!params.value) return "";
   return dayjs(params.value).format("YYYY.MM.DD");
 };
@@ -152,9 +101,9 @@ const dateFormatter = (params: ValueFormatterParams) => {
 // --- IMPORT/DEFINE PressTitleRenderer and its dateFormatter ---
 // (This might be better if PressTitleRenderer is in a shared location, but for now, define/adapt here)
 
-const PressTitleRenderer_Preview: React.FC<ICellRendererParams<Article>> = (
-  params
-) => {
+const PressTitleRenderer_Preview: React.FC<
+  ICellRendererParams<BoardArticleCommon>
+> = (params) => {
   const post = params.data;
   const { colorMode } = useColorMode();
   const colors = useColors();
@@ -194,16 +143,23 @@ const PressTitleRenderer_Preview: React.FC<ICellRendererParams<Article>> = (
       title={post.title}
     >
       <ChakraLink
-        href={externalLinkHref}
+        href={externalLinkHref ?? internalDetailUrl}
+        flex={1}
         minW={0}
-        flexShrink={1}
-        overflow="hidden"
         display="flex"
         alignItems="center"
+        color={titleColor}
+        _hover={{
+          textDecoration: "underline",
+          color: titleHoverColor,
+        }}
+        onClick={(e) => {
+          if (externalLinkHref) {
+            e.preventDefault();
+          }
+        }}
       >
-        <Text fontWeight="medium" fontSize="md" color={titleColor} truncate>
-          {post.title}
-        </Text>
+        <PostTitleDisplay title={post.title} postData={post} />
       </ChakraLink>
 
       {externalLinkHref && (
@@ -229,7 +185,9 @@ const PressTitleRenderer_Preview: React.FC<ICellRendererParams<Article>> = (
 };
 
 // Re-use existing dateFormatter or ensure one is available for Press columns
-const pressDateFormatter = (params: ValueFormatterParams<Article, string>) => {
+const pressDateFormatter = (
+  params: ValueFormatterParams<BoardArticleCommon, string>
+) => {
   if (!params.value) return "";
   return dayjs(params.value).format("YYYY.MM.DD");
 };
@@ -257,35 +215,6 @@ interface ApiResponse<T> {
   stackTrace: string | null;
 }
 
-interface ArticlesData {
-  content: Article[];
-  pageable: {
-    sort: {
-      empty: boolean;
-      sorted: boolean;
-      unsorted: boolean;
-    };
-    offset: number;
-    pageNumber: number;
-    pageSize: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  last: boolean;
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  size: number;
-  number: number;
-  sort: {
-    empty: boolean;
-    sorted: boolean;
-    unsorted: boolean;
-  };
-  numberOfElements: number;
-  empty: boolean;
-}
-
 const BoardPreview = React.memo(function BoardPreview({
   menu,
   board,
@@ -293,7 +222,7 @@ const BoardPreview = React.memo(function BoardPreview({
   refetchArticles,
 }: BoardPreviewProps) {
   // === ALL HOOKS AT THE TOP LEVEL OF THE COMPONENT ===
-  const gridRef = useRef<AgGridReact<Article>>(null);
+  const gridRef = useRef<AgGridReact<BoardArticleCommon>>(null);
   const { colorMode } = useColorMode();
   const colors = useColors();
   const [searchInputText, setSearchInputText] = useState("");
@@ -302,15 +231,17 @@ const BoardPreview = React.memo(function BoardPreview({
   const [pageSize, setPageSize] = useState(20);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedArticleForDetail, setSelectedArticleForDetail] =
-    useState<Article | null>(null);
+    useState<BoardArticleCommon | null>(null);
   const { user, isAuthenticated } = useRecoilValue(authState);
   const queryClient = useQueryClient();
   const [previousArticleInDrawer, setPreviousArticleInDrawer] =
-    useState<Article | null>(null);
+    useState<BoardArticleCommon | null>(null);
   const [nextArticleInDrawer, setNextArticleInDrawer] =
-    useState<Article | null>(null);
+    useState<BoardArticleCommon | null>(null);
   const [isWriteDrawerOpen, setIsWriteDrawerOpen] = useState(false);
-  const [articleToEdit, setArticleToEdit] = useState<Article | null>(null);
+  const [articleToEdit, setArticleToEdit] = useState<BoardArticleCommon | null>(
+    null
+  );
 
   const initialViewMode = useMemo(() => {
     const initialSkinType = board?.skinType;
@@ -408,7 +339,7 @@ const BoardPreview = React.memo(function BoardPreview({
   const articles = useMemo(
     () => articlesApiResponse?.data?.content || [],
     [articlesApiResponse?.data?.content]
-  );
+  ) as BoardArticleCommon[];
   const heroData = useHeroSectionData(menu?.url ?? "");
   useEffect(() => {
     if (selectedArticleForDetail && articles.length > 0) {
@@ -422,9 +353,6 @@ const BoardPreview = React.memo(function BoardPreview({
         setNextArticleInDrawer(
           currentIndex < articles.length - 1 ? articles[currentIndex + 1] : null
         );
-      } else {
-        setPreviousArticleInDrawer(null);
-        setNextArticleInDrawer(null);
       }
     } else {
       setPreviousArticleInDrawer(null);
@@ -449,12 +377,14 @@ const BoardPreview = React.memo(function BoardPreview({
   const agGridTheme =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
-  const colDefs = useMemo<ColDef<Article>[]>(() => {
+  const colDefs = useMemo<ColDef<BoardArticleCommon>[]>(() => {
     const baseCellTextStyle: CellStyle = {
       fontWeight: "normal",
       color: textColor,
-      display: "flex",
-      alignItems: "center",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      justifyContent: "flex-start",
     };
     const centeredCellTextStyle: CellStyle = {
       ...baseCellTextStyle,
@@ -462,25 +392,34 @@ const BoardPreview = React.memo(function BoardPreview({
       textAlign: "center",
       color: colors.text?.secondary || textColor,
     };
-    const baseColDefs: ColDef<Article>[] = [
+    const baseColDefs: ColDef<BoardArticleCommon>[] = [
       {
         headerName: "번호",
         field: "no",
         width: 80,
         sortable: true,
         cellRenderer: NoticeNumberRenderer,
-        cellStyle: centeredCellTextStyle,
+        cellStyle: {
+          ...centeredCellTextStyle,
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "제목",
         field: "title",
         flex: 1,
-        cellRenderer: TitleRenderer,
         sortable: true,
+        cellRenderer: PressTitleRenderer_Preview,
+
         cellStyle: {
           ...baseCellTextStyle,
           paddingLeft: "10px",
           paddingRight: "10px",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         },
       },
       {
@@ -488,7 +427,12 @@ const BoardPreview = React.memo(function BoardPreview({
         field: "displayWriter",
         width: 120,
         sortable: true,
-        cellStyle: centeredCellTextStyle,
+        cellStyle: {
+          ...centeredCellTextStyle,
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "등록일",
@@ -496,7 +440,12 @@ const BoardPreview = React.memo(function BoardPreview({
         width: 120,
         valueFormatter: dateFormatter,
         sortable: true,
-        cellStyle: centeredCellTextStyle,
+        cellStyle: {
+          ...centeredCellTextStyle,
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "조회",
@@ -504,7 +453,12 @@ const BoardPreview = React.memo(function BoardPreview({
         width: 80,
         cellRenderer: ViewsRenderer,
         sortable: true,
-        cellStyle: centeredCellTextStyle,
+        cellStyle: {
+          ...centeredCellTextStyle,
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
     ];
 
@@ -516,18 +470,27 @@ const BoardPreview = React.memo(function BoardPreview({
           width: 80,
           sortable: true,
           cellRenderer: NoticeNumberRenderer,
-          cellStyle: centeredCellTextStyle as CellStyle,
+          cellStyle: {
+            ...centeredCellTextStyle,
+            overflow: "visible",
+            textOverflow: "clip",
+            whiteSpace: "normal",
+          },
         },
         {
           headerName: "제목",
           field: "title",
           flex: 1,
+          sortable: true,
           cellRenderer: PressTitleRenderer_Preview,
           cellStyle: {
             ...baseCellTextStyle,
             paddingLeft: "10px",
             paddingRight: "10px",
-          } as CellStyle,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          },
           minWidth: 300,
         },
         {
@@ -535,7 +498,12 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "displayWriter",
           width: 120,
           sortable: true,
-          cellStyle: centeredCellTextStyle as CellStyle,
+          cellStyle: {
+            ...centeredCellTextStyle,
+            overflow: "visible",
+            textOverflow: "clip",
+            whiteSpace: "normal",
+          },
         },
         {
           headerName: "등록일",
@@ -543,7 +511,12 @@ const BoardPreview = React.memo(function BoardPreview({
           width: 120,
           valueFormatter: pressDateFormatter,
           sortable: true,
-          cellStyle: centeredCellTextStyle as CellStyle,
+          cellStyle: {
+            ...centeredCellTextStyle,
+            overflow: "visible",
+            textOverflow: "clip",
+            whiteSpace: "normal",
+          },
         },
       ];
     }
@@ -555,18 +528,28 @@ const BoardPreview = React.memo(function BoardPreview({
           width: 80,
           sortable: true,
           cellRenderer: NoticeNumberRenderer,
-          cellStyle: centeredCellTextStyle as CellStyle,
+          cellStyle: {
+            ...centeredCellTextStyle,
+            overflow: "visible",
+            textOverflow: "clip",
+            whiteSpace: "normal",
+          },
         },
         {
           headerName: "제목",
           field: "title",
           flex: 1,
+          sortable: true,
           cellRenderer: PressTitleRenderer_Preview,
+
           cellStyle: {
             ...baseCellTextStyle,
             paddingLeft: "10px",
             paddingRight: "10px",
-          } as CellStyle,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          },
           minWidth: 300,
         },
         {
@@ -574,7 +557,12 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "displayWriter",
           width: 120,
           sortable: true,
-          cellStyle: centeredCellTextStyle as CellStyle,
+          cellStyle: {
+            ...centeredCellTextStyle,
+            overflow: "visible",
+            textOverflow: "clip",
+            whiteSpace: "normal",
+          },
         },
         {
           headerName: "등록일",
@@ -582,7 +570,12 @@ const BoardPreview = React.memo(function BoardPreview({
           width: 120,
           valueFormatter: pressDateFormatter,
           sortable: true,
-          cellStyle: centeredCellTextStyle as CellStyle,
+          cellStyle: {
+            ...centeredCellTextStyle,
+            overflow: "visible",
+            textOverflow: "clip",
+            whiteSpace: "normal",
+          },
         },
       ];
     }
@@ -599,7 +592,7 @@ const BoardPreview = React.memo(function BoardPreview({
     []
   );
   const handleRowClick = useCallback(
-    (event: RowClickedEvent | { data: Article }) => {
+    (event: RowClickedEvent | { data: BoardArticleCommon }) => {
       setSelectedArticleForDetail(event.data);
       setDetailDrawerOpen(true);
     },
@@ -640,14 +633,17 @@ const BoardPreview = React.memo(function BoardPreview({
     [bbsId, menuId]
   ); // Add bbsId, menuId to dependencies
 
-  const handleEditArticleInPreview = useCallback((article: Article) => {
-    setArticleToEdit(article);
-    setIsWriteDrawerOpen(true);
-    setDetailDrawerOpen(false); // Close detail drawer if it was open
-  }, []);
+  const handleEditArticleInPreview = useCallback(
+    (article: BoardArticleCommon) => {
+      setArticleToEdit(article);
+      setIsWriteDrawerOpen(true);
+      setDetailDrawerOpen(false); // Close detail drawer if it was open
+    },
+    []
+  );
 
   const handleDeleteArticleInPreview = useCallback(
-    async (articleToDelete: Article) => {
+    async (articleToDelete: BoardArticleCommon) => {
       if (!articleToDelete || typeof articleToDelete.nttId !== "number") {
         toaster.error({
           title: "오류",
@@ -823,7 +819,7 @@ const BoardPreview = React.memo(function BoardPreview({
             className={agGridTheme}
             style={{ width: "100%", background: bg }}
           >
-            <AgGridReact
+            <AgGridReact<BoardArticleCommon>
               ref={gridRef}
               rowData={articles}
               columnDefs={colDefs}
@@ -866,7 +862,7 @@ const BoardPreview = React.memo(function BoardPreview({
                     onClick={() =>
                       handleRowClick({
                         data: article,
-                      } as RowClickedEvent<Article>)
+                      } as RowClickedEvent<BoardArticleCommon>)
                     }
                     cursor="pointer"
                     _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}

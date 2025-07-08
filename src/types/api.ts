@@ -1,5 +1,4 @@
 import { AuthType, SkinType, YesNoType } from "./common";
-import { File } from "@/app/cms/file/types"; // Ensure File type is imported
 import {
   EnrollmentApplicationStatus,
   EnrollmentCancellationProgressStatus,
@@ -65,42 +64,44 @@ export interface FileDto {
   mimeType: string;
   size: number; // bytes
   ext: string;
-  // savedName: string; // 프론트엔드에서 직접 사용하지 않으므로 일단 제외 가능
-  // publicYn?: string; // 필요시 추가
-  // fileOrder?: number; // 필요시 추가
-  // createdAt?: string; // 필요시 추가
-  // updatedAt?: string; // 필요시 추가
+  downloadUrl: string;
+  publicYn?: string;
 }
 
-export interface Post {
+export type ArticleStatusFlag = "Y" | "N" | "P";
+
+export interface BoardArticleCommon {
   no: number;
   nttId: number;
   bbsId: number;
   parentNttId: number | null;
   threadDepth: number;
   writer: string;
-  displayWriter: string;
   title: string;
   content: string; // HTML 또는 JSON 문자열일 수 있음
   hasImageInContent: boolean;
   hasAttachment: boolean;
-  noticeState: "Y" | "N" | "P";
+  noticeState: ArticleStatusFlag;
   noticeStartDt: string;
   noticeEndDt: string;
-  publishState: "Y" | "N" | "P";
+  publishState: ArticleStatusFlag;
   publishStartDt: string;
   publishEndDt: string | null;
   externalLink: string | null;
   hits: number;
-  categories?: string[];
-  attachments?: File[] | null; // 변경: File 객체 배열 사용
-  thumbnailUrl?: string; // Optional thumbnail URL for press/card layouts
+  displayWriter?: string;
+  postedAt?: string;
   createdAt: string;
-  postedAt: string;
   updatedAt: string;
+  attachments?: FileDto[] | null;
+  thumbnailUrl?: string;
+  status?: string;
+  skinType?: string | null;
+  menuId?: number;
+}
 
-  // Fields for QnA functionality, used by QnaBoardSkin
-  status?: string; // e.g., "답변대기", "답변완료"
+export interface Post extends BoardArticleCommon {
+  categories?: string[];
   answerContent?: string;
   answerCreatedAt?: string;
   answerUpdatedAt?: string;
@@ -313,10 +314,10 @@ export interface PostData {
   writer: string;
   displayWriter?: string;
   publishStartDt: string;
-  noticeState: "Y" | "N" | "P";
+  noticeState: ArticleStatusFlag;
   noticeStartDt: string;
   noticeEndDt: string;
-  publishState: "Y" | "N" | "P";
+  publishState: ArticleStatusFlag;
   publishEndDt: string | null;
   externalLink: string | null;
   parentNttId: number | null;

@@ -8,15 +8,9 @@ import {
   Icon,
   IconButton,
   VStack,
-  // Removed Drawer specific imports
-  // Button, // Keep if action buttons (Edit/Delete) are part of this core display
-  // Badge, // Keep if used directly in this component, e.g. for tags
 } from "@chakra-ui/react";
-// import { Download, ChevronLeft, ChevronRight } from "lucide-react"; // If nav buttons are here
-// import { FaFacebook, FaTwitter, FaLink, FaEnvelope } from "react-icons/fa"; // If social share is here
 import React from "react";
-import { Article, AttachmentInfoDto } from "@/lib/api/article";
-// import { File } from "@/app/cms/file/types"; // AttachmentInfoDto is more specific from article API
+import { BoardArticleCommon, FileDto } from "@/types/api"; // BoardArticleCommon, FileDto 임포트 추가
 import {
   LuDownload,
   LuFileText,
@@ -62,7 +56,7 @@ function LexicalErrorBoundary({ children }: { children: React.ReactNode }) {
 }
 
 interface ArticleDisplayProps {
-  article?: Article | null;
+  article?: BoardArticleCommon | null; // Article -> BoardArticleCommon 변경
   contentString?: string;
   isFaq?: boolean;
   contentStyle?: React.CSSProperties;
@@ -265,7 +259,8 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
               첨부파일 ({article.attachments.length})
             </Text>
             <VStack align="stretch" gap={2}>
-              {article.attachments.map((file: AttachmentInfoDto) => {
+              {article.attachments.map((file: FileDto) => {
+                // AttachmentInfoDto -> FileDto 변경
                 if (
                   !file ||
                   typeof file.fileId === "undefined" ||

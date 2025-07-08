@@ -38,6 +38,8 @@ import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapPostToCommonCardData } from "@/lib/card-utils";
 import { useColors } from "@/styles/theme";
 import dayjs from "dayjs";
+import PostTitleDisplay from "@/components/common/PostTitleDisplay";
+import TitleCellRenderer from "../common/TitleCellRenderer";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -100,7 +102,7 @@ const SharedPressTitleRenderer: React.FC<ICellRendererParams<Post>> = (
       {/* Title links internally */}
       {/* Apply link styling directly to this ChakraLink which becomes the <a> tag */}
       <ChakraLink
-        href={externalLinkHref ?? ""}
+        href={externalLinkHref ?? internalDetailUrl}
         flex={1}
         minW={0}
         display="flex"
@@ -110,10 +112,13 @@ const SharedPressTitleRenderer: React.FC<ICellRendererParams<Post>> = (
           textDecoration: "underline",
           color: titleHoverColor,
         }}
+        onClick={(e) => {
+          if (externalLinkHref) {
+            e.preventDefault();
+          }
+        }}
       >
-        <Text fontWeight="medium" fontSize="md" truncate title={post.title}>
-          {post.title}
-        </Text>
+        <PostTitleDisplay title={post.title} postData={post} />
       </ChakraLink>
 
       {/* External link icon */}
@@ -206,6 +211,9 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
       paddingLeft: "10px",
       paddingRight: "10px",
       border: "none",
+      overflow: "visible",
+      textOverflow: "clip",
+      whiteSpace: "normal",
     }),
     []
   );
@@ -217,6 +225,9 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
       color: writerDateColor,
       justifyContent: "center",
       textAlign: "center",
+      overflow: "visible",
+      textOverflow: "clip",
+      whiteSpace: "normal",
     }),
     [baseCellStyle, writerDateColor]
   );
@@ -228,6 +239,9 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
       color: noticeNumberTextColor,
       justifyContent: "center",
       textAlign: "center",
+      overflow: "visible",
+      textOverflow: "clip",
+      whiteSpace: "normal",
     }),
     [baseCellStyle, noticeNumberTextColor]
   );
@@ -247,11 +261,14 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
         headerName: "제목",
         field: "title",
         flex: 1,
-        cellRenderer: SharedPressTitleRenderer,
+        cellRenderer: TitleCellRenderer,
         cellStyle: {
           ...baseCellStyle,
           paddingLeft: "16px",
           paddingRight: "16px",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         },
         minWidth: 300,
         headerClass: "press-list-header",

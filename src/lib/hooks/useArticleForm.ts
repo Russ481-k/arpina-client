@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import { boardApi } from "@/lib/api/board";
-import { Article, articleApi, type AttachmentInfoDto } from "@/lib/api/article";
-import { fileApi } from "@/lib/api/file";
-import { BoardMaster, ApiResponse } from "@/types/api";
+import { articleApi } from "@/lib/api/article";
+import {
+  BoardMaster,
+  BoardArticleCommon,
+  FileDto,
+  ArticleStatusFlag,
+} from "@/types/api";
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
 import { toaster } from "@/components/ui/toaster";
@@ -14,10 +18,10 @@ export interface ArticleFormData {
   content: string;
   externalLink?: string;
   captcha?: string;
-  noticeState: string;
+  noticeState: ArticleStatusFlag;
   noticeStartDt: string | null;
   noticeEndDt: string | null;
-  publishState: string;
+  publishState: ArticleStatusFlag;
   publishStartDt: string | null;
   publishEndDt: string | null;
   hits?: number;
@@ -28,7 +32,7 @@ export interface ArticleFormData {
 export interface UseArticleFormProps {
   bbsId?: number;
   menuId?: number;
-  initialData?: Partial<Article>;
+  initialData?: Partial<BoardArticleCommon>;
   maxFileAttachments?: number;
   maxFileSizeMB?: number;
   disableAttachments?: boolean;
@@ -56,10 +60,10 @@ export function useArticleForm({
     content: initialData?.content || "",
     externalLink: initialData?.externalLink || "",
     captcha: "",
-    noticeState: initialData?.noticeState || "N",
+    noticeState: (initialData?.noticeState || "N") as ArticleStatusFlag,
     noticeStartDt: initialData?.noticeStartDt || null,
     noticeEndDt: initialData?.noticeEndDt || null,
-    publishState: initialData?.publishState || "Y",
+    publishState: (initialData?.publishState || "Y") as ArticleStatusFlag,
     publishStartDt: initialData?.publishStartDt || null,
     publishEndDt: initialData?.publishEndDt || null,
     hits: initialData?.hits || 0,
@@ -154,7 +158,7 @@ export function useArticleForm({
   useEffect(() => {
     if (initialData?.attachments && initialData.attachments.length > 0) {
       const mappedAttachments: ExistingAttachment[] =
-        initialData.attachments.map((att: AttachmentInfoDto) => ({
+        initialData.attachments.map((att: FileDto) => ({
           id: att.fileId,
           name: att.originName,
           url: att.downloadUrl,
