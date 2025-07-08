@@ -198,6 +198,7 @@ export const SitemapDrawer = memo(
                             color={isDark ? "gray.200" : "gray.700"}
                             justifyContent="flex-start"
                             size="xs"
+                            p={0}
                           >
                             <User2Icon size={18} />
                             마이페이지
@@ -208,6 +209,7 @@ export const SitemapDrawer = memo(
                             onClick={handleLogout}
                             justifyContent="flex-start"
                             size="xs"
+                            p={0}
                           >
                             <LogOutIcon size={18} />
                             로그아웃

@@ -110,7 +110,7 @@ export const heroSectionData: Record<
   },
   "/rooms/estimate/calculate": {
     header: "객실",
-    title: "연회장/객실 가견적 산출",
+    title: "세미나실/객실 가견적 산출",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -120,7 +120,7 @@ export const heroSectionData: Record<
   },
   "/rooms/estimate/sheet": {
     header: "객실",
-    title: "연회장/객실 가견적 산출",
+    title: "세미나실/객실 가견적 산출",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [

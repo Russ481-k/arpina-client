@@ -85,8 +85,8 @@ export default function ParticipantsPage() {
             <Box
               as="span"
               display="block"
-              mt={10}
-              fontSize="0.6em"
+              mt={{ base: "10px", md: "20px", lg: "30px" }}
+              fontSize={{ base: "12px", md: "16px", xl: "20px" }}
               color="#FAB20B"
             >
               ※ 8층 야외 옥상정원에서는 회의 중간 여유로운 휴식과 함께, 도심과

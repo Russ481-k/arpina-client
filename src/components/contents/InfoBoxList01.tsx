@@ -17,7 +17,7 @@ export default function InfoBoxList01({
   return (
     <Box
       className="info-list-box01"
-      marginTop={{ base: "5", md: "10", lg: "15" }}
+      marginTop={{ base: "5px", md: "10px", lg: "15px" }}
       padding={{ base: "2", md: "3", lg: "4" }}
       style={{
         backgroundColor: "#F7F8FB",

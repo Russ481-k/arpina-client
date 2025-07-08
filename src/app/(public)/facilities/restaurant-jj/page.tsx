@@ -18,8 +18,8 @@ export default function ParticipantsPage() {
     "/images/contents/jj_img06.jpg",
   ];
 
-  // 다운로드 버튼 클릭 핸들러
-  const handleDownload = (url: string) => {
+  // 링크이동 버튼 클릭 핸들러
+  const handleLink = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -53,7 +53,7 @@ export default function ParticipantsPage() {
             fontWeight="bold"
             fontSize="sm"
             onClick={() =>
-              handleDownload(
+              handleLink(
                 "https://m.blog.naver.com/3chonbapcha/223202325368"
               )
             }
@@ -87,7 +87,7 @@ export default function ParticipantsPage() {
             fontWeight="bold"
             fontSize="sm"
             onClick={() =>
-              handleDownload(
+              handleLink(
                 "https://m.blog.naver.com/3chonbapcha/223299526344"
               )
             }

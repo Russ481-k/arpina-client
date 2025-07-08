@@ -532,42 +532,13 @@ const RoomInfo = ({
 // Seminar data
 // 타입 명시
 const Seminars: SeminarInfoProps[] = [
-  {
-    name: "누리",
-    location: "1F / 소회의실",
-    maxPeople: 10,
-    area: "85.95",
-    price: 308000,
-    images: [
-      { src: "/images/contents/seminar01_img01.jpg" },
-      { src: "/images/contents/seminar01_img02.jpg" },
-    ],
-  },
-  {
-    name: "가람",
-    location: "1F / 소회의실",
-    maxPeople: 10,
-    area: "85.95",
-    price: 308000,
-    images: [
-      { src: "/images/contents/seminar01_img01.jpg" },
-      { src: "/images/contents/seminar01_img02.jpg" },
-    ],
-  },
-  {
-    name: "오션",
-    location: "2F / 소회의실",
-    maxPeople: 20,
-    area: "59.28",
-    price: 154000,
-    images: [{ src: "/images/contents/seminar02_img01.jpg" }],
-  },
+  
   {
     name: "그랜드볼룸",
     location: "2F / 그랜드볼룸",
     maxPeople: 250,
     area: "543.15",
-    price: 1386000,
+    price: 1980000,
     images: [
       { src: "/images/contents/seminar03_img01.jpg" },
       { src: "/images/contents/seminar03_img02.jpg" },
@@ -579,7 +550,7 @@ const Seminars: SeminarInfoProps[] = [
     location: "8F / 중회의실",
     maxPeople: 100,
     area: "180",
-    price: 693000,
+    price: 990000,
     images: [
       { src: "/images/contents/seminar04_img01.jpg" },
       { src: "/images/contents/seminar04_img02.jpg" },
@@ -587,11 +558,23 @@ const Seminars: SeminarInfoProps[] = [
     ],
   },
   {
+    name: "클로버",
+    location: "8F / 중회의실",
+    maxPeople: 80,
+    area: "173",
+    price: 770000,
+    images: [
+      { src: "/images/contents/seminar06_img01.jpg" },
+      { src: "/images/contents/seminar06_img02.jpg" },
+      { src: "/images/contents/seminar06_img03.jpg" },
+    ],
+  },
+  {
     name: "자스민",
     location: "8F / 중회의실",
     maxPeople: 50,
     area: "138.84",
-    price: 462000,
+    price: 660000,
     images: [
       { src: "/images/contents/seminar05_img01.jpg" },
       { src: "/images/contents/seminar05_img02.jpg" },
@@ -599,15 +582,39 @@ const Seminars: SeminarInfoProps[] = [
     ],
   },
   {
-    name: "클로버",
-    location: "8F / 중회의실",
-    maxPeople: 80,
-    area: "173",
-    price: 462000,
+    name: "가람",
+    location: "1F / 소회의실",
+    maxPeople: 10,
+    area: "85.95",
+    price: 440000,
     images: [
-      { src: "/images/contents/seminar06_img01.jpg" },
-      { src: "/images/contents/seminar06_img02.jpg" },
-      { src: "/images/contents/seminar06_img03.jpg" },
+      { src: "/images/contents/seminar01_img01.jpg" },
+      { src: "/images/contents/seminar01_img02.jpg" },
+      { src: "/images/contents/seminar01_img03.jpg" },
+    ],
+  },
+  {
+    name: "누리",
+    location: "1F / 소회의실",
+    maxPeople: 10,
+    area: "85.95",
+    price: 440000,
+    images: [
+      { src: "/images/contents/seminar01_img01.jpg" },
+      { src: "/images/contents/seminar01_img02.jpg" },
+      { src: "/images/contents/seminar01_img03.jpg" },
+    ],
+  },
+  {
+    name: "오션",
+    location: "2F / 소회의실",
+    maxPeople: 20,
+    area: "59.28",
+    price: 220000,
+    images: [
+      { src: "/images/contents/seminar02_img01.jpg" },
+      { src: "/images/contents/seminar02_img02.jpg" },
+      { src: "/images/contents/seminar02_img03.jpg" },
     ],
   },
 ];
@@ -1091,10 +1098,10 @@ export default function EstimatePage() {
   };
 
   const infoItems01 = [
-    "하단리스트의 선택할 연회장/객실을 장바구니 버튼을 클릭하여 담습니다.",
+    "하단리스트의 선택할 세미나실/객실을 장바구니 버튼을 클릭하여 담습니다.",
     "오른쪽 가견적 산출프로그램에서 담긴 정보를 확인합니다.",
     "담긴 정보의 이용기간 및 수량을 확인 후 선택합니다 (객실은 숙박일정을 먼저 입력 후 선택이 가능합니다)",
-    "연회장 및 객실 정보 입력 후 가견적서 발행 바로가기 버튼이 나오면, 클릭하여 가견적서 발행 페이지로 이동합니다",
+    "세미나실 및 객실 정보 입력 후 가견적서 발행 바로가기 버튼이 나오면, 클릭하여 가견적서 발행 페이지로 이동합니다",
   ];
 
   function getNightsDays(checkIn: DateInfo | null, checkOut: DateInfo | null) {
@@ -1131,15 +1138,15 @@ export default function EstimatePage() {
     setSelectedRangeText("");
   }
 
-  // 연회장/객실 가격적 산출 프로그램 상태 추가
+  // 세미나실/객실 가격적 산출 프로그램 상태 추가
   const hallList = [
-    "누리",
-    "가람",
-    "오션",
     "그랜드볼룸",
     "시걸",
-    "자스민",
     "클로버",
+    "자스민",
+    "가람",
+    "누리",
+    "오션",
   ];
   const roomList = ["트윈", "트리플", "디럭스", "코리안", "패밀리"];
   const [hallDays, setHallDays] = React.useState(
@@ -1175,7 +1182,7 @@ export default function EstimatePage() {
     });
   };
 
-  // 세미나실(연회장) 총 금액 계산
+  // 세미나실 총 금액 계산
   const seminarTotal = React.useMemo(() => {
     return Seminars.reduce((sum, seminar, idx) => {
       return sum + seminar.price * (hallDays[idx] || 0);
@@ -1229,7 +1236,7 @@ export default function EstimatePage() {
 
   return (
     <PageContainer>
-      <Heading mb="-50px" color="#373636" fontSize="2xl" fontWeight="700">
+      <Heading color="#373636" fontSize="2xl" fontWeight="700">
         가견적 산출방법
       </Heading>
       <InfoBoxList01 items={infoItems01} />
@@ -1248,7 +1255,7 @@ export default function EstimatePage() {
             fontWeight="700"
             lineHeight="1.5"
           >
-            연회장 (세미나실)
+            세미나실
           </Heading>
           <Box>
             {Seminars.map((Seminar, index) => (
@@ -1395,7 +1402,7 @@ export default function EstimatePage() {
           top="80px"
           zIndex={2}
         >
-          {/* 연회장/객실 가격적 산출 프로그램 UI */}
+          {/* 세미나실/객실 가격적 산출 프로그램 UI */}
           <Box bg="#F7F8FB" borderRadius="2xl" px={10} py={5} mx="auto">
             {/* 상단 타이틀 */}
             <Flex align="center" gap={2} mb={2}>
@@ -1417,7 +1424,7 @@ export default function EstimatePage() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                연회장/객실 가견견적 산출 프로그램
+                세미나실/객실 가견적 산출 프로그램
               </Text>
             </Flex>
             <Text
@@ -1430,12 +1437,12 @@ export default function EstimatePage() {
               p={1}
               textAlign="center"
             >
-              선택하신 연회장 정보가 표시됩니다
+              선택하신 세미나실 정보가 표시됩니다
             </Text>
-            {/* 연회장 테이블 */}
+            {/* 세미나실 테이블 */}
             <Box bg="white" borderRadius="lg" p={3} mb={4}>
               <Flex fontWeight="600" color="#0C8EA4" fontSize="sm" mb={2}>
-                <Box flex="1">연회장명</Box>
+                <Box flex="1">세미나실명</Box>
                 <Box w="120px" textAlign="center">
                   이용기간(일)
                 </Box>

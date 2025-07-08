@@ -286,7 +286,7 @@ export default function InfoTopBox({
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                mt={{ base: "10px", md: "20px", lg: "60px" }}
+                mt={{ base: "30px", md: "20px", lg: "60px" }}
                 mb="15px"
                 color="#393939"
                 fontWeight="semibold"
