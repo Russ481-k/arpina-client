@@ -9,7 +9,7 @@ import {
   AreaIcon,
   CartIcon,
 } from "@/components/icons/EstimateIcons";
-import { CartItem, Seminar } from "@/types/estimate";
+import { CartItem } from "@/types/estimate";
 
 interface SeminarImage {
   src: string;

@@ -251,13 +251,38 @@ const DateSelectionStep = ({
 };
 
 const ItemSelectionStep = ({ handlePrev }: { handlePrev: () => void }) => {
-  const { selectedServices, addToCart } = useEstimateContext();
+  const {
+    selectedServices,
+    addToCart,
+    cart,
+    checkInDate,
+    checkOutDate,
+    totalAmount,
+  } = useEstimateContext();
   const [roomQuantities, setRoomQuantities] = React.useState<{
     [key: string]: number;
   }>({});
 
   const handleQuantityChange = (name: string, value: number) => {
     setRoomQuantities((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleGenerateQuote = () => {
+    if (!checkInDate || !checkOutDate) {
+      alert("날짜가 선택되지 않았습니다.");
+      return;
+    }
+    const quoteData = {
+      cart,
+      checkInDate,
+      checkOutDate,
+      totalAmount,
+    };
+
+    const serializedData = JSON.stringify(quoteData);
+    const encodedData = encodeURIComponent(serializedData);
+    const url = `/rooms/estimate/sheet?data=${encodedData}`;
+    window.open(url, "_blank");
   };
 
   const seminarContent = (
@@ -318,7 +343,9 @@ const ItemSelectionStep = ({ handlePrev }: { handlePrev: () => void }) => {
         <Button onClick={handlePrev} variant="outline">
           이전
         </Button>
-        <Button colorPalette="blue">견적 완료하기</Button>
+        <Button colorPalette="blue" onClick={handleGenerateQuote}>
+          견적 완료하기
+        </Button>
       </HStack>
     </Box>
   );

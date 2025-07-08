@@ -16,8 +16,8 @@ import React from "react";
 import {
   AreaIcon,
   BedIcon,
-  CheckIcon,
   CartIcon,
+  CheckIcon,
 } from "@/components/icons/EstimateIcons";
 import { CartItem } from "@/types/estimate";
 
@@ -223,6 +223,7 @@ export const RoomInfo = ({
                 quantity: roomQuantities[name] || 1,
               })
             }
+            cursor="pointer"
           >
             <CartIcon />
           </Box>
