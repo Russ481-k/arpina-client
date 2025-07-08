@@ -1128,6 +1128,7 @@ export interface GroupReservationInquiry {
   customerRegion?: string;
   contactPersonName: string;
   contactPersonDpt?: string;
+  contactPersonTel?: string;
   contactPersonPhone: string;
   contactPersonEmail: string;
   privacyAgreed: boolean;

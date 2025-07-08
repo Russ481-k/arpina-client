@@ -105,6 +105,10 @@ export const ArticleDetailDialog = ({
                       </Field.Root>
                       <Field.Root>
                         <Field.Label>연락처</Field.Label>
+                        <Text>{inquiry.contactPersonTel}</Text>
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>휴대전화</Field.Label>
                         <Text>{inquiry.contactPersonPhone}</Text>
                       </Field.Root>
                       <Field.Root>
