@@ -702,7 +702,7 @@ const BoardPreview = React.memo(function BoardPreview({
 
   const currentSkinType = board?.skinType;
   const articlesData = articlesApiResponse?.data;
-  console.log(articles);
+
   return (
     <Layout currentPage="홈" isPreview={true} menus={menus}>
       <HeroSection slideContents={[heroData]} />

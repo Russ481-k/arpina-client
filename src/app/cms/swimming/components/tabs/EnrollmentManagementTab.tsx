@@ -396,13 +396,6 @@ export const EnrollmentManagementTab = ({
     [enrollmentIdToCancel, adminCancelEnrollmentMutation]
   );
 
-  const handleDiscountApproval = useCallback(
-    (enrollId: number, status: "APPROVED" | "DENIED") => {
-      console.log("할인 승인/거절:", enrollId, status);
-    },
-    []
-  );
-
   const openMemoDialog = useCallback((data: EnrollmentData) => {
     setSelectedUserForMemo(data);
   }, []);
@@ -419,9 +412,8 @@ export const EnrollmentManagementTab = ({
     () => ({
       openMemoDialog,
       adminCancelEnrollment: handleAdminCancelRequest,
-      handleDiscountApproval,
     }),
-    [openMemoDialog, handleAdminCancelRequest, handleDiscountApproval]
+    [openMemoDialog, handleAdminCancelRequest]
   );
 
   const filteredEnrollmentsForGrid = useMemo(() => {

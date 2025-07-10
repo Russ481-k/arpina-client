@@ -22,7 +22,6 @@ export default function Home() {
   const treeMenus = useMemo(() => {
     try {
       if (!menus?.success) {
-        console.error("Menu API call was not successful");
         return [];
       }
 

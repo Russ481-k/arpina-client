@@ -53,14 +53,10 @@ const KISPGPaymentFrame = forwardRef<
     data: any,
     fallbackEnrollId: number
   ): number => {
-    console.log("🔍 Extracting enrollId from response data:", data);
-    console.log("🔄 Fallback enrollId:", fallbackEnrollId);
-
     try {
       // 1. moid에서 추출 시도 (temp_enrollId_timestamp 또는 enroll_enrollId_timestamp)
       if (data.moid || paymentData.moid) {
         const moid = data.moid || paymentData.moid;
-        console.log("📋 Checking moid:", moid);
 
         const parts = moid.split("_");
         if (parts.length >= 2) {
@@ -68,10 +64,6 @@ const KISPGPaymentFrame = forwardRef<
           if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
             const extractedId = parseInt(parts[1]);
             if (!isNaN(extractedId)) {
-              console.log(
-                `✅ EnrollId extracted from moid (${parts[0]}_):`,
-                extractedId
-              );
               return extractedId;
             }
           }
@@ -81,7 +73,6 @@ const KISPGPaymentFrame = forwardRef<
       // 2. mbsReserved1에서 추출 시도 (temp_enrollId 또는 enroll_enrollId)
       if (data.mbsReserved1 || paymentData.mbsReserved1) {
         const mbsReserved1 = data.mbsReserved1 || paymentData.mbsReserved1;
-        console.log("📋 Checking mbsReserved1:", mbsReserved1);
 
         const parts = mbsReserved1.split("_");
         if (parts.length >= 2) {
@@ -89,10 +80,6 @@ const KISPGPaymentFrame = forwardRef<
           if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
             const extractedId = parseInt(parts[1]);
             if (!isNaN(extractedId)) {
-              console.log(
-                `✅ EnrollId extracted from mbsReserved1 (${parts[0]}_):`,
-                extractedId
-              );
               return extractedId;
             }
           }
@@ -101,17 +88,11 @@ const KISPGPaymentFrame = forwardRef<
 
       // 3. ordNo에서 추출 시도 (추가 대안)
       if (data.ordNo) {
-        console.log("📋 Checking ordNo:", data.ordNo);
-
         const parts = data.ordNo.split("_");
         if (parts.length >= 2) {
           if ((parts[0] === "temp" || parts[0] === "enroll") && parts[1]) {
             const extractedId = parseInt(parts[1]);
             if (!isNaN(extractedId)) {
-              console.log(
-                `✅ EnrollId extracted from ordNo (${parts[0]}_):`,
-                extractedId
-              );
               return extractedId;
             }
           }
@@ -121,16 +102,9 @@ const KISPGPaymentFrame = forwardRef<
       // 4. 직접 enrollId 필드에서 추출 시도
       if (data.enrollId && !isNaN(parseInt(data.enrollId))) {
         const extractedId = parseInt(data.enrollId);
-        console.log(
-          "✅ EnrollId extracted from direct enrollId field:",
-          extractedId
-        );
         return extractedId;
       }
 
-      console.log(
-        "⚠️ Could not extract enrollId from response, using fallback"
-      );
       return fallbackEnrollId;
     } catch (error) {
       console.error("💥 Error extracting enrollId from response:", error);
@@ -140,34 +114,11 @@ const KISPGPaymentFrame = forwardRef<
 
   // KISPG 결제창에서 오는 메시지 처리 (JSP의 returnData 함수와 동일한 역할)
   const handleKISPGMessage = (event: MessageEvent) => {
-    console.log("📨 Received message from iframe:", event);
-    console.log("📊 Message origin:", event.origin);
-    console.log("📦 Message data:", event.data);
-
     // KISPG에서 오는 메시지는 특정 구조를 가져야 함
     // JSP 샘플에 따르면: { resultCode: '0000', data: {...} } 형태
     // 하지만 실제 KISPG는 다른 형태일 수 있음
     const { resultCode, resultCd, data } = event.data;
     const actualResultCode = resultCode || resultCd; // 두 가지 모두 체크
-
-    console.log("🧩 Extracted fields:", {
-      resultCode,
-      resultCd,
-      actualResultCode,
-      data,
-      allKeys: Object.keys(event.data),
-    });
-
-    // 🔍 전체 KISPG 파라미터 상세 로깅
-    console.log("🔍 Detailed KISPG Parameter Analysis:");
-    console.log("🏷️ Payment Result Fields:");
-
-    // 🐛 디버깅: 데이터 구조 정확히 파악
-    console.log("🐛 DEBUG - data variable:", data);
-    console.log("🐛 DEBUG - event.data:", event.data);
-    console.log("🐛 DEBUG - typeof data:", typeof data);
-    console.log("🐛 DEBUG - data is null:", data === null);
-    console.log("🐛 DEBUG - data is undefined:", data === undefined);
 
     const kispgFields = [
       "resultCd",
@@ -209,11 +160,6 @@ const KISPGPaymentFrame = forwardRef<
     // data가 존재하고 객체이면 data 사용, 아니면 event.data 사용
     const actualPaymentData =
       data && typeof data === "object" ? data : event.data;
-    console.log("🎯 Selected actualPaymentData:", actualPaymentData);
-    console.log(
-      "🎯 actualPaymentData keys:",
-      Object.keys(actualPaymentData || {})
-    );
 
     const receivedFields: { [key: string]: any } = {};
     const missingFields: string[] = [];
@@ -226,19 +172,6 @@ const KISPGPaymentFrame = forwardRef<
       }
     });
 
-    console.log("✅ Received KISPG Fields:", receivedFields);
-    console.log("❌ Missing KISPG Fields:", missingFields);
-    console.log(
-      "🎯 Total Fields in Payment Data:",
-      Object.keys(actualPaymentData || {}).length
-    );
-    console.log(
-      "📋 All Payment Data Fields:",
-      Object.keys(actualPaymentData || {})
-    );
-    console.log("🎯 Total Fields in Message:", Object.keys(event.data).length);
-    console.log("📋 All Message Fields:", Object.keys(event.data));
-
     // resultCode가 없으면 KISPG 메시지가 아님 - 하지만 다른 필드명일 수 있음
     if (actualResultCode === undefined || actualResultCode === null) {
       // KISPG 메시지인지 다른 방법으로 확인
@@ -249,40 +182,24 @@ const KISPGPaymentFrame = forwardRef<
         event.data.hasOwnProperty("moid");
 
       if (hasKISPGFields) {
-        console.log(
-          "🎯 Possible KISPG message without standard resultCode:",
-          event.data
-        );
         // 다른 결제 성공 지표가 있는지 확인
         if (event.data.type === "KISPG_PAYMENT_RESULT" && event.data.success) {
-          console.log("🎉 Found KISPG success message with different format!");
           submitToResultPage(event.data);
           return;
         }
       }
 
-      console.log(
-        "❌ Not a KISPG payment message - missing resultCode/resultCd"
-      );
       return;
     }
 
-    console.log("✅ Valid KISPG message - Result Code:", actualResultCode);
-
     if (actualResultCode === "0000") {
       // 결제 성공 - JSP의 receive_result 함수와 동일한 로직
-      console.log("🎉 Payment successful, submitting to result page");
-      console.log("💳 Success data being passed:", data || event.data);
       submitToResultPage(data || event.data);
     } else if (actualResultCode === "XXXX") {
       // 인증 실패
-      console.log("🚫 Payment authentication failed:", actualResultCode);
-      console.log("💥 Auth failure data:", data || event.data);
       handlePaymentFailure(data || event.data, "인증에 실패했습니다.");
     } else {
       // 기타 실패
-      console.log("💥 Payment failed with code:", actualResultCode);
-      console.log("💥 Failure data:", data || event.data);
       handlePaymentFailure(
         data || event.data,
         data?.resultMsg ||
@@ -294,8 +211,6 @@ const KISPGPaymentFrame = forwardRef<
 
   // 결제 실패 처리 함수
   const handlePaymentFailure = (data: any, message: string) => {
-    console.log("Handling payment failure:", { data, message });
-
     // 결제창 닫기
     setShowPaymentFrame(false);
     setIsPaymentInProgress(false);
@@ -304,7 +219,6 @@ const KISPGPaymentFrame = forwardRef<
     if (messageHandlerRef.current) {
       window.removeEventListener("message", messageHandlerRef.current);
       messageHandlerRef.current = null;
-      console.log("Message listener removed after payment failure");
     }
 
     // 실패 토스터 표시
@@ -323,10 +237,6 @@ const KISPGPaymentFrame = forwardRef<
 
   // JSP의 receive_result 함수와 동일한 로직 - 폼을 생성해서 결과 페이지로 POST
   const submitToResultPage = async (data: any) => {
-    console.log("🚀 submitToResultPage called with data:", data);
-    console.log("💳 Current paymentData:", paymentData);
-    console.log("🆔 Current enrollId prop:", enrollId);
-
     // 🔍 KISPG 결제 결과 파라미터 모두 추출 및 로깅
     const kispgResult: KISPGPaymentResultDto = {
       // 기본 결제 정보
@@ -384,17 +294,6 @@ const KISPGPaymentFrame = forwardRef<
       ...data, // 모든 원본 데이터도 포함
     };
 
-    console.log("📋 Complete KISPG Payment Result Parameters:", kispgResult);
-    console.log("🎯 Key Payment Info:", {
-      resultCode: kispgResult.resultCd,
-      transactionId: kispgResult.tid,
-      amount: kispgResult.amt,
-      paymentMethod: kispgResult.payMethod,
-      cardCompany: kispgResult.fnNm,
-      approvalNumber: kispgResult.appNo,
-      paymentDateTime: kispgResult.appDtm,
-    });
-
     // 결제창 먼저 닫기
     setShowPaymentFrame(false);
     setIsPaymentInProgress(false);
@@ -403,16 +302,11 @@ const KISPGPaymentFrame = forwardRef<
     if (messageHandlerRef.current) {
       window.removeEventListener("message", messageHandlerRef.current);
       messageHandlerRef.current = null;
-      console.log(
-        "🧹 Message listener removed after payment processing attempt"
-      );
     }
 
     let processingToastId: string | number | undefined = undefined;
 
     try {
-      console.log("✅ KISPG 인증 성공! 백엔드 승인 API 호출 시작...");
-
       // 승인 처리 중이라는 중간 상태 알림
       processingToastId = toaster.create({
         title: "승인 처리 중",
@@ -429,19 +323,13 @@ const KISPGPaymentFrame = forwardRef<
         kispgPaymentResult: kispgResult, // 전체 KISPG 결과 전달
       };
 
-      console.log("📬 Sending to backend approval API:", approvalRequestData);
-
       // 2. 백엔드 승인 API 호출
       const approvalResponse =
         await swimmingPaymentService.approvePaymentAndCreateEnrollment(
           approvalRequestData
         );
 
-      console.log("📬 Backend approval API response:", approvalResponse);
-
       if (approvalResponse && approvalResponse.success) {
-        console.log("✅ 백엔드 승인 및 등록 성공!", approvalResponse.data);
-
         if (processingToastId) toaster.dismiss(processingToastId);
         toaster.create({
           title: "결제 및 신청 완료",
@@ -538,12 +426,9 @@ const KISPGPaymentFrame = forwardRef<
       // iframe이 로드된 후 폼 제출 및 메시지 리스너 등록
       setTimeout(() => {
         if (formRef.current && iframeRef.current) {
-          console.log("Submitting payment form to iframe");
-
           // 메시지 리스너 등록 (폼 제출 직전에)
           messageHandlerRef.current = handleKISPGMessage;
           window.addEventListener("message", handleKISPGMessage, false);
-          console.log("Message listener registered for KISPG payment");
 
           formRef.current.submit();
         }
@@ -581,7 +466,6 @@ const KISPGPaymentFrame = forwardRef<
     if (messageHandlerRef.current) {
       window.removeEventListener("message", messageHandlerRef.current);
       messageHandlerRef.current = null;
-      console.log("Message listener removed when closing payment frame");
     }
 
     if (onPaymentClose) {

@@ -1,17 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useCallback } from "react";
-import {
-  Box,
-  Button,
-  Heading,
-  Text,
-  Flex,
-  Link as ChakraLink,
-  Badge,
-  HStack,
-  Icon,
-} from "@chakra-ui/react";
+import { Box, Text, Flex, Badge, HStack, Icon } from "@chakra-ui/react";
 import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api";
 import { PaginationData } from "@/types/common";
@@ -160,12 +150,6 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
   const gridRef = useRef<AgGridReact<Post>>(null); // AG Grid ref
   const { colorMode } = useColorMode(); // For theme
   const colors = useColors(); // For theme
-
-  console.log(posts);
-
-  const canWrite =
-    pageDetails.boardWriteAuth &&
-    pageDetails.boardWriteAuth !== "NONE_OR_SIMILAR_RESTRICTIVE_VALUE";
 
   const handlePageChange = (page: number) => {
     router.push(

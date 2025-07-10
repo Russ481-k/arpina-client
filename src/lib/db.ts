@@ -23,9 +23,7 @@ const pool = mysql.createPool({
 });
 
 // 연결 풀 이벤트 핸들러
-pool.on("connection", () => {
-  console.log("New connection established");
-});
+pool.on("connection", () => {});
 
 // API 라우트에서 사용할 수 있는 데이터베이스 연결 함수
 export async function getConnection() {
