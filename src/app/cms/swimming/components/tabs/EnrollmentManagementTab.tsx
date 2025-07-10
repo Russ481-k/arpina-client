@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import {
   Box,
   Text,
@@ -11,20 +11,15 @@ import {
   Spinner,
   HStack,
 } from "@chakra-ui/react";
-import {
-  SearchIcon,
-  UserIcon,
-  XIcon,
-  MessageSquareIcon,
-  Edit2Icon,
-  DownloadIcon,
-  PlusCircleIcon,
-  PlusIcon,
-} from "lucide-react";
+import { XIcon, MessageSquareIcon, PlusIcon } from "lucide-react";
 import { useColors } from "@/styles/theme";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
-import type { EnrollAdminResponseDto, PaginatedResponse } from "@/types/api";
+import type {
+  EnrollAdminResponseDto,
+  PaginatedResponse,
+  ApiResponse,
+} from "@/types/api";
 import { UiDisplayStatus } from "@/types/statusTypes";
 import { AgGridReact } from "ag-grid-react";
 import {
@@ -235,17 +230,22 @@ export const EnrollmentManagementTab = ({
     number | null
   >(null);
 
-  const updateLockerNoMutation = useMutation({
-    mutationFn: ({
-      enrollId,
-      lockerNo,
-    }: {
-      enrollId: number;
-      lockerNo: string | null;
-    }) => adminApi.updateEnrollmentLockerNo(enrollId, { lockerNo }),
-    onSuccess: () => {
+  const updateLockerNoMutation = useMutation<
+    ApiResponse<EnrollAdminResponseDto>,
+    Error,
+    { enrollId: number; lockerNo: string | null }
+  >({
+    mutationFn: ({ enrollId, lockerNo }) =>
+      adminApi.updateEnrollmentLockerNo(enrollId, { lockerNo }),
+    onSuccess: (response, variables) => {
+      const userName = response.data?.userName || "회원";
+      const lockerNo = variables.lockerNo;
+
       toaster.success({
-        title: "사물함 번호가 업데이트되었습니다.",
+        title: "사물함 번호 업데이트",
+        description: lockerNo
+          ? `${userName} 님의 사물함 번호가 ${lockerNo}(으)로 등록되었습니다.`
+          : `${userName} 님의 사물함 번호가 해제되었습니다.`,
       });
       queryClient.invalidateQueries({
         queryKey: enrollmentQueryKeys.list(
@@ -356,6 +356,7 @@ export const EnrollmentManagementTab = ({
         width: 110,
         cellStyle: {
           padding: "0px",
+          justifyContent: "center",
         } as CellStyle,
       },
       {
