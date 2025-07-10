@@ -33,6 +33,7 @@ import {
   AllCommunityModule,
   type ICellRendererParams,
   type ValueFormatterParams,
+  type CellStyle,
 } from "ag-grid-community";
 
 import { useColorMode } from "@/components/ui/color-mode";
@@ -45,10 +46,14 @@ import { getMembershipLabel } from "@/lib/utils/displayUtils";
 // Import the new dialog components
 import {
   UserMemoDialog,
-  type EnrollmentData,
+  type EnrollmentData as UserMemoEnrollmentData,
 } from "./enrollmentManagement/UserMemoDialog";
 import { TemporaryEnrollmentDialog } from "./enrollmentManagement/TemporaryEnrollmentDialog";
 import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
+
+export type EnrollmentData = UserMemoEnrollmentData & {
+  lockerNo?: string | null;
+};
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -216,6 +221,7 @@ export const EnrollmentManagementTab = ({
         userGender: dto.userGender || "OTHER",
         userLoginId: dto.userLoginId || "N/A",
         userPhone: dto.userPhone || "N/A",
+        lockerNo: dto.lockerNo,
       })
     );
   }, [paginatedEnrollmentsData]);
@@ -229,10 +235,53 @@ export const EnrollmentManagementTab = ({
     number | null
   >(null);
 
+  const updateLockerNoMutation = useMutation({
+    mutationFn: ({
+      enrollId,
+      lockerNo,
+    }: {
+      enrollId: number;
+      lockerNo: string | null;
+    }) => adminApi.updateEnrollmentLockerNo(enrollId, { lockerNo }),
+    onSuccess: () => {
+      toaster.success({
+        title: "사물함 번호가 업데이트되었습니다.",
+      });
+      queryClient.invalidateQueries({
+        queryKey: enrollmentQueryKeys.list(
+          lessonIdFilter,
+          selectedYear,
+          selectedMonth,
+          {
+            payStatus: filters.payStatus || undefined,
+          }
+        ),
+      });
+    },
+    onError: (error) => {
+      toaster.error({
+        title: "업데이트 실패",
+        description: error.message,
+      });
+    },
+  });
+
+  const onCellValueChanged = useCallback(
+    (params: any) => {
+      const { colDef, newValue, data } = params;
+      if (colDef.field === "lockerNo") {
+        updateLockerNoMutation.mutate({
+          enrollId: data.enrollId,
+          lockerNo: newValue,
+        });
+      }
+    },
+    [updateLockerNoMutation]
+  );
+
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
   const borderColor = colorMode === "dark" ? "#2D3748" : "#E2E8F0";
-  const primaryColor = colors.primary?.default || "#2a7fc1";
   const agGridTheme =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
@@ -299,6 +348,15 @@ export const EnrollmentManagementTab = ({
           alignItems: "center",
           justifyContent: "center",
         },
+      },
+      {
+        headerName: "사물함 번호",
+        field: "lockerNo",
+        editable: true,
+        width: 110,
+        cellStyle: {
+          padding: "0px",
+        } as CellStyle,
       },
       {
         headerName: "구분",
@@ -517,6 +575,7 @@ export const EnrollmentManagementTab = ({
           headerHeight={36}
           rowHeight={40}
           context={agGridContext}
+          onCellValueChanged={onCellValueChanged}
           getRowStyle={() => ({
             color: textColor,
             background: bg,

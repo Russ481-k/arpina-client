@@ -630,6 +630,8 @@ export interface EnrollAdminResponseDto {
   userLoginId: string | null; // User login ID from user table
   membershipType?: string; // Added field for discount/membership type
   renewalFlag: boolean;
+  memo?: string;
+  lockerNo?: string | null;
 }
 
 // CancelRequestDto for GET /admin/swimming/enrolls/cancel-requests
