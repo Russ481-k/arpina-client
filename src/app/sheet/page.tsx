@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import {
   Box,
   Heading,
@@ -35,7 +35,7 @@ const getWeekdayWeekendNights = (checkIn: Date, checkOut: Date) => {
   return { weekday, weekend };
 };
 
-export default function SheetPage() {
+const SheetContents = () => {
   const searchParams = useSearchParams();
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
 
@@ -339,5 +339,19 @@ export default function SheetPage() {
         </HStack>
       </VStack>
     </Box>
+  );
+};
+
+export default function SheetPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box textAlign="center" p={10}>
+          <Text>견적 정보를 불러오는 중입니다...</Text>
+        </Box>
+      }
+    >
+      <SheetContents />
+    </Suspense>
   );
 }

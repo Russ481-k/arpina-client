@@ -53,7 +53,7 @@ export const EstimateStepper = () => {
           <DateSelectionStep handleNext={handleNext} handlePrev={handlePrev} />
         );
       case 3:
-        return <ItemSelectionStep handlePrev={handlePrev} />;
+        return <ItemSelectionStep />;
       default:
         return <Text>알 수 없는 단계</Text>;
     }

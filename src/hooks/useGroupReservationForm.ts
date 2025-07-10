@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
-import { GroupReservationInquiryData, RoomReservationRequest } from "@/lib/api/reservation";
+import {
+  GroupReservationInquiryData,
+  RoomReservationRequest,
+} from "@/lib/api/reservation";
 import { toaster } from "@/components/ui/toaster";
 import { reservationApi } from "@/lib/api/reservation";
-import {
-  validateEmail,
-  validatePhoneNumber,
-} from "@/lib/utils/validationUtils";
+import { validateEmail } from "@/lib/utils/validationUtils";
 import {
   formatPhoneNumberWithHyphen,
   isValidKoreanPhoneNumber,
@@ -22,12 +22,11 @@ type ValidationErrors = {
 };
 
 type TouchedFields = {
-  [K in keyof Omit<
-    GroupReservationInquiryData,
-    "roomReservations"
-  >]?: boolean;
+  [K in keyof Omit<GroupReservationInquiryData, "roomReservations">]?: boolean;
 } & {
-  roomReservations?: { [index: number]: { [K in keyof RoomReservationRequest]?: boolean } };
+  roomReservations?: {
+    [index: number]: { [K in keyof RoomReservationRequest]?: boolean };
+  };
 };
 
 const formatDate = (date: Date): string => {
@@ -97,7 +96,8 @@ const validateRoom = (room: RoomReservationRequest): RoomValidationErrors => {
 };
 
 export function useGroupReservationForm() {
-  const [formData, setFormData] = useState<GroupReservationInquiryData>(initialFormData);
+  const [formData, setFormData] =
+    useState<GroupReservationInquiryData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
@@ -112,19 +112,24 @@ export function useGroupReservationForm() {
       field: K,
       value: GroupReservationInquiryData[K]
     ) => {
-      if ((field === "contactPersonPhone" || field === "contactPersonTel") && typeof value === "string") {
+      if (
+        (field === "contactPersonPhone" || field === "contactPersonTel") &&
+        typeof value === "string"
+      ) {
         const cleaned = value.replace(/\D/g, "");
         if (cleaned.length > 11) {
           return;
         }
         const formattedPhone = formatPhoneNumberWithHyphen(cleaned);
-        console.log(`${field} 값 변경:`, { 입력값: value, 포맷된값: formattedPhone });
         setFormData((prev) => ({ ...prev, [field]: formattedPhone }));
       } else {
         setFormData((prev) => ({ ...prev, [field]: value }));
       }
       if (errors[field as keyof ValidationErrors]) {
-        setErrors((prev) => ({ ...prev, [field as keyof ValidationErrors]: undefined }));
+        setErrors((prev) => ({
+          ...prev,
+          [field as keyof ValidationErrors]: undefined,
+        }));
       }
     },
     [errors]
@@ -138,10 +143,7 @@ export function useGroupReservationForm() {
         const originalRoom = newRooms[index];
         const updatedRoom = { ...originalRoom, [field]: value };
 
-        if (
-          field === "roomSizeDesc" &&
-          value !== originalRoom.roomSizeDesc
-        ) {
+        if (field === "roomSizeDesc" && value !== originalRoom.roomSizeDesc) {
           updatedRoom.roomTypeDesc = "";
         }
 
@@ -173,7 +175,7 @@ export function useGroupReservationForm() {
         },
       }));
     },
-    [] 
+    []
   );
 
   const updateAndValidate = useCallback(
@@ -447,4 +449,4 @@ export function useGroupReservationForm() {
     updateAndValidate,
     clearFieldToFocus,
   };
-} 
+}
