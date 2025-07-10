@@ -62,9 +62,9 @@ const CartContent = () => {
 
   return (
     <VStack w="full" gap={4} align="stretch">
-      <Heading size="md">장바구니</Heading>
+      <Heading size="xl">선택 목록</Heading>
       {cart.length === 0 ? (
-        <Text>장바구니가 비어 있습니다.</Text>
+        <Text>선택 목록가 비어 있습니다.</Text>
       ) : (
         <VStack
           gap={4}
@@ -72,7 +72,7 @@ const CartContent = () => {
           separator={<Separator />}
           overflowY="auto"
           maxH="60vh"
-          p={4}
+          p={2}
         >
           {cart.map((item) => {
             const nights =
@@ -86,7 +86,7 @@ const CartContent = () => {
                   <Text fontWeight="bold">{item.name}</Text>
                   <CloseButton
                     size="sm"
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => removeFromCart(item.productId)}
                   />
                 </HStack>
                 {item.type === "room" ? (
@@ -99,6 +99,9 @@ const CartContent = () => {
                         <IconButton
                           aria-label="decrease quantity"
                           size="xs"
+                          variant="subtle"
+                          colorPalette="blue"
+                          borderRadius="full"
                           onClick={() =>
                             updateCartItemQuantity(item.id, item.quantity - 1)
                           }
@@ -109,6 +112,9 @@ const CartContent = () => {
                         <IconButton
                           aria-label="increase quantity"
                           size="xs"
+                          variant="subtle"
+                          colorPalette="blue"
+                          borderRadius="full"
                           onClick={() =>
                             updateCartItemQuantity(item.id, item.quantity + 1)
                           }
@@ -165,8 +171,9 @@ const CartContent = () => {
   );
 };
 
-export const EstimateCart = () => {
+export const EstimateCart = ({ handlePrev }: { handlePrev: () => void }) => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
+  const { cart, generateQuote } = useEstimateContext();
 
   if (isMobile) {
     return (
@@ -174,15 +181,20 @@ export const EstimateCart = () => {
         <Drawer.Trigger asChild>
           <Button
             position="fixed"
-            bottom={4}
+            bottom={0}
             left="50%"
             transform="translateX(-50%)"
-            colorPalette="blue"
-            w="90%"
-            py={6}
+            style={{
+              backgroundColor: "#2E3192",
+              color: "white",
+            }}
+            w="100%"
+            p={0}
             boxShadow="lg"
+            zIndex={10}
+            borderRadius="none"
           >
-            장바구니 보기
+            선택 목록 ({cart.length})
           </Button>
         </Drawer.Trigger>
         <Portal>
@@ -190,15 +202,24 @@ export const EstimateCart = () => {
           <Drawer.Positioner>
             <Drawer.Content roundedTop="l3">
               <Drawer.Header>
-                <Drawer.Title>장바구니</Drawer.Title>
+                <Drawer.Title>선택 목록</Drawer.Title>
               </Drawer.Header>
               <Drawer.Body>
                 <CartContent />
               </Drawer.Body>
               <Drawer.Footer>
-                <Button w="full" colorPalette="blue" size="lg">
-                  가견적서 발행
-                </Button>
+                <HStack justify="space-between" w="full">
+                  <Button onClick={handlePrev} variant="outline">
+                    이전
+                  </Button>
+                  <Button
+                    colorPalette="blue"
+                    onClick={generateQuote}
+                    disabled={cart.length === 0}
+                  >
+                    가견적서 발행
+                  </Button>
+                </HStack>
               </Drawer.Footer>
               <Drawer.CloseTrigger asChild>
                 <CloseButton size="sm" />
@@ -221,9 +242,19 @@ export const EstimateCart = () => {
       borderRadius="lg"
     >
       <CartContent />
-      <Button w="full" colorPalette="blue" mt={6} size="lg">
-        가견적서 발행
-      </Button>
+      <HStack justify="space-between" mt={6}>
+        <Button size="lg" onClick={handlePrev} variant="outline">
+          이전
+        </Button>
+        <Button
+          colorPalette="blue"
+          size="lg"
+          onClick={generateQuote}
+          disabled={cart.length === 0}
+        >
+          가견적서 발행
+        </Button>
+      </HStack>
     </Box>
   );
 };

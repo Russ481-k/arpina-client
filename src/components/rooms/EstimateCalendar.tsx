@@ -1,14 +1,6 @@
 import React, { Dispatch, SetStateAction } from "react";
-import {
-  Box,
-  Flex,
-  Grid,
-  Text,
-  Button,
-  Icon,
-  Collapsible,
-} from "@chakra-ui/react";
-import { DateInfo, OpenChangeDetails } from "@/types/calendar";
+import { Box, Flex, Grid, Text, Button } from "@chakra-ui/react";
+import { DateInfo } from "@/types/calendar";
 
 interface EstimateCalendarProps {
   currentDate: Date;
@@ -28,6 +20,7 @@ interface EstimateCalendarProps {
   // Added for direct use in EstimateCalendar
   onApplyDates: () => void; // A callback to apply dates, passed from parent
   onResetDates: () => void; // A callback to reset dates, passed from parent
+  handlePrev: () => void;
 }
 
 const getDaysInMonth = (year: number, month: number) => {
@@ -52,12 +45,6 @@ const isDateInRange = (date: DateInfo, start: DateInfo, end: DateInfo) => {
   const endDate = new Date(end.year, end.month, end.day);
 
   return checkDate >= startDate && checkDate <= endDate;
-};
-
-const formatDate = (date: DateInfo) => {
-  return `${date.year}.${(date.month + 1)
-    .toString()
-    .padStart(2, "0")}.${date.day.toString().padStart(2, "0")}`;
 };
 
 const getNightsDays = (checkIn: DateInfo | null, checkOut: DateInfo | null) => {
@@ -88,6 +75,7 @@ export const EstimateCalendar = ({
   setIsOpen,
   onApplyDates,
   onResetDates,
+  handlePrev,
 }: EstimateCalendarProps) => {
   const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -338,11 +326,7 @@ export const EstimateCalendar = ({
 
   return (
     <Box p={4} backgroundColor="#F7F8FB">
-      <Flex
-        direction={{ base: "column", md: "row" }}
-        gap={4}
-        justify="space-between"
-      >
+      <Flex gap={4} justify="space-between">
         <Box display="flex" flexDirection="column" flex="1">
           {renderCalendarContent(
             currentDate,
@@ -366,6 +350,19 @@ export const EstimateCalendar = ({
         py={2}
         borderTop="1px solid #838383"
       >
+        <Button
+          px={4}
+          py={2}
+          borderRadius="md"
+          bg="#F8F8FA"
+          color="#2E3192"
+          fontWeight="bold"
+          border="1px solid #2E3192"
+          _hover={{ bg: "#E6F0FA" }}
+          onClick={handlePrev}
+        >
+          이전
+        </Button>
         <Button
           px={4}
           py={2}

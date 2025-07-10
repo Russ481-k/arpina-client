@@ -36,6 +36,9 @@ interface EstimateContextType {
   setCheckOutDate: Dispatch<SetStateAction<DateInfo | null>>;
   handleApplyDates: () => void;
   isDateSelectionValid: boolean;
+
+  // Quote Generation
+  generateQuote: () => void;
 }
 
 const EstimateContext = createContext<EstimateContextType | undefined>(
@@ -79,6 +82,23 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
   };
   const isDateSelectionValid = !!(checkInDate && checkOutDate);
 
+  // Quote Generation Logic
+  const generateQuote = () => {
+    if (!checkInDate || !checkOutDate) {
+      alert("날짜를 먼저 선택해주세요.");
+      return;
+    }
+    const data = {
+      cart,
+      totalAmount,
+      checkInDate,
+      checkOutDate,
+    };
+    const serializedData = JSON.stringify(data);
+    const encodedData = encodeURIComponent(serializedData);
+    window.open(`/sheet?data=${encodedData}`, "_blank");
+  };
+
   // Cart Logic
   const addToCart = (
     item: Omit<CartItem, "id" | "checkInDate" | "checkOutDate">
@@ -106,8 +126,10 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     setCart((prevCart) => [...prevCart, newItem]);
   };
 
-  const removeFromCart = (itemId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== itemId));
+  const removeFromCart = (productId: string) => {
+    setCart((prevCart) =>
+      prevCart.filter((item) => item.productId !== productId)
+    );
   };
 
   const updateCartItemQuantity = (itemId: string, newQuantity: number) => {
@@ -175,6 +197,7 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     setCheckOutDate,
     handleApplyDates,
     isDateSelectionValid,
+    generateQuote,
   };
 
   return (

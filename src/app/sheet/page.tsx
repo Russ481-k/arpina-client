@@ -14,6 +14,8 @@ import {
 import { rooms, Seminars } from "@/data/estimateData";
 import { CartItem } from "@/types/estimate";
 import { DateInfo } from "@/types/calendar";
+import Image from "next/image";
+import { PrinterIcon } from "lucide-react";
 
 interface QuoteData {
   cart: CartItem[];
@@ -100,7 +102,7 @@ export default function SheetPage() {
   );
 
   return (
-    <Box bg="#F7F8FB" p={{ base: 4, md: 8 }}>
+    <Box p={{ base: 4, md: 8 }}>
       <style>
         {`
           @media print {
@@ -121,52 +123,44 @@ export default function SheetPage() {
           }
         `}
       </style>
-      <VStack
-        align="stretch"
-        gap={6}
-        p={{ base: 4, md: 10 }}
-        maxW="1000px"
-        mx="auto"
-        bg="white"
-        boxShadow="md"
-        borderRadius="lg"
-      >
+      <VStack align="stretch" gap={6} maxW="1600px" mx="auto" bg="white">
         {/* Header */}
         <HStack justify="space-between" align="flex-start">
-          <VStack align="flex-start">
+          <VStack align="flex-start" gap={4} position="relative">
+            <Box mb={8}>
+              <Image
+                src="/images/logo/logo.png"
+                alt="logo"
+                width={240}
+                height={120}
+                objectFit="cover"
+              />
+            </Box>
             <Heading as="h1" size="lg" color="#2E3192">
               아르피나 단체예약 견적서
             </Heading>
             <Text fontSize="sm">
               부산광역시 해운대구 해운대해변로
               <br />
-              대표자: 신창호
+              대 표 자: 신 창 호 (인)
               <br />
               사업자등록번호: 383-82-00288
               <br />
               대표전화: 051-731-9800
-            </Text>
+            </Text>{" "}
+            <Box position="absolute" left={110} top={150} zIndex={10}>
+              <Image
+                src="/images/signature.png"
+                alt="직인"
+                width={40}
+                height={40}
+                style={{
+                  opacity: 0.8,
+                  transform: "rotate(-15deg)",
+                }}
+              />
+            </Box>
           </VStack>
-          <Box position="relative">
-            <Box
-              w="70px"
-              h="70px"
-              border="4px solid #ff0000"
-              borderRadius="full"
-            />
-            <Text
-              position="absolute"
-              top="50%"
-              left="50%"
-              transform="translate(-50%, -50%) rotate(-15deg)"
-              fontSize="lg"
-              fontWeight="bold"
-              color="#ff0000"
-              whiteSpace="nowrap"
-            >
-              (직인생략)
-            </Text>
-          </Box>
         </HStack>
 
         <HStack
@@ -332,8 +326,14 @@ export default function SheetPage() {
           </Text>
         </HStack>
 
-        <HStack className="no-print" justify="center" pt={8}>
-          <Button onClick={() => window.print()} colorScheme="blue" size="lg">
+        <HStack className="no-print" justify="right" pt={8}>
+          <Button
+            onClick={() => window.print()}
+            variant="surface"
+            colorPalette="yellow"
+            size="lg"
+          >
+            <PrinterIcon />
             견적서 인쇄 또는 PDF로 저장
           </Button>
         </HStack>

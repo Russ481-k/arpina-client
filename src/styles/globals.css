@@ -398,3 +398,29 @@ select:focus option {
   color: white;
   border-color: #08a4b4;
 }
+
+.swiper-pagination-bullet-active {
+  background: #3182ce !important;
+}
+
+/* Swiper Navigation Button Styles */
+.swiper-button-prev,
+.swiper-button-next {
+  color: #ffffff !important;
+  background-color: rgba(0, 0, 0, 0.25);
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 14px !important;
+  font-weight: 900;
+}

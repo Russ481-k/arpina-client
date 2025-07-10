@@ -10,11 +10,10 @@ import {
 import { EstimateStepper } from "@/components/rooms/estimate/EstimateStepper";
 
 const EstimateView = () => {
-  const { step } = useEstimateContext();
   return (
-    <Flex direction={{ base: "column", lg: "row" }} align="flex-start">
+    <Flex align="flex-start">
       <Box flex="1" m={0}>
-        <EstimateStepper step={step} />
+        <EstimateStepper />
       </Box>
     </Flex>
   );
