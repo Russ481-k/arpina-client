@@ -63,6 +63,7 @@ export default function Layout({
       <Box as="main" mx="auto" position="relative" w="full">
         <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
       </Box>
+      <MemoizedFooter />
     </Box>
   );
 }
