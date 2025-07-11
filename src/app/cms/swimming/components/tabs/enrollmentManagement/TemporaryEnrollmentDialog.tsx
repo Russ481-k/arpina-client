@@ -26,7 +26,6 @@ import type {
   EnrollAdminResponseDto,
 } from "@/types/api";
 
-// Copied from EnrollmentManagementTab, consider moving to a shared file or passing as prop
 const enrollmentQueryKeys = {
   all: ["adminEnrollments"] as const,
   list: (lessonId?: number | null, params?: any) =>
@@ -38,7 +37,6 @@ interface TemporaryEnrollmentDialogProps {
   isOpen: boolean;
   onClose: () => void;
   lessonIdFilter: number | null;
-  // queryClient: ReturnType<typeof useQueryClient>; // Pass queryClient if not using hook inside
 }
 
 export const TemporaryEnrollmentDialog: React.FC<
@@ -71,14 +69,13 @@ export const TemporaryEnrollmentDialog: React.FC<
         usesLocker: false,
         memo: "",
       });
-      onClose(); // Close dialog on success
+      onClose();
     },
     onError: (error) => {
       console.error(
         "임시 등록 실패 (TemporaryEnrollmentDialog):",
         error.message
       );
-      // Optionally, show a toastr message here
     },
   });
 
@@ -102,7 +99,6 @@ export const TemporaryEnrollmentDialog: React.FC<
     }
     if (!tempEnrollForm.userName.trim()) {
       console.error("이름 입력 필요 (TemporaryEnrollmentDialog)");
-      // Optionally, show a toastr or set an error state
       return;
     }
 
@@ -112,7 +108,6 @@ export const TemporaryEnrollmentDialog: React.FC<
     });
   };
 
-  // Reset form when dialog is closed externally or opened
   React.useEffect(() => {
     if (isOpen) {
       setTempEnrollForm({
@@ -122,7 +117,6 @@ export const TemporaryEnrollmentDialog: React.FC<
         memo: "",
       });
     } else {
-      // Reset mutation state if dialog is closed and mutation was triggered
       if (
         temporaryEnrollmentMutation.isError ||
         temporaryEnrollmentMutation.isSuccess

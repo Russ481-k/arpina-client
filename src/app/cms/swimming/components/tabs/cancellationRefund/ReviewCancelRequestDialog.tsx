@@ -40,7 +40,6 @@ import { toaster } from "@/components/ui/toaster";
 import type { EnrollmentPayStatus } from "@/types/statusTypes";
 import { AxiosError } from "axios";
 
-// API 응답 구조에 맞게 인터페이스 수정
 interface UICalculatedRefundDetails {
   usedDays: number;
   manualUsedDays?: number | null;
@@ -59,7 +58,6 @@ interface UIPaymentInfo {
 }
 
 export interface CancelRequestData {
-  // Dialog fields
   enrollId: number;
   userName: string;
   userLoginId: string;
@@ -84,7 +82,6 @@ export interface CancelRequestData {
   paymentStatus: string;
   adminComment?: string;
 
-  // Additional fields for the grid in CancellationRefundTab
   id?: string;
   paymentDisplayStatus?: EnrollmentPayStatus;
 }
@@ -95,7 +92,6 @@ interface ReviewCancelRequestDialogProps {
   selectedRequest: CancelRequestData | null;
 }
 
-// Helper functions (consider moving to a shared utility file)
 const formatCurrency = (
   amount: number | undefined | null,
   showWon: boolean = true
@@ -117,7 +113,6 @@ export const ReviewCancelRequestDialog: React.FC<
   const [finalRefundAmountInput, setFinalRefundAmountInput] = useState("0");
   const [isOverrideMode, setIsOverrideMode] = useState(false);
 
-  // 다이얼로그가 열릴 때 초기값 설정 및 API 호출
   useEffect(() => {
     if (selectedRequest && isOpen) {
       const initialDays =
@@ -125,7 +120,6 @@ export const ReviewCancelRequestDialog: React.FC<
         selectedRequest.calculatedRefundDetails?.systemCalculatedUsedDays;
 
       setManualUsedDaysInput(initialDays);
-      // API 응답 구조에 맞게 데이터 매핑
       setCurrentRefundDetails({
         usedDays:
           selectedRequest.calculatedRefundDetails?.systemCalculatedUsedDays,
@@ -151,7 +145,6 @@ export const ReviewCancelRequestDialog: React.FC<
         )
       );
 
-      // 초기 API 호출
       previewRefundMutation.mutate({
         enrollId: selectedRequest.enrollId,
         data: { manualUsedDays: initialDays },
@@ -169,7 +162,6 @@ export const ReviewCancelRequestDialog: React.FC<
     }
   }, [selectedRequest, isOpen]);
 
-  // Update final refund input when preview details change, but only if not in override mode
   useEffect(() => {
     if (currentRefundDetails && !isOverrideMode && !isFullRefund) {
       setFinalRefundAmountInput(
@@ -181,14 +173,12 @@ export const ReviewCancelRequestDialog: React.FC<
   const handleFullRefundChange = (checked: boolean) => {
     setIsFullRefund(checked);
     if (checked) {
-      // "Full Refund" is a manual override.
       setIsOverrideMode(true);
       const totalPaid =
         (selectedRequest?.paymentInfo.lessonPaidAmt ?? 0) +
         (selectedRequest?.paymentInfo.lockerPaidAmt ?? 0);
       setFinalRefundAmountInput(formatCurrency(totalPaid, false));
     } else {
-      // Unchecking reverts to calculation mode based on used days.
       setIsOverrideMode(false);
       setFinalRefundAmountInput(
         formatCurrency(currentRefundDetails?.finalRefundAmount ?? 0, false)
@@ -197,7 +187,7 @@ export const ReviewCancelRequestDialog: React.FC<
   };
 
   const handleFinalRefundAmountChange = (value: string) => {
-    setIsOverrideMode(true); // Enter override mode
+    setIsOverrideMode(true);
     const numericString = value.replace(/[^0-9]/g, "");
     const numericValue = parseInt(numericString, 10);
     const formattedValue =
@@ -215,7 +205,7 @@ export const ReviewCancelRequestDialog: React.FC<
   };
 
   const handleUsedDaysChange = (value: string) => {
-    setIsOverrideMode(false); // Exit override mode
+    setIsOverrideMode(false);
     const days = value === "" ? 0 : Math.max(0, parseInt(value, 10));
     setManualUsedDaysInput(days);
 
@@ -259,7 +249,6 @@ export const ReviewCancelRequestDialog: React.FC<
         };
         setCurrentRefundDetails(newRefundDetails);
 
-        // API 응답의 isFullRefund 값을 사용하여 UI 상태 업데이트
         if (refundDetailsPreview.isFullRefund) {
           const totalPaid =
             (selectedRequest?.paymentInfo.lessonPaidAmt ?? 0) +
@@ -268,7 +257,7 @@ export const ReviewCancelRequestDialog: React.FC<
         }
 
         setIsFullRefund(refundDetailsPreview.isFullRefund);
-        setIsOverrideMode(false); // 계산결과 반영 모드로 설정
+        setIsOverrideMode(false);
 
         toaster.create({
           title: "환불액 미리보기 업데이트됨",
@@ -304,7 +293,6 @@ export const ReviewCancelRequestDialog: React.FC<
         type: "success",
       });
       queryClient.invalidateQueries({ queryKey: ["adminCancelRequests"] });
-      // 신청자 관리 리스트도 리프레시
       queryClient.invalidateQueries({ queryKey: ["adminEnrollments"] });
       onClose();
     },

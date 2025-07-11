@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import { useCallback } from "react";
 import {
   Box,
   Heading,
   Text,
   Spinner,
   Flex,
-  Button,
   SimpleGrid,
 } from "@chakra-ui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +17,6 @@ import type {
   LockerInventoryUpdateRequestDto,
 } from "@/types/api";
 import { LockerCard, type LockerData } from "./lockerInventory/LockerCard";
-import { useColors } from "@/styles/theme";
 import { toaster } from "@/components/ui/toaster";
 
 const lockerInventoryQueryKey = ["lockerInventory"];
@@ -31,7 +29,6 @@ const transformDtoToCardData = (dto: LockerInventoryDto): LockerData => ({
 });
 
 export const LockerInventoryTab = () => {
-  const colors = useColors();
   const queryClient = useQueryClient();
 
   const {

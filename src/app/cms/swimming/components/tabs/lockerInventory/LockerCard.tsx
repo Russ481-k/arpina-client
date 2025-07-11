@@ -13,12 +13,11 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { EditIcon, SaveIcon, XIcon } from "lucide-react";
-import { useColors } from "@/styles/theme"; // Assuming useColors is accessible
+import { useColors } from "@/styles/theme";
 
-// Type for locker data item (can be shared if used elsewhere)
 export interface LockerData {
   gender: "MALE" | "FEMALE";
-  totalQuantity: number;
+  totalQuantity: number; // 총 수량
   usedQuantity: number;
   availableQuantity: number;
 }
@@ -27,7 +26,6 @@ interface LockerCardProps {
   data: LockerData;
   onSave: (gender: "MALE" | "FEMALE", newTotalQuantity: number) => void;
   isLoading: boolean;
-  // Add any other necessary props like colors if not using useColors hook inside
 }
 
 export const LockerCard: React.FC<LockerCardProps> = ({
@@ -35,7 +33,7 @@ export const LockerCard: React.FC<LockerCardProps> = ({
   onSave,
   isLoading,
 }) => {
-  const colors = useColors(); // Or receive colors as a prop
+  const colors = useColors();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<number>(data.totalQuantity ?? 0);
 
@@ -46,10 +44,8 @@ export const LockerCard: React.FC<LockerCardProps> = ({
 
   const handleSave = () => {
     if (editValue < data.usedQuantity) {
-      // Optionally, show a toastr or error message
       console.error("Total quantity cannot be less than used quantity.");
-      setEditValue(data.totalQuantity); // Reset to original or last valid
-      // setIsEditing(false); // Or keep editing to allow correction
+      setEditValue(data.totalQuantity);
       return;
     }
     onSave(data.gender, editValue);
@@ -58,7 +54,7 @@ export const LockerCard: React.FC<LockerCardProps> = ({
 
   const handleCancel = () => {
     setIsEditing(false);
-    setEditValue(data.totalQuantity); // Reset edit value
+    setEditValue(data.totalQuantity);
   };
 
   const usagePercentage =
@@ -105,11 +101,11 @@ export const LockerCard: React.FC<LockerCardProps> = ({
                     size="2xs"
                     w="60px"
                     type="number"
-                    value={editValue.toString()} // Input expects string
+                    value={editValue.toString()}
                     onChange={(e) =>
                       setEditValue(Math.max(0, Number(e.target.value)))
                     }
-                    min={data.usedQuantity} // HTML5 min attribute
+                    min={data.usedQuantity}
                   />
                   <IconButton
                     size="2xs"

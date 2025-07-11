@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Text,
@@ -9,7 +9,6 @@ import {
   Badge,
   Flex,
   Spinner,
-  Icon,
 } from "@chakra-ui/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
@@ -19,7 +18,6 @@ import { AgGridReact } from "ag-grid-react";
 import type {
   ColDef,
   ICellRendererParams,
-  ValueFormatterParams,
   CellClickedEvent,
 } from "ag-grid-community";
 import { useColorMode } from "@/components/ui/color-mode";
@@ -30,7 +28,6 @@ import {
   displayStatusConfig,
   getDisplayStatusInfo,
 } from "@/lib/utils/statusUtils";
-import { InfoIcon } from "@chakra-ui/icons";
 import { formatDateTime } from "@/app/cms/schedule/utils";
 
 interface CancellationRefundTabProps {
