@@ -44,7 +44,7 @@ const RemedyInfo = () => {
         </Text>
       </HeadingH4>
       <Box border="1px solid #E2E8F0" borderRadius="md" p={{ base: 4, md: 6 }}>
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" gap={4}>
           <Text textAlign="justify" fontSize={{ base: "14px", md: "18px" }}>
             정보주체는 개인정보침해로 인한 구제를 받기 위하여
             개인정보분쟁조정위원회, 한국인터넷진흥원 개인정보침해신고센터 등에
@@ -55,7 +55,7 @@ const RemedyInfo = () => {
 
           <VStack
             align="start"
-            spacing={2}
+            gap={2}
             my={2}
             fontSize={{ base: "14px", md: "18px" }}
           >

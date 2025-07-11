@@ -56,11 +56,7 @@ const CookiePolicyInfo = () => {
         </Text>
       </HeadingH4>
       <Box border="1px solid #E2E8F0" borderRadius="md" p={{ base: 4, md: 6 }}>
-        <VStack
-          align="stretch"
-          spacing={4}
-          fontSize={{ base: "14px", md: "18px" }}
-        >
+        <VStack align="stretch" gap={4} fontSize={{ base: "14px", md: "18px" }}>
           {content.map((item) => (
             <Text
               key={item.id}
