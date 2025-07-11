@@ -184,7 +184,7 @@ export const rooms: Room[] = [
   },
   {
     name: "코리안",
-    roomType: "5인실",
+    roomType: "4인실",
     bedType: "온돌 1개 & 침구세트 4개",
     area: "23.1",
     weekdayPrice: 77000,
