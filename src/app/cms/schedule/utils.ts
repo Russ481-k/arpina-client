@@ -1,6 +1,4 @@
-import { ko } from "date-fns/locale";
 import { Schedule, ScheduleStatus } from "./types";
-import { format, isAfter, isBefore, isValid, isWithinInterval } from "date-fns";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 
@@ -13,7 +11,7 @@ export const calculateScheduleStatus = (schedule: Schedule): ScheduleStatus => {
 
   if (!schedule.displayYn) return "HIDDEN";
   if (now.isBefore(startTime)) return "UPCOMING";
-  if (now.isBetween(startTime, endTime, null, '[]')) return "ONGOING";
+  if (now.isBetween(startTime, endTime, null, "[]")) return "ONGOING";
   return "ENDED";
 };
 

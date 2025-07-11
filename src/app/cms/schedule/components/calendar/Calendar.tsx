@@ -11,21 +11,13 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import {
-  startOfMonth,
-  endOfMonth,
   format,
   addMonths,
   subMonths,
   isSameMonth,
   isSameDay,
   isToday,
-  isValid,
-  differenceInDays,
-  addDays,
-  subDays,
-  getDaysInMonth,
   getDay,
-  getMonth,
   getYear,
   setMonth,
 } from "date-fns";
@@ -82,8 +74,14 @@ export const Calendar: React.FC<CalendarProps> = ({
   const currentMonth = dayjs(currentDate).month(); // 0-indexed
 
   // 현재 달의 시작일과 마지막일 계산
-  const startDate = useMemo(() => dayjs(currentDate).startOf('month').toDate(), [currentDate]);
-  const endDate = useMemo(() => dayjs(currentDate).endOf('month').toDate(), [currentDate]);
+  const startDate = useMemo(
+    () => dayjs(currentDate).startOf("month").toDate(),
+    [currentDate]
+  );
+  const endDate = useMemo(
+    () => dayjs(currentDate).endOf("month").toDate(),
+    [currentDate]
+  );
 
   // 달력에 표시할 모든 날짜 계산
   const days = useMemo(() => {
@@ -91,11 +89,13 @@ export const Calendar: React.FC<CalendarProps> = ({
     const daysInMonth = dayjs(currentDate).daysInMonth();
 
     const prevMonthDaysArray = Array.from({ length: firstDayOfMonth }, (_, i) =>
-      dayjs(startDate).subtract(firstDayOfMonth - i, 'day').toDate()
+      dayjs(startDate)
+        .subtract(firstDayOfMonth - i, "day")
+        .toDate()
     );
 
     const currentMonthDaysArray = Array.from({ length: daysInMonth }, (_, i) =>
-      dayjs(startDate).add(i, 'day').toDate()
+      dayjs(startDate).add(i, "day").toDate()
     );
 
     const totalCells = 35; // 7 days * 5 weeks
@@ -103,10 +103,12 @@ export const Calendar: React.FC<CalendarProps> = ({
       totalCells - (prevMonthDaysArray.length + currentMonthDaysArray.length);
 
     const nextMonthDaysArray = Array.from(
-      { length: Math.max(0, remainingCells) }, // Ensure length is not negative
+      { length: Math.max(0, remainingCells) },
       (_, i) =>
-        dayjs(currentMonthDaysArray[currentMonthDaysArray.length - 1] || endDate)
-          .add(i + 1, 'day')
+        dayjs(
+          currentMonthDaysArray[currentMonthDaysArray.length - 1] || endDate
+        )
+          .add(i + 1, "day")
           .toDate()
     );
 
@@ -157,7 +159,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const handlePrevYear = () => {
-    const newDate = subMonths(currentDate, 12); // Subtract 12 months to go to previous year
+    const newDate = subMonths(currentDate, 12);
     if (validateDate(newDate)) {
       onDateChange(newDate);
       setSelectedDate(null);
@@ -165,7 +167,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const handleNextYear = () => {
-    const newDate = addMonths(currentDate, 12); // Add 12 months to go to next year
+    const newDate = addMonths(currentDate, 12);
     if (validateDate(newDate)) {
       onDateChange(newDate);
       setSelectedDate(null);
@@ -249,16 +251,16 @@ export const Calendar: React.FC<CalendarProps> = ({
         justify="space-between"
         mb={2}
         p={3}
-        bg="#0A2540" // Dark blue background as per image
+        bg="#0A2540"
         borderRadius="md"
       >
         {months.map((month, index) => (
           <Button
             key={month}
-            variant="ghost" // Changed to link for cleaner look
+            variant="ghost"
             onClick={() => handleMonthChange(index)}
             fontWeight={currentMonth === index ? "bold" : "normal"}
-            color={currentMonth === index ? "#FFD700" : "white"} // Yellow for current month, white for others
+            color={currentMonth === index ? "#FFD700" : "white"}
             fontSize="md"
             flex={1}
             textAlign="center"
@@ -277,10 +279,10 @@ export const Calendar: React.FC<CalendarProps> = ({
       <Grid
         templateColumns="repeat(7, 1fr)"
         gap={0}
-        borderWidth="1px" // Add border to the grid container
-        borderColor="gray.300" // Set border color for the grid
-        borderRadius="md" // Optional: adds rounded corners to the grid
-        overflow="hidden" // Ensures child borders don't spill out
+        borderWidth="1px"
+        borderColor="gray.300"
+        borderRadius="md"
+        overflow="hidden"
       >
         {weekDays.map((day, index) => (
           <VStack
@@ -288,10 +290,10 @@ export const Calendar: React.FC<CalendarProps> = ({
             textAlign="center"
             py={2}
             fontWeight="bold"
-            bg="gray.50" // Light gray background for day headers
+            bg="gray.50"
             borderBottomWidth="1px"
             borderColor="gray.300"
-            gap={0} // Remove gap between day and dayEng
+            gap={0}
           >
             <Text
               fontSize="sm"
@@ -300,7 +302,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   ? "red.500"
                   : day === "토"
                   ? "blue.500"
-                  : "gray.700" // Darker text for other days
+                  : "gray.700"
               }
             >
               {day}
@@ -312,7 +314,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   ? "red.500"
                   : day === "토"
                   ? "blue.500"
-                  : "gray.500" // Lighter text for ENG day
+                  : "gray.500"
               }
             >
               {weekDayEng[index]}
@@ -325,8 +327,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           const daySchedules = schedulesMap[dateStr] || [];
           const sortedSchedules = sortSchedulesByTime(daySchedules);
           const isCurrentMonth = isSameMonth(date, currentDate);
-          const isDisabled = !isCurrentMonth || !validateDate(date); // Also disable days not in current month
-          const dayOfWeekIndex = getDay(date); // 0 for Sunday, 6 for Saturday
+          const isDisabled = !isCurrentMonth || !validateDate(date);
+          const dayOfWeekIndex = getDay(date);
           const isSelected =
             selectedDateState && isSameDay(date, selectedDateState);
           const isTodayDate = isToday(date);
@@ -334,19 +336,13 @@ export const Calendar: React.FC<CalendarProps> = ({
           return (
             <Box
               key={dateStr}
-              p={1.5} // Reduced padding
-              bg={
-                isSelected
-                  ? "blue.100"
-                  : isTodayDate
-                  ? "blue.50" // Subtle background for today's date if not selected
-                  : "white"
-              } // White background, blue.100 for selected
-              minH="120px" // Adjusted height
-              maxH="120px" // Adjusted height
+              p={1.5}
+              bg={isSelected ? "blue.100" : isTodayDate ? "blue.50" : "white"}
+              minH="120px"
+              maxH="120px"
               role="gridcell"
               aria-label={format(date, "yyyy년 M월 d일 EEEE", { locale: ko })}
-              opacity={isCurrentMonth ? 1 : 0.4} // More faded for non-current month days
+              opacity={isCurrentMonth ? 1 : 0.4}
               cursor={isDisabled ? "not-allowed" : "pointer"}
               onClick={() => !isDisabled && handleDateClick(date)}
               overflow="hidden"
@@ -359,39 +355,38 @@ export const Calendar: React.FC<CalendarProps> = ({
               }
               transition="background-color 0.2s ease-out"
               position="relative"
-              borderRightWidth={idx % 7 === 6 ? "0" : "1px"} // No right border for last cell in a row
-              borderBottomWidth={idx >= days.length - 7 ? "0" : "1px"} // No bottom border for last row
-              borderColor="gray.300" // Border color for cells
+              borderRightWidth={idx % 7 === 6 ? "0" : "1px"}
+              borderBottomWidth={idx >= days.length - 7 ? "0" : "1px"}
+              borderColor="gray.300"
             >
               <Flex direction="column" gap={1} height="100%">
                 <Text
                   fontSize="sm"
-                  fontWeight="medium" // Slightly less bold
+                  fontWeight="medium"
                   color={
                     isDisabled
                       ? "gray.400"
                       : isSelected
                       ? "blue.700"
                       : isTodayDate
-                      ? colors.primary.default // Highlight today's date number
-                      : dayOfWeekIndex === 0 // Sunday
+                      ? colors.primary.default
+                      : dayOfWeekIndex === 0
                       ? "red.500"
-                      : dayOfWeekIndex === 6 // Saturday
+                      : dayOfWeekIndex === 6
                       ? "blue.500"
-                      : "gray.800" // Default day number color
+                      : "gray.800"
                   }
-                  alignSelf="flex-start" // Align date number to top-left
-                  pb={0.5} // Padding below the date number
+                  alignSelf="flex-start"
+                  pb={0.5}
                 >
                   {format(date, "d")}
                 </Text>
                 <Stack
                   direction="column"
-                  gap={0.5} // Reduced gap between schedules
+                  gap={0.5}
                   flexGrow={1}
                   overflowY="auto"
-                  maxH="calc(100% - 20px)" // Adjust based on date number's height
-                  // Custom scrollbar styles
+                  maxH="calc(100% - 20px)"
                   css={{
                     "&::-webkit-scrollbar": {
                       width: "4px",
@@ -400,23 +395,20 @@ export const Calendar: React.FC<CalendarProps> = ({
                       width: "6px",
                     },
                     "&::-webkit-scrollbar-thumb": {
-                      background: colors.primary.default, // Use theme color
+                      background: colors.primary.default,
                       borderRadius: "24px",
                     },
                   }}
                 >
                   {sortedSchedules.slice(0, 2).map((schedule) => {
-                    // Show only 2 schedules initially
                     const isStartDate =
                       format(new Date(schedule.startDateTime), "yyyy-MM-dd") ===
                       dateStr;
 
-                    // Determine background color based on image (blue or light gray)
-                    // This is a placeholder logic, you might need a specific field in `Schedule` type
                     const scheduleItemBgColor = schedule.title.includes("중요")
                       ? scheduleBgColor
-                      : isTodayDate && !isSelected // If it's today and not the main selected item's schedule view
-                      ? "gray.50" // Slightly different bg for schedules on today's cell if it's not selected
+                      : isTodayDate && !isSelected
+                      ? "gray.50"
                       : "gray.100";
                     const scheduleItemTextColor = schedule.title.includes(
                       "중요"
@@ -427,11 +419,11 @@ export const Calendar: React.FC<CalendarProps> = ({
                     return (
                       <Box
                         key={schedule.scheduleId}
-                        py={0.5} // Adjust padding
-                        px={1.5} // Adjust padding
+                        py={0.5}
+                        px={1.5}
                         bg={scheduleItemBgColor}
                         color={scheduleItemTextColor}
-                        borderRadius="xs" // Slightly less rounded
+                        borderRadius="xs"
                         cursor="pointer"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -445,7 +437,6 @@ export const Calendar: React.FC<CalendarProps> = ({
                         textOverflow="ellipsis"
                       >
                         <Text fontSize="11px" lineHeight="1.2">
-                          {/* Adjusted font size and line height */}
                           {isStartDate
                             ? `${format(
                                 new Date(schedule.startDateTime),
@@ -462,14 +453,14 @@ export const Calendar: React.FC<CalendarProps> = ({
                   })}
                   {sortedSchedules.length > 2 && (
                     <Text
-                      fontSize="10px" // Smaller font size
+                      fontSize="10px"
                       color="gray.500"
                       textAlign="center"
                       cursor="pointer"
-                      mt={0.5} // Margin top
+                      mt={0.5}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDateClick(date); // Clicking "more" should select the date
+                        handleDateClick(date);
                       }}
                       _hover={{ textDecoration: "underline" }}
                     >
