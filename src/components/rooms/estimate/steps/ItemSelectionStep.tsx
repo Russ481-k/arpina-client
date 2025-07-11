@@ -43,16 +43,27 @@ export const ItemSelectionStep = () => {
   return (
     <Box>
       {selectedServices.length > 1 ? (
-        <Tabs.Root defaultValue="room" variant="plain" colorPalette="blue">
-          <Tabs.List>
-            <Tabs.Trigger value="room">
-              <HStack>
-                <LuBedDouble size={24} /> <Heading size="2xl">객실</Heading>
+        <Tabs.Root
+          defaultValue="room"
+          variant="subtle"
+          colorPalette="blue"
+          width="100%"
+        >
+          <Tabs.List width="100%">
+            <Tabs.Trigger value="room" height="100%">
+              <HStack p={2}>
+                <LuBedDouble size={40} />
+                <Heading size="4xl" fontWeight="bold">
+                  객실
+                </Heading>
               </HStack>
             </Tabs.Trigger>
-            <Tabs.Trigger value="seminar">
-              <HStack>
-                <LuBuilding size={24} /> <Heading size="2xl">세미나실</Heading>
+            <Tabs.Trigger value="seminar" height="100%">
+              <HStack p={2}>
+                <LuBuilding size={40} />
+                <Heading size="4xl" fontWeight="bold">
+                  세미나실
+                </Heading>
               </HStack>
             </Tabs.Trigger>
           </Tabs.List>

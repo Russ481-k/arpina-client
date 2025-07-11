@@ -148,15 +148,15 @@ const SheetContents = () => {
               <br />
               대표전화: 051-731-9800
             </Text>{" "}
-            <Box position="absolute" left={110} top={150} zIndex={10}>
+            <Box position="absolute" left={100} top={140} zIndex={10}>
               <Image
                 src="/images/signature.png"
                 alt="직인"
-                width={40}
-                height={40}
+                width={60}
+                height={60}
                 style={{
                   opacity: 0.8,
-                  transform: "rotate(-15deg)",
+                  transform: "rotate(-10deg)",
                 }}
               />
             </Box>

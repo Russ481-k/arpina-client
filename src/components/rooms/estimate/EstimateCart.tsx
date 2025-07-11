@@ -233,7 +233,7 @@ const CartContent = ({ isMobile }: { isMobile: boolean }) => {
         >
           {roomsInCart.length > 0 && (
             <VStack align="stretch" gap={4}>
-              <Heading size="xl" fontWeight="700">
+              <Heading size="2xl" fontWeight="700">
                 객실
               </Heading>
               {roomsInCart.map((item) => renderItem(item, true))}
@@ -241,7 +241,7 @@ const CartContent = ({ isMobile }: { isMobile: boolean }) => {
           )}
           {seminarsInCart.length > 0 && (
             <VStack align="stretch" gap={2}>
-              <Heading size="xl" fontWeight="700">
+              <Heading size="2xl" fontWeight="700">
                 세미나실
               </Heading>
               {seminarsInCart.map((item) => renderItem(item, false))}
