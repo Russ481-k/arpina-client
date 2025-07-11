@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Box,
   Heading,
@@ -45,6 +45,7 @@ const calculateRoomPrice = (
 
 const calculateSeminarPrice = (
   itemName: string,
+  quantity: number,
   checkIn: Date,
   checkOut: Date
 ) => {
@@ -53,16 +54,169 @@ const calculateSeminarPrice = (
 
   const nights = (checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24);
   const days = nights + 1;
-  return seminar.price * days;
+  return seminar.price * days * quantity;
 };
 
 const CartContent = () => {
-  const { cart, removeFromCart, updateCartItemQuantity, totalAmount } =
-    useEstimateContext();
+  const {
+    cart,
+    removeFromCart,
+    updateCartItemQuantity,
+    updateSeminarDays,
+    totalAmount,
+    lastAddedItemId,
+    setLastAddedItemId,
+  } = useEstimateContext();
+
+  const roomsInCart = cart.filter((item) => item.type === "room");
+  const seminarsInCart = cart.filter((item) => item.type === "seminar");
+  const lastAddedItemRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (lastAddedItemId && lastAddedItemRef.current) {
+      lastAddedItemRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      const timer = setTimeout(() => {
+        setLastAddedItemId(null);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [lastAddedItemId, setLastAddedItemId]);
+
+  const renderItem = (item: any, isRoom: boolean) => {
+    const nights =
+      (item.checkOutDate.getTime() - item.checkInDate.getTime()) /
+      (1000 * 3600 * 24);
+    const days = nights + 1;
+
+    return (
+      <Box
+        key={item.id}
+        p={2}
+        ref={item.id === lastAddedItemId ? lastAddedItemRef : null}
+        bg={item.id === lastAddedItemId ? "blue.100" : "transparent"}
+        borderColor={item.id === lastAddedItemId ? "blue.500" : "transparent"}
+        borderWidth="2px"
+        borderStyle="solid"
+        borderRadius="lg"
+        boxShadow={item.id === lastAddedItemId ? "lg" : "none"}
+        transition="all 0.5s ease-in-out"
+      >
+        <HStack justify="space-between">
+          <Text fontWeight="bold">{item.name}</Text>
+          <CloseButton
+            size="sm"
+            onClick={() => removeFromCart(item.productId)}
+          />
+        </HStack>
+        {isRoom ? (
+          <Box p={2}>
+            <HStack justify="space-between" mt={2}>
+              <Text fontSize="sm" color="gray.500">
+                객실 수
+              </Text>
+              <HStack>
+                <IconButton
+                  aria-label="decrease quantity"
+                  size="xs"
+                  variant="subtle"
+                  colorPalette="blue"
+                  borderRadius="full"
+                  onClick={() =>
+                    updateCartItemQuantity(item.id, item.quantity - 1)
+                  }
+                >
+                  <Minus />
+                </IconButton>
+                <Text>{item.quantity}</Text>
+                <IconButton
+                  aria-label="increase quantity"
+                  size="xs"
+                  variant="subtle"
+                  colorPalette="blue"
+                  borderRadius="full"
+                  onClick={() =>
+                    updateCartItemQuantity(item.id, item.quantity + 1)
+                  }
+                >
+                  <Plus />
+                </IconButton>
+              </HStack>
+            </HStack>
+            <HStack justify="space-between" mt={2}>
+              <Text fontSize="sm" color="gray.500">
+                {`${nights}박 ${days}일`}
+              </Text>
+              <Text fontSize="sm" fontWeight="bold">
+                ₩
+                {calculateRoomPrice(
+                  item.name,
+                  item.quantity,
+                  item.checkInDate,
+                  item.checkOutDate
+                ).toLocaleString()}
+              </Text>
+            </HStack>
+          </Box>
+        ) : (
+          <Box p={2}>
+            <HStack justify="space-between">
+              <Text fontSize="sm" color="gray.500">
+                {`사용일수`}
+              </Text>
+              <HStack>
+                <IconButton
+                  aria-label="decrease days"
+                  size="xs"
+                  variant="subtle"
+                  colorPalette="blue"
+                  borderRadius="full"
+                  onClick={() => updateSeminarDays(item.id, days - 1)}
+                >
+                  <Minus />
+                </IconButton>
+                <Text>{days}일</Text>
+                <IconButton
+                  aria-label="increase days"
+                  size="xs"
+                  variant="subtle"
+                  colorPalette="blue"
+                  borderRadius="full"
+                  onClick={() => updateSeminarDays(item.id, days + 1)}
+                >
+                  <Plus />
+                </IconButton>
+              </HStack>
+            </HStack>
+
+            <HStack justify="space-between" mt={2}>
+              <Text fontSize="sm" color="gray.500">
+                합계
+              </Text>
+              <Text fontSize="sm" fontWeight="bold">
+                ₩
+                {calculateSeminarPrice(
+                  item.name,
+                  item.quantity,
+                  item.checkInDate,
+                  item.checkOutDate
+                ).toLocaleString()}
+              </Text>
+            </HStack>
+          </Box>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <VStack w="full" gap={4} align="stretch">
-      <Heading size="xl">선택 목록</Heading>
+      <Heading size="2xl" fontWeight="800">
+        선택 목록
+      </Heading>
       {cart.length === 0 ? (
         <Text>선택 목록가 비어 있습니다.</Text>
       ) : (
@@ -74,88 +228,22 @@ const CartContent = () => {
           maxH="60vh"
           p={2}
         >
-          {cart.map((item) => {
-            const nights =
-              (item.checkOutDate.getTime() - item.checkInDate.getTime()) /
-              (1000 * 3600 * 24);
-            const days = nights + 1;
-
-            return (
-              <Box key={item.id}>
-                <HStack justify="space-between">
-                  <Text fontWeight="bold">{item.name}</Text>
-                  <CloseButton
-                    size="sm"
-                    onClick={() => removeFromCart(item.productId)}
-                  />
-                </HStack>
-                {item.type === "room" ? (
-                  <>
-                    <HStack justify="space-between" mt={2}>
-                      <Text fontSize="sm" color="gray.500">
-                        수량
-                      </Text>
-                      <HStack>
-                        <IconButton
-                          aria-label="decrease quantity"
-                          size="xs"
-                          variant="subtle"
-                          colorPalette="blue"
-                          borderRadius="full"
-                          onClick={() =>
-                            updateCartItemQuantity(item.id, item.quantity - 1)
-                          }
-                        >
-                          <Minus />
-                        </IconButton>
-                        <Text>{item.quantity}</Text>
-                        <IconButton
-                          aria-label="increase quantity"
-                          size="xs"
-                          variant="subtle"
-                          colorPalette="blue"
-                          borderRadius="full"
-                          onClick={() =>
-                            updateCartItemQuantity(item.id, item.quantity + 1)
-                          }
-                        >
-                          <Plus />
-                        </IconButton>
-                      </HStack>
-                    </HStack>
-                    <HStack justify="space-between" mt={2}>
-                      <Text fontSize="sm" color="gray.500">
-                        {`${nights}박 ${days}일`}
-                      </Text>
-                      <Text fontSize="sm" fontWeight="bold">
-                        ₩
-                        {calculateRoomPrice(
-                          item.name,
-                          item.quantity,
-                          item.checkInDate,
-                          item.checkOutDate
-                        ).toLocaleString()}
-                      </Text>
-                    </HStack>
-                  </>
-                ) : (
-                  <HStack justify="space-between" mt={2}>
-                    <Text fontSize="sm" color="gray.500">
-                      {`${nights}박 ${days}일`}
-                    </Text>
-                    <Text fontSize="sm" fontWeight="bold">
-                      ₩
-                      {calculateSeminarPrice(
-                        item.name,
-                        item.checkInDate,
-                        item.checkOutDate
-                      ).toLocaleString()}
-                    </Text>
-                  </HStack>
-                )}
-              </Box>
-            );
-          })}
+          {roomsInCart.length > 0 && (
+            <VStack align="stretch" gap={4}>
+              <Heading size="xl" fontWeight="700">
+                객실
+              </Heading>
+              {roomsInCart.map((item) => renderItem(item, true))}
+            </VStack>
+          )}
+          {seminarsInCart.length > 0 && (
+            <VStack align="stretch" gap={2}>
+              <Heading size="xl" fontWeight="700">
+                세미나실
+              </Heading>
+              {seminarsInCart.map((item) => renderItem(item, false))}
+            </VStack>
+          )}
         </VStack>
       )}
       <Separator my={4} />

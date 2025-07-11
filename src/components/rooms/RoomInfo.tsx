@@ -1,8 +1,17 @@
-import { Box, Flex, Icon, Text, Em, List, Highlight } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Icon,
+  Text,
+  Em,
+  List,
+  Highlight,
+  Button,
+} from "@chakra-ui/react";
 import React from "react";
 import { AreaIcon, BedIcon, CheckIcon } from "@/components/icons/EstimateIcons";
 import { CartItem } from "@/types/estimate";
-import { ShoppingCart, Check } from "lucide-react";
+import { Check, PlusIcon } from "lucide-react";
 import { ImageSwiper } from "@/components/common/ImageSwiper";
 import { useEstimateContext } from "@/contexts/EstimateContext";
 
@@ -143,21 +152,24 @@ export const RoomInfo = ({
             alignItems="flex-end"
             justifyContent="space-between"
           >
-            <Box onClick={handleToggleCart} cursor="pointer">
-              {isInCart ? (
-                <Check
-                  size={32}
-                  color="white"
-                  style={{
-                    backgroundColor: "#2E3192",
-                    borderRadius: "50%",
-                    padding: "4px",
-                  }}
-                />
-              ) : (
-                <ShoppingCart size={40} color="#2E3192" />
-              )}
-            </Box>
+            {isInCart ? (
+              <Check
+                size={32}
+                color="white"
+                style={{
+                  backgroundColor: "#2E3192",
+                  borderRadius: "50%",
+                  padding: "4px",
+                }}
+              />
+            ) : (
+              <Button variant="ghost" onClick={handleToggleCart}>
+                <PlusIcon />
+                <Text fontSize="2xl" fontWeight="700">
+                  담기
+                </Text>
+              </Button>
+            )}
             <Box>
               <Text
                 fontSize={{ base: "xl", lg: "4xl" }}

@@ -4,7 +4,7 @@ import { RoomInfo } from "@/components/rooms/RoomInfo";
 import { SeminarInfo } from "@/components/rooms/SeminarInfo";
 import { useEstimateContext } from "@/contexts/EstimateContext";
 import { rooms, Seminars } from "@/data/estimateData";
-import { Box, HStack, Tabs, Text, VStack } from "@chakra-ui/react";
+import { Box, Heading, HStack, Tabs, VStack } from "@chakra-ui/react";
 import React from "react";
 import { LuBedDouble, LuBuilding } from "react-icons/lu";
 
@@ -30,30 +30,30 @@ export const ItemSelectionStep = () => {
   return (
     <Box>
       {selectedServices.length > 1 ? (
-        <Tabs.Root defaultValue="seminar" variant="subtle" colorPalette="blue">
+        <Tabs.Root defaultValue="room" variant="plain" colorPalette="blue">
           <Tabs.List>
-            <Tabs.Trigger value="seminar">
-              <HStack>
-                <LuBuilding /> <Text>세미나실</Text>
-              </HStack>
-            </Tabs.Trigger>
             <Tabs.Trigger value="room">
               <HStack>
-                <LuBedDouble /> <Text>객실</Text>
+                <LuBedDouble size={24} /> <Heading size="2xl">객실</Heading>
+              </HStack>
+            </Tabs.Trigger>
+            <Tabs.Trigger value="seminar">
+              <HStack>
+                <LuBuilding size={24} /> <Heading size="2xl">세미나실</Heading>
               </HStack>
             </Tabs.Trigger>
           </Tabs.List>
-          <Tabs.Content value="seminar" pt={6}>
-            {seminarContent}
-          </Tabs.Content>
           <Tabs.Content value="room" pt={6}>
             {roomContent}
+          </Tabs.Content>
+          <Tabs.Content value="seminar" pt={6}>
+            {seminarContent}
           </Tabs.Content>
         </Tabs.Root>
       ) : (
         <>
-          {selectedServices.includes("seminar") && seminarContent}
           {selectedServices.includes("room") && roomContent}
+          {selectedServices.includes("seminar") && seminarContent}
         </>
       )}
     </Box>

@@ -19,7 +19,11 @@ interface EstimateContextType {
   ) => void;
   removeFromCart: (itemId: string) => void;
   updateCartItemQuantity: (itemId: string, newQuantity: number) => void;
+  updateSeminarDays: (itemId: string, days: number) => void;
   totalAmount: number;
+  generateQuote: () => void;
+  lastAddedItemId: string | null;
+  setLastAddedItemId: (id: string | null) => void;
 
   // Stepper State
   step: number;
@@ -36,9 +40,6 @@ interface EstimateContextType {
   setCheckOutDate: Dispatch<SetStateAction<DateInfo | null>>;
   handleApplyDates: () => void;
   isDateSelectionValid: boolean;
-
-  // Quote Generation
-  generateQuote: () => void;
 }
 
 const EstimateContext = createContext<EstimateContextType | undefined>(
@@ -48,6 +49,7 @@ const EstimateContext = createContext<EstimateContextType | undefined>(
 export const EstimateProvider = ({ children }: { children: ReactNode }) => {
   // Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [lastAddedItemId, setLastAddedItemId] = useState<string | null>(null);
 
   // Stepper State
   const [step, setStep] = useState(1);
@@ -124,6 +126,7 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     };
 
     setCart((prevCart) => [...prevCart, newItem]);
+    setLastAddedItemId(newItem.id);
   };
 
   const removeFromCart = (productId: string) => {
@@ -142,6 +145,20 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const updateSeminarDays = (itemId: string, days: number) => {
+    if (days < 1) return;
+    setCart((prevCart) =>
+      prevCart.map((item) => {
+        if (item.id === itemId && item.type === "seminar") {
+          const newCheckOutDate = new Date(item.checkInDate);
+          newCheckOutDate.setDate(newCheckOutDate.getDate() + days - 1);
+          return { ...item, checkOutDate: newCheckOutDate };
+        }
+        return item;
+      })
+    );
+  };
+
   // Price Calculation Logic (from useEstimate)
   const getWeekdayWeekendNights = (checkIn: Date, checkOut: Date) => {
     let weekday = 0;
@@ -156,28 +173,30 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
 
   const totalAmount = useMemo(() => {
     return cart.reduce((total, item) => {
-      let itemTotal = 0;
-      if (item.type === "seminar") {
-        const seminar = Seminars.find((s) => s.name === item.name);
-        if (seminar) {
-          const nights =
-            (item.checkOutDate.getTime() - item.checkInDate.getTime()) /
-            (1000 * 60 * 60 * 24);
-          itemTotal = seminar.price * (nights + 1); // 세미나는 일 단위
-        }
-      } else if (item.type === "room") {
+      if (item.type === "room") {
         const room = rooms.find((r) => r.name === item.name);
         if (room) {
           const { weekday, weekend } = getWeekdayWeekendNights(
             item.checkInDate,
             item.checkOutDate
           );
-          itemTotal =
+          return (
+            total +
             (room.weekdayPrice * weekday + room.weekendPrice * weekend) *
-            item.quantity;
+              item.quantity
+          );
+        }
+      } else {
+        const seminar = Seminars.find((s) => s.name === item.name);
+        if (seminar) {
+          const nights =
+            (item.checkOutDate.getTime() - item.checkInDate.getTime()) /
+            (1000 * 3600 * 24);
+          const days = nights + 1;
+          return total + seminar.price * days * item.quantity;
         }
       }
-      return total + itemTotal;
+      return total;
     }, 0);
   }, [cart]);
 
@@ -186,6 +205,7 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     addToCart,
     removeFromCart,
     updateCartItemQuantity,
+    updateSeminarDays,
     totalAmount,
     step,
     setStep,
@@ -198,6 +218,8 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     handleApplyDates,
     isDateSelectionValid,
     generateQuote,
+    lastAddedItemId,
+    setLastAddedItemId,
   };
 
   return (
