@@ -78,6 +78,8 @@ export const EstimateCalendar = ({
   handlePrev,
 }: EstimateCalendarProps) => {
   const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const handlePrevMonth = () => {
     const newCurrentDate = new Date(
@@ -104,31 +106,63 @@ export const EstimateCalendar = ({
   };
 
   const handleDateClick = (day: number, monthDate: Date) => {
-    const dateInfo: DateInfo = {
-      year: monthDate.getFullYear(),
-      month: monthDate.getMonth(),
-      day: day,
-    };
+    const clickedDate = new Date(
+      monthDate.getFullYear(),
+      monthDate.getMonth(),
+      day
+    );
 
-    if (selectionMode === "checkIn") {
-      setCheckInDate(dateInfo);
-      if (
-        checkOutDate &&
-        new Date(dateInfo.year, dateInfo.month, dateInfo.day) >
-          new Date(checkOutDate.year, checkOutDate.month, checkOutDate.day)
-      ) {
-        setCheckOutDate(null);
-      }
+    if (clickedDate < today) {
+      return;
+    }
+
+    if (!checkInDate || (checkInDate && checkOutDate)) {
+      setCheckInDate({
+        year: monthDate.getFullYear(),
+        month: monthDate.getMonth(),
+        day: day,
+      });
+      setCheckOutDate(null);
       setSelectionMode("checkOut");
+      setSelectedRangeText(
+        `${monthDate.getFullYear()}.${monthDate.getMonth() + 1}.${day} -`
+      );
     } else {
-      if (
-        checkInDate &&
-        new Date(dateInfo.year, dateInfo.month, dateInfo.day) <
-          new Date(checkInDate.year, checkInDate.month, checkInDate.day)
-      ) {
+      const checkInAsDate = new Date(
+        checkInDate.year,
+        checkInDate.month,
+        checkInDate.day
+      );
+
+      if (clickedDate.getTime() === checkInAsDate.getTime()) {
+        onResetDates();
         return;
       }
-      setCheckOutDate(dateInfo);
+
+      if (clickedDate < checkInAsDate) {
+        setCheckOutDate(checkInDate);
+        setCheckInDate({
+          year: monthDate.getFullYear(),
+          month: monthDate.getMonth(),
+          day: day,
+        });
+        setSelectedRangeText(
+          `${monthDate.getFullYear()}.${monthDate.getMonth() + 1}.${day} - ${
+            checkInDate.year
+          }.${checkInDate.month + 1}.${checkInDate.day}`
+        );
+      } else {
+        setCheckOutDate({
+          year: monthDate.getFullYear(),
+          month: monthDate.getMonth(),
+          day: day,
+        });
+        setSelectedRangeText(
+          `${checkInDate.year}.${checkInDate.month + 1}.${
+            checkInDate.day
+          } - ${monthDate.getFullYear()}.${monthDate.getMonth() + 1}.${day}`
+        );
+      }
       setSelectionMode("checkIn");
     }
   };
@@ -275,6 +309,7 @@ export const EstimateCalendar = ({
               checkInDate &&
               checkOutDate &&
               isDateInRange(dateInfo, checkInDate, checkOutDate);
+            const isDisabled = new Date(year, month, day) < today;
             return (
               <Box
                 key={`current-${i}`}
@@ -299,6 +334,10 @@ export const EstimateCalendar = ({
                   bg: isCheckIn || isCheckOut ? "#1B2066" : "#E6F0FA",
                 }}
                 onClick={() => handleDateClick(day, monthDate)}
+                _disabled={{
+                  bg: isCheckIn || isCheckOut ? "#1B2066" : "#E6F0FA",
+                  cursor: "default",
+                }}
               >
                 {day}
               </Box>
