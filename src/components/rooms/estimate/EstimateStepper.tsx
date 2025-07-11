@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useEstimateContext } from "@/contexts/EstimateContext";
-import { Box, Flex, HStack, Text, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { EstimateCart } from "./EstimateCart";
 import { StepperIndicator } from "./steps/StepperIndicator";
@@ -15,7 +15,6 @@ const MotionBox = motion(Box);
 export const EstimateStepper = () => {
   const { step, setStep } = useEstimateContext();
   const [direction, setDirection] = useState(1);
-  const isMobile = useBreakpointValue({ base: true, lg: false });
 
   const handleNext = () => {
     setDirection(1);

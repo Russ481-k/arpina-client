@@ -11,9 +11,8 @@ import {
 import React, { useState } from "react";
 import { AreaIcon, BedIcon, CheckIcon } from "@/components/icons/EstimateIcons";
 import { CartItem, Room } from "@/types/estimate";
-import { Check, PlusIcon, X } from "lucide-react";
+import { PlusIcon, X } from "lucide-react";
 import { ImageSwiper } from "@/components/common/ImageSwiper";
-import { useEstimateContext } from "@/contexts/EstimateContext";
 
 interface RoomImage {
   src: string;

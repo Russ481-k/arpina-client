@@ -2,7 +2,7 @@ import { Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
 import React from "react";
 import { PeopleIcon, AreaIcon } from "@/components/icons/EstimateIcons";
 import { CartItem } from "@/types/estimate";
-import { Check, PlusIcon, X } from "lucide-react";
+import { PlusIcon, X } from "lucide-react";
 import { ImageSwiper } from "@/components/common/ImageSwiper";
 
 interface SeminarImage {

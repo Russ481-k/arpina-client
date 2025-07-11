@@ -2,7 +2,7 @@
 
 import { EstimateCalendar } from "@/components/rooms/EstimateCalendar";
 import { useEstimateContext } from "@/contexts/EstimateContext";
-import { Box, Button, Heading, HStack } from "@chakra-ui/react";
+import { Box, Heading } from "@chakra-ui/react";
 import React from "react";
 
 export const DateSelectionStep = ({
@@ -12,13 +12,8 @@ export const DateSelectionStep = ({
   handleNext: () => void;
   handlePrev: () => void;
 }) => {
-  const {
-    checkInDate,
-    setCheckInDate,
-    checkOutDate,
-    setCheckOutDate,
-    isDateSelectionValid,
-  } = useEstimateContext();
+  const { checkInDate, setCheckInDate, checkOutDate, setCheckOutDate } =
+    useEstimateContext();
 
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [nextMonthDate, setNextMonthDate] = React.useState(() => {
