@@ -3,13 +3,13 @@ import { Drawer, CloseButton, Portal, Box, Text } from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import { ArticleEditor } from "@/components/article/ArticleEditor";
 import { useBoardSettings } from "@/hooks/useBoardSettings";
-import type { Article } from "@/lib/api/article";
+import { BoardArticleCommon } from "@/types/api";
 
 interface ArticleWriteDrawerProps {
   onOpenChange: (open: boolean) => void;
   bbsId?: number;
   menuId?: number;
-  initialData?: Article | null;
+  initialData?: BoardArticleCommon | null;
 }
 
 export const ArticleWriteDrawer = ({

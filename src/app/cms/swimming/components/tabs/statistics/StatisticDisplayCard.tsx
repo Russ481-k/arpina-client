@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Box, Text, Flex, Card, Icon } from "@chakra-ui/react";
-// import type { IconType } from "lucide-react"; // Replaced with React.ElementType
 import { useColors } from "@/styles/theme";
 
 interface StatisticDisplayCardProps {
@@ -31,8 +30,6 @@ export const StatisticDisplayCard: React.FC<StatisticDisplayCardProps> = ({
 
   return (
     <Card.Root size="sm" flex={1}>
-      {" "}
-      {/* Added flex=1 for better distribution in a Flex/Grid container */}
       <Card.Body p={1}>
         <Flex align="center" gap={3}>
           {IconComponent && (

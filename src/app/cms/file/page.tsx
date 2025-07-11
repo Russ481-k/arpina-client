@@ -27,9 +27,9 @@ import { fileApi } from "@/lib/api/file";
 
 import { sortMenus } from "@/lib/api/menu";
 import { Menu } from "@/types/api";
+import { File as CustomFile } from "./types";
 import { FileUploadDialog } from "./components/FileUploadDialog";
 import { FiUpload } from "react-icons/fi";
-import { File } from "@/app/cms/file/types";
 
 type MenuType = Menu["type"]; // "LINK" | "FOLDER" | "BOARD" | "CONTENT" | "POPUP" | "PROGRAM"
 type ModuleType = "CONTENT" | "POPUP" | "BBS" | "PROGRAM";
@@ -119,7 +119,7 @@ export default function MenuManagementPage() {
   }, [menuResponse]);
 
   // 파일 목록 조회
-  const { data: fileList } = useQuery<File[]>({
+  const { data: fileList } = useQuery<CustomFile[]>({
     queryKey: ["file"],
     queryFn: async () => {
       try {
@@ -131,22 +131,6 @@ export default function MenuManagementPage() {
     },
     enabled: menus.length > 0,
   });
-
-  // 파일 목록을 메뉴 타입별로 그룹화
-  const groupedFiles = React.useMemo(() => {
-    if (!fileList) return {};
-
-    return fileList.reduce<Record<string, File[]>>((acc, file) => {
-      const { menu, menuId } = file;
-      const key = `${menu}_${menuId}`;
-
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(file);
-      return acc;
-    }, {});
-  }, [fileList]);
 
   // 메뉴 순서 업데이트 뮤테이션
   const updateOrderMutation = useMutation({

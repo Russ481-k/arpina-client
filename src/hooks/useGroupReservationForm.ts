@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
-import { GroupReservationInquiryData, RoomReservationRequest } from "@/lib/api/reservation";
+import {
+  GroupReservationInquiryData,
+  RoomReservationRequest,
+} from "@/lib/api/reservation";
 import { toaster } from "@/components/ui/toaster";
 import { reservationApi } from "@/lib/api/reservation";
-import {
-  validateEmail,
-  validatePhoneNumber,
-} from "@/lib/utils/validationUtils";
+import { validateEmail } from "@/lib/utils/validationUtils";
 import {
   formatPhoneNumberWithHyphen,
   isValidKoreanPhoneNumber,
@@ -22,12 +22,11 @@ type ValidationErrors = {
 };
 
 type TouchedFields = {
-  [K in keyof Omit<
-    GroupReservationInquiryData,
-    "roomReservations"
-  >]?: boolean;
+  [K in keyof Omit<GroupReservationInquiryData, "roomReservations">]?: boolean;
 } & {
-  roomReservations?: { [index: number]: { [K in keyof RoomReservationRequest]?: boolean } };
+  roomReservations?: {
+    [index: number]: { [K in keyof RoomReservationRequest]?: boolean };
+  };
 };
 
 const formatDate = (date: Date): string => {
@@ -58,7 +57,8 @@ const fieldLabels: { [key: string]: string } = {
   adultAttendees: "성인 인원수",
   customerGroupName: "단체명",
   contactPersonName: "담당자명",
-  contactPersonPhone: "담당자 연락처",
+  contactPersonPhone: "담당자 휴대전화",
+  contactPersonTel: "담당자 연락처",
   contactPersonEmail: "담당자 이메일",
   roomSizeDesc: "세미나실 크기",
   roomTypeDesc: "세미나실 종류",
@@ -80,6 +80,7 @@ const initialFormData: GroupReservationInquiryData = {
   contactPersonName: "",
   contactPersonDpt: "",
   contactPersonPhone: "",
+  contactPersonTel: "",
   contactPersonEmail: "",
   privacyAgreed: false,
   marketingAgreed: false,
@@ -95,7 +96,8 @@ const validateRoom = (room: RoomReservationRequest): RoomValidationErrors => {
 };
 
 export function useGroupReservationForm() {
-  const [formData, setFormData] = useState<GroupReservationInquiryData>(initialFormData);
+  const [formData, setFormData] =
+    useState<GroupReservationInquiryData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<TouchedFields>({});
@@ -110,7 +112,10 @@ export function useGroupReservationForm() {
       field: K,
       value: GroupReservationInquiryData[K]
     ) => {
-      if (field === "contactPersonPhone" && typeof value === "string") {
+      if (
+        (field === "contactPersonPhone" || field === "contactPersonTel") &&
+        typeof value === "string"
+      ) {
         const cleaned = value.replace(/\D/g, "");
         if (cleaned.length > 11) {
           return;
@@ -121,7 +126,10 @@ export function useGroupReservationForm() {
         setFormData((prev) => ({ ...prev, [field]: value }));
       }
       if (errors[field as keyof ValidationErrors]) {
-        setErrors((prev) => ({ ...prev, [field as keyof ValidationErrors]: undefined }));
+        setErrors((prev) => ({
+          ...prev,
+          [field as keyof ValidationErrors]: undefined,
+        }));
       }
     },
     [errors]
@@ -135,10 +143,7 @@ export function useGroupReservationForm() {
         const originalRoom = newRooms[index];
         const updatedRoom = { ...originalRoom, [field]: value };
 
-        if (
-          field === "roomSizeDesc" &&
-          value !== originalRoom.roomSizeDesc
-        ) {
+        if (field === "roomSizeDesc" && value !== originalRoom.roomSizeDesc) {
           updatedRoom.roomTypeDesc = "";
         }
 
@@ -170,7 +175,7 @@ export function useGroupReservationForm() {
         },
       }));
     },
-    [] 
+    []
   );
 
   const updateAndValidate = useCallback(
@@ -275,9 +280,14 @@ export function useGroupReservationForm() {
     if (!data.contactPersonName?.trim())
       newErrors.contactPersonName = "담당자명을 입력해주세요.";
     if (!data.contactPersonPhone?.trim())
-      newErrors.contactPersonPhone = "담당자 연락처를 입력해주세요.";
+      newErrors.contactPersonPhone = "담당자 휴대전화를 입력해주세요.";
     else if (!isValidKoreanPhoneNumber(data.contactPersonPhone))
       newErrors.contactPersonPhone =
+        "올바른 형식의 휴대전화를 입력해주세요. (예: 010-1234-5678)";
+    if (!data.contactPersonTel?.trim())
+      newErrors.contactPersonTel = "담당자 연락처를 입력해주세요.";
+    else if (!isValidKoreanPhoneNumber(data.contactPersonTel))
+      newErrors.contactPersonTel =
         "올바른 형식의 연락처를 입력해주세요. (예: 010-1234-5678)";
     const emailError = validateEmail(data.contactPersonEmail);
     if (emailError) newErrors.contactPersonEmail = emailError;
@@ -324,6 +334,7 @@ export function useGroupReservationForm() {
       "customerGroupName",
       "contactPersonName",
       "contactPersonPhone",
+      "contactPersonTel",
       "contactPersonEmail",
     ];
 
@@ -438,4 +449,4 @@ export function useGroupReservationForm() {
     updateAndValidate,
     clearFieldToFocus,
   };
-} 
+}

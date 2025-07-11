@@ -160,7 +160,7 @@ export const Header = memo(function Header({
         top={isPreview ? 50 : 0}
         left={0}
         right={0}
-        zIndex={1000}
+        zIndex={10}
         bg={
           isNavHovered
             ? isDark
@@ -180,6 +180,20 @@ export const Header = memo(function Header({
         opacity={1}
         pointerEvents={"auto"}
         boxShadow={isNavHovered ? "none" : "0 4px 20px rgba(0, 0, 0, 0.1)"}
+        _after={{
+          content: '""',
+          position: "absolute",
+          bottom: "0",
+          left: "0",
+          width: "100%",
+          height: "1px",
+          bg: isMainPage ? "#0D344E" : isDark ? "blue.200" : "black",
+          transition: "all 0.3s ease",
+          opacity: isNavHovered && lastHoveredMenuId ? "1" : "0",
+          transform:
+            isNavHovered && lastHoveredMenuId ? "scaleX(1)" : "scaleX(0)",
+          transformOrigin: "left",
+        }}
       >
         <Container
           position="relative"
@@ -240,31 +254,29 @@ export const Header = memo(function Header({
         </Container>
       </Box>
 
-      {/* 확장 영역을 헤더 밖으로 분리 */}
+      {/* 통합된 확장 영역 */}
       <Box
         position="fixed"
         top={(isPreview ? 50 : 0) + parseInt(headerHeight || "70")}
         left={0}
         right={0}
-        zIndex={999}
-        height={isNavHovered ? "160px" : "0"}
-        transition="height 0.3s ease"
-        bg={
-          isNavHovered
-            ? isDark
-              ? "rgba(26, 32, 44, 0.95)"
-              : "rgba(255, 255, 255, 0.95)"
-            : "transparent"
-        }
-        bgImage={isNavHovered ? "url('/images/header/header_bg.png')" : "none"}
+        zIndex={2}
+        height="160px"
+        transform={isNavHovered ? "translateY(0)" : "translateY(-20px)"}
+        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+        opacity={isNavHovered ? 1 : 0}
+        visibility={isNavHovered ? "visible" : "hidden"}
+        bg={isDark ? "rgba(26, 32, 44, 0.95)" : "rgba(255, 255, 255, 0.95)"}
+        bgImage="url('/images/header/header_bg.png')"
         bgSize="cover"
         bgRepeat="no-repeat"
         backgroundPosition="center"
-        backdropFilter={isNavHovered ? "blur(30px)" : "none"}
+        backdropFilter="blur(30px)"
         pointerEvents={isNavHovered ? "auto" : "none"}
         overflow="hidden"
-        boxShadow={isNavHovered ? "0 4px 20px rgba(0, 0, 0, 0.1)" : "none"}
+        boxShadow="0 4px 20px rgba(0, 0, 0, 0.1)"
       />
+
       {/* <MobileMenuDrawer
         menusWithLastFlag={menusWithLastFlag}
         isMenuActive={isMenuActive}

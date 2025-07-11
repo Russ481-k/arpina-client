@@ -167,7 +167,7 @@ export default function InfoTopBox({
     md: "42.8125%",
   });
   const gap = useBreakpointValue({ base: "15px", md: "5.9375%" });
-  console.log(descriptionStyle?.fontWeight);
+
   return (
     <Box className="info-top-box">
       <Flex
@@ -286,7 +286,7 @@ export default function InfoTopBox({
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                mt={{ base: "10px", md: "20px", lg: "60px" }}
+                mt={{ base: "30px", md: "20px", lg: "60px" }}
                 mb="15px"
                 color="#393939"
                 fontWeight="semibold"

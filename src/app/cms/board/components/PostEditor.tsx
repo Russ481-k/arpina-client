@@ -12,7 +12,7 @@ import {
   Fieldset,
   HStack,
 } from "@chakra-ui/react";
-import { Post, PostData } from "@/types/api";
+import { Post, PostData, ArticleStatusFlag } from "@/types/api";
 import { CheckIcon } from "lucide-react";
 
 interface PostEditorProps {
@@ -65,10 +65,10 @@ export function PostEditor({
         writer: post.writer,
         displayWriter: post.displayWriter,
         publishStartDt: post.publishStartDt,
-        noticeState: post.noticeState,
+        noticeState: post.noticeState as ArticleStatusFlag,
         noticeStartDt: post.noticeStartDt,
         noticeEndDt: post.noticeEndDt,
-        publishState: post.publishState,
+        publishState: post.publishState as ArticleStatusFlag,
         publishEndDt: post.publishEndDt,
         externalLink: post.externalLink,
         nttId: post.nttId,

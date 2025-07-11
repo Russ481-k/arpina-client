@@ -1,5 +1,5 @@
 export const membershipTypeLabels: { [key: string]: string } = {
-  general: "해당사항 없음",
+  general: "-",
   merit: "국가 유공자",
   "multi-child": "다자녀 (3인 이상)",
   multicultural: "다문화 가정",

@@ -12,10 +12,11 @@ import {
 } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
 import { useEffect, useState } from "react";
-import { articleApi, Article } from "@/lib/api/article";
+import { articleApi } from "@/lib/api/article";
+import { BoardArticleCommon } from "@/types/api";
 
 export function NoticeSection() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<BoardArticleCommon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,14 +46,14 @@ export function NoticeSection() {
     fetchArticles();
   }, []);
 
-  const noticeItemPadding = useBreakpointValue({ base: "14px", md: "28px" });
-  const noticeCateWidth = useBreakpointValue({ base: "80px", md: "130px" });
+  const noticeItemPadding = useBreakpointValue({ base: "10px", md: "28px" });
+  const noticeCateWidth = useBreakpointValue({ base: "70px", md: "130px" });
   const noticeCateFontSize = useBreakpointValue({ base: "12px", md: "16px" });
-  const noticeTitleFontSize = useBreakpointValue({ base: "16px", md: "24px" });
-  const noticeDateFontSize = useBreakpointValue({ base: "14px", md: "20px" });
+  const noticeTitleFontSize = useBreakpointValue({ base: "14px", md: "24px" });
+  const noticeDateFontSize = useBreakpointValue({ base: "12px", md: "20px" });
   const noticeDateWidth = useBreakpointValue({ base: "auto", md: "140px" });
 
-  const renderNoticeList = (items: Article[]) => {
+  const renderNoticeList = (items: BoardArticleCommon[]) => {
     if (isLoading) {
       return <Text>Loading...</Text>;
     }
@@ -106,7 +107,17 @@ export function NoticeSection() {
   const bannerWidth = useBreakpointValue({ base: "100%", lg: "460px" });
   const headingFontSize = useBreakpointValue({ base: "30px", md: "40px" });
   const tabsPaddingLeft = useBreakpointValue({ base: "0", md: "160px" });
-  const sectionMarginBottom = useBreakpointValue({ base: "40px", md: "80px" });
+  const sectionMarginBottom = useBreakpointValue({ base: "100px", md: "80px" });
+
+  const banner1Src = useBreakpointValue({
+    base: "/images/main/msec02_bnr_001m.png", // 모바일용 이미지
+    md: "/images/main/msec02_bnr_001.png", // 데스크톱용 이미지
+  });
+
+  const banner2Src = useBreakpointValue({
+    base: "/images/main/msec02_bnr_002m.png", // 모바일용 이미지
+    md: "/images/main/msec02_bnr_002.png", // 데스크톱용 이미지
+  });
 
   return (
     <>
@@ -200,7 +211,7 @@ export function NoticeSection() {
       />
       <Box className="msec02" mb={sectionMarginBottom}>
         <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
-          <Flex gap={5} direction={flexDirection}>
+          <Flex gap={20} direction={flexDirection}>
             <Box flex="1" minW="0">
               <Heading
                 as="h3"
@@ -209,7 +220,6 @@ export function NoticeSection() {
                 color={"#333333"}
                 lineHeight={"1"}
                 fontFamily="'Paperlogy', sans-serif"
-                mb={6}
               >
                 공지사항
               </Heading>
@@ -264,8 +274,8 @@ export function NoticeSection() {
                 <Box borderRadius="20px" overflow="hidden">
                   <Link href="/meeting/estimate">
                     <Image
-                      src="/images/main/msec02_bnr_001.png"
-                      alt="부산 유스호스텔 아르피나 배너"
+                      src={banner1Src}
+                      alt="회의실 단체 예약문의"
                       w="100%"
                       h="auto"
                       objectFit="cover"
@@ -275,8 +285,8 @@ export function NoticeSection() {
                 <Box borderRadius="20px" overflow="hidden">
                   <Link href="/rooms/estimate/calculate">
                     <Image
-                      src="/images/main/msec02_bnr_002.png"
-                      alt="부산 유스호스텔 아르피나 배너 2"
+                      src={banner2Src}
+                      alt="회의실 이용 견적 산출"
                       w="100%"
                       h="auto"
                       objectFit="cover"

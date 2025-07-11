@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
 import { menuApi } from "@/lib/api/menu";
-import { articleApi, Article } from "@/lib/api/article";
+import { articleApi } from "@/lib/api/article";
 import { PageDetailsDto } from "@/types/menu";
-import { Post, Menu } from "@/types/api";
-import { Metadata } from "next";
+import { Post, BoardArticleCommon, FileDto } from "@/types/api";
+
 import { PaginationData } from "@/types/common";
-import { File } from "@/app/cms/file/types";
 import FormBoardSkin from "@/components/bbsSkins/FormBoardSkin";
 import { findMenuByPath } from "@/lib/menu-utils";
 
@@ -14,30 +13,17 @@ const EXPECTED_SKIN_TYPE = "FORM";
 const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_SORT_ORDER = "createdAt,desc";
 
-function mapArticleToPost(article: Article): Post {
-  const mappedAttachments: File[] | null = article.attachments
-    ? article.attachments.map((att): File => {
-        const savedNameDerived =
-          att.downloadUrl.substring(att.downloadUrl.lastIndexOf("/") + 1) ||
-          att.originName;
+function mapArticleToPost(article: BoardArticleCommon): Post {
+  const mappedAttachments: FileDto[] | null = article.attachments
+    ? article.attachments.map((att): FileDto => {
         return {
           fileId: att.fileId,
           originName: att.originName,
           mimeType: att.mimeType,
           size: att.size,
           ext: att.ext,
-          menu: "BBS",
-          menuId: article.menuId,
-          savedName: savedNameDerived,
-          version: 1,
-          publicYn: "Y",
-          fileOrder: 0,
-          createdBy: null,
-          createdDate: null,
-          createdIp: null,
-          updatedBy: null,
-          updatedDate: null,
-          updatedIp: null,
+          downloadUrl: att.downloadUrl,
+          publicYn: att.publicYn,
         };
       })
     : null;

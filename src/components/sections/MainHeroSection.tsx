@@ -58,11 +58,14 @@ export const MainHeroSection = () => {
   }, [activeSlide, totalSlides]);
 
   return (
-    <Box className="msec01" mb={{ base: "15px", md: "20px", lg: "45px" }}>
+    <Box
+      className="msec01"
+      mb={{ base: "15px", md: "20px", lg: "45px" }}
+    >
       <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
         <Heading
           as="h3"
-          mb={{ base: 5, md: 5, lg: 7 }}
+          mb={{ base: 5, md: 6, lg: 7 }}
           fontSize={{ base: "24px", md: "32px", lg: "40px" }}
           fontWeight="bold"
           color={"#444445"}
@@ -135,6 +138,7 @@ export const MainHeroSection = () => {
                     zIndex="1"
                     pr={{ base: 4, md: 5, lg: 6 }}
                     pl={0}
+                    display={{ base: "none", md: "block" }}
                   >
                     <Text
                       py={{ base: 4, md: 5, lg: 6 }}

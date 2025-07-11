@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import {
   Box,
   Text,
@@ -11,20 +11,15 @@ import {
   Spinner,
   HStack,
 } from "@chakra-ui/react";
-import {
-  SearchIcon,
-  UserIcon,
-  XIcon,
-  MessageSquareIcon,
-  Edit2Icon,
-  DownloadIcon,
-  PlusCircleIcon,
-  PlusIcon,
-} from "lucide-react";
+import { XIcon, MessageSquareIcon, PlusIcon } from "lucide-react";
 import { useColors } from "@/styles/theme";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/adminApi";
-import type { EnrollAdminResponseDto, PaginatedResponse } from "@/types/api";
+import type {
+  EnrollAdminResponseDto,
+  PaginatedResponse,
+  ApiResponse,
+} from "@/types/api";
 import { UiDisplayStatus } from "@/types/statusTypes";
 import { AgGridReact } from "ag-grid-react";
 import {
@@ -33,6 +28,7 @@ import {
   AllCommunityModule,
   type ICellRendererParams,
   type ValueFormatterParams,
+  type CellStyle,
 } from "ag-grid-community";
 
 import { useColorMode } from "@/components/ui/color-mode";
@@ -45,10 +41,14 @@ import { getMembershipLabel } from "@/lib/utils/displayUtils";
 // Import the new dialog components
 import {
   UserMemoDialog,
-  type EnrollmentData,
+  type EnrollmentData as UserMemoEnrollmentData,
 } from "./enrollmentManagement/UserMemoDialog";
 import { TemporaryEnrollmentDialog } from "./enrollmentManagement/TemporaryEnrollmentDialog";
 import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
+
+export type EnrollmentData = UserMemoEnrollmentData & {
+  lockerNo?: string | null;
+};
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -216,6 +216,7 @@ export const EnrollmentManagementTab = ({
         userGender: dto.userGender || "OTHER",
         userLoginId: dto.userLoginId || "N/A",
         userPhone: dto.userPhone || "N/A",
+        lockerNo: dto.lockerNo,
       })
     );
   }, [paginatedEnrollmentsData]);
@@ -229,10 +230,58 @@ export const EnrollmentManagementTab = ({
     number | null
   >(null);
 
+  const updateLockerNoMutation = useMutation<
+    ApiResponse<EnrollAdminResponseDto>,
+    Error,
+    { enrollId: number; lockerNo: string | null }
+  >({
+    mutationFn: ({ enrollId, lockerNo }) =>
+      adminApi.updateEnrollmentLockerNo(enrollId, { lockerNo }),
+    onSuccess: (response, variables) => {
+      const userName = response.data?.userName || "회원";
+      const lockerNo = variables.lockerNo;
+
+      toaster.success({
+        title: "사물함 번호 업데이트",
+        description: lockerNo
+          ? `${userName} 님의 사물함 번호가 ${lockerNo}(으)로 등록되었습니다.`
+          : `${userName} 님의 사물함 번호가 해제되었습니다.`,
+      });
+      queryClient.invalidateQueries({
+        queryKey: enrollmentQueryKeys.list(
+          lessonIdFilter,
+          selectedYear,
+          selectedMonth,
+          {
+            payStatus: filters.payStatus || undefined,
+          }
+        ),
+      });
+    },
+    onError: (error) => {
+      toaster.error({
+        title: "업데이트 실패",
+        description: error.message,
+      });
+    },
+  });
+
+  const onCellValueChanged = useCallback(
+    (params: any) => {
+      const { colDef, newValue, data } = params;
+      if (colDef.field === "lockerNo") {
+        updateLockerNoMutation.mutate({
+          enrollId: data.enrollId,
+          lockerNo: newValue,
+        });
+      }
+    },
+    [updateLockerNoMutation]
+  );
+
   const bg = colorMode === "dark" ? "#1A202C" : "white";
   const textColor = colorMode === "dark" ? "#E2E8F0" : "#2D3748";
   const borderColor = colorMode === "dark" ? "#2D3748" : "#E2E8F0";
-  const primaryColor = colors.primary?.default || "#2a7fc1";
   const agGridTheme =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
@@ -299,6 +348,16 @@ export const EnrollmentManagementTab = ({
           alignItems: "center",
           justifyContent: "center",
         },
+      },
+      {
+        headerName: "사물함 번호",
+        field: "lockerNo",
+        editable: true,
+        width: 110,
+        cellStyle: {
+          padding: "0px",
+          justifyContent: "center",
+        } as CellStyle,
       },
       {
         headerName: "구분",
@@ -396,13 +455,6 @@ export const EnrollmentManagementTab = ({
     [enrollmentIdToCancel, adminCancelEnrollmentMutation]
   );
 
-  const handleDiscountApproval = useCallback(
-    (enrollId: number, status: "APPROVED" | "DENIED") => {
-      console.log("할인 승인/거절:", enrollId, status);
-    },
-    []
-  );
-
   const openMemoDialog = useCallback((data: EnrollmentData) => {
     setSelectedUserForMemo(data);
   }, []);
@@ -419,9 +471,8 @@ export const EnrollmentManagementTab = ({
     () => ({
       openMemoDialog,
       adminCancelEnrollment: handleAdminCancelRequest,
-      handleDiscountApproval,
     }),
-    [openMemoDialog, handleAdminCancelRequest, handleDiscountApproval]
+    [openMemoDialog, handleAdminCancelRequest]
   );
 
   const filteredEnrollmentsForGrid = useMemo(() => {
@@ -525,6 +576,7 @@ export const EnrollmentManagementTab = ({
           headerHeight={36}
           rowHeight={40}
           context={agGridContext}
+          onCellValueChanged={onCellValueChanged}
           getRowStyle={() => ({
             color: textColor,
             background: bg,

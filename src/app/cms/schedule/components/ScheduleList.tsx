@@ -2,94 +2,24 @@
 
 import React from "react";
 import { useState } from "react";
-import {
-  Box,
-  Table,
-  IconButton,
-  Text,
-  Badge,
-  VStack,
-  Flex,
-  HStack,
-  Stack,
-  Spinner,
-} from "@chakra-ui/react";
-import { Schedule, ScheduleStatus } from "../types";
+import { Box, Text, Badge, Flex, Stack } from "@chakra-ui/react";
+import { Schedule } from "../types";
 import { useColors } from "@/styles/theme";
-import { LuEyeOff, LuTrash2 } from "react-icons/lu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { formatDate } from "../utils";
 import { format } from "date-fns";
 
 interface ScheduleListProps {
   schedules: Schedule[];
   onEdit: (schedule: Schedule) => void;
   onDelete: (scheduleId: number) => void;
-  onToggleDisplay: (scheduleId: number) => void;
-  onPageChange: (page: number) => void;
-  onSortChange: (sort: string) => void;
-  currentPage: number;
-  totalPages: number;
   selectedDate?: Date;
   selectedScheduleId?: number;
 }
-
-const StatusBadge: React.FC<{ status: ScheduleStatus }> = ({ status }) => {
-  const colors = useColors();
-  const statusColors = {
-    UPCOMING: {
-      bg: "blue.50",
-      color: "blue.700",
-      text: "예정",
-    },
-    ONGOING: {
-      bg: "green.50",
-      color: "green.700",
-      text: "진행중",
-    },
-    COMPLETED: {
-      bg: "gray.50",
-      color: "gray.700",
-      text: "종료",
-    },
-    ENDED: {
-      bg: "gray.50",
-      color: "gray.700",
-      text: "종료",
-    },
-    HIDDEN: {
-      bg: "gray.100",
-      color: "gray.500",
-      text: "숨김",
-    },
-  };
-
-  const { bg, color, text } = statusColors[status];
-
-  return (
-    <Badge
-      bg={bg}
-      color={color}
-      px={2}
-      py={1}
-      borderRadius="full"
-      fontSize="xs"
-      fontWeight="medium"
-    >
-      {text}
-    </Badge>
-  );
-};
 
 export const ScheduleList: React.FC<ScheduleListProps> = ({
   schedules,
   onEdit,
   onDelete,
-  onToggleDisplay,
-  onPageChange,
-  onSortChange,
-  currentPage,
-  totalPages,
   selectedDate,
   selectedScheduleId,
 }) => {

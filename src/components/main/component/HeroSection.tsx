@@ -30,6 +30,16 @@ export function HeroSection() {
   const heroBoxWidth = useBreakpointValue({ base: "100%", lg: "30%" });
   const imageBoxWidth = useBreakpointValue({ base: "100%", lg: "69%" });
 
+  const imageSrc = useBreakpointValue({
+    base: "/images/contents/main_3_m.png", // 모바일용 이미지
+    md: "/images/contents/main_3.png", // 데스크톱용 이미지
+  });
+
+  const heroImageSrc = useBreakpointValue({
+    base: "/images/contents/msec01_sld_img02m.png", // 모바일용 이미지
+    md: "/images/contents/msec01_sld_img02.png", // 데스크톱용 이미지
+  });
+
   return (
     <>
       <Global
@@ -102,10 +112,18 @@ export function HeroSection() {
                 }}
               >
                 <SwiperSlide>
-                  <Box w="100%" position="relative" display="block">
-                    <AspectRatio ratio={1088 / 620} w="100%">
+                  <Box
+                    w="100%"
+                    position="relative"
+                    display="block"
+                    h={{ base: "400px", md: "auto" }}
+                    borderRadius={{ base: "15px", md: "0" }}
+                    mt={{ base: "10px" }}
+                    overflow="hidden"
+                  >
+                    <AspectRatio ratio={1088 / 620} w="100%" h="100%">
                       <Image
-                        src="/images/contents/msec01_sld_img02.png"
+                        src={heroImageSrc}
                         alt="새로운 여정의 시작"
                         w="100%"
                         h="100%"
@@ -126,6 +144,7 @@ export function HeroSection() {
                           fontSize={{ base: "14px", md: "20px", lg: "28px" }}
                           fontWeight="semibold"
                           color="#1F2732"
+                          display={{ base: "none", md: "block" }}
                         >
                           도심 속 합리적인 컨벤션 & 스테이
                         </Text>
@@ -144,7 +163,7 @@ export function HeroSection() {
               <Box>
                 <Link href="https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA">
                   <Image
-                    src="/images/contents/main_3.png"
+                    src={imageSrc}
                     alt="호텔 실시간 예약"
                     w="100%"
                     h="auto"

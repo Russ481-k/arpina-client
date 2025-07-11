@@ -26,9 +26,7 @@ export const PaymentHistoryTab = ({
   selectedMonth,
 }: PaymentHistoryTabProps) => {
   const { colorMode } = useColorMode();
-  const [activeTab, setActiveTab] = useState<"payments" | "refunds">(
-    "payments"
-  );
+
   const [paymentsCurrentPage] = useState(0);
   const [paymentsPageSize] = useState(100);
 

@@ -26,6 +26,7 @@ export interface GroupReservationInquiryData {
   contactPersonName: string;
   contactPersonDpt?: string;
   contactPersonPhone: string;
+  contactPersonTel: string;
   contactPersonEmail: string;
   privacyAgreed: boolean;
   marketingAgreed: boolean;

@@ -91,7 +91,7 @@ export default function EstimateTemplate({
         </Text>
       </Box>
 
-      {/* 연회장/세미나실 테이블 */}
+      {/* 세미나실/세미나실 테이블 */}
       {hallData.length > 0 && (
         <Box mb={6}>
           <table
@@ -126,8 +126,6 @@ export default function EstimateTemplate({
                     verticalAlign: "top",
                   }}
                 >
-                  연회장
-                  <br />
                   세미나실
                 </th>
                 <th
@@ -286,7 +284,7 @@ export default function EstimateTemplate({
                   </td>
                 </tr>
               ))}
-              {/* 연회장 소계 */}
+              {/* 세미나실 소계 */}
               <tr>
                 <td
                   colSpan={7}

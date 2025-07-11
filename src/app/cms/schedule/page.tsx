@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { Box, Flex, Heading, Badge } from "@chakra-ui/react";
 import { GridSection } from "@/components/ui/grid-section";
 import { useColors } from "@/styles/theme";
@@ -8,13 +8,7 @@ import { toaster, Toaster } from "@/components/ui/toaster";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Calendar } from "./components/calendar/Calendar";
-import {
-  Schedule,
-  ScheduleListParams,
-  ScheduleListResponse,
-  ScheduleFormData,
-  ScheduleResponse,
-} from "./types";
+import { Schedule, ScheduleListResponse, ScheduleFormData } from "./types";
 import { scheduleApi } from "@/lib/api/schedule";
 import { ScheduleForm } from "./components/ScheduleForm";
 import { ScheduleList } from "./components/ScheduleList";
@@ -278,11 +272,6 @@ export default function ScheduleManagementPage() {
               schedules={filteredSchedules}
               onEdit={handleEditSchedule}
               onDelete={handleDeleteSchedule}
-              onToggleDisplay={handleToggleDisplay}
-              onPageChange={() => {}}
-              onSortChange={() => {}}
-              currentPage={1}
-              totalPages={1}
               selectedDate={selectedDate}
               selectedScheduleId={selectedSchedule?.scheduleId || undefined}
             />

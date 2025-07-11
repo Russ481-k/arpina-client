@@ -7,7 +7,6 @@ import {
   Text,
   Button,
   NativeSelect,
-  Stack,
   Flex,
   For,
   SimpleGrid,
@@ -17,7 +16,6 @@ import {
   DownloadIcon,
   UsersIcon,
   DollarSignIcon,
-  BarChart3Icon,
   TrendingUpIcon,
   ListChecksIcon,
   BriefcaseIcon,
@@ -26,7 +24,6 @@ import {
 } from "lucide-react";
 import { useColors } from "@/styles/theme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminApi } from "@/lib/api/adminApi";
 import { toaster } from "@/components/ui/toaster";
 import { StatisticDisplayCard } from "./statistics/StatisticDisplayCard";
 import dayjs from "dayjs";

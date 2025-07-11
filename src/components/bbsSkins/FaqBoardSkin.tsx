@@ -5,11 +5,9 @@ import { Accordion, Box, Text, useBreakpointValue } from "@chakra-ui/react";
 import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api"; // Post 타입에 FAQ 질문(title)과 답변(content)이 있다고 가정
 import { PaginationData } from "@/types/common"; // PaginationData import
-import { CustomPagination } from "@/components/common/CustomPagination"; // CustomPagination import
 import { useRouter } from "next/navigation"; // for onPageChange
 import { ArticleDisplay } from "@/components/articles/ArticleDisplay"; // Import ArticleDisplay
-
-const AVAILABLE_PAGE_SIZES_FAQ = [10, 20, 50]; // FAQ용 페이지 크기 옵션 (다를 수 있음)
+import PostTitleDisplay from "@/components/common/PostTitleDisplay"; // PostTitleDisplay 임포트
 
 interface FaqBoardSkinProps {
   pageDetails: PageDetailsDto;
@@ -25,26 +23,12 @@ const FaqBoardSkin: React.FC<FaqBoardSkinProps> = ({
   currentPathId, // prop 받기
 }) => {
   const router = useRouter();
-  const canWrite =
-    pageDetails.boardWriteAuth &&
-    pageDetails.boardWriteAuth !== "NONE_OR_SIMILAR_RESTRICTIVE_VALUE";
-
   // 반응형 폰트 크기 설정
   const fontSize = useBreakpointValue({
     base: "sm",
     md: "lg",
     lg: "2xl",
   });
-
-  const handlePageChange = (page: number) => {
-    router.push(
-      `/bbs/${currentPathId}?page=${page + 1}&size=${pagination.pageSize}` // currentPathId 사용
-    );
-  };
-
-  const handlePageSizeChange = (newSize: number) => {
-    router.push(`/bbs/${currentPathId}?page=1&size=${newSize}`); // currentPathId 사용
-  };
 
   return (
     <Box borderTop="2px solid #000" mt={5}>
@@ -70,13 +54,7 @@ const FaqBoardSkin: React.FC<FaqBoardSkinProps> = ({
                   >
                     Q
                   </Text>
-                  <Text
-                    color="#404040"
-                    fontSize={{ base: "sm ", md: "lg", lg: "2xl" }}
-                    fontWeight="semibold"
-                  >
-                    {faqItem.title}
-                  </Text>
+                  <PostTitleDisplay title={faqItem.title} postData={faqItem} />
                 </Box>
                 <Accordion.ItemIndicator
                   position="absolute"

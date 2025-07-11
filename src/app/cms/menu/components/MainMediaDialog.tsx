@@ -189,10 +189,6 @@ export const MainMediaDialog: React.FC<MainMediaDialogProps> = ({
         return;
       }
 
-      // Debug: Check selectedFile state
-      console.log("selectedFile:", selectedFile);
-      console.log("selectedMedia:", selectedMedia);
-
       if (!selectedFile && !selectedMedia) {
         toaster.error({
           title: "파일을 선택해주세요.",
@@ -206,23 +202,11 @@ export const MainMediaDialog: React.FC<MainMediaDialogProps> = ({
 
         // Step 1: Upload file first if a new file is selected
         if (selectedFile) {
-          console.log(
-            "Uploading file:",
-            selectedFile.name,
-            selectedFile.size,
-            selectedFile.type
-          );
-
           // Debug: Create FormData manually to see what's being sent
           const debugFormData = new FormData();
           debugFormData.append("files", selectedFile, selectedFile.name);
           debugFormData.append("menu", "MAIN_MEDIA");
           debugFormData.append("menuId", "0");
-
-          console.log("Debug FormData contents:");
-          for (const [key, value] of debugFormData.entries()) {
-            console.log(key, value);
-          }
 
           const fileUploadResponse = await fileApi.upload(
             selectedFile,
@@ -230,14 +214,11 @@ export const MainMediaDialog: React.FC<MainMediaDialogProps> = ({
             0 // temporary menuId, will be updated with actual media ID later
           );
 
-          console.log("File upload response:", fileUploadResponse);
-
           if (
             fileUploadResponse.success &&
             fileUploadResponse.data.length > 0
           ) {
             fileId = fileUploadResponse.data[0].fileId;
-            console.log("File uploaded successfully, fileId:", fileId);
           } else {
             throw new Error("파일 업로드에 실패했습니다.");
           }
@@ -253,8 +234,6 @@ export const MainMediaDialog: React.FC<MainMediaDialogProps> = ({
           ...(fileId && { fileId }), // Include fileId only if we have one
         };
 
-        console.log("Prepared mainMediaDtoPart:", mainMediaDtoPart);
-
         const mainMediaDtoBlob = new Blob([JSON.stringify(mainMediaDtoPart)], {
           type: "application/json",
         });
@@ -264,12 +243,6 @@ export const MainMediaDialog: React.FC<MainMediaDialogProps> = ({
         if (selectedFile && fileId) {
           // Note: We already uploaded the file, but some APIs might expect the file in the main request too
           // Check if this is needed based on your API specification
-        }
-
-        // Debug: Log FormData contents
-        console.log("FormData contents:");
-        for (const [key, value] of formData.entries()) {
-          console.log(key, value);
         }
 
         if (selectedMedia) {
@@ -318,17 +291,9 @@ export const MainMediaDialog: React.FC<MainMediaDialogProps> = ({
   }, [selectedMedia, deleteMutation]);
 
   const handleFileChange = useCallback((files: File[]) => {
-    console.log("handleFileChange called with files:", files);
     if (files.length > 0) {
-      console.log(
-        "Setting selectedFile to:",
-        files[0].name,
-        files[0].size,
-        files[0].type
-      );
       setSelectedFile(files[0]);
     } else {
-      console.log("No files provided, clearing selectedFile");
       setSelectedFile(null);
     }
   }, []);

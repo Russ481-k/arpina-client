@@ -1,17 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useCallback } from "react";
-import {
-  Box,
-  Button,
-  Heading,
-  Text,
-  Flex,
-  Link as ChakraLink,
-  Badge,
-  HStack,
-  Icon,
-} from "@chakra-ui/react";
+import { Box, Text, Flex, Badge, HStack, Icon } from "@chakra-ui/react";
 import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api";
 import { PaginationData } from "@/types/common";
@@ -36,6 +26,7 @@ import { useColorMode } from "@/components/ui/color-mode"; // For theme switchin
 import { useColors } from "@/styles/theme"; // For custom theme colors
 import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config"; // Theme styles
 import { LuImage, LuPaperclip, LuEye } from "react-icons/lu"; // Icons
+import TitleCellRenderer from "@/components/common/TitleCellRenderer"; // TitleCellRenderer 임포트
 
 ModuleRegistry.registerModules([AllCommunityModule]); // Register AG Grid modules
 
@@ -160,12 +151,6 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
   const { colorMode } = useColorMode(); // For theme
   const colors = useColors(); // For theme
 
-  console.log(posts);
-
-  const canWrite =
-    pageDetails.boardWriteAuth &&
-    pageDetails.boardWriteAuth !== "NONE_OR_SIMILAR_RESTRICTIVE_VALUE";
-
   const handlePageChange = (page: number) => {
     router.push(
       `/bbs/${currentPathId}?page=${page + 1}&size=${pagination.pageSize}`
@@ -193,6 +178,14 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 80,
         sortable: true,
         cellRenderer: NoticeNumberRenderer,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "상태",
@@ -200,20 +193,43 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 100,
         sortable: true,
         cellRenderer: StatusRenderer,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "제목",
         field: "title",
         flex: 1,
         sortable: true,
-        cellRenderer: TitleRenderer,
+        cellRenderer: TitleCellRenderer,
+        cellStyle: {
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        },
       },
       {
         headerName: "작성자",
         field: "displayWriter",
         width: 120,
         sortable: true,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "등록일",
@@ -221,7 +237,14 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 120,
         valueFormatter: dateFormatter,
         sortable: true,
-        cellStyle: { justifyContent: "center" },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
       {
         headerName: "조회",
@@ -229,6 +252,14 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         width: 80,
         cellRenderer: ViewsRenderer,
         sortable: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
+          textOverflow: "clip",
+          whiteSpace: "normal",
+        },
       },
     ],
     []

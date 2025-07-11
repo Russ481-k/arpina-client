@@ -20,7 +20,6 @@ export function withAuthRedirect<T extends (...args: any[]) => Promise<any>>(
   return async (
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>> | null> => {
-    console.log(`[withAuthRedirect] Calling API: ${apiCall.name}`, args);
     try {
       // The wrapped apiCall is responsible for its own logic, including throwing
       // a custom ApiError with status 401 if a 200 OK response means "no data for auth".
@@ -30,9 +29,6 @@ export function withAuthRedirect<T extends (...args: any[]) => Promise<any>>(
       console.error("[withAuthRedirect] API Error caught:", apiError);
 
       if (apiError.status === 401) {
-        console.log(
-          "[withAuthRedirect] Auth error (401) detected. Preparing to redirect."
-        );
         let description = "로그인이 필요합니다. 로그인 페이지로 이동합니다.";
         if (apiError.isNoDataAuthError) {
           description =
@@ -52,14 +48,10 @@ export function withAuthRedirect<T extends (...args: any[]) => Promise<any>>(
           currentPath
         )}`;
 
-        console.log(
-          `[withAuthRedirect] Attempting to redirect to: ${loginUrl}`
-        );
         try {
           // It's important that Router.push completes before null is returned,
           // but in practice, the redirect will take over.
           await Router.push(loginUrl);
-          console.log("[withAuthRedirect] Redirect initiated to:", loginUrl);
         } catch (redirectError) {
           console.error(
             "[withAuthRedirect] Error during Router.push:",
@@ -86,7 +78,6 @@ export function withAuthRedirect<T extends (...args: any[]) => Promise<any>>(
       //   description: apiError.message || "알 수 없는 오류가 발생했습니다.",
       //   type: "error",
       // });
-      console.log("[withAuthRedirect] Error is not 401, re-throwing.");
       throw apiError;
     }
   };

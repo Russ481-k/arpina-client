@@ -1,8 +1,7 @@
 import React from "react";
-import { Dialog, Text, Stack, Badge, Box, Separator } from "@chakra-ui/react";
+import { Dialog, Text, Stack, Box } from "@chakra-ui/react";
 import { Schedule } from "../types";
-import { formatDateTime, getStatusColor, getStatusText } from "../utils";
-import { useColors } from "@/styles/theme";
+import { formatDateTime } from "../utils";
 
 interface SchedulePopupProps {
   schedule: Schedule | null;
@@ -15,8 +14,6 @@ export const SchedulePopup: React.FC<SchedulePopupProps> = ({
   isOpen,
   onClose,
 }) => {
-  const colors = useColors();
-
   if (!schedule) return null;
 
   return (

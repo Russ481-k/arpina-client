@@ -27,6 +27,10 @@ import type {
   CreateUserMemoRequestDto,
 } from "@/types/api";
 
+export interface UpdateLockerNoRequestDto {
+  lockerNo: string | null;
+}
+
 const CMS_API_BASE = "/cms";
 
 export const adminApi = {
@@ -138,6 +142,16 @@ export const adminApi = {
   ): Promise<EnrollAdminResponseDto> => {
     const response = await privateApi.put<EnrollAdminResponseDto>(
       `${CMS_API_BASE}/enrollments/${enrollId}/discount-status`,
+      data
+    );
+    return response.data;
+  },
+  updateEnrollmentLockerNo: async (
+    enrollId: number,
+    data: UpdateLockerNoRequestDto
+  ): Promise<ApiResponse<EnrollAdminResponseDto>> => {
+    const response = await privateApi.put<ApiResponse<EnrollAdminResponseDto>>(
+      `${CMS_API_BASE}/enrollments/${enrollId}/locker-no`,
       data
     );
     return response.data;

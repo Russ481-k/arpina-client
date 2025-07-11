@@ -7,7 +7,7 @@ import {
   Portal,
   Textarea,
   Stack,
-  Text, // Added for potential enrollId display
+  Text,
 } from "@chakra-ui/react";
 
 interface AdminCancelReasonDialogProps {
@@ -22,23 +22,18 @@ export const AdminCancelReasonDialog: React.FC<
 > = ({ isOpen, onClose, onSubmit, enrollId }) => {
   const [reason, setReason] = useState("");
 
-  // Reset reason when dialog is opened for a new enrollId or closed
   useEffect(() => {
     if (isOpen) {
-      setReason(""); // Clear previous reason when opening
+      setReason("");
     }
   }, [isOpen]);
 
   const handleSubmit = () => {
-    onSubmit(reason.trim() || "관리자 직접 취소"); // Use default if reason is empty or only whitespace
-    // No need to call onClose or setReason here, as the parent component
-    // will close the dialog (which triggers the useEffect above if reopened)
-    // and handles state post-mutation.
+    onSubmit(reason.trim() || "관리자 직접 취소");
   };
 
   const handleClose = () => {
     onClose();
-    // setReason(""); // Resetting reason is handled by useEffect on next open
   };
 
   if (!isOpen) {
@@ -78,7 +73,6 @@ export const AdminCancelReasonDialog: React.FC<
                 취소 처리
               </Button>
             </Dialog.Footer>
-            {/* Dialog.CloseTrigger is not strictly needed if Button onClick handles onClose */}
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>

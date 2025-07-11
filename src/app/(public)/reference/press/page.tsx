@@ -1,13 +1,12 @@
 "use client"; // Make it a client component
 
-import { useEffect, useState, useCallback } from "react"; // Added hooks
+import { useEffect, useState } from "react"; // Added hooks
 import { notFound, useRouter, useSearchParams } from "next/navigation"; // Added useRouter, useSearchParams
 import { menuApi } from "@/lib/api/menu";
-import { articleApi, Article } from "@/lib/api/article";
+import { articleApi } from "@/lib/api/article";
 import { PageDetailsDto } from "@/types/menu";
-import { Post, Menu } from "@/types/api";
+import { Post, Menu, BoardArticleCommon, FileDto } from "@/types/api"; // BoardArticleCommon, FileDto 임포트 추가
 import { PaginationData } from "@/types/common";
-import { File } from "@/app/cms/file/types"; // Assuming this is still needed for mapArticleToPost
 import PressBoardSkin from "@/components/bbsSkins/PressBoardSkin";
 import { findMenuByPath } from "@/lib/menu-utils";
 import BoardControls from "@/components/bbsCommon/BoardControls"; // Import BoardControls
@@ -23,30 +22,17 @@ const DEFAULT_SORT_ORDER = "createdAt,desc";
 // --- Helper functions (copied and adapted from /bbs/[id]/page.tsx) ---
 
 // Helper to map Article to Post
-function mapArticleToPost(article: Article): Post {
-  const mappedAttachments: File[] | null = article.attachments
-    ? article.attachments.map((att): File => {
-        const savedNameDerived =
-          att.downloadUrl.substring(att.downloadUrl.lastIndexOf("/") + 1) ||
-          att.originName;
+function mapArticleToPost(article: BoardArticleCommon): Post {
+  const mappedAttachments: FileDto[] | null = article.attachments
+    ? article.attachments.map((att): FileDto => {
         return {
           fileId: att.fileId,
           originName: att.originName,
           mimeType: att.mimeType,
           size: att.size,
           ext: att.ext,
-          menu: "BBS",
-          menuId: article.menuId,
-          savedName: savedNameDerived,
-          version: 1,
-          publicYn: "Y",
-          fileOrder: 0,
-          createdBy: null,
-          createdDate: null,
-          createdIp: null,
-          updatedBy: null,
-          updatedDate: null,
-          updatedIp: null,
+          downloadUrl: att.downloadUrl, // FileDto에 downloadUrl 추가
+          publicYn: att.publicYn, // FileDto에 publicYn 추가
         };
       })
     : null;

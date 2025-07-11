@@ -110,7 +110,7 @@ export const heroSectionData: Record<
   },
   "/rooms/estimate/calculate": {
     header: "객실",
-    title: "연회장/객실 가견적 산출",
+    title: "세미나실/객실 가견적 산출",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -120,7 +120,7 @@ export const heroSectionData: Record<
   },
   "/rooms/estimate/sheet": {
     header: "객실",
-    title: "연회장/객실 가견적 산출",
+    title: "세미나실/객실 가견적 산출",
     image: "/images/rooms/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -201,7 +201,7 @@ export const heroSectionData: Record<
   "/sports/futsal": {
     header: "스포츠",
     title: "풋살",
-    image: "/images/sports/sub_visual.png",
+    image: "/images/sports/futsal_bg.jpg",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },
@@ -211,7 +211,7 @@ export const heroSectionData: Record<
   "/sports/golf": {
     header: "스포츠",
     title: "골프",
-    image: "/images/sports/sub_visual.png",
+    image: "/images/sports/golf_bg.jpg",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
       { label: "홈", url: "/" },

@@ -36,10 +36,8 @@ import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
 import type { EnrollmentPayStatus } from "@/types/statusTypes";
 import type { EnrollAdminResponseDto, UserMemoDto } from "@/types/api";
 
-// NOTE: This interface extends the DTO. The memo is fetched separately and
-// might not be part of the grid's initial data (`selectedUser`).
 export interface EnrollmentData extends EnrollAdminResponseDto {
-  memo?: string; // This might be stale, primary source of memo is the dedicated query.
+  memo?: string;
   isRenewal?: boolean;
 }
 
@@ -87,7 +85,6 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
   const [userMemoText, setUserMemoText] = useState("");
   const queryClient = useQueryClient();
 
-  // 1. Fetch the user's memo using userId (which is the UUID)
   const { data: userMemoData } = useQuery<UserMemoDto, Error>({
     queryKey: ["userMemo", selectedUser?.userId],
     queryFn: () => {
@@ -99,7 +96,6 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
     retry: false,
   });
 
-  // 2. Fetch user's entire enrollment history using userId
   const {
     data: userEnrollmentsHistoryData,
     isLoading: isLoadingUserEnrollmentsHistory,
@@ -118,13 +114,11 @@ export const UserMemoDialog: React.FC<UserMemoDialogProps> = ({
     enabled: !!selectedUser?.userId,
   });
 
-  // Set memo text when data is available
   useEffect(() => {
     const memo = userMemoData?.memo ?? selectedUser?.memo ?? "";
     setUserMemoText(memo);
   }, [userMemoData, selectedUser]);
 
-  // 3. Setup mutation for saving the memo using userId
   const { mutate: saveMemo, isPending: isSavingMemo } = useMutation({
     mutationFn: (memo: string) => {
       if (!selectedUser?.userId)
