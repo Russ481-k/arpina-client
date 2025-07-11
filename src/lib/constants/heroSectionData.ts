@@ -259,8 +259,8 @@ export const heroSectionData: Record<
     ],
   },
   "/youth/committee": {
-    header: "부대시설설",
-    title: "청소년 운영위원회회",
+    header: "부대시설",
+    title: "청소년 운영위원회",
     image: "/images/youth/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -270,7 +270,7 @@ export const heroSectionData: Record<
   },
   "/youth/training": {
     header: "청소년",
-    title: "청소년 수련활동동",
+    title: "청소년 수련활동",
     image: "/images/youth/sub_visual.png",
     breadcrumbBorderColor: "#2E3192",
     breadcrumb: [
@@ -328,7 +328,6 @@ export const heroSectionData: Record<
       { label: "사용자정보", url: "/mypage" },
     ],
   },
-
   "/application/confirm": {
     header: "스포츠",
     title: "수영장 온라인 신청",
@@ -337,6 +336,16 @@ export const heroSectionData: Record<
     breadcrumb: [
       { label: "홈", url: "/" },
       { label: "스포츠", url: "/sports/swimming/futsal" },
+    ],
+  },
+  "/promotion/partnership": {
+    header: "프로모션",
+    title: "할인제휴",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "프로모션", url: "/promotion/partnership" },
     ],
   },
   "/bbs/notices": {
@@ -417,6 +426,48 @@ export const heroSectionData: Record<
     breadcrumb: [
       { label: "홈", url: "/" },
       { label: "알림", url: "/bbs/voice" },
+    ],
+  },
+  "/operation-guidelines": {
+    header: "운영지침",
+    title: "아르피나 운영지침",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      { label: "홈", url: "/operation-guidelines" },
+    ],
+  },
+  "/privacy-policy": {
+    header: "개인정보처리방침",
+    title: "개인정보처리방침",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      { label: "홈", url: "/privacy-policy" },
+    ],
+  },
+  "/video-policy": {
+    header: "영상정보처리기기운영·관리방침",
+    title: "영상정보처리기기운영·관리방침",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      {
+        label: "홈",
+        url: "/video-policy",
+      },
+    ],
+  },
+  "/reject-spam-email": {
+    header: "이메일무단수집거부",
+    title: "이메일무단수집거부",
+    image: "/images/bbs/sub_visual.png",
+    breadcrumbBorderColor: "#353535",
+    breadcrumb: [
+      {
+        label: "홈",
+        url: "/reject-spam-email",
+      },
     ],
   },
 };

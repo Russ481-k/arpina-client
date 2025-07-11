@@ -11,7 +11,7 @@ export default function HeadingH4({ children }: HeadingH4Props) {
   const fontSize = useBreakpointValue({
     base: "2xl", // sm 이하: 2단계 줄임 (60px -> 4xl)
     md: "3xl", // sm: 1단계 줄임 (60px -> 5xl)
-    lg: "60px", // lg: 원래 크기 (60px)
+    lg: "48px", // lg: 원래 크기 (60px)
   });
 
   return (
