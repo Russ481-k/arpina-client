@@ -41,7 +41,7 @@ export default function Home() {
 
   const router = useRouter();
   useEffect(() => {
-    router.push("/test2");
+    router.push("/");
   }, []);
 
   return (
