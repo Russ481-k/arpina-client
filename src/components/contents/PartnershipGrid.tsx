@@ -9,6 +9,9 @@ import {
   Heading,
   Badge,
   Link,
+  Button,
+  Grid,
+  HStack,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { membershipData } from "@/data/membershipData";
@@ -17,22 +20,20 @@ const PartnershipGrid = () => {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
-    <Flex
-      wrap="wrap"
-      justifyContent={isMobile ? "center" : "flex-start"}
+    <Grid
+      templateColumns={{
+        base: "1fr",
+        sm: "repeat(2, 1fr)",
+        lg: "repeat(3, 1fr)",
+        xl: "repeat(4, 1fr)",
+      }}
       gap={6}
     >
       {membershipData.map((card) => (
         <VStack
           key={card.id}
-          w={{
-            base: "100%",
-            sm: "calc(50% - 12px)",
-            lg: "calc(33.33% - 16px)",
-            xl: "calc(25% - 18px)",
-          }}
-          h={{ base: "auto", sm: "full" }}
-          minH={{ base: 0, sm: "500px" }}
+          w="full"
+          h="full"
           p={6}
           borderWidth="1px"
           borderColor="gray.200"
@@ -47,19 +48,6 @@ const PartnershipGrid = () => {
           overflow="hidden"
           position="relative"
         >
-          <Link
-            as={NextLink}
-            href={card.linkUrl || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            position="absolute"
-            w="full"
-            h="full"
-            top="0"
-            left="0"
-            zIndex="docked"
-            aria-label={card.title}
-          />
           <Image
             src={card.logoUrl}
             alt={`${card.title} logo`}
@@ -167,9 +155,52 @@ const PartnershipGrid = () => {
               ))}
             </VStack>
           )}
+
+          <Flex w="full" mt="auto" pt={4} justifyContent="flex-end">
+            {card.links && card.links.length > 0 ? (
+              <HStack gap={2} flexWrap="wrap" justifyContent="flex-end">
+                {card.links.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    _hover={{ textDecoration: "none" }}
+                  >
+                    <Button
+                      size="sm"
+                      bg="#FAB20B"
+                      color="white"
+                      _hover={{ bg: "#E0A00A" }}
+                      variant="solid"
+                    >
+                      {link.name} →
+                    </Button>
+                  </Link>
+                ))}
+              </HStack>
+            ) : card.linkUrl ? (
+              <Link
+                href={card.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                _hover={{ textDecoration: "none" }}
+              >
+                <Button
+                  size="sm"
+                  bg="#FAB20B"
+                  color="white"
+                  _hover={{ bg: "#E0A00A" }}
+                  variant="solid"
+                >
+                  이동하기 →
+                </Button>
+              </Link>
+            ) : null}
+          </Flex>
         </VStack>
       ))}
-    </Flex>
+    </Grid>
   );
 };
 

@@ -12,6 +12,7 @@ export interface MembershipCardData {
   text?: string;
   tiers?: MembershipTier[];
   linkUrl?: string;
+  links?: { name: string; url: string }[];
 }
 
 export const membershipData: MembershipCardData[] = [
@@ -53,13 +54,11 @@ export const membershipData: MembershipCardData[] = [
     text: `아르피나 객실 및 스포츠센터 이용고객 대상
 *프라이빗 & 퍼블릭 요트투어 10% 할인* 제공
 
-※ 아르피나 프론트에서 할인쿠폰 수령 후 예약 문의시
-
-요트탈래 : https://www.yachttale.com
-요트홀릭 : https://www.yachtholic.com
-낭만요트 : http://www.낭만요트.com
-`,
-    linkUrl: "https://www.yachttale.com",
+※ 아르피나 프론트에서 할인쿠폰 수령 후 예약 문의시`,
+    links: [
+      { name: "요트탈래", url: "https://www.yachttale.com" },
+      { name: "요트홀릭", url: "https://www.yachtholic.com" },
+    ],
   },
   {
     id: 5,
@@ -106,6 +105,6 @@ export const membershipData: MembershipCardData[] = [
 
 ※ 로컬상품 : 고품격 힐링투어, 이바구투어, 영도투어 등
 ※ 아르피나 프론트에서 쿠폰 수령 후 예약문의`,
-    linkUrl: "https://www.busan-tour.com/",
+    linkUrl: "https://busanbustour.co.kr/web/html/00_main/",
   },
 ]; 
