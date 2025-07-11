@@ -46,7 +46,7 @@ export function NoticeSection() {
     fetchArticles();
   }, []);
 
-  const noticeItemPadding = useBreakpointValue({ base: "10px", md: "28px" });
+  const noticeItemPadding = useBreakpointValue({ base: "10px", md: "26px" });
   const noticeCateWidth = useBreakpointValue({ base: "70px", md: "130px" });
   const noticeCateFontSize = useBreakpointValue({ base: "12px", md: "16px" });
   const noticeTitleFontSize = useBreakpointValue({ base: "14px", md: "24px" });

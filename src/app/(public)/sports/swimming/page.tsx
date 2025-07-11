@@ -33,7 +33,10 @@ export default function ParticipantsPage() {
             <Box lineHeight={1.5}>
               ★ 아르피나 홈페이지를 통한 온라인 접수 ★ <br />
               기존회원(매월20일~24일) <br />
-              신규회원은(매월25일~선착순마감)
+              신규회원은(매월25일~선착순마감) <br />
+              <Box as="span" color="#FAB20B">
+                ※ 개인 수건 사용 / 수건 미지급
+              </Box>
             </Box>
           ),
         },

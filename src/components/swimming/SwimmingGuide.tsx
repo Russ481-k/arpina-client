@@ -128,6 +128,13 @@ export const SwimmingGuide = () => {
           <Text {...guideItemTextStyle}>
             • 만 19세 이상만 온라인 신청 가능합니다
           </Text>
+          <Text {...guideItemTextStyle}>
+            • 다자녀, 다문화 (부모) 등록 시 10% 할인 <br />
+            <Box as="span" color="#FAB20B">
+              ※ 다자녀 할인 : 3인 이상으로 자녀 중 한 명이 미성년자일 경우에
+              할인 가능
+            </Box>
+          </Text>
         </Flex>
       </Flex>
     </Flex>
