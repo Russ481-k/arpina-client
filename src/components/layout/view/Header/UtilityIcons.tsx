@@ -56,7 +56,7 @@ export const UtilityIcons = ({
           height={40}
           alt="부산도시공사 로고"
           style={{ cursor: "pointer" }}
-          onClick={() => window.open("https://www.bmc.busan.kr/", "_blank")}
+          onClick={() => router.push("/")}
         />
       </Box>
 

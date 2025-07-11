@@ -68,7 +68,7 @@ export default function InfoTopBox({
     if (pathname?.includes("/sports/swimming")) {
       return [
         { label: "문의", number: "051-740-3271~2" },
-        { label: "운영시간", number: "06:00~21:00" },
+        { label: "운영시간", number: "06:00~22:00" },
       ];
     }
     let number;
@@ -81,9 +81,6 @@ export default function InfoTopBox({
       number = "010-3394-7114"; // 제이엔제이 전화번호
     } else if (pathname?.includes("/facilities/ediya-coffee")) {
       number = "0507-1404-9915"; // 이디야 커피 전화번호
-    } else if (pathname?.includes("facilities/seven-eleven")) {
-      number = "051-744-4839"; // 세븐 일레븐 전화번호
-      label = "문의";
     } else {
       number = "051-731-9800"; // 기본 전화번호
     }
@@ -170,6 +167,7 @@ export default function InfoTopBox({
     md: "42.8125%",
   });
   const gap = useBreakpointValue({ base: "15px", md: "5.9375%" });
+
   return (
     <Box className="info-top-box">
       <Flex

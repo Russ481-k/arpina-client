@@ -6,14 +6,12 @@ interface InfoBoxList02Props {
   items: string[];
   title?: string;
   subtitle?: string;
-  hideBullets?: boolean;
 }
 
 export default function InfoBoxList02({
   items,
   title,
   subtitle,
-  hideBullets,
 }: InfoBoxList02Props) {
   return (
     <Box
@@ -56,21 +54,16 @@ export default function InfoBoxList02({
               _marker={{ fontSize: "0" }}
               color={"#393939"}
               fontSize={{ base: "sm", md: "md", lg: "lg" }}
-              textAlign="justify"
               style={{
                 display: "flex",
                 alignItems: "center",
                 marginTop: "10px",
               }}
-              _before={
-                hideBullets
-                  ? undefined
-                  : {
-                      content: '"·"',
-                      alignSelf: "flex-start",
-                      marginRight: "10px",
-                    }
-              }
+              _before={{
+                content: '"·"',
+                alignSelf: "flex-start",
+                marginRight: "10px",
+              }}
             >
               {item}
             </List.Item>
