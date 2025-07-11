@@ -8,10 +8,10 @@ import {
   Highlight,
   Button,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useState } from "react";
 import { AreaIcon, BedIcon, CheckIcon } from "@/components/icons/EstimateIcons";
-import { CartItem } from "@/types/estimate";
-import { Check, PlusIcon } from "lucide-react";
+import { CartItem, Room } from "@/types/estimate";
+import { Check, PlusIcon, X } from "lucide-react";
 import { ImageSwiper } from "@/components/common/ImageSwiper";
 import { useEstimateContext } from "@/contexts/EstimateContext";
 
@@ -19,30 +19,29 @@ interface RoomImage {
   src: string;
 }
 
-interface RoomInfoProps {
-  name: string;
-  roomType: string;
-  bedType: string;
-  area: string;
-  weekdayPrice: number;
-  weekendPrice: number;
-  images: RoomImage[];
-  amenities: string[];
-  addToCart: (item: CartItem) => void;
+export interface RoomInfoProps extends Room {
+  cart: CartItem[];
+  addToCart: (
+    item: Omit<CartItem, "id" | "checkInDate" | "checkOutDate">
+  ) => void;
+  removeFromCart: (productId: string) => void;
 }
 
-export const RoomInfo = ({
-  name,
-  roomType,
-  bedType,
-  area,
-  weekdayPrice,
-  weekendPrice,
-  images,
-  amenities,
-  addToCart,
-}: RoomInfoProps) => {
-  const { cart, removeFromCart } = useEstimateContext();
+export const RoomInfo = (props: RoomInfoProps) => {
+  const {
+    name,
+    roomType,
+    bedType,
+    area,
+    weekdayPrice,
+    weekendPrice,
+    images,
+    amenities,
+    addToCart,
+    cart,
+    removeFromCart,
+  } = props;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const isInCart = cart.some((item) => item.productId === name);
 
   const handleToggleCart = () => {
@@ -50,12 +49,9 @@ export const RoomInfo = ({
       removeFromCart(name);
     } else {
       addToCart({
-        id: name,
-        checkInDate: new Date(),
-        checkOutDate: new Date(),
         productId: name,
-        type: "room",
         name: name,
+        type: "room",
         quantity: 1,
       });
     }
@@ -153,15 +149,12 @@ export const RoomInfo = ({
             justifyContent="space-between"
           >
             {isInCart ? (
-              <Check
-                size={32}
-                color="white"
-                style={{
-                  backgroundColor: "#2E3192",
-                  borderRadius: "50%",
-                  padding: "4px",
-                }}
-              />
+              <Button variant="ghost" onClick={handleToggleCart}>
+                <X color="#2E3192" aria-label="선택 해제" />
+                <Text fontSize="2xl" fontWeight="700">
+                  취소
+                </Text>
+              </Button>
             ) : (
               <Button variant="ghost" onClick={handleToggleCart}>
                 <PlusIcon />

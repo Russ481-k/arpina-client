@@ -2,34 +2,39 @@ import { Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
 import React from "react";
 import { PeopleIcon, AreaIcon } from "@/components/icons/EstimateIcons";
 import { CartItem } from "@/types/estimate";
-import { Check, PlusIcon } from "lucide-react";
+import { Check, PlusIcon, X } from "lucide-react";
 import { ImageSwiper } from "@/components/common/ImageSwiper";
-import { useEstimateContext } from "@/contexts/EstimateContext";
 
 interface SeminarImage {
   src: string;
 }
 
-interface SeminarInfoProps {
+export interface SeminarInfoProps {
   name: string;
   location: string;
   maxPeople: number;
   area: string;
   price: number;
   images: SeminarImage[];
-  addToCart: (seminar: CartItem) => void;
+  cart: CartItem[];
+  addToCart: (
+    item: Omit<CartItem, "id" | "checkInDate" | "checkOutDate">
+  ) => void;
+  removeFromCart: (productId: string) => void;
 }
 
-export const SeminarInfo = ({
-  name,
-  location,
-  maxPeople,
-  area,
-  price,
-  images,
-  addToCart,
-}: SeminarInfoProps) => {
-  const { cart, removeFromCart } = useEstimateContext();
+export const SeminarInfo = (props: SeminarInfoProps) => {
+  const {
+    name,
+    location,
+    maxPeople,
+    area,
+    price,
+    images,
+    cart,
+    addToCart,
+    removeFromCart,
+  } = props;
   const isInCart = cart.some((item) => item.productId === name);
 
   const handleToggleCart = () => {
@@ -37,13 +42,10 @@ export const SeminarInfo = ({
       removeFromCart(name);
     } else {
       addToCart({
-        id: name,
         productId: name,
-        type: "seminar",
         name: name,
+        type: "seminar",
         quantity: 1,
-        checkInDate: new Date(),
-        checkOutDate: new Date(),
       });
     }
   };
@@ -107,15 +109,12 @@ export const SeminarInfo = ({
             justifyContent="space-between"
           >
             {isInCart ? (
-              <Check
-                size={32}
-                color="white"
-                style={{
-                  backgroundColor: "#2E3192",
-                  borderRadius: "50%",
-                  padding: "4px",
-                }}
-              />
+              <Button variant="ghost" onClick={handleToggleCart}>
+                <X color="#2E3192" aria-label="선택 해제" />
+                <Text fontSize="2xl" fontWeight="700">
+                  취소
+                </Text>
+              </Button>
             ) : (
               <Button variant="ghost" onClick={handleToggleCart}>
                 <PlusIcon />

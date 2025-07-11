@@ -9,12 +9,19 @@ import React from "react";
 import { LuBedDouble, LuBuilding } from "react-icons/lu";
 
 export const ItemSelectionStep = () => {
-  const { selectedServices, addToCart } = useEstimateContext();
+  const { selectedServices, addToCart, cart, removeFromCart } =
+    useEstimateContext();
 
   const seminarContent = (
     <VStack gap={6} align="stretch">
       {Seminars.map((seminar) => (
-        <SeminarInfo key={seminar.name} {...seminar} addToCart={addToCart} />
+        <SeminarInfo
+          key={seminar.name}
+          {...seminar}
+          cart={cart}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
+        />
       ))}
     </VStack>
   );
@@ -22,7 +29,13 @@ export const ItemSelectionStep = () => {
   const roomContent = (
     <VStack gap={6} align="stretch">
       {rooms.map((room) => (
-        <RoomInfo key={room.name} {...room} addToCart={addToCart} />
+        <RoomInfo
+          key={room.name}
+          {...room}
+          cart={cart}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
+        />
       ))}
     </VStack>
   );

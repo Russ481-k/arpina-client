@@ -23,7 +23,7 @@ interface EstimateContextType {
   totalAmount: number;
   generateQuote: () => void;
   lastAddedItemId: string | null;
-  setLastAddedItemId: (id: string | null) => void;
+  clearLastAddedItemId: () => void;
 
   // Stepper State
   step: number;
@@ -159,6 +159,10 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const clearLastAddedItemId = () => {
+    setLastAddedItemId(null);
+  };
+
   // Price Calculation Logic (from useEstimate)
   const getWeekdayWeekendNights = (checkIn: Date, checkOut: Date) => {
     let weekday = 0;
@@ -219,7 +223,7 @@ export const EstimateProvider = ({ children }: { children: ReactNode }) => {
     isDateSelectionValid,
     generateQuote,
     lastAddedItemId,
-    setLastAddedItemId,
+    clearLastAddedItemId,
   };
 
   return (

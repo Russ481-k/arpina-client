@@ -57,7 +57,7 @@ const calculateSeminarPrice = (
   return seminar.price * days * quantity;
 };
 
-const CartContent = () => {
+const CartContent = ({ isMobile }: { isMobile: boolean }) => {
   const {
     cart,
     removeFromCart,
@@ -65,7 +65,7 @@ const CartContent = () => {
     updateSeminarDays,
     totalAmount,
     lastAddedItemId,
-    setLastAddedItemId,
+    clearLastAddedItemId,
   } = useEstimateContext();
 
   const roomsInCart = cart.filter((item) => item.type === "room");
@@ -78,13 +78,16 @@ const CartContent = () => {
         behavior: "smooth",
         block: "center",
       });
-      const timer = setTimeout(() => {
-        setLastAddedItemId(null);
-      }, 500);
 
-      return () => clearTimeout(timer);
+      if (!isMobile) {
+        const timer = setTimeout(() => {
+          clearLastAddedItemId();
+        }, 1200);
+
+        return () => clearTimeout(timer);
+      }
     }
-  }, [lastAddedItemId, setLastAddedItemId]);
+  }, [lastAddedItemId, isMobile, clearLastAddedItemId]);
 
   const renderItem = (item: any, isRoom: boolean) => {
     const nights =
@@ -261,11 +264,18 @@ const CartContent = () => {
 
 export const EstimateCart = ({ handlePrev }: { handlePrev: () => void }) => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
-  const { cart, generateQuote } = useEstimateContext();
+  const { cart, generateQuote, clearLastAddedItemId } = useEstimateContext();
 
   if (isMobile) {
     return (
-      <Drawer.Root placement="bottom">
+      <Drawer.Root
+        placement="bottom"
+        onOpenChange={(details) => {
+          if (!details.open) {
+            clearLastAddedItemId();
+          }
+        }}
+      >
         <Drawer.Trigger asChild>
           <Button
             position="fixed"
@@ -293,7 +303,7 @@ export const EstimateCart = ({ handlePrev }: { handlePrev: () => void }) => {
                 <Drawer.Title>선택 목록</Drawer.Title>
               </Drawer.Header>
               <Drawer.Body>
-                <CartContent />
+                <CartContent isMobile={true} />
               </Drawer.Body>
               <Drawer.Footer>
                 <HStack justify="space-between" w="full">
@@ -329,7 +339,7 @@ export const EstimateCart = ({ handlePrev }: { handlePrev: () => void }) => {
       bg="gray.50"
       borderRadius="lg"
     >
-      <CartContent />
+      <CartContent isMobile={false} />
       <HStack justify="space-between" mt={6}>
         <Button size="lg" onClick={handlePrev} variant="outline">
           이전
