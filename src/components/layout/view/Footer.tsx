@@ -3,10 +3,10 @@ import { Box, Container, Text, Link, Flex, Image } from "@chakra-ui/react";
 export function Footer() {
   const footerLinks = [
     { label: "개인정보처리방침", href: "/privacy-policy", isHighlighted: true },
-    { label: "영상정보처리기기운영․관리방침", href: "/video-policy" },
+    { label: "영상정보처리기기운영·관리방침", href: "/video-policy" },
     { label: "아르피나운영지침", href: "/operation-guidelines" },
-    { label: "찾아오시는 길", href: "/about/location" },
-    { label: "청소년문화센터", href: "/youth-center" },
+    { label: "찾아오시는 길", href: "/arpina/location" },
+    { label: "청소년문화센터", href: "/youth/committee" },
     { label: "이메일무단수집거부", href: "/reject-spam-email" },
   ];
 

@@ -60,7 +60,7 @@ export default function Layout({
         menus={menus}
         isPreview={isPreview}
       />
-      <Box>
+      <Box as="main" mx="auto" position="relative" w="full">
         <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
       </Box>
       <MemoizedFooter />
