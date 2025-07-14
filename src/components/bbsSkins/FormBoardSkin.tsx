@@ -58,33 +58,17 @@ interface FormBoardSkinProps {
 }
 
 const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
-  const { data, node, context } = params;
-  const { pagination } = context;
-
-  if (data && data.no === 0) {
-    return (
-      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-        <Badge colorPalette="orange" variant="subtle">
-          공지
-        </Badge>
-      </Flex>
+  const content =
+    params.data && params.data.no === 0 ? (
+      <Badge colorPalette="orange" variant="subtle">
+        공지
+      </Badge>
+    ) : (
+      <span>{params.value}</span>
     );
-  }
-
-  if (pagination && node && typeof node.rowIndex === "number") {
-    const { totalElements, currentPage, pageSize } = pagination;
-    const calculatedNumber =
-      totalElements - ((currentPage - 1) * pageSize + node.rowIndex);
-    return (
-      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-        <span>{calculatedNumber}</span>
-      </Flex>
-    );
-  }
-
   return (
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-      <span>{params.value}</span>
+      {content}
     </Flex>
   );
 };
@@ -193,10 +177,7 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
     router.push(`/${currentPathId}?page=1&size=${newSize}`);
   };
 
-  const agGridContext = useMemo(
-    () => ({ currentPathId, pagination }),
-    [currentPathId, pagination]
-  );
+  const agGridContext = useMemo(() => ({ currentPathId }), [currentPathId]);
 
   const agGridThemeClass =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";

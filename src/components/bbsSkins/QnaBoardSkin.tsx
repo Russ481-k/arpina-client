@@ -35,7 +35,6 @@ const AVAILABLE_PAGE_SIZES_QNA = [10, 20, 30, 50, 100];
 // --- Cell Renderers and Formatters (copied/adapted from BasicBoardSkin) ---
 const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
   const { data, node, context } = params;
-  const { pagination } = context;
 
   // 공지사항 처리
   if (data && data.no === 0) {
@@ -44,18 +43,6 @@ const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
         <Badge colorPalette="orange" variant="subtle">
           공지
         </Badge>
-      </Flex>
-    );
-  }
-
-  // 페이지네이션 정보가 있을 경우 번호 계산
-  if (pagination && node && typeof node.rowIndex === "number") {
-    const { totalElements, currentPage, pageSize } = pagination;
-    const calculatedNumber =
-      totalElements - ((currentPage - 1) * pageSize + node.rowIndex);
-    return (
-      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-        <span>{calculatedNumber}</span>
       </Flex>
     );
   }
@@ -301,7 +288,7 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
   );
 
   return (
-    <Box maxW="1600px" mx="auto">
+    <Box p={4} maxW="1600px" mx="auto">
       {/* AG Grid replaces the HTML table */}
       <Box
         className={agGridThemeClass}
