@@ -24,7 +24,6 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         run: |
-          echo "NEXT_PUBLIC_API_URL for build is: ${{ secrets.NEXT_PUBLIC_API_URL }}"
           pnpm install --frozen-lockfile
           pnpm build
 
@@ -40,4 +39,3 @@ jobs:
             cd ./client && git pull origin dev && cd ..
             docker compose build --no-cache client
             docker compose up -d --force-recreate --remove-orphans client
-# A small change to trigger git detection

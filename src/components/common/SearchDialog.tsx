@@ -15,17 +15,39 @@ import { useRouter } from "next/navigation";
 import type { Menu as MenuType } from "@/types/api";
 import Fuse, { type FuseResult } from "fuse.js";
 import NextLink from "next/link";
-import { useRecoilValue } from "recoil";
-import { flattenedMenusState } from "@/stores/menu";
+
+// 헬퍼 함수: 메뉴 트리를 평탄화하고 부모 경로를 추가
+const flattenMenusWithParentPath = (
+  menus: MenuType[],
+  parentPath = ""
+): (MenuType & { parent_path?: string })[] => {
+  let flattened: (MenuType & { parent_path?: string })[] = [];
+  for (const menu of menus) {
+    const currentPath = parentPath ? `${parentPath} > ${menu.name}` : menu.name;
+    flattened.push({ ...menu, parent_path: parentPath });
+    if (menu.children && menu.children.length > 0) {
+      flattened = [
+        ...flattened,
+        ...flattenMenusWithParentPath(menu.children as MenuType[], currentPath),
+      ];
+    }
+  }
+  return flattened;
+};
 
 interface SearchDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  menus?: MenuType[];
 }
 
-export const SearchDialog = ({ isOpen, onClose }: SearchDialogProps) => {
+export const SearchDialog = ({
+  isOpen,
+  onClose,
+  menus: menuTree = [],
+}: SearchDialogProps) => {
   const [query, setQuery] = useState("");
-  const menus = useRecoilValue(flattenedMenusState);
+  const menus = useMemo(() => flattenMenusWithParentPath(menuTree), [menuTree]);
   const [results, setResults] = useState<
     FuseResult<MenuType & { parent_path?: string }>[]
   >([]);

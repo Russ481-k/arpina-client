@@ -30,10 +30,25 @@ export function sortMenus(menus: Menu[]): Menu[] {
     } else {
       const parent = menuMap.get(menu.parentId);
       if (parent) {
+        // 순환 참조 방지: 자기 자신을 부모로 삼을 수 없음
+        if (parent.id === menu.id) {
+          console.warn(
+            `[sortMenus] Circular reference detected: Menu ${menu.id} ('${menu.name}') cannot be its own parent. Treating as a root menu.`
+          );
+          rootMenus.push(menuCopy);
+          return;
+        }
+
         if (!parent.children) {
           parent.children = [];
         }
         parent.children.push(menuCopy);
+      } else {
+        // 고아 메뉴 처리: 존재하지 않는 부모를 가진 메뉴는 루트 메뉴로 간주
+        console.warn(
+          `[sortMenus] Orphan menu detected: Menu ${menu.id} ('${menu.name}') has a non-existent parentId ${menu.parentId}. Treating as a root menu.`
+        );
+        rootMenus.push(menuCopy);
       }
     }
   });

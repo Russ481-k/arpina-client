@@ -15,15 +15,18 @@ import Image from "next/image";
 import { useRecoilValue } from "recoil";
 import { authState, useAuthActions } from "@/stores/auth";
 import { SearchDialog } from "@/components/common/SearchDialog";
+import { Menu as MenuType } from "@/types/api";
 
 interface UtilityIconsProps {
   iconColor: string;
   onSitemapOpen: () => void;
+  menus?: MenuType[];
 }
 
 export const UtilityIcons = ({
   iconColor,
   onSitemapOpen,
+  menus,
 }: UtilityIconsProps) => {
   const router = useRouter();
   const { isAuthenticated } = useRecoilValue(authState);
@@ -156,7 +159,11 @@ export const UtilityIcons = ({
         <Grid3x3 />
       </IconButton>
 
-      <SearchDialog isOpen={isSearchOpen} onClose={onSearchClose} />
+      <SearchDialog
+        isOpen={isSearchOpen}
+        onClose={onSearchClose}
+        menus={menus}
+      />
     </Flex>
   );
 };

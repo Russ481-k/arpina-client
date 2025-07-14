@@ -1,24 +1,30 @@
 "use client";
 
 import { Suspense } from "react";
-import { Center, Spinner } from "@chakra-ui/react";
+import { Box, Center, Spinner } from "@chakra-ui/react";
 import { FloatingButtons } from "@/components/layout/FloatingButtons";
 import Layout from "@/components/layout/view/Layout";
-import { useRecoilValue } from "recoil";
-import { menuTreeState } from "@/stores/menu";
+import { menuApi, sortMenus } from "@/lib/api/menu";
+import { Menu } from "@/types/api";
 
-function LayoutWithData({ children }: { children: React.ReactNode }) {
-  const menus = useRecoilValue(menuTreeState);
-  return <Layout menus={menus}>{children}</Layout>;
-}
-
-export default function RoutesLayout({
+export default async function RoutesLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let menus: Menu[] = [];
+  try {
+    const response = await menuApi.getPublicMenus();
+    if (response.data && response.data.success) {
+      menus = sortMenus(response.data.data || []);
+    }
+  } catch (error) {
+    console.error("Failed to fetch menus in layout:", error);
+    // 에러 발생 시 빈 메뉴로 렌더링
+  }
+
   return (
-    <>
+    <Box>
       <Suspense
         fallback={
           <Center h="100vh">
@@ -26,9 +32,9 @@ export default function RoutesLayout({
           </Center>
         }
       >
-        <LayoutWithData>{children}</LayoutWithData>
+        <Layout menus={menus}>{children}</Layout>
       </Suspense>
       <FloatingButtons />
-    </>
+    </Box>
   );
 }

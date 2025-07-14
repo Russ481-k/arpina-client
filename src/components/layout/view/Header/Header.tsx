@@ -245,6 +245,7 @@ export const Header = memo(function Header({
                 onMenuLeave={handleMenuLeave}
               />
               <UtilityIcons
+                menus={menus}
                 iconColor={iconColor}
                 onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
               />
