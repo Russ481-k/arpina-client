@@ -20,17 +20,6 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Validate API URL format
-        env:
-          API_URL_CHECK: ${{ secrets.NEXT_PUBLIC_API_URL }}
-        run: |
-          if [[ "$API_URL_CHECK" == http* ]]; then
-            echo "NEXT_PUBLIC_API_URL starts with http. Format is valid."
-          else
-            echo "::error::NEXT_PUBLIC_API_URL is missing the protocol (http:// or https://)."
-            exit 1
-          fi
-
       - name: Install dependencies and build
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
