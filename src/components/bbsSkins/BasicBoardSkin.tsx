@@ -29,34 +29,56 @@ import dayjs from "dayjs";
 
 import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api";
+import { PaginationData } from "@/types/common";
 import { LuEye } from "react-icons/lu";
 
 // Import GenericArticleCard and the mapping function
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapPostToCommonCardData } from "@/lib/card-utils";
 import TitleCellRenderer from "@/components/common/TitleCellRenderer";
+import { CustomPagination } from "@/components/common/CustomPagination";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface BasicBoardSkinProps {
   pageDetails: PageDetailsDto;
   posts: Post[];
+  pagination: PaginationData;
   currentPathId: string;
   viewMode: "list" | "card";
 }
 
 const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
-  const content =
-    params.data && params.data.no === 0 ? (
-      <Badge colorPalette="orange" variant="subtle">
-        공지
-      </Badge>
-    ) : (
-      <span>{params.value}</span>
+  const { data, node, context } = params;
+  const { pagination } = context;
+
+  // 공지사항 처리
+  if (data && data.no === 0) {
+    return (
+      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+        <Badge colorPalette="orange" variant="subtle">
+          공지
+        </Badge>
+      </Flex>
     );
+  }
+
+  // 일반 게시글 번호 계산
+  if (pagination && node.rowIndex !== null) {
+    const { totalElements, currentPage, pageSize } = pagination;
+    const calculatedNumber =
+      totalElements - (currentPage - 1) * pageSize - node.rowIndex;
+    return (
+      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+        <span>{calculatedNumber}</span>
+      </Flex>
+    );
+  }
+
+  // Fallback (pagination 정보가 없을 경우)
   return (
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-      {content}
+      <span>{params.value}</span>
     </Flex>
   );
 };
@@ -76,6 +98,7 @@ const dateFormatter = (params: ValueFormatterParams<Post>) => {
 const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
   pageDetails,
   posts,
+  pagination,
   currentPathId,
   viewMode,
 }) => {
@@ -84,6 +107,16 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
   const { colorMode } = useColorMode();
   const colors = useColors();
 
+  const handlePageChange = (page: number) => {
+    router.push(
+      `/bbs/${currentPathId}?page=${page + 1}&size=${pagination.pageSize}`
+    );
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    router.push(`/bbs/${currentPathId}?page=1&size=${newSize}`);
+  };
+
   const agGridThemeClass =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
   const selectedAgGridThemeStyles =
@@ -91,6 +124,13 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
 
   const rowBackgroundColor = colors.bg;
   const rowTextColor = colors.text.primary;
+
+  const agGridContext = useMemo(
+    () => ({
+      pagination: pagination,
+    }),
+    [pagination]
+  );
 
   const colDefs = useMemo<ColDef<Post>[]>(
     () => [
@@ -197,14 +237,25 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
     return (
       <Box maxW="1600px" mx="auto">
         {posts && posts.length > 0 ? (
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={4}>
-            {posts.map((post) => {
-              const cardData = mapPostToCommonCardData(post, currentPathId);
-              return (
-                <GenericArticleCard key={cardData.id} cardData={cardData} />
-              );
-            })}
-          </SimpleGrid>
+          <>
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={4}>
+              {posts.map((post) => {
+                const cardData = mapPostToCommonCardData(post, currentPathId);
+                return (
+                  <GenericArticleCard key={cardData.id} cardData={cardData} />
+                );
+              })}
+            </SimpleGrid>
+            <Flex justify="center" mt={8}>
+              <CustomPagination
+                currentPage={pagination.currentPage - 1}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+                pageSize={pagination.pageSize}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </Flex>
+          </>
         ) : (
           <Flex justify="center" align="center" h="30vh">
             <Text>표시할 게시물이 없습니다.</Text>
@@ -229,6 +280,7 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
             ref={gridRef}
             rowData={posts}
             columnDefs={colDefs}
+            context={agGridContext}
             defaultColDef={defaultColDef}
             domLayout="autoHeight"
             headerHeight={40}
@@ -241,6 +293,15 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
             })}
             theme="legacy"
           />
+          <Flex justify="center" mt={8}>
+            <CustomPagination
+              currentPage={pagination.currentPage - 1}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+              pageSize={pagination.pageSize}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          </Flex>
         </Box>
       ) : (
         <Flex

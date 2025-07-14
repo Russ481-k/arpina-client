@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { menuApi } from "@/lib/api/menu";
 import { articleApi } from "@/lib/api/article";
 import { PageDetailsDto } from "@/types/menu";
-import { BoardArticleCommon, Post, FileDto } from "@/types/api"; // FileDto 임포트 추가
+import { BoardArticleCommon, Post, FileDto, BoardMaster } from "@/types/api"; // FileDto 임포트 추가
 import { PaginationData } from "@/types/common";
 import { findMenuByPath } from "@/lib/menu-utils"; // Import findMenuByPath
 import { Box, Flex, Heading, Text, Button } from "@chakra-ui/react"; // Chakra UI 컴포넌트 임포트
@@ -20,6 +20,7 @@ import FormBoardSkin from "@/components/bbsSkins/FormBoardSkin";
 import CustomPagination from "@/components/common/CustomPagination"; // Import CustomPagination
 import BoardControls from "@/components/bbsCommon/BoardControls"; // Import BoardControls
 import { PageContainer } from "@/components/layout/PageContainer";
+import { getVoiceComments } from "@/lib/api/voice-comment";
 
 interface BoardPageProps {
   params: Promise<{ id: string }>; // params is a Promise again
@@ -99,6 +100,11 @@ function mapArticleToPost(article: BoardArticleCommon): Post {
     status: article.status,
     attachments: mappedAttachments, // Use the correctly typed variable
     categories: [],
+    answerContent: article.answerContent,
+    answerCreatedAt: (article as Post).answerCreatedAt,
+    answerUpdatedAt: (article as Post).answerUpdatedAt,
+    answerUserEmail: (article as Post).answerUserEmail,
+    answerUserNickname: (article as Post).answerUserNickname,
   };
 }
 
@@ -146,7 +152,25 @@ async function getBoardPageData(
 
     const articlesData = apiResponse.data; // This is ArticleListResponse
 
-    const articles = articlesData.content || [];
+    let articles = articlesData.content || [];
+
+    // '고객의 소리' 게시판(QNA 스킨)인 경우에만 답변(댓글) 정보를 가져옵니다.
+    if (pageDetails.boardSkinType === "QNA") {
+      articles = await Promise.all(
+        articles.map(async (article) => {
+          try {
+            const comments = await getVoiceComments(article.nttId);
+            return {
+              ...article,
+              answerContent: comments.length > 0 ? comments[0].content : "",
+            };
+          } catch (error) {
+            return { ...article, answerContent: "" };
+          }
+        })
+      );
+    }
+
     // Map Article[] to Post[]
     const posts: Post[] = articles.map(mapArticleToPost);
 
@@ -348,6 +372,10 @@ export default function BoardPage({
   }
 
   const { pageDetails, posts, pagination } = boardData;
+  const showViewModeToggle =
+    pageDetails.boardSkinType === "BASIC" ||
+    pageDetails.boardSkinType === "PRESS";
+
   return (
     <PageContainer>
       {/* Use BoardControls component */}
@@ -374,6 +402,7 @@ export default function BoardPage({
               <BasicBoardSkin
                 pageDetails={pageDetails}
                 posts={posts}
+                pagination={pagination}
                 currentPathId={currentPathId!}
                 viewMode={viewMode}
               />
@@ -417,33 +446,19 @@ export default function BoardPage({
             );
           default:
             console.warn(
-              `[BoardPage] Unknown or unsupported boardSkinType: "${pageDetails.boardSkinType}" for menuId: ${pageDetails.menuId}. Falling back to BasicBoardSkin.`
+              `[BoardPage] Unknown or unsupported boardSkin: "${pageDetails.boardSkinType}" for menuId: ${pageDetails.menuId}. Falling back to BasicBoardSkin.`
             );
             return (
               <BasicBoardSkin
                 pageDetails={pageDetails}
                 posts={posts}
+                pagination={pagination}
                 currentPathId={currentPathId!}
                 viewMode={viewMode}
               />
             );
         }
       })()}
-      {/* Render CustomPagination if boardData and pagination data exist */}
-      {boardData &&
-        boardData.pagination &&
-        boardData.pagination.totalPages > 0 && (
-          <Flex justify="center">
-            {/* Added mt for spacing */}
-            <CustomPagination
-              currentPage={boardData.pagination.currentPage - 1} // CustomPagination is 0-indexed
-              totalPages={boardData.pagination.totalPages}
-              onPageChange={handlePageChange}
-              pageSize={boardData.pagination.pageSize}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          </Flex>
-        )}
     </PageContainer>
   );
 }

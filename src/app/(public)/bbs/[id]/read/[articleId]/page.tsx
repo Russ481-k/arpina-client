@@ -21,6 +21,7 @@ import { menuApi } from "@/lib/api/menu";
 import { PageDetailsDto } from "@/types/menu";
 import { findMenuByPath } from "@/lib/menu-utils";
 import { Menu, BoardArticleCommon } from "@/types/api";
+import { AdminVoiceComment } from "@/components/comments/AdminVoiceComment";
 
 interface PrevNextArticleInfo {
   nttId: number;
@@ -45,6 +46,8 @@ export default function ArticleDetailPage() {
     useState<PrevNextArticleInfo | null>(null);
   const [nextArticleInfo, setNextArticleInfo] =
     useState<PrevNextArticleInfo | null>(null);
+
+  const listUrl = id ? `/bbs/${id}` : "/bbs/voice";
 
   useEffect(() => {
     async function fetchData() {
@@ -111,7 +114,7 @@ export default function ArticleDetailPage() {
           throw new Error(articleResponse.message || "Failed to fetch article");
         }
 
-        const menuPath = `/bbs/${id}`;
+        const menuPath = `/cms/bbs/${id}`;
         const menu: Menu | null = await findMenuByPath(menuPath);
         if (menu && typeof menu.id === "number") {
           const details = await menuApi.getPageDetails(menu.id);
@@ -154,7 +157,7 @@ export default function ArticleDetailPage() {
           Error
         </Heading>
         <Text color="red.500">{error}</Text>
-        <NextLink href={`/bbs/${id || ""}`} passHref>
+        <NextLink href={listUrl} passHref>
           <Button mt={6} colorPalette="gray" size="xs">
             Back to List
           </Button>
@@ -170,7 +173,7 @@ export default function ArticleDetailPage() {
           Article Not Found
         </Heading>
         <Text>The requested article could not be found.</Text>
-        <NextLink href={`/bbs/${id || ""}`} passHref>
+        <NextLink href={listUrl} passHref>
           <Button mt={6} colorPalette="gray" size="xs">
             Back to List
           </Button>
@@ -189,7 +192,7 @@ export default function ArticleDetailPage() {
           <Heading size="md" color="gray.600" fontWeight="bold">
             {pageDetails?.menuName || pageDetails?.boardName || id}
           </Heading>
-          <NextLink href={`/bbs/${id || ""}`} passHref>
+          <NextLink href={listUrl} passHref>
             <Button size="xs" variant="outline">
               목록
             </Button>
@@ -201,6 +204,13 @@ export default function ArticleDetailPage() {
         article={article}
         isFaq={pageDetails?.boardSkinType === "FAQ"}
       />
+
+      {/* 댓글 컴포넌트 표시 - 고객의 소리 게시판(id === 'voice')에서만 표시 */}
+      {id === "voice" && article && (
+        <Box mt={8}>
+          <AdminVoiceComment nttId={article.nttId} isReadOnly={true} />
+        </Box>
+      )}
 
       <Separator my={8} />
 
@@ -235,7 +245,7 @@ export default function ArticleDetailPage() {
             </HStack>
           )}
         </Box>
-        <NextLink href={`/bbs/${id || ""}`} passHref>
+        <NextLink href={listUrl} passHref>
           <Button variant="outline" size="xs">
             목록
           </Button>

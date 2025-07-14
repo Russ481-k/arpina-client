@@ -98,6 +98,7 @@ export interface BoardArticleCommon {
   status?: string;
   skinType?: string | null;
   menuId?: number;
+  answerContent?: string;
 }
 
 export interface Post extends BoardArticleCommon {

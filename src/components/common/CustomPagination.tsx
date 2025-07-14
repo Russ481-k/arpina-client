@@ -223,53 +223,51 @@ export const CustomPagination: React.FC<CustomPaginationProps> = ({
       ) : (
         <Box /> // Empty Box to maintain space-between if no page buttons
       )}
-      {totalPages > 1 &&
-        effectivePageSizes &&
-        effectivePageSizes.length > 0 && (
-          <HStack gap={2} alignItems="center">
-            <ChakraSelect.Root
-              collection={pageSizeCollection}
-              value={[String(pageSize)]}
-              onValueChange={(details) => {
-                if (details.value && details.value.length > 0) {
-                  onPageSizeChange(Number(details.value[0]));
-                }
+      {effectivePageSizes && effectivePageSizes.length > 0 && (
+        <HStack gap={2} alignItems="center">
+          <ChakraSelect.Root
+            collection={pageSizeCollection}
+            value={[String(pageSize)]}
+            onValueChange={(details) => {
+              if (details.value && details.value.length > 0) {
+                onPageSizeChange(Number(details.value[0]));
+              }
+            }}
+            size="xs"
+            minW="60px"
+          >
+            <ChakraSelect.Control
+              bg={colorMode === "dark" ? "gray.700" : "white"}
+              borderColor={borderColor}
+              color={textColor}
+              _hover={{ borderColor: primaryColor }}
+              _focus={{
+                borderColor: primaryColor,
+                boxShadow: `0 0 0 1px ${primaryColor}`,
               }}
-              size="xs"
-              minW="60px"
             >
-              <ChakraSelect.Control
-                bg={colorMode === "dark" ? "gray.700" : "white"}
-                borderColor={borderColor}
-                color={textColor}
-                _hover={{ borderColor: primaryColor }}
-                _focus={{
-                  borderColor: primaryColor,
-                  boxShadow: `0 0 0 1px ${primaryColor}`,
-                }}
-              >
-                <ChakraSelect.Trigger>
-                  <ChakraSelect.ValueText />
-                </ChakraSelect.Trigger>
-                <ChakraSelect.IndicatorGroup>
-                  <ChakraSelect.Indicator />
-                </ChakraSelect.IndicatorGroup>
-              </ChakraSelect.Control>
-              <Portal>
-                <ChakraSelect.Positioner>
-                  <ChakraSelect.Content>
-                    {pageSizeCollection.items.map((item) => (
-                      <ChakraSelect.Item item={item} key={item.value}>
-                        {item.label}
-                        <ChakraSelect.ItemIndicator />
-                      </ChakraSelect.Item>
-                    ))}
-                  </ChakraSelect.Content>
-                </ChakraSelect.Positioner>
-              </Portal>
-            </ChakraSelect.Root>
-          </HStack>
-        )}
+              <ChakraSelect.Trigger>
+                <ChakraSelect.ValueText />
+              </ChakraSelect.Trigger>
+              <ChakraSelect.IndicatorGroup>
+                <ChakraSelect.Indicator />
+              </ChakraSelect.IndicatorGroup>
+            </ChakraSelect.Control>
+            <Portal>
+              <ChakraSelect.Positioner>
+                <ChakraSelect.Content>
+                  {pageSizeCollection.items.map((item) => (
+                    <ChakraSelect.Item item={item} key={item.value}>
+                      {item.label}
+                      <ChakraSelect.ItemIndicator />
+                    </ChakraSelect.Item>
+                  ))}
+                </ChakraSelect.Content>
+              </ChakraSelect.Positioner>
+            </Portal>
+          </ChakraSelect.Root>
+        </HStack>
+      )}
     </Flex>
   );
 };

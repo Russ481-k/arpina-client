@@ -18,12 +18,14 @@ import { ArticleDisplay } from "@/components/articles/ArticleDisplay";
 import { toaster } from "@/components/ui/toaster";
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
+import { AdminVoiceComment } from "@/components/comments/AdminVoiceComment";
 
 interface ArticleDetailDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   article: BoardArticleCommon | null;
   isFaq?: boolean;
+  isQna?: boolean;
   previousArticle?: { nttId: number; title: string } | null;
   nextArticle?: { nttId: number; title: string } | null;
   onNavigate?: (nttId: number) => void;
@@ -42,6 +44,7 @@ export const ArticleDetailDrawer = ({
   onOpenChange,
   article,
   isFaq,
+  isQna,
   previousArticle,
   nextArticle,
   onNavigate,
@@ -129,6 +132,7 @@ export const ArticleDetailDrawer = ({
             <Drawer.Header></Drawer.Header>
             <Drawer.Body px={8} py={6}>
               <ArticleDisplay article={article} isFaq={isFaq} />
+              {isQna && article && <AdminVoiceComment nttId={article.nttId} />}
 
               <Flex justify="space-between" align="center" my={6} gap={2}>
                 <Box

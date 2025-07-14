@@ -6,11 +6,10 @@ import {
   HStack,
   // Heading, // Not used, Text with fontWeight is used
   AspectRatio,
-  LinkBox,
-  Link as ChakraLink,
   Icon,
   Flex,
   Box,
+  Link as ChakraLink,
 } from "@chakra-ui/react";
 import { CommonCardData } from "@/types/common"; // Import CommonCardData
 import { LuEye, LuImageOff, LuExternalLink } from "react-icons/lu";
@@ -70,7 +69,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
       : colors.text?.secondary || "gray.600";
 
   return (
-    <LinkBox
+    <Box
       as="article"
       h="100%"
       display="flex"
@@ -124,8 +123,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
         >
           {/* Title always links internally */}
           <Flex flex={1} minW={0}>
-            <ChakraLink
-              href={internalDetailUrl}
+            <Box
               flex={1}
               minW={0}
               title={cardData.title}
@@ -137,7 +135,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
                 title={cardData.title}
                 postData={cardData as ArticleDisplayData}
               />
-            </ChakraLink>
+            </Box>
 
             {/* External link icon, only if externalLinkHref exists */}
             {externalLinkHref && (
@@ -188,7 +186,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
           )}
         </HStack>
       </HStack>
-    </LinkBox>
+    </Box>
   );
 };
 
