@@ -45,25 +45,44 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Renderer for the "번호" (Number) column
 const NoticeNumberRenderer: React.FC<ICellRendererParams<Post>> = (params) => {
-  const isNotice = params.data?.noticeState === "Y" || params.data?.no === 0; // Assuming noticeState or no=0 indicates a notice
-  // Fallback to params.node.rowIndex + 1 if post.no is not available for non-notices
-  const displayValue =
-    params.data?.no && params.data.no !== 0
-      ? params.data.no
-      : (params.node?.rowIndex ?? 0) + 1;
+  const { data, node, context } = params;
+  const { pagination } = context;
+  const isNotice = params.data?.noticeState === "Y" || params.data?.no === 0;
   const textColor = useColorModeValue("gray.700", "gray.300");
+
+  let content;
+
+  if (isNotice) {
+    content = (
+      <Badge colorPalette="orange" variant="solid" fontSize="xs">
+        공지
+      </Badge>
+    );
+  } else if (pagination && node && typeof node.rowIndex === "number") {
+    const { totalElements, currentPage, pageSize } = pagination;
+    const calculatedNumber =
+      totalElements - ((currentPage - 1) * pageSize + node.rowIndex);
+    content = (
+      <Text fontSize="sm" color={textColor}>
+        {calculatedNumber}
+      </Text>
+    );
+  } else {
+    // Fallback to original simple numbering if pagination not available.
+    const displayValue =
+      params.data?.no && params.data.no !== 0
+        ? params.data.no
+        : (params.node?.rowIndex ?? 0) + 1;
+    content = (
+      <Text fontSize="sm" color={textColor}>
+        {displayValue}
+      </Text>
+    );
+  }
 
   return (
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-      {isNotice ? (
-        <Badge colorPalette="orange" variant="solid" fontSize="xs">
-          공지
-        </Badge>
-      ) : (
-        <Text fontSize="sm" color={textColor}>
-          {displayValue}
-        </Text>
-      )}
+      {content}
     </Flex>
   );
 };
@@ -201,7 +220,10 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
     [router, currentPathId]
   );
 
-  const agGridContext = useMemo(() => ({ currentPathId }), [currentPathId]);
+  const agGridContext = useMemo(
+    () => ({ currentPathId, pagination }),
+    [currentPathId, pagination]
+  );
 
   // Memoize cell style objects
   const baseCellStyle = useMemo<CellStyle>(

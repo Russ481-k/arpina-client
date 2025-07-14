@@ -76,8 +76,8 @@ const NoticeNumberRenderer = (
     );
   }
 
-  // 일반 게시글의 경우 아무것도 표시하지 않습니다.
-  return null;
+  // 일반 게시글의 경우 번호를 표시합니다.
+  return params.value;
 };
 
 const ViewsRenderer = (params: ICellRendererParams<ArticleWithAnswer>) => (
@@ -98,6 +98,82 @@ const ViewsRenderer = (params: ICellRendererParams<ArticleWithAnswer>) => (
 const dateFormatter = (params: ValueFormatterParams<BoardArticleCommon>) => {
   if (!params.value) return "";
   return dayjs(params.value).format("YYYY.MM.DD");
+};
+
+const TitleRenderer: React.FC<ICellRendererParams<ArticleWithAnswer>> = (
+  params
+) => {
+  const { data: post } = params;
+  const { colorMode } = useColorMode();
+  const colors = useColors();
+
+  if (!post) return null;
+
+  let externalLinkHref: string | undefined = undefined;
+  if (post.externalLink) {
+    const trimmedExternalLink = post.externalLink.trim();
+    if (
+      trimmedExternalLink.startsWith("http://") ||
+      trimmedExternalLink.startsWith("https://")
+    ) {
+      externalLinkHref = trimmedExternalLink;
+    } else if (trimmedExternalLink) {
+      externalLinkHref = `http://${trimmedExternalLink}`;
+    }
+  }
+
+  const titleColor =
+    colorMode === "dark"
+      ? colors.text?.primary || "#E2E8F0"
+      : colors.text?.primary || "#2D3748";
+  const titleHoverColor = colorMode === "dark" ? "#75E6DA" : "blue.500";
+  const iconColor =
+    colorMode === "dark"
+      ? colors.text?.secondary || "gray.500"
+      : colors.text?.secondary || "gray.600";
+  return (
+    <HStack
+      gap={1}
+      alignItems="center"
+      w="100%"
+      h="100%"
+      overflow="hidden"
+      title={post.title}
+    >
+      <Box
+        flex={1}
+        minW={0}
+        display="flex"
+        alignItems="center"
+        color={titleColor}
+        _hover={{
+          textDecoration: "underline",
+          color: titleHoverColor,
+        }}
+      >
+        <PostTitleDisplay title={post.title} postData={post} />
+      </Box>
+
+      {externalLinkHref && (
+        <ChakraLink
+          href={externalLinkHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          display="inline-flex"
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Open external link: ${externalLinkHref}`}
+        >
+          <Icon
+            as={LuExternalLink}
+            color={iconColor}
+            _hover={{ color: titleHoverColor }}
+            cursor="pointer"
+            boxSize={4}
+          />
+        </ChakraLink>
+      )}
+    </HStack>
+  );
 };
 
 const PressTitleRenderer_Preview: React.FC<
@@ -238,6 +314,40 @@ const BoardPreview = React.memo(function BoardPreview({
   const [articleToEdit, setArticleToEdit] = useState<ArticleWithAnswer | null>(
     null
   );
+  const {
+    data: articlesApiResponse,
+    isLoading: isArticlesLoading,
+    isFetching: isArticlesFetching,
+  } = useQuery<ApiResponse<ArticleListResponse>>({
+    queryKey: [
+      "articles",
+      board?.bbsId,
+      menu?.id,
+      currentPage,
+      pageSize,
+      activeFilterKeyword,
+      refreshKey,
+    ],
+    queryFn: () => {
+      if (!board?.bbsId || !menu?.id) {
+        return Promise.reject(new Error("Board or menu ID is missing"));
+      }
+      return articleApi.getArticles({
+        bbsId: board.bbsId,
+        menuId: menu.id,
+        page: currentPage,
+        size: pageSize,
+        keyword: activeFilterKeyword,
+      });
+    },
+    enabled: !!board?.bbsId && !!menu?.id,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const baseArticles = useMemo(
+    () => articlesApiResponse?.data?.content || [],
+    [articlesApiResponse]
+  );
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
@@ -280,46 +390,6 @@ const BoardPreview = React.memo(function BoardPreview({
     setActiveFilterKeyword(searchInputText);
     setCurrentPage(0);
   }, [searchInputText]);
-
-  const {
-    data: articlesApiResponse,
-    isLoading: isArticlesLoading,
-    isFetching: isArticlesFetching,
-  } = useQuery<ApiResponse<ArticleListResponse>>({
-    queryKey: [
-      "articles",
-      bbsId,
-      menuId,
-      currentPage,
-      pageSize,
-      activeFilterKeyword,
-      refreshKey,
-    ],
-    queryFn: async () => {
-      if (!bbsId || !menuId) {
-        return {
-          success: true,
-          message: "",
-          data: { content: [], totalElements: 0, totalPages: 0 } as any,
-          errorCode: null,
-          stackTrace: null,
-        };
-      }
-      return await articleApi.getArticles({
-        bbsId,
-        menuId,
-        page: currentPage,
-        size: pageSize,
-        keyword: activeFilterKeyword,
-      });
-    },
-    enabled: !!bbsId && !!menuId,
-  });
-
-  const baseArticles = useMemo(
-    () => articlesApiResponse?.data?.content || [],
-    [articlesApiResponse]
-  );
 
   const {
     data: articlesWithComments,
@@ -420,52 +490,6 @@ const BoardPreview = React.memo(function BoardPreview({
       justifyContent: "center",
       textAlign: "center",
     };
-    const baseColDefs: ColDef<ArticleWithAnswer>[] = [
-      {
-        headerName: "번호",
-        field: "no",
-        width: 80,
-        sortable: true,
-        cellRenderer: NoticeNumberRenderer,
-        cellStyle: centeredCellTextStyle,
-      },
-      {
-        headerName: "제목",
-        field: "title",
-        flex: 1,
-        sortable: true,
-        cellRenderer: PressTitleRenderer_Preview,
-        cellStyle: {
-          ...baseCellTextStyle,
-          paddingLeft: "10px",
-          paddingRight: "10px",
-          justifyContent: "flex-start",
-        },
-      },
-      {
-        headerName: "작성자",
-        field: "displayWriter",
-        width: 120,
-        sortable: true,
-        cellStyle: centeredCellTextStyle,
-      },
-      {
-        headerName: "등록일",
-        field: "postedAt",
-        width: 120,
-        valueFormatter: dateFormatter,
-        sortable: true,
-        cellStyle: centeredCellTextStyle,
-      },
-      {
-        headerName: "조회",
-        field: "hits",
-        width: 80,
-        cellRenderer: ViewsRenderer,
-        sortable: true,
-        cellStyle: centeredCellTextStyle,
-      },
-    ];
 
     if (board?.skinType === "PRESS") {
       return [
@@ -507,13 +531,51 @@ const BoardPreview = React.memo(function BoardPreview({
         },
       ];
     }
-    if (board?.skinType === "QNA") {
-      return [
+    const skin = board?.skinType;
+    if (skin === "QNA") {
+      const qnaCols: ColDef<ArticleWithAnswer>[] = [
         {
           headerName: "번호",
           field: "no",
           width: 80,
-          sortable: true,
+          cellStyle: centeredCellTextStyle,
+          valueGetter: (params) => {
+            if (params.data?.no === 0) {
+              // Notice
+              return "공지";
+            }
+            const totalElements = articlesApiResponse?.data?.totalElements ?? 0;
+            const rowIndex = params.node?.rowIndex;
+            if (typeof rowIndex !== "number") {
+              return "";
+            }
+            return totalElements - currentPage * pageSize - rowIndex;
+          },
+        },
+        {
+          headerName: "제목",
+          field: "title",
+          flex: 1,
+          cellRenderer: PressTitleRenderer_Preview,
+          minWidth: 300,
+          cellStyle: {
+            ...baseCellTextStyle,
+            paddingLeft: "10px",
+            paddingRight: "10px",
+            justifyContent: "flex-start",
+          },
+        },
+        {
+          headerName: "작성자",
+          field: "displayWriter",
+          width: 120,
+          cellStyle: centeredCellTextStyle,
+        },
+        {
+          headerName: "등록일",
+          field: "postedAt",
+          width: 120,
+          valueFormatter: dateFormatter,
           cellStyle: centeredCellTextStyle,
         },
         {
@@ -523,6 +585,92 @@ const BoardPreview = React.memo(function BoardPreview({
           sortable: true,
           cellRenderer: StatusRenderer,
           cellStyle: centeredCellTextStyle,
+        },
+        {
+          headerName: "조회수",
+          field: "hits",
+          width: 90,
+          cellRenderer: ViewsRenderer,
+          cellStyle: centeredCellTextStyle,
+        },
+      ];
+      return qnaCols;
+    }
+
+    const baseColDefs: ColDef<ArticleWithAnswer>[] = [
+      {
+        headerName: "번호",
+        field: "no",
+        width: 80,
+        cellStyle: centeredCellTextStyle,
+        valueGetter: (params) => {
+          if (params.data?.no === 0) {
+            return "공지";
+          }
+          const totalElements = articlesApiResponse?.data?.totalElements ?? 0;
+          const rowIndex = params.node?.rowIndex;
+          if (typeof rowIndex !== "number") {
+            return "";
+          }
+          return totalElements - currentPage * pageSize - rowIndex;
+        },
+      },
+      {
+        headerName: "제목",
+        field: "title",
+        flex: 1,
+        sortable: true,
+        cellRenderer: PressTitleRenderer_Preview,
+        cellStyle: {
+          ...baseCellTextStyle,
+          paddingLeft: "10px",
+          paddingRight: "10px",
+          justifyContent: "flex-start",
+        },
+      },
+      {
+        headerName: "작성자",
+        field: "displayWriter",
+        width: 120,
+        sortable: true,
+        cellStyle: centeredCellTextStyle,
+      },
+      {
+        headerName: "등록일",
+        field: "postedAt",
+        width: 120,
+        valueFormatter: pressDateFormatter,
+        sortable: true,
+        cellStyle: centeredCellTextStyle,
+      },
+      {
+        headerName: "조회",
+        field: "hits",
+        width: 80,
+        cellRenderer: ViewsRenderer,
+        sortable: true,
+        cellStyle: centeredCellTextStyle,
+      },
+    ];
+
+    if (board?.skinType === "QNA" || board?.skinType === "FORM") {
+      return [
+        {
+          headerName: "번호",
+          field: "no",
+          width: 80,
+          cellStyle: { textAlign: "center" } as CellStyle,
+          valueGetter: (params) => {
+            if (params.data?.no === 0) {
+              return "공지";
+            }
+            const totalElements = articlesApiResponse?.data?.totalElements || 0;
+            const roxIndex = params.node?.rowIndex;
+            if (typeof roxIndex !== "number") {
+              return "";
+            }
+            return totalElements - currentPage * pageSize - roxIndex;
+          },
         },
         {
           headerName: "제목",
@@ -556,7 +704,14 @@ const BoardPreview = React.memo(function BoardPreview({
       ];
     }
     return baseColDefs;
-  }, [board?.skinType, colors.text, textColor]);
+  }, [
+    board?.skinType,
+    colors.text,
+    textColor,
+    articlesApiResponse,
+    currentPage,
+    pageSize,
+  ]);
 
   const defaultColDef = useMemo(
     () => ({
@@ -821,13 +976,9 @@ const BoardPreview = React.memo(function BoardPreview({
           (currentSkinType === "BASIC" || currentSkinType === "PRESS") && (
             <Stack direction="row" wrap="wrap" gap={4} mt={4}>
               {finalArticles.map((article) => {
-                const cardData = mapArticleToCommonCardData(
-                  article,
-                  menu?.url || ""
-                );
                 return (
                   <Box
-                    key={cardData.id}
+                    key={article.nttId}
                     width={{
                       base: "100%",
                       sm: "calc(50% - 0.5rem)",
@@ -843,7 +994,12 @@ const BoardPreview = React.memo(function BoardPreview({
                     _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
                     transition="all 0.2s"
                   >
-                    <GenericArticleCard cardData={cardData} />
+                    <GenericArticleCard
+                      cardData={mapArticleToCommonCardData(
+                        article,
+                        menu?.url || ""
+                      )}
+                    />
                   </Box>
                 );
               })}
