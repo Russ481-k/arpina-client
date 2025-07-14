@@ -15,6 +15,8 @@ import { useColorMode } from "@/components/ui/color-mode";
 import { UserActionsCellRenderer } from "./UserActionsCellRenderer";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import { CommonPayStatusBadge } from "@/components/common/CommonPayStatusBadge";
+import { formatPhoneNumberWithHyphen } from "@/lib/utils/phoneUtils";
+import { UsernameCellRenderer } from "./UsernameCellRenderer";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -66,9 +68,30 @@ export const UserGrid = forwardRef<UserGridRef, UserGridProps>(
           sortable: false,
           filter: false,
         },
-        { headerName: "ID", field: "username", flex: 1, minWidth: 180 },
+        {
+          headerName: "ID",
+          field: "username",
+          minWidth: 180,
+          cellRenderer: UsernameCellRenderer,
+          cellRendererParams: {
+            onUsernameClick: onRowSelected,
+          },
+        },
         { headerName: "이름", field: "name", width: 120 },
-        { headerName: "연락처", field: "phone", width: 150 },
+        {
+          headerName: "연락처",
+          field: "phone",
+          width: 150,
+          valueFormatter: (p: ValueFormatterParams) => {
+            if (!p.value) return "-";
+            return formatPhoneNumberWithHyphen(p.value);
+          },
+          cellStyle: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+        },
         { headerName: "차량번호", field: "carNo", width: 120 },
         {
           headerName: "상태",
@@ -97,12 +120,17 @@ export const UserGrid = forwardRef<UserGridRef, UserGridProps>(
           tooltipField: "lastEnrollment.lessonTime",
         },
         {
-          headerName: "결제 상태",
+          headerName: "최근 결제 상태",
           field: "lastEnrollment.payStatus",
-          width: 120,
+          width: 150,
           cellRenderer: (p: { value?: string }) => {
             if (!p.value) return null;
             return <CommonPayStatusBadge status={p.value} />;
+          },
+          cellStyle: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           },
         },
         {
@@ -134,12 +162,6 @@ export const UserGrid = forwardRef<UserGridRef, UserGridProps>(
           ref={gridRef}
           rowData={users}
           columnDefs={colDefs}
-          onSelectionChanged={(e) => {
-            const selectedRows = e.api.getSelectedRows();
-            if (selectedRows.length > 0) {
-              onRowSelected(selectedRows[0]);
-            }
-          }}
           rowSelection="single"
           defaultColDef={defaultColDef}
           enableCellTextSelection={true}
