@@ -20,6 +20,17 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
+      - name: Check if API URL is set
+        env:
+          API_URL_CHECK: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        run: |
+          if [ -z "$API_URL_CHECK" ]; then
+            echo "::error::NEXT_PUBLIC_API_URL secret is not set or empty."
+            exit 1
+          else
+            echo "NEXT_PUBLIC_API_URL secret is set."
+          fi
+
       - name: Install dependencies and build
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
