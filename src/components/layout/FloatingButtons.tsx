@@ -3,7 +3,6 @@
 import { Box, IconButton } from "@chakra-ui/react";
 import { LuArrowUp } from "react-icons/lu";
 import { useColors } from "@/styles/theme";
-import { ColorModeToggle } from "@/components/common/ColorModeToggle";
 import { useEffect, useState } from "react";
 import { LanguageModeToggle } from "../common/LanguageModeToggle";
 

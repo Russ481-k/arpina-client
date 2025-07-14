@@ -12,79 +12,24 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { menuApi } from "@/lib/api/menu";
 import type { Menu as MenuType } from "@/types/api";
 import Fuse, { type FuseResult } from "fuse.js";
 import NextLink from "next/link";
+import { useRecoilValue } from "recoil";
+import { flattenedMenusState } from "@/stores/menu";
 
 interface SearchDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const buildMenuTree = (menus: MenuType[]): MenuType[] => {
-  const menuMap = new Map<number, MenuType & { children: MenuType[] }>();
-  const rootMenus: MenuType[] = [];
-
-  menus.forEach((menu) => {
-    menuMap.set(menu.id, { ...menu, children: [] });
-  });
-
-  menus.forEach((menu) => {
-    const menuNode = menuMap.get(menu.id);
-    if (!menuNode) return;
-
-    if (menu.parentId) {
-      const parent = menuMap.get(menu.parentId);
-      parent?.children.push(menuNode);
-    } else {
-      rootMenus.push(menuNode);
-    }
-  });
-
-  return rootMenus;
-};
-
-const flattenMenusWithParentPath = (menus: MenuType[], parentPath = "") => {
-  let flattened: (MenuType & { parent_path?: string })[] = [];
-  for (const menu of menus) {
-    const currentPath = parentPath ? `${parentPath} > ${menu.name}` : menu.name;
-    flattened.push({ ...menu, parent_path: parentPath });
-    if (menu.children && menu.children.length > 0) {
-      flattened = [
-        ...flattened,
-        ...flattenMenusWithParentPath(menu.children as MenuType[], currentPath),
-      ];
-    }
-  }
-  return flattened;
-};
-
 export const SearchDialog = ({ isOpen, onClose }: SearchDialogProps) => {
   const [query, setQuery] = useState("");
-  const [menus, setMenus] = useState<(MenuType & { parent_path?: string })[]>(
-    []
-  );
+  const menus = useRecoilValue(flattenedMenusState);
   const [results, setResults] = useState<
     FuseResult<MenuType & { parent_path?: string }>[]
   >([]);
   const router = useRouter();
-
-  useEffect(() => {
-    const fetchMenus = async () => {
-      try {
-        const response = await menuApi.getPublicMenus();
-        if (response.data.data) {
-          const menuTree = buildMenuTree(response.data.data);
-          const flattenedMenus = flattenMenusWithParentPath(menuTree);
-          setMenus(flattenedMenus);
-        }
-      } catch (error) {
-        console.error("Failed to fetch menus:", error);
-      }
-    };
-    fetchMenus();
-  }, []);
 
   const fuse = useMemo(
     () =>

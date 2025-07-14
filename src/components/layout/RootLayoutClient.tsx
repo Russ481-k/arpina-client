@@ -40,14 +40,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     isCMSPath && !isRootPath && isAuthenticated && !isLoginPage && !isTestPage;
 
   return (
-    <Box
-      bg={mainBg}
-      margin={0}
-      padding={0}
-      height="100vh"
-      width="100vw"
-      overflow="hidden"
-    >
+    <Box bg={mainBg} margin={0} padding={0} minHeight="100vh" width="100vw">
       <Global styles={[getScrollbarStyle(isDark)]} />
       <Box
         color={textColor}
@@ -68,10 +61,9 @@ function Layout({ children }: { children: React.ReactNode }) {
           </>
         )}
         <Box
-          overflowY="auto"
           pl="0"
           pr="0"
-          h={{ base: "calc(100vh - 56px)", md: "100vh" }}
+          minHeight={{ base: "calc(100vh - 56px)", md: "100vh" }}
           py={{ base: "56px", md: "0" }}
           bg={mainBg}
           transition="all 0.2s ease-in-out"
