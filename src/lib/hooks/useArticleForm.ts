@@ -354,13 +354,6 @@ export function useArticleForm({
       setNewlyAddedFiles([]);
       setAttachmentsToDelete([]);
 
-      toaster.success({
-        title: "성공",
-        description: initialData?.nttId
-          ? "게시글이 성공적으로 수정되었습니다."
-          : "게시글이 성공적으로 등록되었습니다.",
-      });
-
       return {
         success: true,
         message: initialData?.nttId

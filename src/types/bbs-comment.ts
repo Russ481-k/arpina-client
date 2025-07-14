@@ -1,4 +1,4 @@
-export interface VoiceComment {
+export interface BbsComment {
   commentId: number;
   nttId: number;
   content: string;

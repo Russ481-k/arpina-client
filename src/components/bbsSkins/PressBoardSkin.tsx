@@ -69,10 +69,10 @@ const NoticeNumberRenderer: React.FC<ICellRendererParams<Post>> = (params) => {
     );
   } else {
     // Fallback to original simple numbering if pagination not available.
-    const displayValue =
-      params.data?.no && params.data.no !== 0
-        ? params.data.no
-        : (params.node?.rowIndex ?? 0) + 1;
+  const displayValue =
+    params.data?.no && params.data.no !== 0
+      ? params.data.no
+      : (params.node?.rowIndex ?? 0) + 1;
     content = (
       <Text fontSize="sm" color={textColor}>
         {displayValue}

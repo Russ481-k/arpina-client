@@ -1,20 +1,20 @@
 import { privateApi, publicApi } from '@/lib/api/client';
-import { VoiceComment } from '@/types/voice-comment';
+import { BbsComment } from '@/types/bbs-comment';
 
 // 댓글 목록 조회 (Read)
-export const getVoiceComments = async (
+export const getBbsComments = async (
   nttId: number
-): Promise<VoiceComment[]> => {
+): Promise<BbsComment[]> => {
   const { data } = await publicApi.get(`/cms/bbs/voice/read/${nttId}/comments`);
   return data;
 };
 
 // 댓글 생성 (Create)
-export const createVoiceComment = async (
+export const createBbsComment = async (
   nttId: number,
   content: string,
   displayWriter: string
-): Promise<VoiceComment> => {
+): Promise<BbsComment> => {
   const { data } = await privateApi.post(`/cms/bbs/voice/read/${nttId}/comments`, {
     content,
     displayWriter,
@@ -23,7 +23,7 @@ export const createVoiceComment = async (
 };
 
 // 댓글 수정 (Update)
-export const updateVoiceComment = async (
+export const updateBbsComment = async (
   nttId: number,
   commentId: number,
   content: string,
@@ -36,7 +36,7 @@ export const updateVoiceComment = async (
 };
 
 // 댓글 삭제 (Delete)
-export const deleteVoiceComment = async (
+export const deleteBbsComment = async (
   nttId: number,
   commentId: number
 ): Promise<void> => {

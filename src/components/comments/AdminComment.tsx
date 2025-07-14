@@ -13,28 +13,28 @@ import {
 } from "@chakra-ui/react";
 import { Edit, Trash2 } from "lucide-react";
 import {
-  getVoiceComments,
-  createVoiceComment,
-  deleteVoiceComment,
-  updateVoiceComment,
-} from "@/lib/api/voice-comment";
-import type { VoiceComment } from "@/types/voice-comment";
+  getBbsComments,
+  createBbsComment,
+  deleteBbsComment,
+  updateBbsComment,
+} from "@/lib/api/bbs-comment";
+import type { BbsComment } from "@/types/bbs-comment";
 import { format } from "date-fns";
 import { authState } from "@/stores/auth";
 
-interface AdminVoiceCommentProps {
+interface AdminCommentProps {
   nttId: number;
   isReadOnly?: boolean;
 }
 
-export function AdminVoiceComment({
+export function AdminComment({
   nttId,
   isReadOnly = false,
-}: AdminVoiceCommentProps) {
+}: AdminCommentProps) {
   const { user } = useRecoilValue(authState);
   const isAdmin = user?.role === "ADMIN" || user?.role === "SYSTEM_ADMIN";
 
-  const [comments, setComments] = useState<VoiceComment[]>([]);
+  const [comments, setComments] = useState<BbsComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
@@ -45,7 +45,7 @@ export function AdminVoiceComment({
 
   const fetchComments = async () => {
     try {
-      const data = await getVoiceComments(nttId);
+      const data = await getBbsComments(nttId);
       setComments(data);
     } catch (error: any) {
       if (error.response && error.response.status === 404) {
@@ -71,7 +71,7 @@ export function AdminVoiceComment({
 
     setIsSubmitting(true);
     try {
-      await createVoiceComment(nttId, newComment, "아르피나");
+      await createBbsComment(nttId, newComment, "아르피나");
       setNewComment("");
       await fetchComments();
     } catch (error) {
@@ -87,7 +87,7 @@ export function AdminVoiceComment({
 
     setIsDeleting(commentId);
     try {
-      await deleteVoiceComment(nttId, commentId);
+      await deleteBbsComment(nttId, commentId);
       await fetchComments();
     } catch (error) {
       console.error("Failed to delete comment:", error);
@@ -97,7 +97,7 @@ export function AdminVoiceComment({
     }
   };
 
-  const handleEdit = (comment: VoiceComment) => {
+  const handleEdit = (comment: BbsComment) => {
     setEditingCommentId(comment.commentId);
     setEditingContent(comment.content);
   };
@@ -114,7 +114,7 @@ export function AdminVoiceComment({
     }
     setIsUpdating(true);
     try {
-      await updateVoiceComment(nttId, commentId, editingContent, "아르피나");
+      await updateBbsComment(nttId, commentId, editingContent, "아르피나");
       handleCancelEdit();
       await fetchComments();
     } catch (error) {

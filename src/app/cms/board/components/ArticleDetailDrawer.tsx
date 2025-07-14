@@ -18,7 +18,7 @@ import { ArticleDisplay } from "@/components/articles/ArticleDisplay";
 import { toaster } from "@/components/ui/toaster";
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
-import { AdminVoiceComment } from "@/components/comments/AdminVoiceComment";
+import { AdminComment } from "@/components/comments/AdminComment";
 
 interface ArticleDetailDrawerProps {
   open: boolean;
@@ -132,7 +132,7 @@ export const ArticleDetailDrawer = ({
             <Drawer.Header></Drawer.Header>
             <Drawer.Body px={8} py={6}>
               <ArticleDisplay article={article} isFaq={isFaq} />
-              {isQna && article && <AdminVoiceComment nttId={article.nttId} />}
+              {isQna && article && <AdminComment nttId={article.nttId} />}
 
               <Flex justify="space-between" align="center" my={6} gap={2}>
                 <Box

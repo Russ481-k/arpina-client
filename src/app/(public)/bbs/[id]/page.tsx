@@ -17,10 +17,9 @@ import FaqBoardSkin from "@/components/bbsSkins/FaqBoardSkin";
 import QnaBoardSkin from "@/components/bbsSkins/QnaBoardSkin";
 import PressBoardSkin from "@/components/bbsSkins/PressBoardSkin";
 import FormBoardSkin from "@/components/bbsSkins/FormBoardSkin";
-import CustomPagination from "@/components/common/CustomPagination"; // Import CustomPagination
-import BoardControls from "@/components/bbsCommon/BoardControls"; // Import BoardControls
+import BoardControls from "@/components/bbsCommon/BoardControls";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { getVoiceComments } from "@/lib/api/voice-comment";
+import { getBbsComments } from "@/lib/api/bbs-comment";
 
 interface BoardPageProps {
   params: Promise<{ id: string }>; // params is a Promise again
@@ -159,7 +158,7 @@ async function getBoardPageData(
       articles = await Promise.all(
         articles.map(async (article) => {
           try {
-            const comments = await getVoiceComments(article.nttId);
+            const comments = await getBbsComments(article.nttId);
             return {
               ...article,
               answerContent: comments.length > 0 ? comments[0].content : "",

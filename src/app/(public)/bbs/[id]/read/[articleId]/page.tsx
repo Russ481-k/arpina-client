@@ -21,7 +21,7 @@ import { menuApi } from "@/lib/api/menu";
 import { PageDetailsDto } from "@/types/menu";
 import { findMenuByPath } from "@/lib/menu-utils";
 import { Menu, BoardArticleCommon } from "@/types/api";
-import { AdminVoiceComment } from "@/components/comments/AdminVoiceComment";
+import { AdminComment } from "@/components/comments/AdminComment";
 
 interface PrevNextArticleInfo {
   nttId: number;
@@ -208,7 +208,7 @@ export default function ArticleDetailPage() {
       {/* 댓글 컴포넌트 표시 - 고객의 소리 게시판(id === 'voice')에서만 표시 */}
       {id === "voice" && article && (
         <Box mt={8}>
-          <AdminVoiceComment nttId={article.nttId} isReadOnly={true} />
+          <AdminComment nttId={article.nttId} isReadOnly={true} />
         </Box>
       )}
 

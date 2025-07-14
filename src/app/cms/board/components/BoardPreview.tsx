@@ -53,7 +53,7 @@ import CustomPagination from "@/components/common/CustomPagination";
 import { toaster } from "@/components/ui/toaster";
 import dayjs from "dayjs";
 import PostTitleDisplay from "@/components/common/PostTitleDisplay";
-import { getVoiceComments } from "@/lib/api/voice-comment";
+import { getBbsComments } from "@/lib/api/bbs-comment";
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapArticleToCommonCardData } from "@/lib/card-utils";
 
@@ -98,82 +98,6 @@ const ViewsRenderer = (params: ICellRendererParams<ArticleWithAnswer>) => (
 const dateFormatter = (params: ValueFormatterParams<BoardArticleCommon>) => {
   if (!params.value) return "";
   return dayjs(params.value).format("YYYY.MM.DD");
-};
-
-const TitleRenderer: React.FC<ICellRendererParams<ArticleWithAnswer>> = (
-  params
-) => {
-  const { data: post } = params;
-  const { colorMode } = useColorMode();
-  const colors = useColors();
-
-  if (!post) return null;
-
-  let externalLinkHref: string | undefined = undefined;
-  if (post.externalLink) {
-    const trimmedExternalLink = post.externalLink.trim();
-    if (
-      trimmedExternalLink.startsWith("http://") ||
-      trimmedExternalLink.startsWith("https://")
-    ) {
-      externalLinkHref = trimmedExternalLink;
-    } else if (trimmedExternalLink) {
-      externalLinkHref = `http://${trimmedExternalLink}`;
-    }
-  }
-
-  const titleColor =
-    colorMode === "dark"
-      ? colors.text?.primary || "#E2E8F0"
-      : colors.text?.primary || "#2D3748";
-  const titleHoverColor = colorMode === "dark" ? "#75E6DA" : "blue.500";
-  const iconColor =
-    colorMode === "dark"
-      ? colors.text?.secondary || "gray.500"
-      : colors.text?.secondary || "gray.600";
-  return (
-    <HStack
-      gap={1}
-      alignItems="center"
-      w="100%"
-      h="100%"
-      overflow="hidden"
-      title={post.title}
-    >
-      <Box
-        flex={1}
-        minW={0}
-        display="flex"
-        alignItems="center"
-        color={titleColor}
-        _hover={{
-          textDecoration: "underline",
-          color: titleHoverColor,
-        }}
-      >
-        <PostTitleDisplay title={post.title} postData={post} />
-      </Box>
-
-      {externalLinkHref && (
-        <ChakraLink
-          href={externalLinkHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          display="inline-flex"
-          onClick={(e) => e.stopPropagation()}
-          aria-label={`Open external link: ${externalLinkHref}`}
-        >
-          <Icon
-            as={LuExternalLink}
-            color={iconColor}
-            _hover={{ color: titleHoverColor }}
-            cursor="pointer"
-            boxSize={4}
-          />
-        </ChakraLink>
-      )}
-    </HStack>
-  );
 };
 
 const PressTitleRenderer_Preview: React.FC<
@@ -314,40 +238,6 @@ const BoardPreview = React.memo(function BoardPreview({
   const [articleToEdit, setArticleToEdit] = useState<ArticleWithAnswer | null>(
     null
   );
-  const {
-    data: articlesApiResponse,
-    isLoading: isArticlesLoading,
-    isFetching: isArticlesFetching,
-  } = useQuery<ApiResponse<ArticleListResponse>>({
-    queryKey: [
-      "articles",
-      board?.bbsId,
-      menu?.id,
-      currentPage,
-      pageSize,
-      activeFilterKeyword,
-      refreshKey,
-    ],
-    queryFn: () => {
-      if (!board?.bbsId || !menu?.id) {
-        return Promise.reject(new Error("Board or menu ID is missing"));
-      }
-      return articleApi.getArticles({
-        bbsId: board.bbsId,
-        menuId: menu.id,
-        page: currentPage,
-        size: pageSize,
-        keyword: activeFilterKeyword,
-      });
-    },
-    enabled: !!board?.bbsId && !!menu?.id,
-    placeholderData: (previousData) => previousData,
-  });
-
-  const baseArticles = useMemo(
-    () => articlesApiResponse?.data?.content || [],
-    [articlesApiResponse]
-  );
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
@@ -392,6 +282,46 @@ const BoardPreview = React.memo(function BoardPreview({
   }, [searchInputText]);
 
   const {
+    data: articlesApiResponse,
+    isLoading: isArticlesLoading,
+    isFetching: isArticlesFetching,
+  } = useQuery<ApiResponse<ArticleListResponse>>({
+    queryKey: [
+      "articles",
+      bbsId,
+      menuId,
+      currentPage,
+      pageSize,
+      activeFilterKeyword,
+      refreshKey,
+    ],
+    queryFn: async () => {
+      if (!bbsId || !menuId) {
+        return {
+          success: true,
+          message: "",
+          data: { content: [], totalElements: 0, totalPages: 0 } as any,
+          errorCode: null,
+          stackTrace: null,
+        };
+      }
+      return await articleApi.getArticles({
+        bbsId,
+        menuId,
+        page: currentPage,
+        size: pageSize,
+        keyword: activeFilterKeyword,
+      });
+    },
+    enabled: !!bbsId && !!menuId,
+  });
+
+  const baseArticles = useMemo(
+    () => articlesApiResponse?.data?.content || [],
+    [articlesApiResponse]
+  );
+
+  const {
     data: articlesWithComments,
     isLoading: isCommentsLoading,
     isFetching: isCommentsFetching,
@@ -408,7 +338,7 @@ const BoardPreview = React.memo(function BoardPreview({
       return Promise.all(
         baseArticles.map(async (article) => {
           try {
-            const comments = await getVoiceComments(article.nttId);
+            const comments = await getBbsComments(article.nttId);
             return {
               ...article,
               answerContent: comments.length > 0 ? comments[0].content : "",
@@ -498,6 +428,7 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "no",
           width: 80,
           sortable: true,
+          cellRenderer: NoticeNumberRenderer,
           cellStyle: centeredCellTextStyle,
         },
         {
@@ -538,19 +469,17 @@ const BoardPreview = React.memo(function BoardPreview({
           headerName: "번호",
           field: "no",
           width: 80,
+          sortable: true,
+          cellRenderer: NoticeNumberRenderer,
           cellStyle: centeredCellTextStyle,
-          valueGetter: (params) => {
-            if (params.data?.no === 0) {
-              // Notice
-              return "공지";
-            }
-            const totalElements = articlesApiResponse?.data?.totalElements ?? 0;
-            const rowIndex = params.node?.rowIndex;
-            if (typeof rowIndex !== "number") {
-              return "";
-            }
-            return totalElements - currentPage * pageSize - rowIndex;
-          },
+        },
+        {
+          headerName: "상태",
+          field: "answerContent",
+          width: 100,
+          sortable: true,
+          cellRenderer: StatusRenderer,
+          cellStyle: centeredCellTextStyle,
         },
         {
           headerName: "제목",
@@ -579,14 +508,6 @@ const BoardPreview = React.memo(function BoardPreview({
           cellStyle: centeredCellTextStyle,
         },
         {
-          headerName: "상태",
-          field: "answerContent",
-          width: 100,
-          sortable: true,
-          cellRenderer: StatusRenderer,
-          cellStyle: centeredCellTextStyle,
-        },
-        {
           headerName: "조회수",
           field: "hits",
           width: 90,
@@ -602,18 +523,9 @@ const BoardPreview = React.memo(function BoardPreview({
         headerName: "번호",
         field: "no",
         width: 80,
+        sortable: true,
+        cellRenderer: NoticeNumberRenderer,
         cellStyle: centeredCellTextStyle,
-        valueGetter: (params) => {
-          if (params.data?.no === 0) {
-            return "공지";
-          }
-          const totalElements = articlesApiResponse?.data?.totalElements ?? 0;
-          const rowIndex = params.node?.rowIndex;
-          if (typeof rowIndex !== "number") {
-            return "";
-          }
-          return totalElements - currentPage * pageSize - rowIndex;
-        },
       },
       {
         headerName: "제목",
@@ -627,6 +539,7 @@ const BoardPreview = React.memo(function BoardPreview({
           paddingRight: "10px",
           justifyContent: "flex-start",
         },
+        minWidth: 300,
       },
       {
         headerName: "작성자",

@@ -193,10 +193,7 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
     router.push(`/${currentPathId}?page=1&size=${newSize}`);
   };
 
-  const agGridContext = useMemo(
-    () => ({ currentPathId, pagination }),
-    [currentPathId, pagination]
-  );
+  const agGridContext = useMemo(() => ({ currentPathId }), [currentPathId]);
 
   const agGridThemeClass =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
