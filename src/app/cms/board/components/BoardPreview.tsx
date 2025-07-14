@@ -66,7 +66,8 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 const NoticeNumberRenderer = (
   params: ICellRendererParams<ArticleWithAnswer>
 ) => {
-  const { data, node, context } = params;
+  const { data } = params;
+  // 공지사항일 경우에만 "공지" 배지를 표시합니다.
   if (data && data.no === 0) {
     return (
       <Badge colorPalette="orange" variant="subtle">
@@ -74,13 +75,9 @@ const NoticeNumberRenderer = (
       </Badge>
     );
   }
-  if (context && context.pagination && node.rowIndex !== null) {
-    const { totalElements, currentPage, pageSize } = context.pagination;
-    const calculatedNumber =
-      totalElements - currentPage * pageSize - node.rowIndex;
-    return <span>{calculatedNumber}</span>;
-  }
-  return <span>{params.value}</span>;
+
+  // 일반 게시글의 경우 아무것도 표시하지 않습니다.
+  return null;
 };
 
 const ViewsRenderer = (params: ICellRendererParams<ArticleWithAnswer>) => (
@@ -477,7 +474,6 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "no",
           width: 80,
           sortable: true,
-          cellRenderer: NoticeNumberRenderer,
           cellStyle: centeredCellTextStyle,
         },
         {
@@ -518,7 +514,6 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "no",
           width: 80,
           sortable: true,
-          cellRenderer: NoticeNumberRenderer,
           cellStyle: centeredCellTextStyle,
         },
         {

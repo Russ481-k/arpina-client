@@ -63,18 +63,6 @@ const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
     );
   }
 
-  // 일반 게시글 번호 계산
-  if (pagination && node.rowIndex !== null) {
-    const { totalElements, currentPage, pageSize } = pagination;
-    const calculatedNumber =
-      totalElements - (currentPage - 1) * pageSize - node.rowIndex;
-    return (
-      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-        <span>{calculatedNumber}</span>
-      </Flex>
-    );
-  }
-
   // Fallback (pagination 정보가 없을 경우)
   return (
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
