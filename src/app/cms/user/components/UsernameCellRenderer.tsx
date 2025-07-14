@@ -30,17 +30,12 @@ export const UsernameCellRenderer = (params: UsernameCellRendererParams) => {
       h="full"
       justify="space-between"
       align="center"
-      pr={2}
+      gap={0.5}
+      cursor="pointer"
       _hover={{ textDecoration: "underline", color: "blue.500" }}
+      onClick={handleUsernameClick}
     >
-      <Text
-        as="span"
-        cursor="pointer"
-        onClick={handleUsernameClick}
-        fontWeight="medium"
-      >
-        {data.username}
-      </Text>
+      <Text fontWeight="medium">{data.username}</Text>
       <ExternalLink size={14} />
     </HStack>
   );
