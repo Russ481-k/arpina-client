@@ -15,7 +15,6 @@ import { Menu } from "@/types/api";
 import { usePathname } from "next/navigation";
 import DesktopNav from "../DesktopNav";
 import { UtilityIcons } from "./UtilityIcons";
-import MobileMenuDrawer from "./MobileMenuDrawer";
 import SitemapDrawer from "./SitemapDrawer";
 
 const buildVisibleMenuTree = (menus: Menu[]): Menu[] => {
@@ -276,15 +275,6 @@ export const Header = memo(function Header({
         overflow="hidden"
         boxShadow="0 4px 20px rgba(0, 0, 0, 0.1)"
       />
-
-      {/* <MobileMenuDrawer
-        menusWithLastFlag={menusWithLastFlag}
-        isMenuActive={isMenuActive}
-        isDark={isDark}
-        isPreview={isPreview}
-        width={logoWidth}
-        height={logoHeight}
-      /> */}
       <SitemapDrawer
         isOpen={isSitemapDrawerOpen}
         onClose={() => setIsSitemapDrawerOpen(false)}

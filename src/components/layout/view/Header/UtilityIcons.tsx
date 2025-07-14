@@ -1,12 +1,20 @@
 "use client";
 
-import { Flex, IconButton, Menu, Portal, Box } from "@chakra-ui/react";
+import {
+  Flex,
+  IconButton,
+  Menu,
+  Portal,
+  Box,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { useCallback } from "react";
 import { Grid3x3, Search, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useRecoilValue } from "recoil";
 import { authState, useAuthActions } from "@/stores/auth";
+import { SearchDialog } from "@/components/common/SearchDialog";
 
 interface UtilityIconsProps {
   iconColor: string;
@@ -20,6 +28,11 @@ export const UtilityIcons = ({
   const router = useRouter();
   const { isAuthenticated } = useRecoilValue(authState);
   const { logout } = useAuthActions();
+  const {
+    open: isSearchOpen,
+    onOpen: onSearchOpen,
+    onClose: onSearchClose,
+  } = useDisclosure();
 
   const handleLogin = useCallback(() => {
     router.push("/login");
@@ -128,7 +141,7 @@ export const UtilityIcons = ({
         size="sm"
         borderRadius="full"
         display={{ base: "none", sm: "flex" }}
-        // TODO: Implement search functionality or drawer
+        onClick={onSearchOpen}
       >
         <Search />
       </IconButton>
@@ -142,6 +155,8 @@ export const UtilityIcons = ({
       >
         <Grid3x3 />
       </IconButton>
+
+      <SearchDialog isOpen={isSearchOpen} onClose={onSearchClose} />
     </Flex>
   );
 };

@@ -1,0 +1,189 @@
+"use client";
+
+import {
+  Dialog,
+  Input,
+  Link,
+  Text,
+  VStack,
+  Box,
+  CloseButton,
+  Portal,
+} from "@chakra-ui/react";
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { menuApi } from "@/lib/api/menu";
+import type { Menu as MenuType } from "@/types/api";
+import Fuse, { type FuseResult } from "fuse.js";
+import NextLink from "next/link";
+
+interface SearchDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const buildMenuTree = (menus: MenuType[]): MenuType[] => {
+  const menuMap = new Map<number, MenuType & { children: MenuType[] }>();
+  const rootMenus: MenuType[] = [];
+
+  menus.forEach((menu) => {
+    menuMap.set(menu.id, { ...menu, children: [] });
+  });
+
+  menus.forEach((menu) => {
+    const menuNode = menuMap.get(menu.id);
+    if (!menuNode) return;
+
+    if (menu.parentId) {
+      const parent = menuMap.get(menu.parentId);
+      parent?.children.push(menuNode);
+    } else {
+      rootMenus.push(menuNode);
+    }
+  });
+
+  return rootMenus;
+};
+
+const flattenMenusWithParentPath = (menus: MenuType[], parentPath = "") => {
+  let flattened: (MenuType & { parent_path?: string })[] = [];
+  for (const menu of menus) {
+    const currentPath = parentPath ? `${parentPath} > ${menu.name}` : menu.name;
+    flattened.push({ ...menu, parent_path: parentPath });
+    if (menu.children && menu.children.length > 0) {
+      flattened = [
+        ...flattened,
+        ...flattenMenusWithParentPath(menu.children as MenuType[], currentPath),
+      ];
+    }
+  }
+  return flattened;
+};
+
+export const SearchDialog = ({ isOpen, onClose }: SearchDialogProps) => {
+  const [query, setQuery] = useState("");
+  const [menus, setMenus] = useState<(MenuType & { parent_path?: string })[]>(
+    []
+  );
+  const [results, setResults] = useState<
+    FuseResult<MenuType & { parent_path?: string }>[]
+  >([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        const response = await menuApi.getPublicMenus();
+        if (response.data.data) {
+          const menuTree = buildMenuTree(response.data.data);
+          const flattenedMenus = flattenMenusWithParentPath(menuTree);
+          setMenus(flattenedMenus);
+        }
+      } catch (error) {
+        console.error("Failed to fetch menus:", error);
+      }
+    };
+    fetchMenus();
+  }, []);
+
+  const fuse = useMemo(
+    () =>
+      new Fuse(menus, {
+        keys: ["name", "parent_path"],
+        includeScore: true,
+        threshold: 0.4,
+      }),
+    [menus]
+  );
+
+  useEffect(() => {
+    if (query.trim() === "") {
+      setResults([]);
+      return;
+    }
+    const searchResults = fuse.search(query);
+    setResults(searchResults);
+  }, [query, fuse]);
+
+  const handleItemClick = (url: string | null) => {
+    if (url) {
+      if (url.startsWith("http")) {
+        window.open(url, "_blank");
+      } else {
+        router.push(url);
+      }
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setQuery("");
+    }
+  }, [isOpen]);
+
+  return (
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(detail) => !detail.open && onClose()}
+      placement="top"
+    >
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content mt="10vh" mx={2} maxW="xl" borderRadius="4xl">
+            <Dialog.Header pb={0} pt={3}>
+              <Dialog.Title>Search</Dialog.Title>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Header>
+            <Dialog.Body pb={6}>
+              <Input
+                placeholder="메뉴명을 검색하세요..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoFocus
+                borderRadius="3xl"
+              />
+              <Box mt={1} maxH="60vh" overflowY="auto">
+                <VStack gap={1} align="stretch">
+                  {results.length > 0
+                    ? results.map(({ item }) => (
+                        <Box
+                          key={item.id}
+                          p={2}
+                          borderRadius="md"
+                          _hover={{ bg: "gray.100" }}
+                          onClick={() => handleItemClick(item.url ?? null)}
+                          cursor="pointer"
+                        >
+                          <Link
+                            as={NextLink}
+                            href={item.url || "#"}
+                            onClick={(e) => e.preventDefault()}
+                            display="block"
+                          >
+                            <Text fontWeight="semibold">{item.name}</Text>
+                            {item.parent_path && (
+                              <Text fontSize="xs" color="gray.500">
+                                {item.parent_path}
+                              </Text>
+                            )}
+                          </Link>
+                        </Box>
+                      ))
+                    : query && (
+                        <Text textAlign="center" color="gray.500" p={4}>
+                          검색 결과가 없습니다.
+                        </Text>
+                      )}
+                </VStack>
+              </Box>
+            </Dialog.Body>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  );
+};

@@ -424,3 +424,11 @@ select:focus option {
   font-size: 14px !important;
   font-weight: 900;
 }
+
+.skiptranslate {
+    display: none !important;
+}
+
+body {
+    top: 0px !important;
+}

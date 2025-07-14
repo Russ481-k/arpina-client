@@ -56,16 +56,10 @@ export default function RoutesLayout({
 
   return (
     <Layout menus={menus}>
-      <Box
-        as="main"
-        bg={colors.bg}
-        flex="1"
-        position="relative"
-        mx="auto"
-      >
+      <Box as="main" bg={colors.bg} flex="1" position="relative" mx="auto">
         <Global styles={[getScrollbarStyle(isDark)]} />
         {children}
-        {/* <FloatingButtons /> */}
+        <FloatingButtons />
       </Box>
     </Layout>
   );
