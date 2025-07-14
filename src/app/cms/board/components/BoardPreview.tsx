@@ -11,6 +11,7 @@ import {
   Icon,
   Stack,
   Link as ChakraLink,
+  Spinner,
 } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
@@ -32,15 +33,13 @@ import {
   LuList,
   LuGrip,
   LuRefreshCw,
-  LuImage,
-  LuPaperclip,
   LuExternalLink,
 } from "react-icons/lu";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "@/styles/ag-grid-custom.css";
 import Layout from "@/components/layout/view/Layout";
 import { menuKeys, menuApi, sortMenus } from "@/lib/api/menu";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useHeroSectionData } from "@/lib/hooks/useHeroSectionData";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { articleApi, type ArticleListResponse } from "@/lib/api/article";
@@ -53,31 +52,35 @@ import { LucideEdit } from "lucide-react";
 import CustomPagination from "@/components/common/CustomPagination";
 import { toaster } from "@/components/ui/toaster";
 import dayjs from "dayjs";
-import TitleCellRenderer from "@/components/common/TitleCellRenderer";
 import PostTitleDisplay from "@/components/common/PostTitleDisplay";
-
-// Import GenericArticleCard and the mapping function
+import { getVoiceComments } from "@/lib/api/voice-comment";
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapArticleToCommonCardData } from "@/lib/card-utils";
 
-// Register required modules
+type ArticleWithAnswer = BoardArticleCommon & {
+  answerContent?: string;
+};
+
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// NEW: Custom Cell Renderer for "번호" (Number) column
 const NoticeNumberRenderer = (
-  params: ICellRendererParams<BoardArticleCommon>
+  params: ICellRendererParams<ArticleWithAnswer>
 ) => {
-  if (params.data && params.data.no === 0) {
+  const { data } = params;
+  // 공지사항일 경우에만 "공지" 배지를 표시합니다.
+  if (data && data.no === 0) {
     return (
       <Badge colorPalette="orange" variant="subtle">
         공지
       </Badge>
     );
   }
-  return <span>{params.value}</span>; // params.value will be data.no
+
+  // 일반 게시글의 경우 번호를 표시합니다.
+  return params.value;
 };
 
-const ViewsRenderer = (params: ICellRendererParams<BoardArticleCommon>) => (
+const ViewsRenderer = (params: ICellRendererParams<ArticleWithAnswer>) => (
   <span
     style={{
       display: "flex",
@@ -92,24 +95,95 @@ const ViewsRenderer = (params: ICellRendererParams<BoardArticleCommon>) => (
   </span>
 );
 
-// Date formatter
 const dateFormatter = (params: ValueFormatterParams<BoardArticleCommon>) => {
   if (!params.value) return "";
   return dayjs(params.value).format("YYYY.MM.DD");
 };
 
-// --- IMPORT/DEFINE PressTitleRenderer and its dateFormatter ---
-// (This might be better if PressTitleRenderer is in a shared location, but for now, define/adapt here)
+const TitleRenderer: React.FC<ICellRendererParams<ArticleWithAnswer>> = (
+  params
+) => {
+  const { data: post } = params;
+  const { colorMode } = useColorMode();
+  const colors = useColors();
+
+  if (!post) return null;
+
+  let externalLinkHref: string | undefined = undefined;
+  if (post.externalLink) {
+    const trimmedExternalLink = post.externalLink.trim();
+    if (
+      trimmedExternalLink.startsWith("http://") ||
+      trimmedExternalLink.startsWith("https://")
+    ) {
+      externalLinkHref = trimmedExternalLink;
+    } else if (trimmedExternalLink) {
+      externalLinkHref = `http://${trimmedExternalLink}`;
+    }
+  }
+
+  const titleColor =
+    colorMode === "dark"
+      ? colors.text?.primary || "#E2E8F0"
+      : colors.text?.primary || "#2D3748";
+  const titleHoverColor = colorMode === "dark" ? "#75E6DA" : "blue.500";
+  const iconColor =
+    colorMode === "dark"
+      ? colors.text?.secondary || "gray.500"
+      : colors.text?.secondary || "gray.600";
+  return (
+    <HStack
+      gap={1}
+      alignItems="center"
+      w="100%"
+      h="100%"
+      overflow="hidden"
+      title={post.title}
+    >
+      <Box
+        flex={1}
+        minW={0}
+        display="flex"
+        alignItems="center"
+        color={titleColor}
+        _hover={{
+          textDecoration: "underline",
+          color: titleHoverColor,
+        }}
+      >
+        <PostTitleDisplay title={post.title} postData={post} />
+      </Box>
+
+      {externalLinkHref && (
+        <ChakraLink
+          href={externalLinkHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          display="inline-flex"
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Open external link: ${externalLinkHref}`}
+        >
+          <Icon
+            as={LuExternalLink}
+            color={iconColor}
+            _hover={{ color: titleHoverColor }}
+            cursor="pointer"
+            boxSize={4}
+          />
+        </ChakraLink>
+      )}
+    </HStack>
+  );
+};
 
 const PressTitleRenderer_Preview: React.FC<
-  ICellRendererParams<BoardArticleCommon>
+  ICellRendererParams<ArticleWithAnswer>
 > = (params) => {
-  const post = params.data;
+  const { data: post } = params;
   const { colorMode } = useColorMode();
   const colors = useColors();
   if (!post) return null;
 
-  const internalDetailUrl = `${params.context.menuUrl}/read/${post.nttId}`;
   let externalLinkHref: string | undefined = undefined;
   if (post.externalLink) {
     const trimmedExternalLink = post.externalLink.trim();
@@ -142,8 +216,7 @@ const PressTitleRenderer_Preview: React.FC<
       overflow="hidden"
       title={post.title}
     >
-      <ChakraLink
-        href={externalLinkHref ?? internalDetailUrl}
+      <Box
         flex={1}
         minW={0}
         display="flex"
@@ -153,14 +226,9 @@ const PressTitleRenderer_Preview: React.FC<
           textDecoration: "underline",
           color: titleHoverColor,
         }}
-        onClick={(e) => {
-          if (externalLinkHref) {
-            e.preventDefault();
-          }
-        }}
       >
         <PostTitleDisplay title={post.title} postData={post} />
-      </ChakraLink>
+      </Box>
 
       {externalLinkHref && (
         <ChakraLink
@@ -184,7 +252,6 @@ const PressTitleRenderer_Preview: React.FC<
   );
 };
 
-// Re-use existing dateFormatter or ensure one is available for Press columns
 const pressDateFormatter = (
   params: ValueFormatterParams<BoardArticleCommon, string>
 ) => {
@@ -192,19 +259,26 @@ const pressDateFormatter = (
   return dayjs(params.value).format("YYYY.MM.DD");
 };
 
+const StatusRenderer = (params: ICellRendererParams<ArticleWithAnswer>) => {
+  const hasAnswer =
+    params.data?.answerContent && params.data.answerContent.trim() !== "";
+  const badgeColor = hasAnswer ? "pink" : "gray";
+  const statusText = hasAnswer ? "답변완료" : "답변대기";
+
+  return (
+    <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+      <Badge colorPalette={badgeColor} variant="subtle" px={2} py={1}>
+        {statusText}
+      </Badge>
+    </Flex>
+  );
+};
+
 export interface BoardPreviewProps {
   menu: Menu | null;
   board: BoardMaster | null;
-  settings?: {
-    showTitle: boolean;
-    showSearch: boolean;
-    showPagination: boolean;
-    showWriteButton: boolean;
-    layout: "list" | "grid" | "gallery";
-  };
   menus?: Menu[];
   onAddArticleClick?: () => void;
-  refetchArticles?: () => void;
 }
 
 interface ApiResponse<T> {
@@ -219,29 +293,65 @@ const BoardPreview = React.memo(function BoardPreview({
   menu,
   board,
   onAddArticleClick,
-  refetchArticles,
 }: BoardPreviewProps) {
-  // === ALL HOOKS AT THE TOP LEVEL OF THE COMPONENT ===
-  const gridRef = useRef<AgGridReact<BoardArticleCommon>>(null);
+  const gridRef = useRef<AgGridReact<ArticleWithAnswer>>(null);
   const { colorMode } = useColorMode();
   const colors = useColors();
   const [searchInputText, setSearchInputText] = useState("");
   const [activeFilterKeyword, setActiveFilterKeyword] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedArticleForDetail, setSelectedArticleForDetail] =
-    useState<BoardArticleCommon | null>(null);
+    useState<ArticleWithAnswer | null>(null);
   const { user, isAuthenticated } = useRecoilValue(authState);
-  const queryClient = useQueryClient();
   const [previousArticleInDrawer, setPreviousArticleInDrawer] =
-    useState<BoardArticleCommon | null>(null);
+    useState<ArticleWithAnswer | null>(null);
   const [nextArticleInDrawer, setNextArticleInDrawer] =
-    useState<BoardArticleCommon | null>(null);
+    useState<ArticleWithAnswer | null>(null);
   const [isWriteDrawerOpen, setIsWriteDrawerOpen] = useState(false);
-  const [articleToEdit, setArticleToEdit] = useState<BoardArticleCommon | null>(
+  const [articleToEdit, setArticleToEdit] = useState<ArticleWithAnswer | null>(
     null
   );
+  const {
+    data: articlesApiResponse,
+    isLoading: isArticlesLoading,
+    isFetching: isArticlesFetching,
+  } = useQuery<ApiResponse<ArticleListResponse>>({
+    queryKey: [
+      "articles",
+      board?.bbsId,
+      menu?.id,
+      currentPage,
+      pageSize,
+      activeFilterKeyword,
+      refreshKey,
+    ],
+    queryFn: () => {
+      if (!board?.bbsId || !menu?.id) {
+        return Promise.reject(new Error("Board or menu ID is missing"));
+      }
+      return articleApi.getArticles({
+        bbsId: board.bbsId,
+        menuId: menu.id,
+        page: currentPage,
+        size: pageSize,
+        keyword: activeFilterKeyword,
+      });
+    },
+    enabled: !!board?.bbsId && !!menu?.id,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const baseArticles = useMemo(
+    () => articlesApiResponse?.data?.content || [],
+    [articlesApiResponse]
+  );
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((prevKey) => prevKey + 1);
+  }, []);
 
   const initialViewMode = useMemo(() => {
     const initialSkinType = board?.skinType;
@@ -263,9 +373,7 @@ const BoardPreview = React.memo(function BoardPreview({
     try {
       const responseData = menuResponse;
       if (!responseData) return [];
-      if (Array.isArray(responseData)) {
-        return sortMenus(responseData);
-      }
+      if (Array.isArray(responseData)) return sortMenus(responseData);
       const menuData = responseData;
       if (!menuData) return [];
       return Array.isArray(menuData) ? sortMenus(menuData) : [menuData];
@@ -284,81 +392,63 @@ const BoardPreview = React.memo(function BoardPreview({
   }, [searchInputText]);
 
   const {
-    data: articlesApiResponse,
-    isLoading: isArticlesLoading,
-    isError: isArticlesError,
-  } = useQuery<ApiResponse<ArticleListResponse>>({
+    data: articlesWithComments,
+    isLoading: isCommentsLoading,
+    isFetching: isCommentsFetching,
+  } = useQuery<ArticleWithAnswer[]>({
     queryKey: [
-      "articles",
-      bbsId,
-      menuId,
-      currentPage,
-      pageSize,
-      activeFilterKeyword,
+      "articlesWithComments",
+      baseArticles.map((a) => a.nttId),
+      refreshKey,
     ],
     queryFn: async () => {
-      if (!bbsId || !menuId) {
-        return {
-          success: true,
-          message: "",
-          data: {
-            content: [],
-            pageable: {
-              sort: { empty: true, sorted: false, unsorted: true },
-              offset: 0,
-              pageNumber: 0,
-              pageSize: 20,
-              paged: true,
-              unpaged: false,
-            },
-            last: true,
-            totalElements: 0,
-            totalPages: 0,
-            first: true,
-            size: 20,
-            number: 0,
-            sort: { empty: true, sorted: false, unsorted: true },
-            numberOfElements: 0,
-            empty: true,
-          },
-          errorCode: null,
-          stackTrace: null,
-        };
+      if (menu?.url !== "/bbs/voice" || baseArticles.length === 0) {
+        return baseArticles;
       }
-      return await articleApi.getArticles({
-        bbsId,
-        menuId,
-        page: currentPage,
-        size: pageSize,
-        keyword: activeFilterKeyword,
-      });
+      return Promise.all(
+        baseArticles.map(async (article) => {
+          try {
+            const comments = await getVoiceComments(article.nttId);
+            return {
+              ...article,
+              answerContent: comments.length > 0 ? comments[0].content : "",
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching comments for article ${article.nttId}:`,
+              error
+            );
+            return { ...article, answerContent: "" };
+          }
+        })
+      );
     },
-    enabled: !!bbsId && !!menuId,
+    enabled: baseArticles.length > 0,
   });
 
-  const articles = useMemo(
-    () => articlesApiResponse?.data?.content || [],
-    [articlesApiResponse?.data?.content]
-  ) as BoardArticleCommon[];
   const heroData = useHeroSectionData(menu?.url ?? "");
+
   useEffect(() => {
-    if (selectedArticleForDetail && articles.length > 0) {
-      const currentIndex = articles.findIndex(
+    const currentArticles = articlesWithComments || [];
+    if (selectedArticleForDetail && currentArticles.length > 0) {
+      const currentIndex = currentArticles.findIndex(
         (article) => article.nttId === selectedArticleForDetail.nttId
       );
       if (currentIndex !== -1) {
         setPreviousArticleInDrawer(
-          currentIndex > 0 ? articles[currentIndex - 1] : null
+          currentIndex > 0 ? currentArticles[currentIndex - 1] : null
         );
         setNextArticleInDrawer(
-          currentIndex < articles.length - 1 ? articles[currentIndex + 1] : null
+          currentIndex < currentArticles.length - 1
+            ? currentArticles[currentIndex + 1]
+            : null
         );
       }
     } else {
       setPreviousArticleInDrawer(null);
       setNextArticleInDrawer(null);
     }
-  }, [selectedArticleForDetail, articles]);
+  }, [selectedArticleForDetail, articlesWithComments]);
 
   useEffect(() => {
     const skinType = board?.skinType;
@@ -366,8 +456,15 @@ const BoardPreview = React.memo(function BoardPreview({
   }, [board?.skinType]);
 
   const agGridContext = useMemo(
-    () => ({ menuUrl: menu?.url || "" }),
-    [menu?.url]
+    () => ({
+      menuUrl: menu?.url || "",
+      pagination: {
+        totalElements: articlesApiResponse?.data?.totalElements || 0,
+        currentPage: currentPage,
+        pageSize: pageSize,
+      },
+    }),
+    [articlesApiResponse, currentPage, pageSize, menu?.url]
   );
 
   const bg = colorMode === "dark" ? "#1A202C" : "white";
@@ -377,90 +474,22 @@ const BoardPreview = React.memo(function BoardPreview({
   const agGridTheme =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
 
-  const colDefs = useMemo<ColDef<BoardArticleCommon>[]>(() => {
+  const colDefs = useMemo<ColDef<ArticleWithAnswer>[]>(() => {
     const baseCellTextStyle: CellStyle = {
       fontWeight: "normal",
       color: textColor,
       overflow: "hidden",
       textOverflow: "ellipsis",
       whiteSpace: "nowrap",
-      justifyContent: "flex-start",
+      display: "flex",
+      alignItems: "center",
+      height: "100%",
     };
     const centeredCellTextStyle: CellStyle = {
       ...baseCellTextStyle,
       justifyContent: "center",
       textAlign: "center",
-      color: colors.text?.secondary || textColor,
     };
-    const baseColDefs: ColDef<BoardArticleCommon>[] = [
-      {
-        headerName: "번호",
-        field: "no",
-        width: 80,
-        sortable: true,
-        cellRenderer: NoticeNumberRenderer,
-        cellStyle: {
-          ...centeredCellTextStyle,
-          overflow: "visible",
-          textOverflow: "clip",
-          whiteSpace: "normal",
-        },
-      },
-      {
-        headerName: "제목",
-        field: "title",
-        flex: 1,
-        sortable: true,
-        cellRenderer: PressTitleRenderer_Preview,
-
-        cellStyle: {
-          ...baseCellTextStyle,
-          paddingLeft: "10px",
-          paddingRight: "10px",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        },
-      },
-      {
-        headerName: "작성자",
-        field: "displayWriter",
-        width: 120,
-        sortable: true,
-        cellStyle: {
-          ...centeredCellTextStyle,
-          overflow: "visible",
-          textOverflow: "clip",
-          whiteSpace: "normal",
-        },
-      },
-      {
-        headerName: "등록일",
-        field: "postedAt",
-        width: 120,
-        valueFormatter: dateFormatter,
-        sortable: true,
-        cellStyle: {
-          ...centeredCellTextStyle,
-          overflow: "visible",
-          textOverflow: "clip",
-          whiteSpace: "normal",
-        },
-      },
-      {
-        headerName: "조회",
-        field: "hits",
-        width: 80,
-        cellRenderer: ViewsRenderer,
-        sortable: true,
-        cellStyle: {
-          ...centeredCellTextStyle,
-          overflow: "visible",
-          textOverflow: "clip",
-          whiteSpace: "normal",
-        },
-      },
-    ];
 
     if (board?.skinType === "PRESS") {
       return [
@@ -469,13 +498,7 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "no",
           width: 80,
           sortable: true,
-          cellRenderer: NoticeNumberRenderer,
-          cellStyle: {
-            ...centeredCellTextStyle,
-            overflow: "visible",
-            textOverflow: "clip",
-            whiteSpace: "normal",
-          },
+          cellStyle: centeredCellTextStyle,
         },
         {
           headerName: "제목",
@@ -487,9 +510,7 @@ const BoardPreview = React.memo(function BoardPreview({
             ...baseCellTextStyle,
             paddingLeft: "10px",
             paddingRight: "10px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+            justifyContent: "flex-start",
           },
           minWidth: 300,
         },
@@ -498,12 +519,7 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "displayWriter",
           width: 120,
           sortable: true,
-          cellStyle: {
-            ...centeredCellTextStyle,
-            overflow: "visible",
-            textOverflow: "clip",
-            whiteSpace: "normal",
-          },
+          cellStyle: centeredCellTextStyle,
         },
         {
           headerName: "등록일",
@@ -511,28 +527,149 @@ const BoardPreview = React.memo(function BoardPreview({
           width: 120,
           valueFormatter: pressDateFormatter,
           sortable: true,
-          cellStyle: {
-            ...centeredCellTextStyle,
-            overflow: "visible",
-            textOverflow: "clip",
-            whiteSpace: "normal",
-          },
+          cellStyle: centeredCellTextStyle,
         },
       ];
     }
-    if (board?.skinType === "QNA") {
+    const skin = board?.skinType;
+    if (skin === "QNA") {
+      const qnaCols: ColDef<ArticleWithAnswer>[] = [
+        {
+          headerName: "번호",
+          field: "no",
+          width: 80,
+          cellStyle: centeredCellTextStyle,
+          valueGetter: (params) => {
+            if (params.data?.no === 0) {
+              // Notice
+              return "공지";
+            }
+            const totalElements = articlesApiResponse?.data?.totalElements ?? 0;
+            const rowIndex = params.node?.rowIndex;
+            if (typeof rowIndex !== "number") {
+              return "";
+            }
+            return totalElements - currentPage * pageSize - rowIndex;
+          },
+        },
+        {
+          headerName: "제목",
+          field: "title",
+          flex: 1,
+          cellRenderer: PressTitleRenderer_Preview,
+          minWidth: 300,
+          cellStyle: {
+            ...baseCellTextStyle,
+            paddingLeft: "10px",
+            paddingRight: "10px",
+            justifyContent: "flex-start",
+          },
+        },
+        {
+          headerName: "작성자",
+          field: "displayWriter",
+          width: 120,
+          cellStyle: centeredCellTextStyle,
+        },
+        {
+          headerName: "등록일",
+          field: "postedAt",
+          width: 120,
+          valueFormatter: dateFormatter,
+          cellStyle: centeredCellTextStyle,
+        },
+        {
+          headerName: "상태",
+          field: "answerContent",
+          width: 100,
+          sortable: true,
+          cellRenderer: StatusRenderer,
+          cellStyle: centeredCellTextStyle,
+        },
+        {
+          headerName: "조회수",
+          field: "hits",
+          width: 90,
+          cellRenderer: ViewsRenderer,
+          cellStyle: centeredCellTextStyle,
+        },
+      ];
+      return qnaCols;
+    }
+
+    const baseColDefs: ColDef<ArticleWithAnswer>[] = [
+      {
+        headerName: "번호",
+        field: "no",
+        width: 80,
+        cellStyle: centeredCellTextStyle,
+        valueGetter: (params) => {
+          if (params.data?.no === 0) {
+            return "공지";
+          }
+          const totalElements = articlesApiResponse?.data?.totalElements ?? 0;
+          const rowIndex = params.node?.rowIndex;
+          if (typeof rowIndex !== "number") {
+            return "";
+          }
+          return totalElements - currentPage * pageSize - rowIndex;
+        },
+      },
+      {
+        headerName: "제목",
+        field: "title",
+        flex: 1,
+        sortable: true,
+        cellRenderer: PressTitleRenderer_Preview,
+        cellStyle: {
+          ...baseCellTextStyle,
+          paddingLeft: "10px",
+          paddingRight: "10px",
+          justifyContent: "flex-start",
+        },
+      },
+      {
+        headerName: "작성자",
+        field: "displayWriter",
+        width: 120,
+        sortable: true,
+        cellStyle: centeredCellTextStyle,
+      },
+      {
+        headerName: "등록일",
+        field: "postedAt",
+        width: 120,
+        valueFormatter: pressDateFormatter,
+        sortable: true,
+        cellStyle: centeredCellTextStyle,
+      },
+      {
+        headerName: "조회",
+        field: "hits",
+        width: 80,
+        cellRenderer: ViewsRenderer,
+        sortable: true,
+        cellStyle: centeredCellTextStyle,
+      },
+    ];
+
+    if (board?.skinType === "QNA" || board?.skinType === "FORM") {
       return [
         {
           headerName: "번호",
           field: "no",
           width: 80,
-          sortable: true,
-          cellRenderer: NoticeNumberRenderer,
-          cellStyle: {
-            ...centeredCellTextStyle,
-            overflow: "visible",
-            textOverflow: "clip",
-            whiteSpace: "normal",
+          cellStyle: { textAlign: "center" } as CellStyle,
+          valueGetter: (params) => {
+            if (params.data?.no === 0) {
+              return "공지";
+            }
+            const totalElements = articlesApiResponse?.data?.totalElements || 0;
+            const roxIndex = params.node?.rowIndex;
+            if (typeof roxIndex !== "number") {
+              return "";
+            }
+            return totalElements - currentPage * pageSize - roxIndex;
           },
         },
         {
@@ -541,14 +678,11 @@ const BoardPreview = React.memo(function BoardPreview({
           flex: 1,
           sortable: true,
           cellRenderer: PressTitleRenderer_Preview,
-
           cellStyle: {
             ...baseCellTextStyle,
             paddingLeft: "10px",
             paddingRight: "10px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+            justifyContent: "flex-start",
           },
           minWidth: 300,
         },
@@ -557,12 +691,7 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "displayWriter",
           width: 120,
           sortable: true,
-          cellStyle: {
-            ...centeredCellTextStyle,
-            overflow: "visible",
-            textOverflow: "clip",
-            whiteSpace: "normal",
-          },
+          cellStyle: centeredCellTextStyle,
         },
         {
           headerName: "등록일",
@@ -570,17 +699,19 @@ const BoardPreview = React.memo(function BoardPreview({
           width: 120,
           valueFormatter: pressDateFormatter,
           sortable: true,
-          cellStyle: {
-            ...centeredCellTextStyle,
-            overflow: "visible",
-            textOverflow: "clip",
-            whiteSpace: "normal",
-          },
+          cellStyle: centeredCellTextStyle,
         },
       ];
     }
     return baseColDefs;
-  }, [board?.skinType, colors.text, textColor]);
+  }, [
+    board?.skinType,
+    colors.text,
+    textColor,
+    articlesApiResponse,
+    currentPage,
+    pageSize,
+  ]);
 
   const defaultColDef = useMemo(
     () => ({
@@ -591,32 +722,34 @@ const BoardPreview = React.memo(function BoardPreview({
     }),
     []
   );
+
   const handleRowClick = useCallback(
-    (event: RowClickedEvent | { data: BoardArticleCommon }) => {
+    (event: RowClickedEvent | { data: ArticleWithAnswer }) => {
       setSelectedArticleForDetail(event.data);
       setDetailDrawerOpen(true);
     },
     []
   );
+
   const handleDetailDrawerClose = useCallback(
     (open: boolean) => {
       setDetailDrawerOpen(open);
-      if (!open && refetchArticles) {
-        refetchArticles();
+      if (!open) {
+        handleRefresh();
       }
     },
-    [refetchArticles]
+    [handleRefresh]
   );
+
   const handlePageSizeChange = useCallback((newPageSize: number) => {
     setPageSize(newPageSize);
     setCurrentPage(0);
   }, []);
 
-  // Define the handlers for ArticleDetailDrawer actions
   const handleWriteNewInPreview = useCallback(
     (currentBbsId?: number, currentMenuId?: number) => {
-      const targetBbsId = currentBbsId ?? bbsId; // bbsId is from props.board.bbsId
-      const targetMenuId = currentMenuId ?? menuId; // menuId is from props.menu.id
+      const targetBbsId = currentBbsId ?? bbsId;
+      const targetMenuId = currentMenuId ?? menuId;
 
       if (typeof targetBbsId !== "number" || typeof targetMenuId !== "number") {
         toaster.error({
@@ -626,24 +759,24 @@ const BoardPreview = React.memo(function BoardPreview({
         });
         return;
       }
-      setArticleToEdit(null); // Clear any existing article to edit
+      setArticleToEdit(null);
       setIsWriteDrawerOpen(true);
-      setDetailDrawerOpen(false); // Close detail drawer if it was open
+      setDetailDrawerOpen(false);
     },
     [bbsId, menuId]
-  ); // Add bbsId, menuId to dependencies
+  );
 
   const handleEditArticleInPreview = useCallback(
-    (article: BoardArticleCommon) => {
+    (article: ArticleWithAnswer) => {
       setArticleToEdit(article);
       setIsWriteDrawerOpen(true);
-      setDetailDrawerOpen(false); // Close detail drawer if it was open
+      setDetailDrawerOpen(false);
     },
     []
   );
 
   const handleDeleteArticleInPreview = useCallback(
-    async (articleToDelete: BoardArticleCommon) => {
+    async (articleToDelete: ArticleWithAnswer) => {
       if (!articleToDelete || typeof articleToDelete.nttId !== "number") {
         toaster.error({
           title: "오류",
@@ -659,11 +792,7 @@ const BoardPreview = React.memo(function BoardPreview({
         });
         setDetailDrawerOpen(false);
         setSelectedArticleForDetail(null);
-        if (bbsId && typeof menuId === "number") {
-          queryClient.invalidateQueries({
-            queryKey: ["articles", bbsId, menuId],
-          });
-        }
+        handleRefresh();
       } catch (error) {
         console.error("Error deleting article:", error);
         toaster.error({
@@ -672,10 +801,16 @@ const BoardPreview = React.memo(function BoardPreview({
         });
       }
     },
-    [bbsId, menuId, queryClient]
-  ); // Add dependencies
+    [handleRefresh]
+  );
 
-  // ALL CONDITIONAL RENDERING / EARLY RETURNS MUST BE AFTER ALL HOOKS
+  const isLoadingCombined =
+    isMenusLoading ||
+    isArticlesLoading ||
+    isArticlesFetching ||
+    isCommentsLoading ||
+    isCommentsFetching;
+
   if (!menu) {
     return (
       <Box p={4} textAlign="center">
@@ -685,23 +820,18 @@ const BoardPreview = React.memo(function BoardPreview({
       </Box>
     );
   }
-  const isLoadingCombined = isMenusLoading || isArticlesLoading;
-  if (isLoadingCombined) {
+
+  if (isLoadingCombined && !(articlesWithComments || []).length) {
     return (
-      <Box
-        width="40px"
-        height="40px"
-        border="4px solid"
-        borderColor="blue.500"
-        borderTopColor="transparent"
-        borderRadius="full"
-        animation="spin 1s linear infinite"
-      />
+      <Flex p={4} w="full" minH="800px" justify="center" align="center">
+        <Spinner size="xl" />
+      </Flex>
     );
   }
 
   const currentSkinType = board?.skinType;
   const articlesData = articlesApiResponse?.data;
+  const finalArticles = articlesWithComments || [];
 
   return (
     <Layout currentPage="홈" isPreview={true} menus={menus}>
@@ -767,11 +897,11 @@ const BoardPreview = React.memo(function BoardPreview({
                 color={textColor}
                 minWidth="32px"
                 px={2}
-                onClick={refetchArticles}
-                // disabled={!refetchArticles}
+                onClick={handleRefresh}
+                disabled={isLoadingCombined}
                 aria-label="Refresh article list"
               >
-                <LuRefreshCw />
+                {isLoadingCombined ? <Spinner size="sm" /> : <LuRefreshCw />}
               </Button>
               <Button
                 size="sm"
@@ -819,9 +949,9 @@ const BoardPreview = React.memo(function BoardPreview({
             className={agGridTheme}
             style={{ width: "100%", background: bg }}
           >
-            <AgGridReact<BoardArticleCommon>
+            <AgGridReact<ArticleWithAnswer>
               ref={gridRef}
-              rowData={articles}
+              rowData={finalArticles}
               columnDefs={colDefs}
               defaultColDef={defaultColDef}
               domLayout="autoHeight"
@@ -845,14 +975,10 @@ const BoardPreview = React.memo(function BoardPreview({
         {viewMode === "card" &&
           (currentSkinType === "BASIC" || currentSkinType === "PRESS") && (
             <Stack direction="row" wrap="wrap" gap={4} mt={4}>
-              {articles.map((article) => {
-                const cardData = mapArticleToCommonCardData(
-                  article,
-                  menu?.url || ""
-                );
+              {finalArticles.map((article) => {
                 return (
                   <Box
-                    key={cardData.id}
+                    key={article.nttId}
                     width={{
                       base: "100%",
                       sm: "calc(50% - 0.5rem)",
@@ -862,13 +988,18 @@ const BoardPreview = React.memo(function BoardPreview({
                     onClick={() =>
                       handleRowClick({
                         data: article,
-                      } as RowClickedEvent<BoardArticleCommon>)
+                      } as RowClickedEvent<ArticleWithAnswer>)
                     }
                     cursor="pointer"
                     _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
                     transition="all 0.2s"
                   >
-                    <GenericArticleCard cardData={cardData} />
+                    <GenericArticleCard
+                      cardData={mapArticleToCommonCardData(
+                        article,
+                        menu?.url || ""
+                      )}
+                    />
                   </Box>
                 );
               })}
@@ -887,6 +1018,7 @@ const BoardPreview = React.memo(function BoardPreview({
         onOpenChange={handleDetailDrawerClose}
         article={selectedArticleForDetail}
         isFaq={currentSkinType === "FAQ"}
+        isQna={currentSkinType === "QNA"}
         previousArticle={previousArticleInDrawer}
         nextArticle={nextArticleInDrawer}
         onNavigateToPrevious={() => {
@@ -936,11 +1068,7 @@ const BoardPreview = React.memo(function BoardPreview({
             if (!openState) {
               setIsWriteDrawerOpen(false);
               setArticleToEdit(null);
-              if (bbsId && typeof menuId === "number") {
-                queryClient.invalidateQueries({
-                  queryKey: ["articles", bbsId, menuId],
-                });
-              }
+              handleRefresh();
             }
           }}
         />

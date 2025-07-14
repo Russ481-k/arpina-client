@@ -30,21 +30,40 @@ import TitleCellRenderer from "@/components/common/TitleCellRenderer"; // TitleC
 
 ModuleRegistry.registerModules([AllCommunityModule]); // Register AG Grid modules
 
-const AVAILABLE_PAGE_SIZES_QNA = [10, 20, 50];
+const AVAILABLE_PAGE_SIZES_QNA = [10, 20, 30, 50, 100];
 
 // --- Cell Renderers and Formatters (copied/adapted from BasicBoardSkin) ---
 const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
-  const content =
-    params.data && params.data.no === 0 ? (
-      <Badge colorPalette="orange" variant="subtle">
-        공지
-      </Badge>
-    ) : (
-      <span>{params.value}</span>
+  const { data, node, context } = params;
+  const { pagination } = context;
+
+  // 공지사항 처리
+  if (data && data.no === 0) {
+    return (
+      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+        <Badge colorPalette="orange" variant="subtle">
+          공지
+        </Badge>
+      </Flex>
     );
+  }
+
+  // 페이지네이션 정보가 있을 경우 번호 계산
+  if (pagination && node && typeof node.rowIndex === "number") {
+    const { totalElements, currentPage, pageSize } = pagination;
+    const calculatedNumber =
+      totalElements - ((currentPage - 1) * pageSize + node.rowIndex);
+    return (
+      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+        <span>{calculatedNumber}</span>
+      </Flex>
+    );
+  }
+
+  // Fallback (pagination 정보가 없을 경우)
   return (
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
-      {content}
+      <span>{params.value}</span>
     </Flex>
   );
 };
@@ -101,20 +120,10 @@ const dateFormatter = (params: ValueFormatterParams<Post>) => {
 
 // New StatusRenderer for Q&A
 const StatusRenderer = (params: ICellRendererParams<Post>) => {
-  const status = params.data?.status;
-  let badgecolorPalette = "gray";
-  let statusText = status || "정보 없음";
-
-  if (status === "답변완료" || status?.toUpperCase() === "ANSWERED") {
-    // Handle variations
-    badgecolorPalette = "green";
-    statusText = "답변완료";
-  } else if (status === "답변대기" || status?.toUpperCase() === "PENDING") {
-    // Handle variations
-    badgecolorPalette = "orange";
-    statusText = "답변대기";
-  }
-  // Add more specific status checks if needed, e.g., based on post.parentNttId for replies
+  const hasAnswer =
+    params.data?.answerContent && params.data.answerContent.trim() !== "";
+  const badgecolorPalette = hasAnswer ? "pink" : "gray";
+  const statusText = hasAnswer ? "답변완료" : "답변대기";
 
   return (
     <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
@@ -161,6 +170,13 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
     router.push(`/bbs/${currentPathId}?page=1&size=${newSize}`);
   };
 
+  const agGridContext = useMemo(
+    () => ({
+      pagination: pagination,
+    }),
+    [pagination]
+  );
+
   // AG Grid Theme Logic
   const agGridThemeClass =
     colorMode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz";
@@ -189,7 +205,7 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
       },
       {
         headerName: "상태",
-        field: "status",
+        field: "answerContent",
         width: 100,
         sortable: true,
         cellRenderer: StatusRenderer,
@@ -285,7 +301,7 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
   );
 
   return (
-    <Box p={4} maxW="1600px" mx="auto">
+    <Box maxW="1600px" mx="auto">
       {/* AG Grid replaces the HTML table */}
       <Box
         className={agGridThemeClass}
@@ -316,6 +332,7 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
               color: rowTextColor,
             })}
             theme="legacy"
+            context={agGridContext}
           />
         ) : (
           <Flex
