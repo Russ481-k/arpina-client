@@ -24,6 +24,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         run: |
+          echo "NEXT_PUBLIC_API_URL for build is: ${{ secrets.NEXT_PUBLIC_API_URL }}"
           pnpm install --frozen-lockfile
           pnpm build
 
