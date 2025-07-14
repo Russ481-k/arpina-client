@@ -264,7 +264,7 @@ export default function UserManagementPage() {
               selectFilters={[
                 {
                   id: "payStatus",
-                  label: "결제 상태",
+                  label: "최근 결제 상태",
                   value: filters.payStatus,
                   onChange: handleFilterChange,
                   options: PAY_STATUS_OPTIONS,
