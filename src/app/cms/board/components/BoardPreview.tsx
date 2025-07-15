@@ -734,14 +734,6 @@ const BoardPreview = React.memo(function BoardPreview({
     );
   }
 
-  if (isLoadingCombined && !(articlesWithComments || []).length) {
-    return (
-      <Flex p={4} w="full" minH="800px" justify="center" align="center">
-        <Spinner size="xl" />
-      </Flex>
-    );
-  }
-
   const currentSkinType = board?.skinType;
   const articlesData = articlesApiResponse?.data;
   const finalArticles = articlesWithComments || [];
@@ -762,16 +754,14 @@ const BoardPreview = React.memo(function BoardPreview({
             width={{ base: "100%", md: "50%" }}
           >
             <HStack gap={1}>
-              {articlesData?.totalElements !== undefined && (
-                <Text
-                  fontSize="sm"
-                  color={colors.text.secondary}
-                  whiteSpace="nowrap"
-                  mr={2}
-                >
-                  총 {articlesData.totalElements}건
-                </Text>
-              )}
+              <Text
+                fontSize="sm"
+                color={colors.text.secondary}
+                whiteSpace="nowrap"
+                mr={2}
+              >
+                총 {articlesData?.totalElements ?? 0}건
+              </Text>
               <Input
                 placeholder="검색어를 입력해주세요"
                 size="sm"
@@ -862,27 +852,33 @@ const BoardPreview = React.memo(function BoardPreview({
             className={agGridTheme}
             style={{ width: "100%", background: bg }}
           >
-            <AgGridReact<ArticleWithAnswer>
-              ref={gridRef}
-              rowData={finalArticles}
-              columnDefs={colDefs}
-              defaultColDef={defaultColDef}
-              domLayout="autoHeight"
-              headerHeight={40}
-              rowHeight={60}
-              suppressCellFocus
-              enableCellTextSelection={true}
-              getRowStyle={() => ({
-                color: textColor,
-                background: bg,
-                borderBottom: `1px solid ${borderColor}`,
-                display: "flex",
-                alignItems: "center",
-              })}
-              rowSelection="single"
-              onRowClicked={handleRowClick}
-              context={agGridContext}
-            />
+            {isLoadingCombined && !(articlesWithComments || []).length ? (
+              <Flex p={4} w="full" minH="400px" justify="center" align="center">
+                <Spinner size="xl" />
+              </Flex>
+            ) : (
+              <AgGridReact<ArticleWithAnswer>
+                ref={gridRef}
+                rowData={finalArticles}
+                columnDefs={colDefs}
+                defaultColDef={defaultColDef}
+                domLayout="autoHeight"
+                headerHeight={40}
+                rowHeight={60}
+                suppressCellFocus
+                enableCellTextSelection={true}
+                getRowStyle={() => ({
+                  color: textColor,
+                  background: bg,
+                  borderBottom: `1px solid ${borderColor}`,
+                  display: "flex",
+                  alignItems: "center",
+                })}
+                rowSelection="single"
+                onRowClicked={handleRowClick}
+                context={agGridContext}
+              />
+            )}
           </Box>
         )}
         {viewMode === "card" &&

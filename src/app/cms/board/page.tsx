@@ -20,7 +20,6 @@ export default function BoardManagementPage() {
   const [selectedBoardMenu, setSelectedBoardMenu] = useState<Menu | null>(null);
   const [tempBoard, setTempBoard] = useState<BoardMaster | null>(null);
   const [loadingBoardId, setLoadingBoardId] = useState<number | null>(null);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<BoardMaster | null>(null);
   const [drawerMenuId, setDrawerMenuId] = useState<number | null>(null);
 
@@ -28,14 +27,6 @@ export default function BoardManagementPage() {
   const headingColor = useColorModeValue(
     colors.text.primary,
     colors.text.primary
-  );
-  const buttonBg = useColorModeValue(
-    colors.primary.default,
-    colors.primary.default
-  );
-  const buttonHoverBg = useColorModeValue(
-    colors.primary.hover,
-    colors.primary.hover
   );
 
   const queryClient = useQueryClient();
@@ -135,13 +126,11 @@ export default function BoardManagementPage() {
 
   const handleAddBoard = useCallback(() => {
     setSelectedBoardMenu(null);
-    setIsEditorOpen(true);
   }, []);
 
   const handleEditBoard = useCallback(
     (boardMenu: Menu, board: BoardMaster | null) => {
       setSelectedBoardMenu(boardMenu);
-      setIsEditorOpen(true);
       setSelectedBoard(board);
     },
     []
