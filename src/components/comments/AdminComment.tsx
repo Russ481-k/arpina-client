@@ -21,16 +21,14 @@ import {
 import type { BbsComment } from "@/types/bbs-comment";
 import { format } from "date-fns";
 import { authState } from "@/stores/auth";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface AdminCommentProps {
   nttId: number;
   isReadOnly?: boolean;
 }
 
-export function AdminComment({
-  nttId,
-  isReadOnly = false,
-}: AdminCommentProps) {
+export function AdminComment({ nttId, isReadOnly = false }: AdminCommentProps) {
   const { user } = useRecoilValue(authState);
   const isAdmin = user?.role === "ADMIN" || user?.role === "SYSTEM_ADMIN";
 
@@ -42,6 +40,8 @@ export function AdminComment({
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
 
   const fetchComments = async () => {
     try {
@@ -82,18 +82,24 @@ export function AdminComment({
     }
   };
 
-  const handleDelete = async (commentId: number) => {
-    if (!window.confirm("정말로 이 답변을 삭제하시겠습니까?")) return;
+  const handleDelete = (commentId: number) => {
+    setCommentToDelete(commentId);
+    setConfirmOpen(true);
+  };
 
-    setIsDeleting(commentId);
+  const handleConfirmDelete = async () => {
+    if (!commentToDelete) return;
+    setIsDeleting(commentToDelete);
     try {
-      await deleteBbsComment(nttId, commentId);
+      await deleteBbsComment(nttId, commentToDelete);
       await fetchComments();
     } catch (error) {
       console.error("Failed to delete comment:", error);
       alert("답변 삭제에 실패했습니다.");
     } finally {
       setIsDeleting(null);
+      setCommentToDelete(null);
+      setConfirmOpen(false);
     }
   };
 
@@ -250,6 +256,14 @@ export function AdminComment({
           </Flex>
         </Box>
       )}
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="답변 삭제"
+        description="정말로 이 답변을 삭제하시겠습니까?"
+        isLoading={isDeleting !== null}
+      />
     </Box>
   );
 }
