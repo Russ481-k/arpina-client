@@ -1,9 +1,8 @@
 import { Box, Heading } from "@chakra-ui/react";
-import { HeroSection } from "./component/HeroSection";
+import { MainHeroSection } from "./component/MainHeroSection";
 import { ApplySection } from "./component/ApplySection";
 import { NoticeSection } from "./component/NoticeSection";
 import { MarqueeSection } from "./component/MarqueeSection";
-import { EstimateSection } from "./component/EstimateSection";
 
 const MainSection = () => {
   return (
@@ -31,7 +30,7 @@ const MainSection = () => {
       >
         광안리 · 해운대 · 센텀시티를 잇는 이상적인 허브
       </Heading>
-      <HeroSection />
+      <MainHeroSection />
       <MarqueeSection />
       <NoticeSection />
       <ApplySection />

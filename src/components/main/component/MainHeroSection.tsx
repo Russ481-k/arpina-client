@@ -36,7 +36,7 @@ const slideData = [
   },
 ];
 
-export function HeroSection() {
+export function MainHeroSection() {
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
