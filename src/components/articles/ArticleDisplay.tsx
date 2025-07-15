@@ -97,6 +97,11 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
   contentStyle,
   boardInfo,
 }) => {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const initialConfig = React.useMemo(
     () => ({
       ...baseInitialConfig,
@@ -222,28 +227,32 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
                 A:
               </Text>
             )}
-            <LexicalComposer
-              key={
-                article?.nttId || contentString?.substring(0, 20) || Date.now()
-              }
-              initialConfig={initialConfig}
-            >
-              <RichTextPlugin
-                contentEditable={
-                  <ContentEditable
-                    className="article-content"
-                    style={{
-                      ...contentStyle,
-                    }}
-                    readOnly={true}
-                  />
+            {isMounted && (
+              <LexicalComposer
+                key={
+                  article?.nttId ||
+                  contentString?.substring(0, 20) ||
+                  Date.now()
                 }
-                placeholder={null}
-                ErrorBoundary={LexicalErrorBoundary}
-              />
-              <ListPlugin />
-              <LinkPlugin />
-            </LexicalComposer>
+                initialConfig={initialConfig}
+              >
+                <RichTextPlugin
+                  contentEditable={
+                    <ContentEditable
+                      className="article-content"
+                      style={{
+                        ...contentStyle,
+                      }}
+                      readOnly={true}
+                    />
+                  }
+                  placeholder={null}
+                  ErrorBoundary={LexicalErrorBoundary}
+                />
+                <ListPlugin />
+                <LinkPlugin />
+              </LexicalComposer>
+            )}
           </LexicalErrorBoundary>
         ) : (
           <Text color="gray.500">내용이 없습니다.</Text>
