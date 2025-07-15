@@ -1,6 +1,4 @@
 import { usePathname } from "next/navigation";
-import { useRecoilValue } from "recoil";
-import { menuTreeState } from "@/stores/menu";
 import type { Menu } from "@/types/api";
 
 const findMenuId = (
@@ -24,8 +22,7 @@ const findMenuId = (
   return null;
 };
 
-export const useCurrentMenuId = (): number | null => {
+export const useCurrentMenuId = (menus: Menu[]): number | null => {
   const pathname = usePathname();
-  const menus = useRecoilValue(menuTreeState);
   return findMenuId(menus, pathname);
 };
