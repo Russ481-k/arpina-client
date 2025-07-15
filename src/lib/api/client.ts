@@ -11,9 +11,7 @@ import {
 } from "../auth-utils";
 
 // Java 백엔드 서버 주소 설정
-const BASE_URL =
-  (process.env.NEXT_PUBLIC_API_URL || "https://222.119.41.194:8080") +
-  "/api/v1";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/api/v1";
 
 // 기본 API 클라이언트 설정
 const createApiClient = (needsAuth: boolean): AxiosInstance => {

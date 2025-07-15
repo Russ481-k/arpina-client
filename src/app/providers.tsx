@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
-import { MenuProvider } from "@/lib/contexts/MenuContext";
 import { AuthInitializer } from "@/components/auth/AuthInitializer";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -31,9 +30,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <AuthInitializer />
         <ChakraProvider value={defaultSystem}>
-          <ColorModeProvider>
-            <MenuProvider>{children}</MenuProvider>
-          </ColorModeProvider>
+          <ColorModeProvider>{children}</ColorModeProvider>
         </ChakraProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

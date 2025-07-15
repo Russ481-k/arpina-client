@@ -3,8 +3,8 @@
 import { Box, IconButton } from "@chakra-ui/react";
 import { LuArrowUp } from "react-icons/lu";
 import { useColors } from "@/styles/theme";
-import { ColorModeToggle } from "@/components/common/ColorModeToggle";
 import { useEffect, useState } from "react";
+import { LanguageModeToggle } from "../common/LanguageModeToggle";
 
 export const FloatingButtons = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -63,7 +63,8 @@ export const FloatingButtons = () => {
       >
         <LuArrowUp />
       </IconButton>
-      <ColorModeToggle size="lg" variant="icon" />
+      {/* <ColorModeToggle size="lg" variant="icon" /> */}
+      <LanguageModeToggle />
     </Box>
   );
 };
