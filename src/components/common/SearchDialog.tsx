@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import type { Menu as MenuType } from "@/types/api";
 import Fuse, { type FuseResult } from "fuse.js";
 import NextLink from "next/link";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // 헬퍼 함수: 메뉴 트리를 평탄화하고 부모 경로를 추가
 const flattenMenusWithParentPath = (
@@ -52,6 +53,8 @@ export const SearchDialog = ({
     FuseResult<MenuType & { parent_path?: string }>[]
   >([]);
   const router = useRouter();
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [targetUrl, setTargetUrl] = useState<string | null>(null);
 
   const fuse = useMemo(
     () =>
@@ -75,12 +78,22 @@ export const SearchDialog = ({
   const handleItemClick = (url: string | null) => {
     if (url) {
       if (url.startsWith("http")) {
-        window.open(url, "_blank");
+        setTargetUrl(url);
+        setConfirmOpen(true);
       } else {
         router.push(url);
+        onClose();
       }
-      onClose();
     }
+  };
+
+  const handleConfirmOpen = () => {
+    if (targetUrl) {
+      window.open(targetUrl, "_blank");
+    }
+    setConfirmOpen(false);
+    setTargetUrl(null);
+    onClose(); // Also close the search dialog
   };
 
   useEffect(() => {
@@ -151,6 +164,13 @@ export const SearchDialog = ({
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmOpen}
+        title="외부 링크 열기"
+        description="새 탭에서 외부 링크를 여시겠습니까?"
+      />
     </Dialog.Root>
   );
 };

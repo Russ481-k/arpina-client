@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, useBreakpointValue, Flex } from "@chakra-ui/react";
+import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
 import { getScrollbarStyle } from "@/styles/scrollbar";
 import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
@@ -10,7 +10,6 @@ import { Bottombar } from "@/components/layout/Bottombar";
 import { Topbar } from "@/components/layout/Topbar";
 import { usePathname } from "next/navigation";
 import { useColors } from "@/styles/theme";
-import { ColorModeToggle } from "@/components/common/ColorModeToggle";
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
 
@@ -77,7 +76,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </Box>
         {/* CMS 화면에서만 컬러 모드 토글 버튼 표시 */}
-        {shouldShowCMSLayout && (
+        {/* {shouldShowCMSLayout && (
           <Flex
             position="fixed"
             bottom="4"
@@ -87,7 +86,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           >
             <ColorModeToggle size="md" variant="icon" />
           </Flex>
-        )}
+        )} */}
       </Box>
     </Box>
   );
