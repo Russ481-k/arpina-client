@@ -1,5 +1,3 @@
-"use client";
-
 import { Suspense } from "react";
 import { Box, Center, Spinner } from "@chakra-ui/react";
 import { FloatingButtons } from "@/components/layout/FloatingButtons";
