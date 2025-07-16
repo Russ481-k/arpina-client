@@ -4,10 +4,11 @@ import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { useColors } from "@/styles/theme";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import { useDrag } from "react-dnd";
+import React from "react";
 
 export interface ListItemProps {
   id: number;
-  name: string;
+  name: React.ReactNode;
   icon: React.ReactElement;
   isSelected?: boolean;
   onAdd?: () => void;
@@ -62,7 +63,13 @@ export function ListItem({
     >
       <Flex align="center" gap={2}>
         {icon}
-        <Text color={textColor} flex={1}>
+        <Text
+          color={textColor}
+          flex={1}
+          whiteSpace="nowrap"
+          overflow="hidden"
+          textOverflow="ellipsis"
+        >
           {name}
         </Text>
         {renderBadges && renderBadges()}

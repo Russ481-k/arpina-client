@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Box, Flex, Heading, Badge } from "@chakra-ui/react";
 import { Button } from "@/components/ui/button";
 import { ContentList } from "./components/ContentList";
@@ -12,17 +12,51 @@ import { toaster } from "@/components/ui/toaster";
 import { TreeItem } from "@/components/ui/tree-list";
 import { ContentPreview } from "./components/ContentPreview";
 import { convertTreeItemToContent } from "./types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { getAuthHeader } from "@/lib/auth-utils";
+import { menuApi, menuKeys } from "@/lib/api/menu";
 import { Menu } from "@/types/api";
 
+const mainPageDefault: TreeItem = {
+  id: 0,
+  name: "메인 페이지",
+  type: "FOLDER",
+  children: [],
+  url: "/",
+  visible: true,
+  sortOrder: 0,
+  displayPosition: "",
+  createdAt: "",
+  updatedAt: "",
+};
+
+// Menu를 TreeItem으로 변환하는 헬퍼 함수
+const convertMenuToTreeItem = (menu: Menu): TreeItem => ({
+  ...menu,
+  parentId: menu.parentId === null ? undefined : menu.parentId,
+  children: menu.children?.map(convertMenuToTreeItem),
+});
+
 export default function ContentManagementPage() {
-  const [selectedContent, setSelectedContent] = useState<TreeItem | null>(null);
-  const [contents, setContents] = useState<TreeItem[]>([]);
-  const [menus, setMenus] = useState<Menu[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const [selectedContent, setSelectedContent] = useState<TreeItem | null>(
+    mainPageDefault
+  );
+
   const colors = useColors();
   const bg = useColorModeValue(colors.bg, colors.darkBg);
+
+  // ContentPreview를 위해 모든 메뉴를 가져오는 쿼리
+  const { data: allMenus = [], isLoading } = useQuery<Menu[]>({
+    queryKey: menuKeys.lists(),
+    queryFn: async () => {
+      const response = await menuApi.getMenus();
+      return response.data.data || [];
+    },
+  });
 
   // 테마 색상 적용
   const headingColor = useColorModeValue(
@@ -43,49 +77,6 @@ export default function ContentManagementPage() {
     colors.primary.default,
     colors.primary.default
   );
-
-  // 컨텐츠 목록 새로고침 함수
-  const refreshContents = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("/api/cms/menu?type=CONTENT", {
-        headers: getAuthHeader(),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch contents");
-      }
-      const data = await response.json();
-      setContents(data);
-    } catch (error) {
-      console.error("Error fetching contents:", error);
-      toaster.error({
-        title: "컨텐츠 목록을 불러오는데 실패했습니다.",
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 메뉴 목록 불러오기
-  const fetchMenus = async () => {
-    try {
-      const response = await fetch("/api/cms/menu", {
-        headers: getAuthHeader(),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch menus");
-      }
-      const data = await response.json();
-      setMenus(data.data);
-    } catch (error) {
-      console.error("Error fetching menus:", error);
-      toaster.create({
-        title: "메뉴 목록을 불러오는데 실패했습니다.",
-        type: "error",
-      });
-    }
-  };
 
   const handleAddContent = () => {
     setSelectedContent(null);
@@ -121,7 +112,7 @@ export default function ContentManagementPage() {
         throw new Error("Failed to save content");
       }
 
-      await refreshContents();
+      queryClient.invalidateQueries({ queryKey: menuKeys.lists() });
       setSelectedContent(null);
       toaster.create({
         title: selectedContent
@@ -149,7 +140,7 @@ export default function ContentManagementPage() {
         throw new Error("Failed to delete content");
       }
 
-      await refreshContents();
+      queryClient.invalidateQueries({ queryKey: menuKeys.lists() });
       setSelectedContent(null);
       toaster.create({
         title: "컨텐츠가 삭제되었습니다.",
@@ -186,99 +177,85 @@ export default function ContentManagementPage() {
     },
     {
       id: "contentEditor",
-      x: 3,
-      y: 1,
-      w: 9,
-      h: 5,
+      x: 0,
+      y: 6,
+      w: 3,
+      h: 6,
       title: "컨텐츠 편집",
       subtitle: "컨텐츠의 상세 정보를 수정할 수 있습니다.",
     },
     {
       id: "contentPreview",
-      x: 0,
-      y: 6,
-      w: 12,
-      h: 5,
+      x: 3,
+      y: 1,
+      w: 9,
+      h: 11,
       title: "컨텐츠 미리보기",
       subtitle: "컨텐츠의 미리보기를 확인할 수 있습니다.",
     },
   ];
 
-  // 초기 데이터 로딩
-  useEffect(() => {
-    refreshContents();
-    fetchMenus();
-  }, []);
+  const allTreeItems = allMenus.map(convertMenuToTreeItem);
 
   return (
-    <Box bg={bg} minH="100vh" w="full" position="relative">
-      <Box w="full">
-        <GridSection initialLayout={contentLayout}>
-          <Flex justify="space-between" align="center" h="36px">
-            <Flex align="center" gap={2} px={2}>
-              <Heading size="lg" color={headingColor} letterSpacing="tight">
-                컨텐츠 관리
-              </Heading>
-              <Badge
-                bg={badgeBg}
-                color={badgeColor}
-                px={2}
-                py={1}
-                borderRadius="md"
-                fontSize="xs"
-                fontWeight="bold"
-              >
-                관리자
-              </Badge>
+    <DndProvider backend={HTML5Backend}>
+      <Box bg={bg} minH="100vh" w="full" position="relative">
+        <Box w="full">
+          <GridSection initialLayout={contentLayout}>
+            <Flex justify="space-between" align="center" h="36px">
+              <Flex align="center" gap={2} px={2}>
+                <Heading size="lg" color={headingColor} letterSpacing="tight">
+                  컨텐츠 관리
+                </Heading>
+                <Badge
+                  bg={colors.secondary.light}
+                  color={colors.secondary.default}
+                  px={2}
+                  py={1}
+                  borderRadius="md"
+                  fontSize="xs"
+                  fontWeight="bold"
+                >
+                  관리자
+                </Badge>
+              </Flex>
             </Flex>
-            <Button
-              onClick={handleAddContent}
-              bg={buttonBg}
-              color="white"
-              _hover={{ bg: buttonHoverBg, transform: "translateY(-2px)" }}
-              _active={{ transform: "translateY(0)" }}
-              shadow={colors.shadow.sm}
-              transition="all 0.3s ease"
-              size="sm"
-            >
-              새 컨텐츠 추가
-            </Button>
-          </Flex>
 
-          <Box>
-            <ContentList
-              menus={contents}
-              onEditContent={handleEditContent}
-              onDeleteContent={handleDeleteContent}
-              isLoading={isLoading}
-              selectedContentId={selectedContent?.id}
-            />
-          </Box>
+            <Box>
+              <ContentList
+                menus={allTreeItems}
+                onEditContent={handleEditContent}
+                onDeleteContent={handleDeleteContent}
+                isLoading={isLoading}
+                selectedContentId={selectedContent?.id}
+              />
+            </Box>
 
-          <Box>
-            <ContentEditor
-              content={
-                selectedContent
-                  ? convertTreeItemToContent(selectedContent)
-                  : null
-              }
-              onClose={handleCloseEditor}
-              onDelete={handleDeleteContent}
-              onSubmit={handleSubmit}
-            />
-          </Box>
-          <Box>
-            <ContentPreview
-              content={
-                selectedContent
-                  ? convertTreeItemToContent(selectedContent)
-                  : null
-              }
-              menus={menus}
-            />
-          </Box>
-        </GridSection>
+            <Box>
+              <ContentEditor
+                content={
+                  selectedContent
+                    ? convertTreeItemToContent(selectedContent)
+                    : null
+                }
+                onClose={handleCloseEditor}
+                onDelete={handleDeleteContent}
+                onSubmit={handleSubmit}
+              />
+            </Box>
+            <Box h="full" w="full">
+              <ContentPreview
+                content={
+                  selectedContent
+                    ? convertTreeItemToContent(selectedContent)
+                    : null
+                }
+                menus={allMenus}
+              />
+            </Box>
+          </GridSection>
+        </Box>
       </Box>
-    </Box>
+    </DndProvider>
   );
 }
