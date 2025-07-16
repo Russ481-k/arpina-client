@@ -283,9 +283,9 @@ export function useArticleForm({
 
       // 5. Append 'mediaLocalIds' for each item
       const allMediaLocalIds = Array.from(pendingMedia.keys());
-      allMediaLocalIds.forEach((id) => {
-        dataToSend.append("mediaLocalIds", id);
-      });
+      if (allMediaLocalIds.length > 0) {
+        dataToSend.append("mediaLocalIds", allMediaLocalIds.join(","));
+      }
 
       // 6. Append 'attachments' part for general attachments
       newlyAddedFiles.forEach((file) => {
