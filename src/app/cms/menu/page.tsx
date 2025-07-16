@@ -1,18 +1,6 @@
 "use client";
 
-import {
-  Badge,
-  Image,
-  Tabs,
-  Link,
-  Button,
-  Collapsible,
-  Box,
-  Flex,
-  Heading,
-  Text,
-} from "@chakra-ui/react";
-import { SwiperSlide } from "swiper/react";
+import { Badge, Box, Flex, Heading } from "@chakra-ui/react";
 import type { Swiper as SwiperType } from "swiper";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { MenuList } from "./components/MenuList";
@@ -30,9 +18,7 @@ import { menuApi, menuKeys, UpdateMenuOrderRequest } from "@/lib/api/menu";
 
 import { sortMenus } from "@/lib/api/menu";
 import { Menu } from "@/types/api";
-import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 
-import { Swiper } from "swiper/react";
 import { MainMediaDialog } from "./components/MainMediaDialog";
 import { useRouter } from "next/navigation";
 import MainSection from "@/components/main/MainSection";
@@ -49,12 +35,9 @@ export default function MenuManagementPage() {
   const [forceExpandMenuId, setForceExpandMenuId] = useState<number | null>(
     null
   );
-  const [activeSlide, setActiveSlide] = useState(0);
   const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
 
   const colors = useColors();
-  const swiperRef = useRef<SwiperType | null>(null);
-  const router = useRouter();
 
   const findParentMenu = useCallback(
     (menus: Menu[], targetId: number): Menu | null => {
