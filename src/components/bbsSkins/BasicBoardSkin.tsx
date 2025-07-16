@@ -71,6 +71,47 @@ const NoticeNumberRenderer = (params: ICellRendererParams<Post>) => {
   );
 };
 
+const CategoryCellRenderer = (params: ICellRendererParams<Post>) => {
+  if (
+    params.data &&
+    params.data.categories &&
+    params.data.categories.length > 0
+  ) {
+    const category = params.data.categories[0];
+    let badgeStyle = { bg: "gray.500", color: "white" }; // Default style
+
+    switch (category.name) {
+      case "공지":
+        badgeStyle = { bg: "blue.500", color: "white" };
+        break;
+      case "홍보":
+        badgeStyle = { bg: "#FAB20B", color: "white" };
+        break;
+      case "유관기관 홍보":
+        badgeStyle = { bg: "teal", color: "white" };
+        break;
+      default:
+        badgeStyle = { bg: "gray.500", color: "white" };
+    }
+
+    return (
+      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+        <Badge
+          px={2}
+          py={0.5}
+          borderRadius="md"
+          bg={badgeStyle.bg}
+          color={badgeStyle.color}
+          textTransform="none"
+        >
+          {category.name}
+        </Badge>
+      </Flex>
+    );
+  }
+  return null;
+};
+
 const ViewsRenderer = (params: ICellRendererParams<Post>) => (
   <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
     <Icon as={LuEye} mr="4px" />
@@ -120,8 +161,8 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
     [pagination]
   );
 
-  const colDefs = useMemo<ColDef<Post>[]>(
-    () => [
+  const colDefs = useMemo<ColDef<Post>[]>(() => {
+    const columns: ColDef<Post>[] = [
       {
         headerName: "번호",
         field: "no",
@@ -137,6 +178,25 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
           whiteSpace: "normal",
         },
       },
+    ];
+
+    // bbsId가 1일 때 (공지사항) "구분" 컬럼 추가
+    if (pageDetails.boardId === 1) {
+      columns.push({
+        headerName: "구분",
+        field: "categories",
+        width: 120,
+        cellRenderer: CategoryCellRenderer,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        headerClass: ["press-list-header", "ag-header-cell-centered"],
+      });
+    }
+
+    columns.push(
       {
         headerName: "제목",
         field: "title",
@@ -195,10 +255,10 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
           textOverflow: "clip",
           whiteSpace: "normal",
         },
-      },
-    ],
-    []
-  );
+      }
+    );
+    return columns;
+  }, [pageDetails.boardId]);
 
   const defaultColDef = useMemo<ColDef<Post>>(() => {
     return {

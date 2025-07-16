@@ -1,8 +1,9 @@
 import {
   Post,
-  BoardMasterApiResponse,
-  BoardMaster,
   ApiResponse,
+  BoardMaster,
+  BoardMasterApiResponse,
+  BoardCategory,
 } from "@/types/api";
 
 import { privateApi, publicApi } from "./client";
@@ -30,8 +31,19 @@ export const boardApi = {
   },
 
   // 공개 게시판 정보 조회 API (일반 사용자용)
-  getPublicBoardInfo: (bbsId: number) => {
-    return publicApi.get<ApiResponse<BoardMaster>>(`/bbs/${bbsId}/info`);
+  getPublicBoardInfo: (
+    bbsId: number
+  ): Promise<ApiResponse<BoardMaster>> => {
+    return publicApi.get(`/api/v1/bbs/${bbsId}`);
+  },
+
+  getBoardCategories: async (
+    bbsId: number
+  ): Promise<ApiResponse<BoardCategory[]>> => {
+    const response = await privateApi.get<ApiResponse<BoardCategory[]>>(
+      `/cms/bbs/${bbsId}/categories`
+    );
+    return response.data;
   },
 
   saveBoard: ({ id, boardData }: { id?: number; boardData: BoardMaster }) => {

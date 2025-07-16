@@ -81,8 +81,8 @@ export default function ArticleDetailPage() {
                 size: 9999,
               });
 
-              if (articlesResponse.success && articlesResponse.data) {
-                const articles = articlesResponse.data
+              if (articlesResponse.data.success && articlesResponse.data.data) {
+                const articles = articlesResponse.data.data
                   .content as BoardArticleCommon[];
                 const currentIndex = articles.findIndex(
                   (a) => a.nttId === numericArticleId

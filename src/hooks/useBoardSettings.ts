@@ -44,22 +44,38 @@ export function useBoardSettings(
       setIsLoading(true);
       setError(null);
       try {
-        const response = isPublicContext
-          ? await boardApi.getPublicBoardInfo(bbsId)
-          : await boardApi.getBoard(bbsId);
+        let settings: BoardMaster | null = null;
 
-        if (!response.data.success || !response.data.data) {
-          throw new Error(response.data.message || "Failed to fetch settings");
+        if (isPublicContext) {
+          const apiResponse = await boardApi.getPublicBoardInfo(bbsId);
+          if (apiResponse.success && apiResponse.data) {
+            settings = apiResponse.data;
+          } else {
+            throw new Error(
+              apiResponse.message || "Failed to fetch public board settings"
+            );
+          }
+        } else {
+          const response = await boardApi.getBoard(bbsId);
+          if (response.data.success && response.data.data) {
+            settings = response.data.data;
+          } else {
+            throw new Error(
+              response.data.message || "Failed to fetch board settings"
+            );
+          }
         }
-        
-        const settings = response.data.data;
-        setBoardSettings(settings);
 
-        setEditorAttachmentProps({
-          maxFileAttachments: Number(settings.attachmentLimit) || undefined,
-          maxFileSizeMB: Number(settings.attachmentSize) || undefined,
-          disableAttachments: settings.attachmentYn !== "Y",
-        });
+        if (settings) {
+          setBoardSettings(settings);
+          setEditorAttachmentProps({
+            maxFileAttachments: Number(settings.attachmentLimit) || undefined,
+            maxFileSizeMB: Number(settings.attachmentSize) || undefined,
+            disableAttachments: settings.attachmentYn !== "Y",
+          });
+        } else {
+          throw new Error("No settings data received");
+        }
       } catch (err: any) {
         console.error(
           `Failed to fetch board settings for bbsId ${bbsId}:`,

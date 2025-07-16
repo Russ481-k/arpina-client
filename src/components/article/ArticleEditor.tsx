@@ -10,6 +10,7 @@ import {
   Image,
   IconButton,
   Accordion,
+  chakra,
 } from "@chakra-ui/react";
 import { LuRefreshCw } from "react-icons/lu";
 import { LexicalEditor } from "@/components/common/LexicalEditor";
@@ -21,6 +22,8 @@ import {
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
 import { toaster } from "@/components/ui/toaster";
+import { boardApi } from "@/lib/api/board";
+import { BoardCategory } from "@/types/api";
 
 // Define the expected result type from handleSubmit
 interface SubmitResult {
@@ -37,6 +40,7 @@ export interface ArticleEditorProps extends UseArticleFormProps {
   maxFileAttachments?: number;
   maxFileSizeMB?: number;
   disableAttachments?: boolean;
+  showCategory?: boolean;
 }
 
 export function ArticleEditor({
@@ -51,6 +55,7 @@ export function ArticleEditor({
   maxFileAttachments,
   maxFileSizeMB,
   disableAttachments,
+  showCategory = false,
 }: ArticleEditorProps) {
   const {
     formData,
@@ -84,6 +89,25 @@ export function ArticleEditor({
   const [isAdminPage, setIsAdminPage] = useState(false);
   const [captchaText, setCaptchaText] = useState("");
   const [captchaImage, setCaptchaImage] = useState("");
+  const [categories, setCategories] = useState<BoardCategory[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (bbsId) {
+        try {
+          const response = await boardApi.getBoardCategories(bbsId);
+          if (response.success && response.data) {
+            setCategories(response.data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch categories", error);
+        }
+      }
+    };
+    if (bbsId) {
+      fetchCategories();
+    }
+  }, [bbsId]);
 
   const handleDeleteExistingFile = (fileId: number) => {
     setAttachmentsToDelete((prev) => {
@@ -293,6 +317,32 @@ export function ArticleEditor({
             </Accordion.ItemContent>
           </Accordion.Item>
         </Accordion.Root>
+      )}
+
+      {boardInfo?.bbsName === "공지사항" && (
+        <Box>
+          <Text fontWeight="bold" mb={1}>
+            카테고리
+          </Text>
+          <chakra.select
+            value={formData.categoryId || ""}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              updateFormField("categoryId", Number(e.target.value))
+            }
+            width="100%"
+            p={2}
+            border="1px solid"
+            borderColor="inherit"
+            borderRadius="md"
+          >
+            <option value="">카테고리 선택</option>
+            {categories.map((category) => (
+              <option key={category.categoryId} value={category.categoryId}>
+                {category.name}
+              </option>
+            ))}
+          </chakra.select>
+        </Box>
       )}
 
       <Box>

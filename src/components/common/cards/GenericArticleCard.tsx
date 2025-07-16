@@ -10,6 +10,8 @@ import {
   Flex,
   Box,
   Link as ChakraLink,
+  Badge,
+  Spacer,
 } from "@chakra-ui/react";
 import { CommonCardData } from "@/types/common"; // Import CommonCardData
 import { LuEye, LuImageOff, LuExternalLink } from "react-icons/lu";
@@ -67,6 +69,19 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
     colorMode === "dark"
       ? colors.text?.secondary || "gray.500"
       : colors.text?.secondary || "gray.600";
+
+  const getCategoryStyle = (categoryName: string) => {
+    switch (categoryName) {
+      case "공지":
+        return { bg: "blue.500", color: "#ffffff" };
+      case "홍보":
+        return { bg: "#FAB20B", color: "#ffffff" };
+      case "유관기관 홍보":
+        return { bg: "#0C8EA4", color: "#ffffff" };
+      default:
+        return { bg: "gray.100", color: "gray.800" };
+    }
+  };
 
   return (
     <Box
@@ -163,27 +178,41 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
         </Text>
       </Box>
 
-      <HStack
-        justify="space-between"
-        p={2}
-        borderTopWidth="1px"
-        borderColor={colors.border}
-        mt="auto"
-      >
-        {cardData.displayWriter && (
-          <Text fontSize="xs" color={colors.text.tertiary}>
-            {cardData.displayWriter}
-          </Text>
-        )}
-        <HStack gap={2} alignItems="center">
+      <HStack p={2} borderTopWidth="1px" borderColor={colors.border} mt="auto">
+        <HStack gap={4} alignItems="center">
+          {cardData.displayWriter && (
+            <Text fontSize="xs" color={colors.text.tertiary}>
+              {cardData.displayWriter}
+            </Text>
+          )}
           {typeof cardData.hits === "number" && (
-            <>
+            <HStack gap={1} alignItems="center">
               <Icon as={LuEye} boxSize="1em" color={colors.text.tertiary} />
               <Text fontSize="xs" color={colors.text.tertiary}>
                 {cardData.hits}
               </Text>
-            </>
+            </HStack>
           )}
+        </HStack>
+        <Spacer />
+        <HStack gap={2} alignItems="center">
+          {cardData.categories &&
+            cardData.categories.map((category) => {
+              const style = getCategoryStyle(category.name);
+              return (
+                <Badge
+                  key={category.categoryId}
+                  bg={style.bg}
+                  color={style.color}
+                  px={2}
+                  py={0.5}
+                  borderRadius="md"
+                  variant="subtle"
+                >
+                  {category.name}
+                </Badge>
+              );
+            })}
         </HStack>
       </HStack>
     </Box>

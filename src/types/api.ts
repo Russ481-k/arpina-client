@@ -99,10 +99,10 @@ export interface BoardArticleCommon {
   skinType?: string | null;
   menuId?: number;
   answerContent?: string;
+  categories?: BoardCategory[];
 }
 
 export interface Post extends BoardArticleCommon {
-  categories?: string[];
   answerContent?: string;
   answerCreatedAt?: string;
   answerUpdatedAt?: string;
@@ -1218,4 +1218,10 @@ export interface MainMediaDto {
   order: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BoardCategory {
+  categoryId: number;
+  name: string;
+  code?: string;
 }

@@ -142,6 +142,7 @@ export function mapPostToCommonCardData(
     hasAttachment: post.hasAttachment,
     contentSnippet: snippet,
     externalLink: post.externalLink || null,
+    categories: post.categories,
   };
 }
 
@@ -189,6 +190,7 @@ export function mapArticleToCommonCardData(
     hasAttachment: article.hasAttachment,
     contentSnippet: snippet,
     externalLink: article.externalLink || null,
+    categories: (article as any).categories,
   };
 }
 

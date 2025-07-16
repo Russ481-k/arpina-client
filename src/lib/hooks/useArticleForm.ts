@@ -16,6 +16,8 @@ export interface ArticleFormData {
   title: string;
   author: string;
   content: string;
+  category?: string;
+  categoryId?: number;
   externalLink?: string;
   captcha?: string;
   noticeState: ArticleStatusFlag;
@@ -32,7 +34,7 @@ export interface ArticleFormData {
 export interface UseArticleFormProps {
   bbsId?: number;
   menuId?: number;
-  initialData?: Partial<BoardArticleCommon>;
+  initialData?: any; // BoardArticleCommon 타입에 category가 없어 임시로 any 사용
   maxFileAttachments?: number;
   maxFileSizeMB?: number;
   disableAttachments?: boolean;
@@ -58,6 +60,8 @@ export function useArticleForm({
     title: initialData?.title || "",
     author: initialData?.writer || "",
     content: initialData?.content || "",
+    category: initialData?.category || "",
+    categoryId: initialData?.categoryId,
     externalLink: initialData?.externalLink || "",
     captcha: "",
     noticeState: (initialData?.noticeState || "N") as ArticleStatusFlag,
@@ -89,7 +93,7 @@ export function useArticleForm({
 
   // Memoize updateFormField with useCallback
   const updateFormField = useCallback(
-    (field: keyof ArticleFormData, value: string) => {
+    (field: keyof ArticleFormData, value: any) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     [] // No dependencies, so the function reference is stable
@@ -119,13 +123,27 @@ export function useArticleForm({
           ? await boardApi.getBoard(bbsId)
           : await boardApi.getPublicBoardInfo(bbsId);
 
-        if (
-          response &&
-          response.data &&
-          response.data.success &&
-          response.data.data
-        ) {
-          const boardData: BoardMaster = response.data.data;
+        // The 'data' from the axios response can be either ApiResponse<BoardMaster> or BoardMaster
+        const responseData: any = response.data;
+        let boardData: BoardMaster | null = null;
+
+        // Type guard to check if it's an ApiResponse object
+        if (responseData && typeof responseData.success === "boolean") {
+          if (responseData.success && responseData.data) {
+            boardData = responseData.data;
+          } else {
+            throw new Error(
+              responseData.message || "Failed to retrieve data."
+            );
+          }
+        } else if (responseData && typeof responseData.bbsId !== "undefined") {
+          // Duck-typing to check if it's a BoardMaster object
+          boardData = responseData;
+        } else {
+          throw new Error("Invalid response structure from board API.");
+        }
+
+        if (boardData) {
           setBoardInfo(boardData);
 
           if (isAdminPage && user?.name) {
@@ -143,7 +161,7 @@ export function useArticleForm({
           setError("게시판 정보를 불러오는데 실패했습니다.");
           setBoardInfo(null);
         }
-      } catch (err) {
+      } catch (err: any) {
         setError("게시판 정보를 불러오는 중 오류가 발생했습니다.");
         setBoardInfo(null);
       } finally {
@@ -249,7 +267,7 @@ export function useArticleForm({
 
     try {
       // 1. Prepare the object for the 'articleData' part (matching backend BbsArticleDto, excluding content)
-      const articleDtoPart = {
+      const articleDtoPart: Record<string, any> = {
         bbsId: bbsId,
         menuId: menuId,
         title: formData.title,
@@ -266,6 +284,11 @@ export function useArticleForm({
         displayWriter: formData.displayWriter,
         postedAt: formData.postedAt || dayjs().format("YYYY-MM-DDTHH:mm:ss"),
       };
+
+      // 카테고리 ID가 있는 경우 categoryIds 배열에 담아 추가
+      if (formData.categoryId) {
+        articleDtoPart.categoryIds = [formData.categoryId];
+      }
 
       // 2. Create FormData
       const dataToSend = new FormData();
@@ -458,13 +481,8 @@ export function useArticleForm({
     formData,
     updateFormField,
     setContent,
-    files: newlyAddedFiles,
-    setFiles: setNewlyAddedFiles,
-    existingAttachments,
-    attachmentsToDelete,
-    setAttachmentsToDelete,
-    pendingMedia,
-    handleMediaAdded,
+    files,
+    setFiles,
     boardInfo,
     isLoading,
     error,
@@ -474,6 +492,10 @@ export function useArticleForm({
     isAttachmentEnabled,
     validateFile,
     isAdminPageContext,
+    handleMediaAdded,
     clearPendingMedia,
+    existingAttachments,
+    attachmentsToDelete,
+    setAttachmentsToDelete,
   };
 }

@@ -69,10 +69,10 @@ const NoticeNumberRenderer: React.FC<ICellRendererParams<Post>> = (params) => {
     );
   } else {
     // Fallback to original simple numbering if pagination not available.
-  const displayValue =
-    params.data?.no && params.data.no !== 0
-      ? params.data.no
-      : (params.node?.rowIndex ?? 0) + 1;
+    const displayValue =
+      params.data?.no && params.data.no !== 0
+        ? params.data.no
+        : (params.node?.rowIndex ?? 0) + 1;
     content = (
       <Text fontSize="sm" color={textColor}>
         {displayValue}
@@ -85,6 +85,23 @@ const NoticeNumberRenderer: React.FC<ICellRendererParams<Post>> = (params) => {
       {content}
     </Flex>
   );
+};
+
+// Renderer for the "구분" (Category) column
+const CategoryBadgeRenderer: React.FC<ICellRendererParams<Post>> = ({
+  data,
+}) => {
+  if (data && data.categories && data.categories.length > 0) {
+    // Display the first category in a badge
+    return (
+      <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+        <Badge colorScheme="blue" variant="subtle" fontSize="xs">
+          {data.categories[0].name}
+        </Badge>
+      </Flex>
+    );
+  }
+  return null; // Render nothing if no categories
 };
 
 // SHARED TITLE RENDERER
@@ -277,6 +294,14 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
         cellRenderer: NoticeNumberRenderer,
         cellStyle: noticeNumberCellStyle,
         sortable: false,
+        headerClass: ["press-list-header", "ag-header-cell-centered"],
+      },
+      {
+        headerName: "구분",
+        field: "categories",
+        width: 120,
+        cellRenderer: CategoryBadgeRenderer,
+        cellStyle: noticeNumberCellStyle,
         headerClass: ["press-list-header", "ag-header-cell-centered"],
       },
       {

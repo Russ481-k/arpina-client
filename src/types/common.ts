@@ -34,6 +34,7 @@ export interface CommonCardData {
   eventDate?: string;
   eventLocation?: string;
   source?: string; // For press releases, the source/media outlet
+  categories?: { categoryId: number; name: string }[];
 }
 
 export interface MenuLink {
