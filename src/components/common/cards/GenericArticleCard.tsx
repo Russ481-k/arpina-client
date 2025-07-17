@@ -20,13 +20,16 @@ import Image from "next/image";
 import { useColorMode as useColorModeComponent } from "@/components/ui/color-mode"; // Correct alias usage
 import PostTitleDisplay from "@/components/common/PostTitleDisplay"; // PostTitleDisplay 임포트
 import { ArticleDisplayData } from "@/components/common/PostTitleDisplay"; // ArticleDisplayData 임포트
+import NextLink from "next/link";
 
 interface GenericArticleCardProps {
   cardData: CommonCardData;
+  onClick?: () => void; // Optional click handler for CMS context
 }
 
 const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
   cardData,
+  onClick,
 }) => {
   const colors = useColors();
   const { colorMode } = useColorModeComponent(); // Use the aliased import
@@ -83,7 +86,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
     }
   };
 
-  return (
+  const cardContent = (
     <Box
       as="article"
       h="100%"
@@ -95,6 +98,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
       borderRadius="lg"
       overflow="hidden"
       transition="all 0.2s ease-in-out"
+      cursor="pointer"
       _hover={{
         transform: "translateY(-2px)",
         boxShadow: "md",
@@ -136,13 +140,12 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
           textOverflow="ellipsis"
           whiteSpace="nowrap"
         >
-          {/* Title always links internally */}
+          {/* Title display without link since the whole card is now clickable */}
           <Flex flex={1} minW={0}>
             <Box
               flex={1}
               minW={0}
               title={cardData.title}
-              _hover={{ textDecoration: "underline" }}
               display="flex"
               alignItems="center"
             >
@@ -216,6 +219,29 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
         </HStack>
       </HStack>
     </Box>
+  );
+
+  // If onClick is provided (CMS context), wrap in a clickable Box
+  if (onClick) {
+    return (
+      <Box onClick={onClick} h="100%">
+        {cardContent}
+      </Box>
+    );
+  }
+
+  // Otherwise, wrap in a Link (public context)
+  return (
+    <ChakraLink
+      as={NextLink}
+      href={internalDetailUrl}
+      textDecoration="none"
+      _hover={{ textDecoration: "none" }}
+      display="block"
+      h="100%"
+    >
+      {cardContent}
+    </ChakraLink>
   );
 };
 

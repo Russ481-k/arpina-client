@@ -1023,20 +1023,17 @@ const BoardPreview = React.memo(function BoardPreview({
                       md: "calc(33.33% - 0.67rem)",
                       lg: "calc(25% - 0.75rem)",
                     }}
-                    onClick={() =>
-                      handleRowClick({
-                        data: article,
-                      } as RowClickedEvent<ArticleWithAnswer>)
-                    }
-                    cursor="pointer"
-                    _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
-                    transition="all 0.2s"
                   >
                     <GenericArticleCard
                       cardData={mapArticleToCommonCardData(
                         article,
                         menu?.url || ""
                       )}
+                      onClick={() =>
+                        handleRowClick({
+                          data: article,
+                        } as RowClickedEvent<ArticleWithAnswer>)
+                      }
                     />
                   </Box>
                 );
