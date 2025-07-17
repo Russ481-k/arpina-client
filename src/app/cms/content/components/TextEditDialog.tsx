@@ -1,15 +1,28 @@
 "use client";
 
-import { Button, Dialog, Portal, CloseButton } from "@chakra-ui/react";
+import {
+  Button,
+  Dialog,
+  Portal,
+  CloseButton,
+  Textarea,
+  Box,
+  Text,
+  VStack,
+  HStack,
+  Badge,
+} from "@chakra-ui/react";
 import { useState, useEffect } from "react";
-import { ContentBlock } from "@/types/api/content";
-import { LexicalEditor } from "@/components/common/LexicalEditor";
+import { ContentBlock, ContentBlockHistory } from "@/types/api/content";
+import dayjs from "dayjs";
 
 interface TextEditDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (content: string) => void;
   block: ContentBlock | null;
+  history: ContentBlockHistory[];
+  onRestore: (historyId: number) => void;
 }
 
 export function TextEditDialog({
@@ -17,20 +30,19 @@ export function TextEditDialog({
   onClose,
   onSave,
   block,
+  history,
+  onRestore,
 }: TextEditDialogProps) {
   const [content, setContent] = useState("");
 
   useEffect(() => {
-    if (block?.content) {
-      setContent(block.content);
-    } else {
-      setContent("");
+    if (open && block) {
+      setContent(block.content || "");
     }
-  }, [block]);
+  }, [open, block]);
 
   const handleSave = () => {
     onSave(content);
-    onClose();
   };
 
   if (!block) return null;
@@ -38,7 +50,7 @@ export function TextEditDialog({
   return (
     <Dialog.Root
       open={open}
-      onOpenChange={(details: any) => !details.open && onClose()}
+      onOpenChange={(details) => !details.open && onClose()}
       size="xl"
     >
       <Portal>
@@ -49,16 +61,57 @@ export function TextEditDialog({
               <Dialog.Title>텍스트 블록 수정</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
-              <LexicalEditor
-                initialContent={content}
-                onChange={setContent}
-                contextMenu="CONTENT"
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="내용을 입력하세요..."
+                rows={10}
               />
+              <Box h="1px" bg="gray.200" my={4} />
+              <Box>
+                <Text fontWeight="bold" mb={2}>
+                  변경 이력
+                </Text>
+                <Box maxH="200px" overflowY="auto" p={1}>
+                  <VStack align="stretch" gap={2}>
+                    {history.length > 0 ? (
+                      history.map((h) => (
+                        <HStack
+                          key={h.id}
+                          justify="space-between"
+                          p={2}
+                          bg="gray.50"
+                          _dark={{ bg: "gray.700" }}
+                          borderRadius="md"
+                        >
+                          <Box>
+                            <Text fontSize="sm">
+                              {dayjs(h.createdDate).format(
+                                "YYYY-MM-DD HH:mm:ss"
+                              )}
+                            </Text>
+                            <Text fontSize="xs" color="gray.500">
+                              수정자: {h.createdBy}
+                            </Text>
+                          </Box>
+                          <Button size="xs" onClick={() => onRestore(h.id)}>
+                            이 버전으로 되돌리기
+                          </Button>
+                        </HStack>
+                      ))
+                    ) : (
+                      <Text fontSize="sm" color="gray.500">
+                        변경 이력이 없습니다.
+                      </Text>
+                    )}
+                  </VStack>
+                </Box>
+              </Box>
             </Dialog.Body>
             <Dialog.Footer>
-              <Dialog.CloseTrigger asChild>
-                <Button variant="ghost">취소</Button>
-              </Dialog.CloseTrigger>
+              <Button variant="ghost" onClick={onClose}>
+                취소
+              </Button>
               <Button colorScheme="blue" onClick={handleSave}>
                 저장
               </Button>

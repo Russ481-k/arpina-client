@@ -1,21 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Box,
-  Flex,
-  Text,
-  Spinner,
-  Button,
-  Tooltip,
-  Portal,
-} from "@chakra-ui/react";
+import { Box, Flex, Text, Spinner, Button } from "@chakra-ui/react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { LuPlus } from "react-icons/lu";
 import { TreeItem } from "@/components/ui/tree-list";
 import { contentApi, contentKeys } from "@/lib/api/content";
 import {
   ContentBlock,
+  ContentBlockHistory,
   CreateContentBlockDto,
   UpdateContentBlockDto,
 } from "@/types/api/content";
@@ -51,6 +44,12 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
     queryKey,
     queryFn: () => contentApi.getContentBlocks(menuId),
     enabled: !!selectedMenu, // menuId가 0일 때도 조회하도록 수정
+  });
+
+  const { data: history = [] } = useQuery<ContentBlockHistory[]>({
+    queryKey: contentKeys.history(editingBlock?.id ?? 0),
+    queryFn: () => contentApi.getContentBlockHistory(editingBlock!.id),
+    enabled: !!editingBlock,
   });
 
   const reorderMutation = useMutation({
@@ -120,6 +119,26 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
     onError: () => {
       toaster.create({ title: "블록 수정에 실패했습니다.", type: "error" });
       queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: contentApi.restoreContentBlock,
+    onSuccess: () => {
+      toaster.create({
+        title: "성공",
+        description: "선택한 버전으로 복원되었습니다.",
+        type: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: contentKeys.lists() });
+      editDialog.onClose();
+    },
+    onError: (error: any) => {
+      toaster.create({
+        title: "오류",
+        description: `복원에 실패했습니다: ${error.message}`,
+        type: "error",
+      });
     },
   });
 
@@ -197,6 +216,10 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
       dto: { type: editingBlock.type, content },
     });
     editDialog.onClose();
+  };
+
+  const handleRestore = (historyId: number) => {
+    restoreMutation.mutate(historyId);
   };
 
   const handleSelectBlock = (blockId: number) => {
@@ -309,6 +332,8 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
         onClose={editDialog.onClose}
         onSave={handleSave}
         block={editingBlock}
+        history={history}
+        onRestore={handleRestore}
       />
 
       <ContentSearchDialog

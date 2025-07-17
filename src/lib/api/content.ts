@@ -92,4 +92,6 @@ export const contentKeys = {
     [...contentKeys.publicLists(), { menuId }] as const,
   details: () => [...contentKeys.all, "detail"] as const,
   detail: (id: number) => [...contentKeys.details(), id] as const,
+  histories: () => [...contentKeys.all, "history"] as const,
+  history: (id: number) => [...contentKeys.histories(), id] as const,
 };
