@@ -111,9 +111,13 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
   const updateMutation = useMutation({
     mutationFn: (vars: { blockId: number; dto: UpdateContentBlockDto }) =>
       contentApi.updateContentBlock(vars.blockId, vars.dto),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toaster.create({ title: "블록이 수정되었습니다.", type: "success" });
       queryClient.invalidateQueries({ queryKey });
+      // 변경 이력도 함께 갱신합니다.
+      queryClient.invalidateQueries({
+        queryKey: contentKeys.history(variables.blockId),
+      });
     },
     onError: () => {
       toaster.create({ title: "블록 수정에 실패했습니다.", type: "error" });
@@ -212,35 +216,36 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
     editDialog.onClose();
   };
 
-  const handleImageSave = async (file: File | null, caption: string) => {
+  const handleImageSave = async (files: (File | number)[], caption: string) => {
     if (!editingBlock) return;
 
-    let fileId = editingBlock.fileId;
-
     try {
-      if (file) {
-        // 새 파일이 있으면 업로드
-        const uploadResponse = await fileApi.upload(
-          file,
-          "CONTENT",
-          menuId // 올바른 menuId 사용
-        );
-        if (uploadResponse.success && uploadResponse.data.length > 0) {
-          fileId = uploadResponse.data[0].fileId;
-        } else {
+      // 1. 파일 처리 (업로드 또는 기존 ID 사용)
+      const fileIds = await Promise.all(
+        files.map(async (fileOrId) => {
+          if (typeof fileOrId === "number") {
+            return fileOrId; // 기존 파일 ID
+          }
+          // 새 파일 업로드
+          const uploadResponse = await fileApi.upload(
+            fileOrId,
+            "CONTENT",
+            menuId
+          );
+          if (uploadResponse.success && uploadResponse.data.length > 0) {
+            return uploadResponse.data[0].fileId;
+          }
           throw new Error(
             uploadResponse.message || "파일 업로드에 실패했습니다."
           );
-        }
-      }
+        })
+      );
 
-      // 캡션 또는 파일 ID가 변경되었으면 업데이트
-      if (caption !== editingBlock.content || fileId !== editingBlock.fileId) {
-        updateMutation.mutate({
-          blockId: editingBlock.id,
-          dto: { type: "IMAGE", content: caption, fileId: fileId },
-        });
-      }
+      // 2. 블록 업데이트
+      updateMutation.mutate({
+        blockId: editingBlock.id,
+        dto: { type: "IMAGE", content: caption, fileIds: fileIds },
+      });
 
       imageEditDialog.onClose();
     } catch (error: any) {
@@ -356,7 +361,6 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
             moveBlock={moveBlock}
             onDelete={handleDeleteRequest}
             onEdit={handleEditRequest}
-            // onDragEnd는 이제 사용하지 않으므로 제거합니다.
           />
         ))}
       </Box>
@@ -383,6 +387,8 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
         onClose={imageEditDialog.onClose}
         onSave={handleImageSave}
         block={editingBlock}
+        history={history}
+        onRestore={handleRestore}
       />
 
       <ContentSearchDialog

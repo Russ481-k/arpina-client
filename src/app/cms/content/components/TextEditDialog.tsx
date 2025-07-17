@@ -90,7 +90,16 @@ export function TextEditDialog({
                                 "YYYY-MM-DD HH:mm:ss"
                               )}
                             </Text>
-                            <Text fontSize="xs" color="gray.500">
+                            <Text
+                              fontSize="sm"
+                              color="gray.600"
+                              _dark={{ color: "gray.400" }}
+                              mt={1}
+                              whiteSpace="pre-wrap"
+                            >
+                              {h.content}
+                            </Text>
+                            <Text fontSize="xs" color="gray.500" mt={1}>
                               수정자: {h.createdBy}
                             </Text>
                           </Box>

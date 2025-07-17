@@ -1,6 +1,14 @@
 import { useRef } from "react";
 import { useDrag, useDrop, XYCoord } from "react-dnd";
-import { Flex, Text, IconButton, Box, HStack, Input } from "@chakra-ui/react";
+import {
+  Flex,
+  Text,
+  IconButton,
+  Box,
+  HStack,
+  Input,
+  Image,
+} from "@chakra-ui/react";
 import { LuGripVertical, LuTrash2 } from "react-icons/lu";
 import { ContentBlock } from "@/types/api/content";
 
@@ -69,23 +77,53 @@ export function ContentBlockItem({
         />
       );
     }
-    if (block.type === "IMAGE" && block.fileId) {
-      // fileUrl 대신 fileId 존재 여부 체크
-      // fileUrl을 무시하고 fileId를 사용하여 올바른 public 다운로드 URL을 생성
-      const imageUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cms/file/public/download/${block.fileId}`;
+    if (block.type === "IMAGE" && block.files && block.files.length > 0) {
+      // 첫 번째 파일을 대표 이미지로 사용
+      const firstFile = block.files[0];
+      const imageUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cms/file/public/download/${firstFile.fileId}`;
+
       return (
-        <Flex align="center" cursor="pointer">
-          <img
-            src={imageUrl}
-            alt={block.content || "image"}
-            style={{
-              width: "40px",
-              height: "40px",
-              objectFit: "cover",
-              marginRight: "12px",
+        <Flex align="center" cursor="pointer" w="full" minW={0}>
+          <HStack
+            gap={2}
+            overflowX="auto"
+            py={1}
+            // 스크롤바 스타일링 (선택 사항)
+            css={{
+              "&::-webkit-scrollbar": {
+                height: "4px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                background: "gray.300",
+                borderRadius: "24px",
+              },
+              "&::-webkit-scrollbar-track": {
+                background: "gray.100",
+              },
             }}
-          />
-          <Text>{block.content || "이미지 블록"}</Text>
+          >
+            {block.files.map((file, i) => (
+              <Image
+                key={file.fileId}
+                src={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/cms/file/public/download/${file.fileId}`}
+                alt={block.content || `image ${i + 1}`}
+                boxSize="40px"
+                objectFit="cover"
+                borderRadius="md"
+                bg="gray.100"
+                flexShrink={0} // 이미지가 줄어들지 않도록 설정
+              />
+            ))}
+          </HStack>
+          <Text
+            ml={2}
+            title={block.content || "이미지 블록"}
+            whiteSpace="nowrap"
+            overflow="hidden"
+            textOverflow="ellipsis"
+          >
+            {block.content || "이미지 블록"}
+          </Text>
         </Flex>
       );
     }
