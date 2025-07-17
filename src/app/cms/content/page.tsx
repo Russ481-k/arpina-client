@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Box, Flex, Heading, Badge } from "@chakra-ui/react";
-import { Button } from "@/components/ui/button";
 import { ContentList } from "./components/ContentList";
 import { ContentEditor } from "./components/ContentEditor";
 import { GridSection } from "@/components/ui/grid-section";
@@ -16,7 +15,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { getAuthHeader } from "@/lib/auth-utils";
 import { menuApi, menuKeys } from "@/lib/api/menu";
 import { Menu } from "@/types/api";
 
@@ -63,82 +61,14 @@ export default function ContentManagementPage() {
     colors.text.primary,
     colors.text.primary
   );
-  const buttonBg = useColorModeValue(
-    colors.primary.default,
-    colors.primary.default
-  );
-  const buttonHoverBg = useColorModeValue(
-    colors.primary.hover,
-    colors.primary.hover
-  );
-
-  const badgeBg = useColorModeValue(colors.primary.light, colors.primary.light);
-  const badgeColor = useColorModeValue(
-    colors.primary.default,
-    colors.primary.default
-  );
-
-  const handleAddContent = () => {
-    setSelectedContent(null);
-  };
 
   const handleEditContent = (content: TreeItem) => {
     setSelectedContent(content);
   };
 
-  const handleCloseEditor = () => {
-    setSelectedContent(null);
-  };
-
-  const handleSubmit = async (
-    contentData: Omit<TreeItem, "id" | "createdAt" | "updatedAt">
-  ) => {
-    try {
-      const url = selectedContent
-        ? `/api/cms/menu/${selectedContent.id}`
-        : "/api/cms/menu";
-      const method = selectedContent ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          ...getAuthHeader(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(contentData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save content");
-      }
-
-      queryClient.invalidateQueries({ queryKey: menuKeys.lists() });
-      setSelectedContent(null);
-      toaster.create({
-        title: selectedContent
-          ? "컨텐츠가 수정되었습니다."
-          : "컨텐츠가 생성되었습니다.",
-        type: "success",
-      });
-    } catch (error) {
-      console.error("Error saving content:", error);
-      toaster.create({
-        title: "컨텐츠 저장에 실패했습니다.",
-        type: "error",
-      });
-    }
-  };
-
   const handleDeleteContent = async (contentId: number) => {
     try {
-      const response = await fetch(`/api/cms/menu/${contentId}`, {
-        method: "DELETE",
-        headers: getAuthHeader(),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete content");
-      }
+      await menuApi.deleteMenu(contentId);
 
       queryClient.invalidateQueries({ queryKey: menuKeys.lists() });
       setSelectedContent(null);
@@ -232,16 +162,7 @@ export default function ContentManagementPage() {
             </Box>
 
             <Box>
-              <ContentEditor
-                content={
-                  selectedContent
-                    ? convertTreeItemToContent(selectedContent)
-                    : null
-                }
-                onClose={handleCloseEditor}
-                onDelete={handleDeleteContent}
-                onSubmit={handleSubmit}
-              />
+              <ContentEditor selectedMenu={selectedContent} />
             </Box>
             <Box h="full" w="full">
               <ContentPreview

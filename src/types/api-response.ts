@@ -6,10 +6,11 @@ import { PageDetailsDto } from "./menu";
  */
 export interface ApiResponse<T> {
   success: boolean;
-  message: string;
+  message?: string;
   data: T;
-  errorCode: string | null;
-  stackTrace: string | null;
+  errorCode?: string | null;
+  stackTrace?: string | null;
+  status?: number;
 }
 
 /**

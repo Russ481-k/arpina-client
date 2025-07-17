@@ -1,492 +1,322 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Flex,
-  Button,
-  VStack,
   Text,
-  Input,
-  Select,
-  IconButton,
-  HStack,
-  Separator,
-  useDisclosure,
+  Spinner,
+  Button,
+  Tooltip,
   Portal,
-  createListCollection,
-  Checkbox,
 } from "@chakra-ui/react";
-
-import { LuPlus, LuTrash2, LuPencil, LuCheck } from "react-icons/lu";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Content, VisionSection } from "../types";
-import dynamic from "next/dynamic";
-import { SectionEditDialog } from "./editor/SectionEditDialog";
-
-const LexicalEditor = dynamic(() => import("./editor/LexicalEditor"), {
-  ssr: false,
-});
-
-const contentSchema = z.object({
-  name: z.string().min(1, "제목을 입력해주세요"),
-  description: z.string(),
-  type: z.enum(["page", "vision", "news", "notice"]),
-  content: z.string(),
-  visible: z.boolean(),
-  sections: z
-    .array(
-      z.object({
-        title: z.string(),
-        content: z.string(),
-        type: z.enum(["text", "quote", "list"]),
-        items: z.array(z.string()).optional(),
-      })
-    )
-    .optional(),
-  settings: z.object({
-    layout: z.enum(["default", "wide", "full"]),
-    showThumbnail: z.boolean(),
-    showTags: z.boolean(),
-    showDate: z.boolean(),
-    showAuthor: z.boolean(),
-    showRelatedContent: z.boolean(),
-    showTableOfContents: z.boolean(),
-  }),
-  metadata: z
-    .object({
-      author: z.string().optional(),
-      position: z.string().optional(),
-      department: z.string().optional(),
-      contact: z.string().optional(),
-    })
-    .optional(),
-});
-
-type ContentFormData = z.infer<typeof contentSchema> & {
-  visible: boolean;
-};
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { LuPlus } from "react-icons/lu";
+import { TreeItem } from "@/components/ui/tree-list";
+import { contentApi, contentKeys } from "@/lib/api/content";
+import {
+  ContentBlock,
+  CreateContentBlockDto,
+  UpdateContentBlockDto,
+} from "@/types/api/content";
+import { toaster } from "@/components/ui/toaster";
+import { ContentBlockItem } from "./ContentBlockItem";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useDisclosure } from "@chakra-ui/react";
+import { TextEditDialog } from "./TextEditDialog"; // 다이얼로그 다시 추가
+import { Search } from "lucide-react";
+import { ContentSearchDialog } from "./ContentSearchDialog";
 
 interface ContentEditorProps {
-  content?: Content | null;
-  onClose: () => void;
-  onDelete?: (contentId: number) => void;
-  onSubmit: (content: Omit<Content, "id" | "createdAt" | "updatedAt">) => void;
+  selectedMenu: TreeItem | null;
 }
 
-export function ContentEditor({
-  content,
-  onClose,
-  onDelete,
-  onSubmit,
-}: ContentEditorProps) {
-  const { open, onOpen, onClose: onCloseModal } = useDisclosure();
-  const [selectedSection, setSelectedSection] = useState<VisionSection | null>(
-    null
-  );
+export function ContentEditor({ selectedMenu }: ContentEditorProps) {
+  const queryClient = useQueryClient();
+  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
+  const [blockToDelete, setBlockToDelete] = useState<number | null>(null);
+  const [editingBlock, setEditingBlock] = useState<ContentBlock | null>(null); // 편집 상태 다시 추가
+  const deleteDialog = useDisclosure();
+  const editDialog = useDisclosure(); // 편집 다이얼로그 상태 다시 추가
+  const searchDialog = useDisclosure();
+
+  const menuId = selectedMenu?.id ?? 0;
+  const queryKey = contentKeys.list(menuId);
 
   const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    formState: { errors },
-  } = useForm<ContentFormData>({
-    resolver: zodResolver(contentSchema),
-    defaultValues: {
-      name: content?.name || "",
-      description: content?.description || "",
-      type: content?.type || "page",
-      content: content?.content || "",
-      visible: content?.visible ?? true,
-      sections: content?.sections || [],
-      settings: content?.settings || {
-        layout: "default",
-        showThumbnail: true,
-        showTags: true,
-        showDate: true,
-        showAuthor: true,
-        showRelatedContent: true,
-        showTableOfContents: true,
-      },
-      metadata: content?.metadata || {
-        author: "",
-        position: "",
-        department: "",
-        contact: "",
-      },
+    data: initialContentBlocks,
+    isLoading,
+    isError,
+  } = useQuery<ContentBlock[]>({
+    queryKey,
+    queryFn: () => contentApi.getContentBlocks(menuId),
+    enabled: !!selectedMenu, // menuId가 0일 때도 조회하도록 수정
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: contentApi.reorderContentBlocks,
+    onSuccess: () => {
+      toaster.create({ title: "순서가 저장되었습니다.", type: "success" });
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err, newOrder, context: any) => {
+      toaster.create({ title: "순서 변경에 실패했습니다.", type: "error" });
+      if (context?.previousBlocks) {
+        setContentBlocks(context.previousBlocks);
+      }
+    },
+    onMutate: async (newOrder) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousBlocks = queryClient.getQueryData<ContentBlock[]>(queryKey);
+      setContentBlocks((prev) =>
+        newOrder.reorderItems.map((item) => prev.find((p) => p.id === item.id)!)
+      );
+      return { previousBlocks };
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "sections",
+  const deleteMutation = useMutation({
+    mutationFn: contentApi.deleteContentBlock,
+    onSuccess: () => {
+      toaster.create({ title: "블록이 삭제되었습니다.", type: "success" });
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err, variables, context: any) => {
+      toaster.create({ title: "블록 삭제에 실패했습니다.", type: "error" });
+      if (context?.previousBlocks) {
+        setContentBlocks(context.previousBlocks);
+      }
+    },
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousBlocks =
+        queryClient.getQueryData<ContentBlock[]>(queryKey) ?? [];
+      setContentBlocks((prev) =>
+        prev.filter((block) => block.id !== deletedId)
+      );
+      return { previousBlocks };
+    },
   });
 
-  const handleAddSection = () => {
-    append({
-      title: "",
-      content: "",
-      type: "text",
-      items: [],
-    });
-  };
+  const createMutation = useMutation({
+    mutationFn: (newBlock: { menuId: number; dto: CreateContentBlockDto }) =>
+      contentApi.createContentBlock(newBlock.menuId, newBlock.dto),
+    onSuccess: () => {
+      toaster.create({ title: "블록이 추가되었습니다.", type: "success" });
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: () => {
+      toaster.create({ title: "블록 추가에 실패했습니다.", type: "error" });
+    },
+  });
 
-  const handleEditSection = (section: VisionSection) => {
-    setSelectedSection(section);
-    onOpen();
-  };
+  const updateMutation = useMutation({
+    mutationFn: (vars: { blockId: number; dto: UpdateContentBlockDto }) =>
+      contentApi.updateContentBlock(vars.blockId, vars.dto),
+    onSuccess: () => {
+      toaster.create({ title: "블록이 수정되었습니다.", type: "success" });
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: () => {
+      toaster.create({ title: "블록 수정에 실패했습니다.", type: "error" });
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
 
-  const handleSaveSection = (section: VisionSection) => {
-    if (selectedSection) {
-      const index = fields.findIndex((f) => f.id === selectedSection.id);
-      if (index !== -1) {
-        fields[index] = { ...section, id: fields[index].id };
-      }
-    } else {
-      append(section);
+  useEffect(() => {
+    if (initialContentBlocks) {
+      setContentBlocks(initialContentBlocks);
+    } else if (!isLoading) {
+      setContentBlocks([]);
     }
-    onCloseModal();
+  }, [initialContentBlocks, isLoading]);
+
+  const moveBlock = useCallback((dragIndex: number, hoverIndex: number) => {
+    setContentBlocks((prevBlocks) => {
+      const newBlocks = [...prevBlocks];
+      const [draggedBlock] = newBlocks.splice(dragIndex, 1);
+      newBlocks.splice(hoverIndex, 0, draggedBlock);
+      return newBlocks;
+    });
+  }, []);
+
+  const handleDragEnd = () => {
+    if (!reorderMutation.isIdle) return;
+    const reorderPayload = {
+      reorderItems: contentBlocks.map((item, index) => ({
+        id: item.id,
+        sortOrder: index,
+      })),
+    };
+    reorderMutation.mutate(reorderPayload);
   };
 
-  const handleFormSubmit = (data: ContentFormData) => {
-    onSubmit({
-      ...data,
-      title: data.name,
-      status: data.visible ? "PUBLISHED" : "DRAFT",
-      displayPosition: content?.displayPosition || "0",
-      visible: data.visible,
-      sortOrder: content?.sortOrder || 0,
-    });
+  const handleDeleteRequest = (blockId: number) => {
+    setBlockToDelete(blockId);
+    deleteDialog.onOpen();
   };
+
+  const handleConfirmDelete = () => {
+    if (blockToDelete) {
+      deleteMutation.mutate(blockToDelete);
+      setBlockToDelete(null);
+    }
+    deleteDialog.onClose();
+  };
+
+  const handleAddBlock = (type: "TEXT" | "IMAGE") => {
+    // !menuId 체크는 menuId가 0일 때 true가 되므로,
+    // selectedMenu가 null인 경우는 이미 앞에서 처리되므로 이 체크는 제거합니다.
+    const newBlockDto: CreateContentBlockDto = {
+      type,
+      sortOrder: contentBlocks.length,
+      content: type === "TEXT" ? "새 텍스트 블록" : "새 이미지 캡션",
+    };
+
+    createMutation.mutate({ menuId, dto: newBlockDto });
+  };
+
+  const handleEditRequest = (block: ContentBlock) => {
+    setEditingBlock(block);
+    if (block.type === "TEXT") {
+      editDialog.onOpen();
+    } else if (block.type === "IMAGE") {
+      // TODO: 이미지 편집 다이얼로그 열기
+      toaster.create({
+        title: "이미지 편집",
+        description: "이미지 편집 다이얼로그는 곧 구현될 예정입니다.",
+        type: "info",
+      });
+    }
+  };
+
+  const handleSave = (content: string) => {
+    if (!editingBlock) return;
+    updateMutation.mutate({
+      blockId: editingBlock.id,
+      dto: { type: editingBlock.type, content },
+    });
+    editDialog.onClose();
+  };
+
+  const handleSelectBlock = (blockId: number) => {
+    const blockElement = document.getElementById(`block-${blockId}`);
+    if (blockElement) {
+      blockElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // 부드러운 아웃라인 효과 적용
+      blockElement.style.outline = "2px solid #3182CE"; // blue.500
+      blockElement.style.transition = "outline-color 1s ease-out";
+
+      setTimeout(() => {
+        blockElement.style.outlineColor = "transparent";
+      }, 1000);
+
+      // 트랜지션이 끝난 후 outline 속성 제거
+      setTimeout(() => {
+        blockElement.style.outline = "";
+      }, 2000);
+    }
+    searchDialog.onClose();
+  };
+
+  if (!selectedMenu) {
+    return (
+      <Flex justify="center" align="center" h="full">
+        <Text>편집할 메뉴를 선택해주세요.</Text>
+      </Flex>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" h="full">
+        <Spinner />
+      </Flex>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Flex justify="center" align="center" h="full">
+        <Text color="red.500">콘텐츠를 불러오는 중 오류가 발생했습니다.</Text>
+      </Flex>
+    );
+  }
 
   return (
-    <Box p={4}>
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <VStack gap={4} align="stretch">
-          <Box>
-            <Text mb={2}>제목</Text>
-            <Input {...register("name")} />
-            {errors.name && (
-              <Text color="red.500" fontSize="sm">
-                {errors.name.message}
-              </Text>
-            )}
-          </Box>
+    <Flex direction="column" h="full" onMouseUp={handleDragEnd}>
+      <Flex
+        gap={2}
+        _dark={{ bg: "gray.800", borderBottomColor: "gray.700" }}
+        flexShrink={0}
+        pb={2}
+      >
+        <Button
+          colorPalette="blue"
+          variant="ghost"
+          onClick={searchDialog.onOpen}
+          p={0}
+          size="xs"
+        >
+          <Search />
+        </Button>
+        <Button
+          colorPalette="blue"
+          variant="subtle"
+          onClick={() => handleAddBlock("TEXT")}
+          flex="1"
+          size="xs"
+        >
+          <LuPlus />
+          <Text as="span">텍스트</Text>
+        </Button>
+        <Button
+          colorPalette="blue"
+          variant="subtle"
+          onClick={() => handleAddBlock("IMAGE")}
+          flex="1"
+          size="xs"
+        >
+          <LuPlus />
+          <Text as="span">이미지</Text>
+        </Button>
+      </Flex>
 
-          <Box>
-            <Text mb={2}>설명</Text>
-            <Input {...register("description")} />
-          </Box>
+      <Box flex="1" overflowY="auto">
+        {contentBlocks.map((block, index) => (
+          <ContentBlockItem
+            key={block.id}
+            block={block}
+            index={index}
+            moveBlock={moveBlock}
+            onDelete={handleDeleteRequest}
+            onEdit={handleEditRequest}
+          />
+        ))}
+      </Box>
 
-          <Box>
-            <Select.Root
-              variant="outline"
-              collection={createListCollection({
-                items: [
-                  { value: "page", label: "일반 페이지" },
-                  { value: "vision", label: "비전 및 목표" },
-                  { value: "news", label: "뉴스" },
-                  { value: "notice", label: "공지사항" },
-                ],
-              })}
-            >
-              <Select.HiddenSelect />
-              <Select.Label>컨텐츠 유형</Select.Label>
-              <Select.Control>
-                <Select.Trigger>
-                  <Select.ValueText placeholder="Select type" />
-                </Select.Trigger>
-                <Select.IndicatorGroup>
-                  <Select.Indicator />
-                </Select.IndicatorGroup>
-              </Select.Control>
-              <Portal>
-                <Select.Positioner>
-                  <Select.Content>
-                    {[
-                      { value: "page", label: "일반 페이지" },
-                      { value: "vision", label: "비전 및 목표" },
-                      { value: "news", label: "뉴스" },
-                      { value: "notice", label: "공지사항" },
-                    ].map((type) => (
-                      <Select.Item item={type} key={type.value}>
-                        {type.label}
-                        <Select.ItemIndicator />
-                      </Select.Item>
-                    ))}
-                  </Select.Content>
-                </Select.Positioner>
-              </Portal>
-            </Select.Root>
-          </Box>
-
-          {watch("type") === "vision" && (
-            <Box>
-              <Flex justify="space-between" align="center" mb={2}>
-                <Text>섹션</Text>
-                <IconButton
-                  aria-label="섹션 추가"
-                  size="sm"
-                  onClick={handleAddSection}
-                >
-                  <LuPlus />
-                </IconButton>
-              </Flex>
-              <VStack gap={2} align="stretch">
-                {fields.map((field, index) => (
-                  <Box key={field.id} p={4} borderWidth={1} borderRadius="md">
-                    <Flex justify="space-between" align="center" mb={2}>
-                      <Text fontWeight="bold">
-                        {field.title || "제목 없음"}
-                      </Text>
-                      <HStack>
-                        <IconButton
-                          aria-label="섹션 수정"
-                          size="sm"
-                          onClick={() => handleEditSection(field)}
-                        >
-                          <LuPencil />
-                        </IconButton>
-                        <IconButton
-                          aria-label="섹션 삭제"
-                          size="sm"
-                          onClick={() => remove(index)}
-                        >
-                          <LuTrash2 />
-                        </IconButton>
-                      </HStack>
-                    </Flex>
-                    <Text>{field.content}</Text>
-                  </Box>
-                ))}
-              </VStack>
-            </Box>
-          )}
-
-          <Box>
-            <Controller
-              name="content"
-              control={control}
-              render={({ field }) => (
-                <LexicalEditor value={field.value} onChange={field.onChange} />
-              )}
-            />
-          </Box>
-
-          <Separator />
-
-          <Box>
-            <VStack gap={2} align="stretch">
-              <Controller
-                name="settings.layout"
-                control={control}
-                render={({ field }) => (
-                  <Select.Root
-                    key={field.value}
-                    variant="outline"
-                    value={[field.value]}
-                    onValueChange={({ value }) => field.onChange(value[0])}
-                    collection={createListCollection({
-                      items: [
-                        { value: "default", label: "기본" },
-                        { value: "wide", label: "와이드" },
-                        { value: "full", label: "전체" },
-                      ],
-                    })}
-                  >
-                    <Select.HiddenSelect />
-                    <Select.Label>설정</Select.Label>
-                    <Select.Control>
-                      <Select.Trigger>
-                        <Select.ValueText placeholder="Select layout" />
-                      </Select.Trigger>
-                      <Select.IndicatorGroup>
-                        <Select.Indicator />
-                      </Select.IndicatorGroup>
-                    </Select.Control>
-                    <Portal>
-                      <Select.Positioner>
-                        <Select.Content>
-                          {[
-                            { value: "default", label: "기본" },
-                            { value: "wide", label: "와이드" },
-                            { value: "full", label: "전체" },
-                          ].map((layout) => (
-                            <Select.Item item={layout} key={layout.value}>
-                              {layout.label}
-                              <Select.ItemIndicator />
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Positioner>
-                    </Portal>
-                  </Select.Root>
-                )}
-              />
-              <Controller
-                name="settings.showThumbnail"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <Checkbox.Root
-                    checked={value}
-                    onCheckedChange={(e) => onChange(!!e.checked)}
-                    colorPalette="blue"
-                    size="sm"
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator>
-                        <LuCheck />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>썸네일 표시</Checkbox.Label>
-                  </Checkbox.Root>
-                )}
-              />
-              <Controller
-                name="settings.showTags"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <Checkbox.Root
-                    checked={value}
-                    onCheckedChange={(e) => onChange(!!e.checked)}
-                    colorPalette="blue"
-                    size="sm"
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator>
-                        <LuCheck />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>태그 표시</Checkbox.Label>
-                  </Checkbox.Root>
-                )}
-              />
-              <Controller
-                name="settings.showDate"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <Checkbox.Root
-                    checked={value}
-                    onCheckedChange={(e) => onChange(!!e.checked)}
-                    colorPalette="blue"
-                    size="sm"
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator>
-                        <LuCheck />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>날짜 표시</Checkbox.Label>
-                  </Checkbox.Root>
-                )}
-              />
-              <Controller
-                name="settings.showAuthor"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <Checkbox.Root
-                    checked={value}
-                    onCheckedChange={(e) => onChange(!!e.checked)}
-                    colorPalette="blue"
-                    size="sm"
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator>
-                        <LuCheck />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>작성자 표시</Checkbox.Label>
-                  </Checkbox.Root>
-                )}
-              />
-              <Controller
-                name="settings.showRelatedContent"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <Checkbox.Root
-                    checked={value}
-                    onCheckedChange={(e) => onChange(!!e.checked)}
-                    colorPalette="blue"
-                    size="sm"
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator>
-                        <LuCheck />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>관련 컨텐츠 표시</Checkbox.Label>
-                  </Checkbox.Root>
-                )}
-              />
-              <Controller
-                name="settings.showTableOfContents"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <Checkbox.Root
-                    checked={value}
-                    onCheckedChange={(e) => onChange(!!e.checked)}
-                    colorPalette="blue"
-                    size="sm"
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator>
-                        <LuCheck />
-                      </Checkbox.Indicator>
-                    </Checkbox.Control>
-                    <Checkbox.Label>목차 표시</Checkbox.Label>
-                  </Checkbox.Root>
-                )}
-              />
-            </VStack>
-          </Box>
-
-          <Separator />
-
-          <Box>
-            <Text mb={2}>메타데이터</Text>
-            <VStack gap={2} align="stretch">
-              <Input placeholder="작성자" {...register("metadata.author")} />
-              <Input placeholder="직위" {...register("metadata.position")} />
-              <Input placeholder="부서" {...register("metadata.department")} />
-              <Input placeholder="연락처" {...register("metadata.contact")} />
-            </VStack>
-          </Box>
-
-          <Flex justify="flex-end" gap={2}>
-            {content && onDelete && (
-              <Button
-                colorPalette="red"
-                variant="outline"
-                onClick={() => onDelete(content.id)}
-              >
-                삭제
-              </Button>
-            )}
-            <Button type="button" variant="outline" onClick={onClose}>
-              취소
-            </Button>
-            <Button type="submit" colorPalette="blue">
-              저장
-            </Button>
-          </Flex>
-        </VStack>
-      </form>
-
-      <SectionEditDialog
-        isOpen={open}
-        onClose={onCloseModal}
-        section={selectedSection}
-        onSave={handleSaveSection}
+      <ConfirmDialog
+        isOpen={deleteDialog.open}
+        onClose={deleteDialog.onClose}
+        onConfirm={handleConfirmDelete}
+        title="블록 삭제"
+        description="정말로 이 콘텐츠 블록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
       />
-    </Box>
+
+      <TextEditDialog
+        open={editDialog.open}
+        onClose={editDialog.onClose}
+        onSave={handleSave}
+        block={editingBlock}
+      />
+
+      <ContentSearchDialog
+        open={searchDialog.open}
+        onClose={searchDialog.onClose}
+        onSelect={handleSelectBlock}
+        blocks={contentBlocks}
+      />
+    </Flex>
   );
 }
