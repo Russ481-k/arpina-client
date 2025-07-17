@@ -10,6 +10,8 @@ import {
   Flex,
   Box,
   Link as ChakraLink,
+  Badge,
+  Spacer,
 } from "@chakra-ui/react";
 import { CommonCardData } from "@/types/common"; // Import CommonCardData
 import { LuEye, LuImageOff, LuExternalLink } from "react-icons/lu";
@@ -18,13 +20,16 @@ import Image from "next/image";
 import { useColorMode as useColorModeComponent } from "@/components/ui/color-mode"; // Correct alias usage
 import PostTitleDisplay from "@/components/common/PostTitleDisplay"; // PostTitleDisplay 임포트
 import { ArticleDisplayData } from "@/components/common/PostTitleDisplay"; // ArticleDisplayData 임포트
+import NextLink from "next/link";
 
 interface GenericArticleCardProps {
   cardData: CommonCardData;
+  onClick?: () => void; // Optional click handler for CMS context
 }
 
 const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
   cardData,
+  onClick,
 }) => {
   const colors = useColors();
   const { colorMode } = useColorModeComponent(); // Use the aliased import
@@ -68,7 +73,20 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
       ? colors.text?.secondary || "gray.500"
       : colors.text?.secondary || "gray.600";
 
-  return (
+  const getCategoryStyle = (categoryName: string) => {
+    switch (categoryName) {
+      case "공지":
+        return { bg: "blue.500", color: "#ffffff" };
+      case "홍보":
+        return { bg: "#FAB20B", color: "#ffffff" };
+      case "유관기관 홍보":
+        return { bg: "#0C8EA4", color: "#ffffff" };
+      default:
+        return { bg: "gray.100", color: "gray.800" };
+    }
+  };
+
+  const cardContent = (
     <Box
       as="article"
       h="100%"
@@ -80,6 +98,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
       borderRadius="lg"
       overflow="hidden"
       transition="all 0.2s ease-in-out"
+      cursor="pointer"
       _hover={{
         transform: "translateY(-2px)",
         boxShadow: "md",
@@ -121,13 +140,12 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
           textOverflow="ellipsis"
           whiteSpace="nowrap"
         >
-          {/* Title always links internally */}
+          {/* Title display without link since the whole card is now clickable */}
           <Flex flex={1} minW={0}>
             <Box
               flex={1}
               minW={0}
               title={cardData.title}
-              _hover={{ textDecoration: "underline" }}
               display="flex"
               alignItems="center"
             >
@@ -163,30 +181,67 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
         </Text>
       </Box>
 
-      <HStack
-        justify="space-between"
-        p={2}
-        borderTopWidth="1px"
-        borderColor={colors.border}
-        mt="auto"
-      >
-        {cardData.displayWriter && (
-          <Text fontSize="xs" color={colors.text.tertiary}>
-            {cardData.displayWriter}
-          </Text>
-        )}
-        <HStack gap={2} alignItems="center">
+      <HStack p={2} borderTopWidth="1px" borderColor={colors.border} mt="auto">
+        <HStack gap={4} alignItems="center">
+          {cardData.displayWriter && (
+            <Text fontSize="xs" color={colors.text.tertiary}>
+              {cardData.displayWriter}
+            </Text>
+          )}
           {typeof cardData.hits === "number" && (
-            <>
+            <HStack gap={1} alignItems="center">
               <Icon as={LuEye} boxSize="1em" color={colors.text.tertiary} />
               <Text fontSize="xs" color={colors.text.tertiary}>
                 {cardData.hits}
               </Text>
-            </>
+            </HStack>
           )}
+        </HStack>
+        <Spacer />
+        <HStack gap={2} alignItems="center">
+          {cardData.categories &&
+            cardData.categories.map((category) => {
+              const style = getCategoryStyle(category.name);
+              return (
+                <Badge
+                  key={category.categoryId}
+                  bg={style.bg}
+                  color={style.color}
+                  px={2}
+                  py={0.5}
+                  borderRadius="md"
+                  variant="subtle"
+                >
+                  {category.name}
+                </Badge>
+              );
+            })}
         </HStack>
       </HStack>
     </Box>
+  );
+
+  // If onClick is provided (CMS context), wrap in a clickable Box
+  if (onClick) {
+    return (
+      <Box onClick={onClick} h="100%">
+        {cardContent}
+      </Box>
+    );
+  }
+
+  // Otherwise, wrap in a Link (public context)
+  return (
+    <ChakraLink
+      as={NextLink}
+      href={internalDetailUrl}
+      textDecoration="none"
+      _hover={{ textDecoration: "none" }}
+      display="block"
+      h="100%"
+    >
+      {cardContent}
+    </ChakraLink>
   );
 };
 

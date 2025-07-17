@@ -11,40 +11,84 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { articleApi } from "@/lib/api/article";
 import { BoardArticleCommon } from "@/types/api";
+import { findMenuByPath } from "@/lib/menu-utils";
+import { LuArrowRight } from "react-icons/lu";
+
+const NOTICES_PATH = "/bbs/notices"; // 공지사항 경로 상수로 정의
+
+// Helper function to map category to CSS class
+const getCategoryClassName = (categoryName?: string) => {
+  switch (categoryName) {
+    case "홍보":
+      return "promotion";
+    case "유관기관 홍보":
+      return "related";
+    case "공지":
+    default:
+      return "notice";
+  }
+};
+
+const TABS = ["전체", "공지", "홍보", "유관기관 홍보"];
+
+const CATEGORY_COLORS: { [key: string]: string } = {
+  공지: "#2E3192",
+  홍보: "#FAB20B",
+  "유관기관 홍보": "#0C8EA4",
+  전체: "#2E3192", // 기본값
+};
 
 export function NoticeSection() {
   const [articles, setArticles] = useState<BoardArticleCommon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState("전체");
 
   useEffect(() => {
-    const fetchArticles = async () => {
+    const fetchNotices = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        const response = await articleApi.getArticles({
-          bbsId: 1,
-          menuId: 79,
-          page: 0,
-          size: 6,
-          sort: "createdAt,desc",
-        });
+        // 1. /bbs/notices 경로로 메뉴 정보 조회
+        const noticeMenu = await findMenuByPath(NOTICES_PATH);
 
-        if (response.success && response.data) {
-          setArticles(response.data.content);
+        if (noticeMenu && noticeMenu.targetId) {
+          // 2. 찾은 bbsId와 menuId로 게시글 조회
+          const response = await articleApi.getArticles({
+            bbsId: noticeMenu.targetId, // targetId가 bbsId
+            menuId: noticeMenu.id,
+            size: 5,
+            sort: "createdAt,desc",
+          });
+
+          if (response.data.success && response.data.data?.content) {
+            setArticles(response.data.data.content);
+          } else {
+            console.error("Failed to fetch notices:", response.data.message);
+            setArticles([]);
+          }
         } else {
-          console.error("Failed to fetch articles:", response.message);
+          console.error(`Menu not found for path: ${NOTICES_PATH}`);
+          setArticles([]);
         }
       } catch (error) {
-        console.error("Error fetching articles:", error);
+        console.error("Error fetching notices:", error);
+        setArticles([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchArticles();
+    fetchNotices();
   }, []);
+
+  const filteredArticles =
+    selectedTab === "전체"
+      ? articles
+      : articles.filter((article) =>
+          article.categories?.some((c) => c.name === selectedTab)
+        );
 
   const noticeItemPadding = useBreakpointValue({ base: "10px", md: "26px" });
   const noticeCateWidth = useBreakpointValue({ base: "70px", md: "130px" });
@@ -64,38 +108,46 @@ export function NoticeSection() {
 
     return (
       <Flex className="mnotice-list" flexDirection={"column"} gap={5}>
-        {items.map((article) => (
-          <Link
-            key={article.nttId}
-            href={`/bbs/1/read/${article.nttId}`}
-            className="notice-item notice"
-            p={noticeItemPadding}
-          >
-            <Box
-              as="span"
-              className="notice-cate"
-              w={noticeCateWidth}
-              fontSize={noticeCateFontSize}
+        {items.map((article) => {
+          const categoryName =
+            article.categories && article.categories.length > 0
+              ? article.categories[0].name
+              : "공지"; // 기본값
+          const categoryClass = getCategoryClassName(categoryName);
+
+          return (
+            <Link
+              key={article.nttId}
+              href={`/bbs/notices/read/${article.nttId}`}
+              className={`notice-item ${categoryClass}`}
+              p={noticeItemPadding}
             >
-              공지
-            </Box>
-            <Box
-              as="span"
-              className="notice-title"
-              fontSize={noticeTitleFontSize}
-            >
-              {article.title}
-            </Box>
-            <Box
-              as="span"
-              className="notice-date"
-              w={noticeDateWidth}
-              fontSize={noticeDateFontSize}
-            >
-              {new Date(article.createdAt).toLocaleDateString("ko-KR")}
-            </Box>
-          </Link>
-        ))}
+              <Box
+                as="span"
+                className="notice-cate"
+                w={noticeCateWidth}
+                fontSize={noticeCateFontSize}
+              >
+                {categoryName}
+              </Box>
+              <Box
+                as="span"
+                className="notice-title"
+                fontSize={noticeTitleFontSize}
+              >
+                {article.title}
+              </Box>
+              <Box
+                as="span"
+                className="notice-date"
+                w={noticeDateWidth}
+                fontSize={noticeDateFontSize}
+              >
+                {new Date(article.createdAt).toLocaleDateString("ko-KR")}
+              </Box>
+            </Link>
+          );
+        })}
       </Flex>
     );
   };
@@ -106,7 +158,6 @@ export function NoticeSection() {
   });
   const bannerWidth = useBreakpointValue({ base: "100%", lg: "460px" });
   const headingFontSize = useBreakpointValue({ base: "30px", md: "40px" });
-  const tabsPaddingLeft = useBreakpointValue({ base: "0", md: "160px" });
   const sectionMarginBottom = useBreakpointValue({ base: "100px", md: "80px" });
 
   const banner1Src = useBreakpointValue({
@@ -195,7 +246,6 @@ export function NoticeSection() {
             color: "#232323",
             fontSize: "24px",
             fontWeight: "700",
-            overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             maxWidth: "100%",
@@ -213,48 +263,182 @@ export function NoticeSection() {
         <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
           <Flex gap={20} direction={flexDirection}>
             <Box flex="1" minW="0">
-              <Heading
-                as="h3"
-                fontSize={headingFontSize}
-                fontWeight="bold"
-                color={"#333333"}
-                lineHeight={"1"}
-                fontFamily="'Paperlogy', sans-serif"
-              >
-                공지사항
-              </Heading>
               <Tabs.Root
-                defaultValue="all"
+                defaultValue="전체"
+                onValueChange={(details) => setSelectedTab(details.value)}
                 colorPalette="purple"
                 variant="subtle"
               >
-                <Tabs.List
-                  borderBottom="0"
-                  style={{
-                    display: "flex",
-                    gap: "20px",
-                    marginTop: "-65px",
-                    paddingLeft: tabsPaddingLeft,
-                  }}
+                {/* 넓은 화면용 레이아웃 (> 2xl) */}
+                <Flex
+                  display={{ base: "none", "2xl": "flex" }}
+                  justify="space-between"
+                  align="center"
+                  mb={4}
                 >
-                  {/* <Tabs.Trigger
-                    value="all"
-                    fontSize="lg"
-                    fontWeight="semibold"
-                    color="#5F5F5F"
-                    transition="all 0.2s"
-                    cursor="pointer"
-                    _active={{
-                      color: "#2E3192",
-                      bg: "rgba(46, 49, 146, 0.05)",
-                      borderBottom: "2px solid #2E3192",
-                    }}
+                  <Flex align="center" gap={4}>
+                    <Heading
+                      as="h3"
+                      fontSize={headingFontSize}
+                      fontWeight="bold"
+                      color={"#333333"}
+                      lineHeight={"1"}
+                      fontFamily="'Paperlogy', sans-serif"
+                    >
+                      공지사항
+                    </Heading>
+                    <Tabs.List
+                      display={{ base: "none", sm: "flex" }}
+                      borderBottom="0"
+                      alignItems="center"
+                      gap="10px"
+                    >
+                      {/* 전체 탭 */}
+                      <Tabs.Trigger
+                        key="전체"
+                        value="전체"
+                        fontSize={{ base: "14px", md: "lg" }}
+                        fontWeight="semibold"
+                        px={6}
+                        py={2}
+                        borderRadius="30px"
+                        transition="all 0.2s"
+                        _selected={{
+                          color: "white",
+                          bg: CATEGORY_COLORS["전체"],
+                        }}
+                      >
+                        전체
+                      </Tabs.Trigger>
+                      {/* 나머지 탭 */}
+                      {TABS.slice(1).map((tab, index) => (
+                        <React.Fragment key={tab}>
+                          {index > 0 && (
+                            <Text color="gray.300" mx={2}>
+                              |
+                            </Text>
+                          )}
+                          <Tabs.Trigger
+                            value={tab}
+                            fontSize={{ base: "14px", md: "lg" }}
+                            fontWeight="semibold"
+                            color="#5F5F5F"
+                            bg="transparent"
+                            p={0}
+                            _selected={{
+                              color:
+                                CATEGORY_COLORS[tab] || CATEGORY_COLORS["전체"],
+                            }}
+                          >
+                            {tab}
+                          </Tabs.Trigger>
+                        </React.Fragment>
+                      ))}
+                    </Tabs.List>
+                  </Flex>
+
+                  <Link
+                    href="/bbs/notices"
+                    display={{ base: "none", md: "flex" }}
+                    alignItems="center"
+                    gap={1}
                   >
-                    전체
-                  </Tabs.Trigger> */}
-                </Tabs.List>
-                <Tabs.Content value="all" mt={7}>
-                  <Box>{renderNoticeList(articles)}</Box>
+                    <Text
+                      fontSize={{ base: "14px", md: "md" }}
+                      color="gray.600"
+                      fontWeight="bold"
+                    >
+                      VIEW MORE
+                    </Text>
+                    <LuArrowRight color="gray.600" />
+                  </Link>
+                </Flex>
+
+                {/* 좁은 화면용 레이아웃 (<= 2xl) */}
+                <Box display={{ base: "block", "2xl": "none" }} mb={4}>
+                  <Heading
+                    as="h3"
+                    fontSize={headingFontSize}
+                    fontWeight="bold"
+                    color={"#333333"}
+                    lineHeight={"1"}
+                    fontFamily="'Paperlogy', sans-serif"
+                    mb={4}
+                  >
+                    공지사항
+                  </Heading>
+                  <Flex
+                    justify={{ base: "flex-end", sm: "space-between" }}
+                    align="center"
+                  >
+                    <Tabs.List
+                      display={{ base: "none", sm: "flex" }}
+                      borderBottom="0"
+                      alignItems="center"
+                      gap="10px"
+                    >
+                      {/* 전체 탭 */}
+                      <Tabs.Trigger
+                        key="전체"
+                        value="전체"
+                        fontSize={{ base: "14px", md: "lg" }}
+                        fontWeight="semibold"
+                        px={6}
+                        py={2}
+                        borderRadius="30px"
+                        transition="all 0.2s"
+                        _selected={{
+                          color: "white",
+                          bg: CATEGORY_COLORS["전체"],
+                        }}
+                      >
+                        전체
+                      </Tabs.Trigger>
+                      {/* 나머지 탭 */}
+                      {TABS.slice(1).map((tab, index) => (
+                        <React.Fragment key={tab}>
+                          {index > 0 && (
+                            <Text color="gray.300" mx={2}>
+                              |
+                            </Text>
+                          )}
+                          <Tabs.Trigger
+                            value={tab}
+                            fontSize={{ base: "14px", md: "lg" }}
+                            fontWeight="semibold"
+                            color="#5F5F5F"
+                            bg="transparent"
+                            p={0}
+                            _selected={{
+                              color:
+                                CATEGORY_COLORS[tab] || CATEGORY_COLORS["전체"],
+                            }}
+                          >
+                            {tab}
+                          </Tabs.Trigger>
+                        </React.Fragment>
+                      ))}
+                    </Tabs.List>
+                    <Link
+                      href="/bbs/notices"
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                    >
+                      <Text
+                        fontSize={{ base: "14px", md: "md" }}
+                        color="gray.600"
+                        fontWeight="bold"
+                      >
+                        VIEW MORE
+                      </Text>
+                      <LuArrowRight color="gray.600" />
+                    </Link>
+                  </Flex>
+                </Box>
+
+                <Tabs.Content value={selectedTab} mt={3}>
+                  <Box>{renderNoticeList(filteredArticles)}</Box>
                 </Tabs.Content>
               </Tabs.Root>
             </Box>

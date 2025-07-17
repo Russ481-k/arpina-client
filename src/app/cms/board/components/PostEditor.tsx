@@ -74,7 +74,7 @@ export function PostEditor({
         nttId: post.nttId,
         threadDepth: post.threadDepth,
         hits: post.hits,
-        categories: post.categories,
+        categories: post.categories?.map((category) => category.name) || [],
         parentNttId: post.parentNttId,
         postedAt: post.postedAt,
       });

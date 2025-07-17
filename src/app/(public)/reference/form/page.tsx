@@ -87,7 +87,7 @@ async function getBoardPageData(
       return null;
     }
 
-    const apiResponse = await articleApi.getArticles({
+    const axiosResponse = await articleApi.getArticles({
       bbsId: pageDetails.boardId,
       menuId: menuId,
       page: currentPage - 1,
@@ -95,6 +95,8 @@ async function getBoardPageData(
       keyword: keyword,
       sort: DEFAULT_SORT_ORDER,
     });
+
+    const apiResponse = axiosResponse.data;
 
     if (!apiResponse.success || !apiResponse.data) {
       console.error(

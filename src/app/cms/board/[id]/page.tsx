@@ -116,7 +116,7 @@ export default function PostManagementPage() {
       if (selectedPost) {
         await updatePostMutation.mutateAsync({
           id: selectedPost.nttId,
-          postData,
+          postData: postData as unknown as Partial<Post>,
         });
       } else {
         const dataToSend = {
@@ -127,7 +127,9 @@ export default function PostManagementPage() {
           displayWriter: postData.displayWriter || postData.writer,
           postedAt: postData.postedAt || new Date().toISOString(),
         };
-        await createPostMutation.mutateAsync(dataToSend);
+        await createPostMutation.mutateAsync(
+          dataToSend as unknown as Omit<Post, "createdAt" | "updatedAt">
+        );
       }
     } finally {
       setLoadingPostId(null);

@@ -10,6 +10,7 @@ interface ArticleWriteDrawerProps {
   bbsId?: number;
   menuId?: number;
   initialData?: BoardArticleCommon | null;
+  showCategory?: boolean;
 }
 
 export const ArticleWriteDrawer = ({
@@ -17,6 +18,7 @@ export const ArticleWriteDrawer = ({
   bbsId,
   menuId,
   initialData,
+  showCategory,
 }: ArticleWriteDrawerProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
 
@@ -86,6 +88,7 @@ export const ArticleWriteDrawer = ({
                   initialData={initialData ?? undefined}
                   onSubmit={handleClose}
                   onCancel={handleClose}
+                  showCategory={showCategory}
                   {...editorAttachmentProps}
                 />
               )}

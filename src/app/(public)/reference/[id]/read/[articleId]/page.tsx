@@ -67,21 +67,23 @@ export default function ArticleDetailPage() {
         }
 
         const articleResponse = await articleApi.getArticle(numericArticleId);
-        if (articleResponse.success && articleResponse.data) {
-          setArticle(articleResponse.data);
-          if (articleResponse.data.bbsId) {
+
+        if (articleResponse.data) {
+          const articleData = articleResponse.data;
+          setArticle(articleData);
+          if (articleData.bbsId) {
             try {
               const articlesResponse = await articleApi.getArticles({
-                bbsId: articleResponse.data.bbsId,
-                menuId: articleResponse.data.menuId ?? 0,
+                bbsId: articleData.bbsId,
+                menuId: articleData.menuId ?? 0,
                 sort: "createdAt,desc",
                 size: 9999,
               });
 
-              if (articlesResponse.success && articlesResponse.data) {
-                const articles = articlesResponse.data.content;
+              if (articlesResponse.data.success && articlesResponse.data.data) {
+                const articles = articlesResponse.data.data.content;
                 const currentIndex = articles.findIndex(
-                  (a) => a.nttId === numericArticleId
+                  (a: BoardArticleCommon) => a.nttId === numericArticleId
                 );
 
                 if (currentIndex !== -1) {
@@ -107,7 +109,7 @@ export default function ArticleDetailPage() {
             }
           }
         } else {
-          throw new Error(articleResponse.message || "Failed to fetch article");
+          throw new Error("Failed to fetch article");
         }
 
         const menuPath = `/reference/${id}`;

@@ -12,10 +12,16 @@ import {
   Stack,
   Link as ChakraLink,
   Spinner,
+  Tabs,
 } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
-import { BoardMaster, Menu, BoardArticleCommon } from "@/types/api";
+import {
+  BoardMaster,
+  Menu,
+  BoardArticleCommon,
+  BoardCategory,
+} from "@/types/api";
 import { AgGridReact } from "ag-grid-react";
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
@@ -56,6 +62,7 @@ import PostTitleDisplay from "@/components/common/PostTitleDisplay";
 import { getBbsComments } from "@/lib/api/bbs-comment";
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapArticleToCommonCardData } from "@/lib/card-utils";
+import { boardApi } from "@/lib/api/board";
 
 type ArticleWithAnswer = BoardArticleCommon & {
   answerContent?: string;
@@ -198,6 +205,46 @@ const StatusRenderer = (params: ICellRendererParams<ArticleWithAnswer>) => {
   );
 };
 
+const CategoryCellRenderer: React.FC<
+  ICellRendererParams<ArticleWithAnswer>
+> = ({ data }) => {
+  const categories = (data as any)?.categories;
+  if (!categories || categories.length === 0) {
+    return null;
+  }
+  const category = categories[0];
+
+  const getCategoryStyle = (categoryName: string) => {
+    switch (categoryName) {
+      case "공지":
+        return { bg: "blue.500", color: "#ffffff" };
+      case "홍보":
+        return { bg: "#FAB20B", color: "#ffffff" };
+      case "유관기관 홍보":
+        return { bg: "#0C8EA4", color: "#ffffff" };
+      default:
+        return { bg: "gray.100", color: "gray.800" };
+    }
+  };
+
+  const style = getCategoryStyle(category.name);
+
+  return (
+    <Flex w="100%" h="100%" alignItems="center" justifyContent="center">
+      <Badge
+        bg={style.bg}
+        color={style.color}
+        px={2}
+        py={1}
+        borderRadius="md"
+        fontSize="xs"
+      >
+        {category.name}
+      </Badge>
+    </Flex>
+  );
+};
+
 export interface BoardPreviewProps {
   menu: Menu | null;
   board: BoardMaster | null;
@@ -238,6 +285,10 @@ const BoardPreview = React.memo(function BoardPreview({
   const [articleToEdit, setArticleToEdit] = useState<ArticleWithAnswer | null>(
     null
   );
+  const [categories, setCategories] = useState<BoardCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
@@ -276,6 +327,33 @@ const BoardPreview = React.memo(function BoardPreview({
   const menuId = menu?.id ?? 0;
   const bbsId = board?.bbsId;
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (board?.bbsName === "공지사항" && bbsId) {
+        try {
+          const response = await boardApi.getBoardCategories(bbsId);
+          if (response.success && response.data) {
+            setCategories(response.data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch categories:", error);
+        }
+      } else {
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, [board?.bbsName, bbsId]);
+
+  const handleTabChange = (details: { value: string | number }) => {
+    if (details.value === "all") {
+      setSelectedCategoryId(null);
+    } else {
+      setSelectedCategoryId(Number(details.value));
+    }
+    setCurrentPage(0);
+  };
+
   const handleSearch = useCallback(() => {
     setActiveFilterKeyword(searchInputText);
     setCurrentPage(0);
@@ -294,8 +372,9 @@ const BoardPreview = React.memo(function BoardPreview({
       pageSize,
       activeFilterKeyword,
       refreshKey,
+      selectedCategoryId,
     ],
-    queryFn: async () => {
+    queryFn: async (): Promise<ApiResponse<ArticleListResponse>> => {
       if (!bbsId || !menuId) {
         return {
           success: true,
@@ -305,13 +384,15 @@ const BoardPreview = React.memo(function BoardPreview({
           stackTrace: null,
         };
       }
-      return await articleApi.getArticles({
+      const response = await articleApi.getArticles({
         bbsId,
         menuId,
         page: currentPage,
         size: pageSize,
         keyword: activeFilterKeyword,
+        categoryId: selectedCategoryId ?? undefined,
       });
+      return response.data; // .data를 추출하여 반환
     },
     enabled: !!bbsId && !!menuId,
   });
@@ -528,6 +609,12 @@ const BoardPreview = React.memo(function BoardPreview({
         cellStyle: centeredCellTextStyle,
       },
       {
+        headerName: "구분",
+        width: 120,
+        cellRenderer: CategoryCellRenderer,
+        cellStyle: centeredCellTextStyle,
+      },
+      {
         headerName: "제목",
         field: "title",
         flex: 1,
@@ -738,10 +825,52 @@ const BoardPreview = React.memo(function BoardPreview({
   const articlesData = articlesApiResponse?.data;
   const finalArticles = articlesWithComments || [];
 
+  const tabStyles = {
+    fontWeight: "normal",
+    color: "gray.500",
+    _selected: {
+      color: "blue.600",
+      fontWeight: "bold",
+      _before: { display: "none" },
+      _after: { display: "none" },
+    },
+    _focus: {
+      boxShadow: "none",
+      borderBottom: "none",
+    },
+    _hover: {
+      color: "blue.500",
+    },
+  };
+
   return (
     <Layout currentPage="홈" isPreview={true} menus={menus}>
       <HeroSection slideContents={[heroData]} />
-      <Box px={8} py={4} minH="800px">
+      <Box px={8} py={8} minH="800px">
+        {categories.length > 0 && (
+          <Tabs.Root defaultValue="all" onValueChange={handleTabChange} mb={8}>
+            <Tabs.List
+              justifyContent="center"
+              gap={2}
+              borderBottom="none"
+              alignItems="center"
+            >
+              <Tabs.Trigger value="all" {...tabStyles}>
+                전체
+              </Tabs.Trigger>
+              {categories.map((cat) => (
+                <React.Fragment key={cat.categoryId}>
+                  <Text as="span" color="gray.300" userSelect="none">
+                    |
+                  </Text>
+                  <Tabs.Trigger value={String(cat.categoryId)} {...tabStyles}>
+                    {cat.name}
+                  </Tabs.Trigger>
+                </React.Fragment>
+              ))}
+            </Tabs.List>
+          </Tabs.Root>
+        )}
         <Flex
           direction={{ base: "column", md: "row" }}
           flexWrap="wrap"
@@ -894,20 +1023,17 @@ const BoardPreview = React.memo(function BoardPreview({
                       md: "calc(33.33% - 0.67rem)",
                       lg: "calc(25% - 0.75rem)",
                     }}
-                    onClick={() =>
-                      handleRowClick({
-                        data: article,
-                      } as RowClickedEvent<ArticleWithAnswer>)
-                    }
-                    cursor="pointer"
-                    _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
-                    transition="all 0.2s"
                   >
                     <GenericArticleCard
                       cardData={mapArticleToCommonCardData(
                         article,
                         menu?.url || ""
                       )}
+                      onClick={() =>
+                        handleRowClick({
+                          data: article,
+                        } as RowClickedEvent<ArticleWithAnswer>)
+                      }
                     />
                   </Box>
                 );

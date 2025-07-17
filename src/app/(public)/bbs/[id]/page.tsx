@@ -98,7 +98,7 @@ function mapArticleToPost(article: BoardArticleCommon): Post {
     thumbnailUrl: article.thumbnailUrl,
     status: article.status,
     attachments: mappedAttachments, // Use the correctly typed variable
-    categories: [],
+    categories: article.categories || [],
     answerContent: article.answerContent,
     answerCreatedAt: (article as Post).answerCreatedAt,
     answerUpdatedAt: (article as Post).answerUpdatedAt,
@@ -111,7 +111,8 @@ async function getBoardPageData(
   menuId: number,
   currentPage: number,
   requestedPageSize?: number,
-  keyword?: string // Add keyword parameter
+  keyword?: string, // Add keyword parameter
+  categoryId?: number
 ): Promise<BoardPageData | null> {
   const pageSizeToUse = requestedPageSize || DEFAULT_PAGE_SIZE;
   try {
@@ -130,17 +131,18 @@ async function getBoardPageData(
     }
 
     // Use articleApi.getArticles
-    const apiResponse = await articleApi.getArticles({
+    const response = await articleApi.getArticles({
       bbsId: pageDetails.boardId,
       menuId: menuId, // Pass menuId as well
       page: currentPage - 1, // API is 0-indexed
       size: pageSizeToUse,
       keyword: keyword, // Pass keyword
       sort: DEFAULT_SORT_ORDER, // Add sort order
+      categoryId: categoryId,
     });
 
-    // Assuming privateApi in articleApi returns ApiResponse<ArticleListResponse>
-    // and we need to access its .data property
+    const apiResponse = response.data; // .data를 추출
+
     if (!apiResponse.success || !apiResponse.data) {
       console.error(
         `Failed to fetch articles for menuId ${menuId}, bbsId ${pageDetails.boardId}:`,
@@ -156,7 +158,7 @@ async function getBoardPageData(
     // '고객의 소리' 게시판(QNA 스킨)인 경우에만 답변(댓글) 정보를 가져옵니다.
     if (pageDetails.boardSkinType === "QNA") {
       articles = await Promise.all(
-        articles.map(async (article) => {
+        articles.map(async (article: BoardArticleCommon) => {
           try {
             const comments = await getBbsComments(article.nttId);
             return {
@@ -213,6 +215,7 @@ export default function BoardPage({
   const [boardData, setBoardData] = useState<BoardPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "card">("list");
+  const [error, setError] = useState<string | null>(null);
 
   // 컴포넌트 마운트 및 params 변경 시 awaitedParams 설정, currentMenuPath 설정 및 keyword 초기화
   useEffect(() => {
@@ -263,6 +266,7 @@ export default function BoardPage({
     10
   );
   const currentKeyword = searchParamsHook.get("keyword") || undefined;
+  const categoryIdFromUrl = searchParamsHook.get("category");
 
   useEffect(() => {
     async function fetchData() {
@@ -281,21 +285,43 @@ export default function BoardPage({
         return;
       }
       const menuIdToUse = menu.id;
-      const data = await getBoardPageData(
+      const categoryIdToFetch = categoryIdFromUrl
+        ? Number(categoryIdFromUrl)
+        : undefined;
+      setIsLoading(true);
+      setError(null);
+      getBoardPageData(
         menuIdToUse,
-        currentPageFromUrl, // Use value from URL for fetching
-        requestedPageSizeFromUrl, // Use value from URL for fetching
-        currentKeyword
-      );
-      if (!data) {
-        console.warn(
-          `[BoardPage] No board data found for menuId: ${menuIdToUse} at path ${currentMenuPath}`
-        );
-        setBoardData(null);
-      } else {
-        setBoardData(data);
-      }
-      setIsLoading(false);
+        currentPageFromUrl,
+        requestedPageSizeFromUrl,
+        currentKeyword,
+        categoryIdToFetch
+      )
+        .then((data) => {
+          if (data) {
+            setBoardData(data);
+            const initialSkinType = data.pageDetails.boardSkinType;
+            if (initialSkinType === "BASIC" || initialSkinType === "PRESS") {
+              setViewMode("card");
+            } else {
+              setViewMode("list");
+            }
+          } else {
+            setError(
+              `게시판 정보를 가져오지 못했습니다. (경로: ${currentMenuPath})`
+            );
+            console.error(
+              `[BoardPage] No board data found for menuId: ${menuIdToUse} at path ${currentMenuPath}`
+            );
+          }
+        })
+        .catch((e) => {
+          setError("데이터를 불러오는 중 오류가 발생했습니다.");
+          console.error(e);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
     fetchData();
   }, [
@@ -305,7 +331,29 @@ export default function BoardPage({
     requestedPageSizeFromUrl,
     currentKeyword,
     currentMenuPath,
+    categoryIdFromUrl,
   ]);
+
+  const noticeCategories = [
+    { id: 4, name: "공지" },
+    { id: 5, name: "홍보" },
+    { id: 6, name: "유관기관 홍보" },
+  ];
+
+  const handleTabChange = (index: number) => {
+    const newCategoryId = index === 0 ? "" : noticeCategories[index - 1].id;
+    const query = new URLSearchParams(searchParamsHook.toString());
+    query.set("page", "1"); // 카테고리 변경 시 1페이지로 리셋
+
+    if (newCategoryId) {
+      query.set("category", String(newCategoryId));
+    } else {
+      query.delete("category");
+    }
+    if (currentMenuPath) {
+      router.push(`${currentMenuPath}?${query.toString()}`);
+    }
+  };
 
   // Pagination Handlers
   const handlePageChange = useCallback(
@@ -350,23 +398,28 @@ export default function BoardPage({
     );
   }
 
-  if (!boardData) {
-    // 데이터가 없거나 로드 실패 시 (FOLDER 타입 메뉴 등 포함)
-    // 혹은 findMenuByPath에서 menu를 못찾은 경우도 여기에 포함될 수 있도록 notFound() 호출
-    // findMenuByPath에서 못찾으면 이미 useEffect에서 notFound() 호출됨
+  if (error) {
     return (
-      <Flex direction="column" justify="center" align="center" h="80vh">
-        <Heading mb={4}>게시판 정보를 찾을 수 없습니다.</Heading>
-        <Text>
-          선택하신 경로에 해당하는 게시판이 없거나 데이터를 불러올 수 없습니다.
-        </Text>
-        <Text>주소가 올바른지 확인하거나 잠시 후 다시 시도해 주세요.</Text>
-        <NextLink href="/" passHref>
-          <Button mt={6} colorPalette="teal" size="xs">
-            홈으로 가기
-          </Button>
-        </NextLink>
-      </Flex>
+      <PageContainer>
+        <Flex justify="center" align="center" minH="400px">
+          <Box textAlign="center">
+            <Heading size="md" color="red.500">
+              오류
+            </Heading>
+            <Text mt={2}>{error}</Text>
+          </Box>
+        </Flex>
+      </PageContainer>
+    );
+  }
+
+  if (!boardData) {
+    return (
+      <PageContainer>
+        <Flex justify="center" align="center" minH="400px">
+          <Heading size="md">게시판 정보를 찾을 수 없습니다.</Heading>
+        </Flex>
+      </PageContainer>
     );
   }
 
@@ -374,9 +427,48 @@ export default function BoardPage({
   const showViewModeToggle =
     pageDetails.boardSkinType === "BASIC" ||
     pageDetails.boardSkinType === "PRESS";
+  const isNoticesPage = currentPathId === "notices";
+  const currentCategoryId = categoryIdFromUrl
+    ? Number(categoryIdFromUrl)
+    : null;
 
   return (
     <PageContainer>
+      {isNoticesPage && (
+        <Flex justify="center" align="center" gap={6} mb={10}>
+          <Button
+            variant="ghost"
+            onClick={() => handleTabChange(0)}
+            fontWeight={currentCategoryId === null ? "bold" : "normal"}
+            color={currentCategoryId === null ? "blue.600" : "gray.500"}
+            _hover={{ bg: "transparent", color: "blue.500" }}
+            fontSize="lg"
+            p={0}
+          >
+            전체
+          </Button>
+          {noticeCategories.map((category, index) => (
+            <React.Fragment key={category.id}>
+              <Box w="1px" h="14px" bg="gray.300" />
+              <Button
+                variant="ghost"
+                onClick={() => handleTabChange(index + 1)}
+                fontWeight={
+                  currentCategoryId === category.id ? "bold" : "normal"
+                }
+                color={
+                  currentCategoryId === category.id ? "blue.600" : "gray.500"
+                }
+                _hover={{ bg: "transparent", color: "blue.500" }}
+                fontSize="lg"
+                p={0}
+              >
+                {category.name}
+              </Button>
+            </React.Fragment>
+          ))}
+        </Flex>
+      )}
       {/* Use BoardControls component */}
       <BoardControls
         pageDetails={pageDetails}

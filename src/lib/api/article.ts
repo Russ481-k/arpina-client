@@ -26,6 +26,7 @@ export interface ArticleListParams {
   size?: number;
   sort?: string;
   keyword?: string;
+  categoryId?: number;
 }
 
 export interface ArticleListResponse {
@@ -86,31 +87,13 @@ export interface AnonymousArticleParams {
 
 export const articleApi = {
   // 게시글 목록 조회
-  getArticles: async (
-    params: ArticleListParams
-  ): Promise<ApiResponse<ArticleListResponse>> => {
-    const {
-      bbsId,
-      menuId,
-      page = 0,
-      size = 20,
-      sort = "createdAt,desc",
-      keyword,
-    } = params;
-    const queryParams = new URLSearchParams({
-      bbsId: bbsId.toString(),
-      menuId: menuId.toString(),
-      page: page.toString(),
-      size: size.toString(),
-      sort,
-    });
-    if (keyword) {
-      queryParams.append("keyword", keyword);
-    }
-    const response = await publicApi.get<ApiResponse<ArticleListResponse>>(
-      `/cms/bbs/article?${queryParams.toString()}`
+  getArticles: (params: any) => {
+    return privateApi.get<ApiResponse<ArticleListResponse>>(
+      "/cms/bbs/article",
+      {
+        params: params,
+      }
     );
-    return response.data;
   },
 
   // 게시글 상세 조회

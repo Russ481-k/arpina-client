@@ -174,8 +174,8 @@ const PostListItem: React.FC<PostListItemProps> = ({
           {post.categories && post.categories.length > 0 && (
             <HStack>
               {post.categories.map((category) => (
-                <Badge key={category} colorPalette="teal">
-                  {category}
+                <Badge key={category.categoryId} colorPalette="teal">
+                  {category.name}
                 </Badge>
               ))}
             </HStack>

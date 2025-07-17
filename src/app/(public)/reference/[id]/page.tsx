@@ -115,7 +115,7 @@ async function getBoardPageData(
     }
 
     // Use articleApi.getArticles
-    const apiResponse = await articleApi.getArticles({
+    const axiosResponse = await articleApi.getArticles({
       bbsId: pageDetails.boardId,
       menuId: menuId, // Pass menuId as well
       page: currentPage - 1, // API is 0-indexed
@@ -123,6 +123,8 @@ async function getBoardPageData(
       keyword: keyword,
       sort: DEFAULT_SORT_ORDER, // Add sort order
     });
+
+    const apiResponse = axiosResponse.data;
 
     // Assuming privateApi in articleApi returns ApiResponse<ArticleListResponse>
     // and we need to access its .data property

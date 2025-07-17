@@ -103,14 +103,14 @@ async function fetchBoardData(
       keyword: keyword,
       sort: DEFAULT_SORT_ORDER,
     });
-    if (!apiResponse.success || !apiResponse.data) {
+    if (!apiResponse.data.success || !apiResponse.data.data) {
       console.error(
         `[PressPage] Failed to fetch articles for menuId ${menuId}`,
-        apiResponse.message
+        apiResponse.data.message
       );
       return null;
     }
-    const articlesData = apiResponse.data;
+    const articlesData = apiResponse.data.data;
     const articles = articlesData.content || [];
     const posts: Post[] = articles.map(mapArticleToPost);
     const { pageNumber, pageSize } = articlesData.pageable || {

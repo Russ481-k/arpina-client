@@ -112,8 +112,8 @@ export function PostDetail({
           {post.categories && post.categories.length > 0 && (
             <HStack mt={2} gap={2}>
               {post.categories.map((category) => (
-                <Badge key={category} colorPalette="blue">
-                  {category}
+                <Badge key={category.categoryId} colorScheme="blue">
+                  {category.name}
                 </Badge>
               ))}
             </HStack>
