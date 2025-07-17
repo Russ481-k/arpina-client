@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useDrop } from "react-dnd"; // useDrop 추가
 import { Box, Flex, Text, Spinner, Button } from "@chakra-ui/react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { LuPlus } from "react-icons/lu";
@@ -25,6 +26,10 @@ import { fileApi } from "@/lib/api/file";
 interface ContentEditorProps {
   selectedMenu: TreeItem | null;
 }
+
+const ItemTypes = {
+  BLOCK: "block",
+};
 
 export function ContentEditor({ selectedMenu }: ContentEditorProps) {
   const queryClient = useQueryClient();
@@ -61,19 +66,10 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
       toaster.create({ title: "순서가 저장되었습니다.", type: "success" });
       queryClient.invalidateQueries({ queryKey });
     },
-    onError: (err, newOrder, context: any) => {
+    onError: (err) => {
       toaster.create({ title: "순서 변경에 실패했습니다.", type: "error" });
-      if (context?.previousBlocks) {
-        setContentBlocks(context.previousBlocks);
-      }
-    },
-    onMutate: async (newOrder) => {
-      await queryClient.cancelQueries({ queryKey });
-      const previousBlocks = queryClient.getQueryData<ContentBlock[]>(queryKey);
-      setContentBlocks((prev) =>
-        newOrder.reorderItems.map((item) => prev.find((p) => p.id === item.id)!)
-      );
-      return { previousBlocks };
+      // 오류 발생 시, 서버 데이터로 되돌리기 위해 쿼리를 무효화합니다.
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -163,7 +159,7 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
   }, []);
 
   const handleDragEnd = () => {
-    if (!reorderMutation.isIdle) return;
+    if (reorderMutation.isPending) return;
     const reorderPayload = {
       reorderItems: contentBlocks.map((item, index) => ({
         id: item.id,
@@ -281,6 +277,13 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
     searchDialog.onClose();
   };
 
+  const [, drop] = useDrop({
+    accept: ItemTypes.BLOCK,
+    drop: () => {
+      handleDragEnd();
+    },
+  });
+
   if (!selectedMenu) {
     return (
       <Flex justify="center" align="center" h="full">
@@ -306,7 +309,7 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
   }
 
   return (
-    <Flex direction="column" h="full" onMouseUp={handleDragEnd}>
+    <Flex direction="column" h="full">
       <Flex
         gap={2}
         _dark={{ bg: "gray.800", borderBottomColor: "gray.700" }}
@@ -344,7 +347,7 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
         </Button>
       </Flex>
 
-      <Box flex="1" overflowY="auto">
+      <Box ref={drop} flex="1" overflowY="auto">
         {contentBlocks.map((block, index) => (
           <ContentBlockItem
             key={block.id}
@@ -353,6 +356,7 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
             moveBlock={moveBlock}
             onDelete={handleDeleteRequest}
             onEdit={handleEditRequest}
+            // onDragEnd는 이제 사용하지 않으므로 제거합니다.
           />
         ))}
       </Box>
