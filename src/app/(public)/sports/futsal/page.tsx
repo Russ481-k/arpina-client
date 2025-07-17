@@ -49,7 +49,7 @@ export default function ParticipantsPage() {
       content: (
         <>
           07:00 ~ 18:00 → 2층 스포츠센터 프런트 <br />
-          22:00 이후 → 1층 개찰 프런트
+          22:00 이후 → 1층 객실 프런트
         </>
       ),
     },

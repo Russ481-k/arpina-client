@@ -38,7 +38,7 @@ const seminarRoomsData = {
 };
 
 const seatingArrangements = createListCollection({
-  items: ["강의식", "극장식", "ㄷ자", "H자", "T자"].map((item) => ({
+  items: ["강의식", "극장식", "ㄷ자", "I자", "T자"].map((item) => ({
     label: item,
     value: item,
   })),
@@ -67,6 +67,52 @@ const getSeminarRoomTypes = (size: string) => {
   return createListCollection({
     items: types.map((item) => ({ label: item, value: item })),
   });
+};
+
+const renderDetails = (details: string) => {
+  // First handle red tags, then bold tags
+  const processText = (text: string) => {
+    const redParts = text.split(/<red>(.*?)<\/red>/g);
+    return redParts.map((redPart, redIndex) => {
+      if (redIndex % 2 === 1) {
+        // This is content inside red tags
+        return (
+          <Text as="span" color="red.500" key={`red-${redIndex}`}>
+            {redPart}
+          </Text>
+        );
+      } else {
+        // This is regular text, check for bold tags
+        const boldParts = redPart.split(/<bold>(.*?)<\/bold>/g);
+        return boldParts.map((boldPart, boldIndex) => {
+          if (boldIndex % 2 === 1) {
+            // This is content inside bold tags
+            return (
+              <Text
+                as="span"
+                fontWeight="bold"
+                key={`bold-${redIndex}-${boldIndex}`}
+              >
+                {boldPart}
+              </Text>
+            );
+          } else {
+            // Regular text - handle line breaks
+            return boldPart.split("\n").map((line, lineIndex) => (
+              <React.Fragment
+                key={`line-${redIndex}-${boldIndex}-${lineIndex}`}
+              >
+                {line}
+                {lineIndex < boldPart.split("\n").length - 1 && <br />}
+              </React.Fragment>
+            ));
+          }
+        });
+      }
+    });
+  };
+
+  return processText(details);
 };
 
 export default function GroupReservationPage() {
@@ -183,13 +229,7 @@ export default function GroupReservationPage() {
                 handleAgreementChange("privacyAgreed", isChecked)
               }
             >
-              <Textarea
-                value={
-                  SIGNUP_AGREEMENT_TEMPLATES.find(
-                    (agreement) => agreement.id === "terms"
-                  )?.details
-                }
-                readOnly
+              <Box
                 border="1px solid"
                 borderColor="gray.200"
                 p={3}
@@ -200,8 +240,14 @@ export default function GroupReservationPage() {
                 w="full"
                 overflowY="auto"
                 bg="gray.50"
-                resize="none"
-              />
+                whiteSpace="pre-wrap"
+              >
+                {renderDetails(
+                  SIGNUP_AGREEMENT_TEMPLATES.find(
+                    (agreement) => agreement.id === "terms"
+                  )?.details || ""
+                )}
+              </Box>
             </AgreementItem>
             <AgreementItem
               title="선택 수집 항목(마케팅 활용)에 대한 동의"
@@ -211,13 +257,7 @@ export default function GroupReservationPage() {
                 handleAgreementChange("marketingAgreed", isChecked)
               }
             >
-              <Textarea
-                value={
-                  SIGNUP_AGREEMENT_TEMPLATES.find(
-                    (agreement) => agreement.id === "marketing"
-                  )?.details
-                }
-                readOnly
+              <Box
                 border="1px solid"
                 borderColor="gray.200"
                 p={3}
@@ -228,8 +268,14 @@ export default function GroupReservationPage() {
                 w="full"
                 overflowY="auto"
                 bg="gray.50"
-                resize="none"
-              />
+                whiteSpace="pre-wrap"
+              >
+                {renderDetails(
+                  SIGNUP_AGREEMENT_TEMPLATES.find(
+                    (agreement) => agreement.id === "marketing"
+                  )?.details || ""
+                )}
+              </Box>
             </AgreementItem>
           </VStack>
 
