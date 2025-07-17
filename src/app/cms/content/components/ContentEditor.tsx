@@ -19,6 +19,8 @@ import { useDisclosure } from "@chakra-ui/react";
 import { TextEditDialog } from "./TextEditDialog"; // 다이얼로그 다시 추가
 import { Search } from "lucide-react";
 import { ContentSearchDialog } from "./ContentSearchDialog";
+import { ImageEditDialog } from "./ImageEditDialog";
+import { fileApi } from "@/lib/api/file";
 
 interface ContentEditorProps {
   selectedMenu: TreeItem | null;
@@ -32,6 +34,7 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
   const deleteDialog = useDisclosure();
   const editDialog = useDisclosure(); // 편집 다이얼로그 상태 다시 추가
   const searchDialog = useDisclosure();
+  const imageEditDialog = useDisclosure();
 
   const menuId = selectedMenu?.id ?? 0;
   const queryKey = contentKeys.list(menuId);
@@ -200,22 +203,57 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
     if (block.type === "TEXT") {
       editDialog.onOpen();
     } else if (block.type === "IMAGE") {
-      // TODO: 이미지 편집 다이얼로그 열기
-      toaster.create({
-        title: "이미지 편집",
-        description: "이미지 편집 다이얼로그는 곧 구현될 예정입니다.",
-        type: "info",
-      });
+      imageEditDialog.onOpen();
     }
   };
 
-  const handleSave = (content: string) => {
+  const handleTextSave = (content: string) => {
     if (!editingBlock) return;
     updateMutation.mutate({
       blockId: editingBlock.id,
       dto: { type: editingBlock.type, content },
     });
     editDialog.onClose();
+  };
+
+  const handleImageSave = async (file: File | null, caption: string) => {
+    if (!editingBlock) return;
+
+    let fileId = editingBlock.fileId;
+
+    try {
+      if (file) {
+        // 새 파일이 있으면 업로드
+        const uploadResponse = await fileApi.upload(
+          file,
+          "CONTENT",
+          menuId // 올바른 menuId 사용
+        );
+        if (uploadResponse.success && uploadResponse.data.length > 0) {
+          fileId = uploadResponse.data[0].fileId;
+        } else {
+          throw new Error(
+            uploadResponse.message || "파일 업로드에 실패했습니다."
+          );
+        }
+      }
+
+      // 캡션 또는 파일 ID가 변경되었으면 업데이트
+      if (caption !== editingBlock.content || fileId !== editingBlock.fileId) {
+        updateMutation.mutate({
+          blockId: editingBlock.id,
+          dto: { type: "IMAGE", content: caption, fileId: fileId },
+        });
+      }
+
+      imageEditDialog.onClose();
+    } catch (error: any) {
+      toaster.create({
+        title: "이미지 저장 실패",
+        description: error.message,
+        type: "error",
+      });
+    }
   };
 
   const handleRestore = (historyId: number) => {
@@ -330,10 +368,17 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
       <TextEditDialog
         open={editDialog.open}
         onClose={editDialog.onClose}
-        onSave={handleSave}
+        onSave={handleTextSave}
         block={editingBlock}
         history={history}
         onRestore={handleRestore}
+      />
+
+      <ImageEditDialog
+        open={imageEditDialog.open}
+        onClose={imageEditDialog.onClose}
+        onSave={handleImageSave}
+        block={editingBlock}
       />
 
       <ContentSearchDialog

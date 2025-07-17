@@ -43,7 +43,7 @@ export const fileApi = {
     // Handle single or multiple files
     if (Array.isArray(filesToUpload)) {
       if (filesToUpload.length > 0) {
-        filesToUpload.forEach((file, index) => {
+        filesToUpload.forEach((file) => {
           formData.append("files", file, file.name); // Always use 'files' key
         });
       } else {
@@ -57,10 +57,15 @@ export const fileApi = {
     formData.append("menu", menu);
     formData.append("menuId", String(menuId));
 
+    // articleApi.uploadAttachments와 동일하게, config 객체를 전달하지 않음
     const response = await publicApi.post<FileUploadResponse>(
       `${BASE_URL}/public/upload`,
-      formData
-      // Axios will automatically set Content-Type for FormData
+      formData,
+      {
+        headers: {
+          "Content-Type": undefined,
+        },
+      }
     );
 
     return response.data;

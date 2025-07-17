@@ -69,11 +69,14 @@ export function ContentBlockItem({
         />
       );
     }
-    if (block.type === "IMAGE" && block.fileUrl) {
+    if (block.type === "IMAGE" && block.fileId) {
+      // fileUrl 대신 fileId 존재 여부 체크
+      // fileUrl을 무시하고 fileId를 사용하여 올바른 public 다운로드 URL을 생성
+      const imageUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cms/file/public/download/${block.fileId}`;
       return (
         <Flex align="center" cursor="pointer">
           <img
-            src={block.fileUrl}
+            src={imageUrl}
             alt={block.content || "image"}
             style={{
               width: "40px",
