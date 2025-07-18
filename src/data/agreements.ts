@@ -69,7 +69,7 @@ export const SIGNUP_AGREEMENT_TEMPLATES: AgreementTemplate[] = [
 3. 제공 목적
 - 전자결제 처리
 - 결제내역 확인 및 환불 처리
-- 결제 고나련 고객 응대
+- 결제 관련 고객 응대
 
 4. 보유 및 이용기간
 - 계약 또는 청약철회 등 거래에 관한 기록 / 전자상거래 등에서의 소비자 보호에 관한 법률 (5년)
@@ -177,4 +177,4 @@ export const SIGNUP_AGREEMENT_TEMPLATES: AgreementTemplate[] = [
 
 마케팅 및 이벤트 목적의 개인정보 수집ㆍ이용에 동의 합니다(선택)`,
   },
-]; 
+];
