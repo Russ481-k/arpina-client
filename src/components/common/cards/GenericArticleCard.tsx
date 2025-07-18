@@ -183,9 +183,9 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
 
       <HStack p={2} borderTopWidth="1px" borderColor={colors.border} mt="auto">
         <HStack gap={4} alignItems="center">
-          {cardData.displayWriter && (
+          {(cardData.displayWriter || cardData.writer) && (
             <Text fontSize="xs" color={colors.text.tertiary}>
-              {cardData.displayWriter}
+              {cardData.displayWriter || cardData.writer}
             </Text>
           )}
           {typeof cardData.hits === "number" && (
@@ -200,7 +200,10 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
         <Spacer />
         <HStack gap={2} alignItems="center">
           {cardData.categories &&
-            cardData.categories.map((category) => {
+            cardData.categories.length > 0 &&
+            (() => {
+              // 리스트뷰와 동일하게 첫 번째 카테고리만 표시
+              const category = cardData.categories[0];
               const style = getCategoryStyle(category.name);
               return (
                 <Badge
@@ -215,7 +218,7 @@ const GenericArticleCard: React.FC<GenericArticleCardProps> = ({
                   {category.name}
                 </Badge>
               );
-            })}
+            })()}
         </HStack>
       </HStack>
     </Box>

@@ -11,6 +11,7 @@ import {
   CellStyleModule,
   colorSchemeLightWarm,
   colorSchemeDarkBlue,
+  ICellRendererParams,
 } from "ag-grid-community";
 
 // Register required modules
@@ -56,4 +57,11 @@ export const getThemeClass = (isDark: boolean) =>
 export const gridContainerStyle: React.CSSProperties = {
   width: "100%",
   height: "100%",
+};
+
+// 공통 WriterCellRenderer
+export const WriterCellRenderer = (params: ICellRendererParams<any>) => {
+  if (!params.data) return null;
+  const displayName = params.data.displayWriter || params.data.writer;
+  return displayName || "";
 };

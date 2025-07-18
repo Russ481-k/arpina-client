@@ -63,6 +63,7 @@ import { getBbsComments } from "@/lib/api/bbs-comment";
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapArticleToCommonCardData } from "@/lib/card-utils";
 import { boardApi } from "@/lib/api/board";
+import { WriterCellRenderer } from "@/lib/ag-grid-config";
 
 type ArticleWithAnswer = BoardArticleCommon & {
   answerContent?: string;
@@ -531,6 +532,7 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "displayWriter",
           width: 120,
           sortable: true,
+          cellRenderer: WriterCellRenderer,
           cellStyle: centeredCellTextStyle,
         },
         {
@@ -579,6 +581,8 @@ const BoardPreview = React.memo(function BoardPreview({
           headerName: "작성자",
           field: "displayWriter",
           width: 120,
+          sortable: true,
+          cellRenderer: WriterCellRenderer,
           cellStyle: centeredCellTextStyle,
         },
         {
@@ -608,12 +612,19 @@ const BoardPreview = React.memo(function BoardPreview({
         cellRenderer: NoticeNumberRenderer,
         cellStyle: centeredCellTextStyle,
       },
-      {
+    ];
+
+    // 리스트 뷰일 때만 구분 컬럼 추가
+    if (viewMode === "list" && menu?.url === "/bbs/notices") {
+      baseColDefs.push({
         headerName: "구분",
         width: 120,
         cellRenderer: CategoryCellRenderer,
         cellStyle: centeredCellTextStyle,
-      },
+      });
+    }
+
+    baseColDefs.push(
       {
         headerName: "제목",
         field: "title",
@@ -633,6 +644,7 @@ const BoardPreview = React.memo(function BoardPreview({
         field: "displayWriter",
         width: 120,
         sortable: true,
+        cellRenderer: WriterCellRenderer,
         cellStyle: centeredCellTextStyle,
       },
       {
@@ -648,10 +660,16 @@ const BoardPreview = React.memo(function BoardPreview({
         field: "hits",
         width: 80,
         cellRenderer: ViewsRenderer,
-        sortable: true,
         cellStyle: centeredCellTextStyle,
       },
-    ];
+      {
+        headerName: "상태",
+        field: "publishState",
+        width: 90,
+        cellRenderer: StatusRenderer,
+        cellStyle: centeredCellTextStyle,
+      }
+    );
 
     if (board?.skinType === "QNA" || board?.skinType === "FORM") {
       return [
@@ -659,7 +677,12 @@ const BoardPreview = React.memo(function BoardPreview({
           headerName: "번호",
           field: "no",
           width: 80,
-          cellStyle: { textAlign: "center" } as CellStyle,
+          cellStyle: {
+            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          } as CellStyle,
           valueGetter: (params) => {
             if (params.data?.no === 0) {
               return "공지";
@@ -691,6 +714,7 @@ const BoardPreview = React.memo(function BoardPreview({
           field: "displayWriter",
           width: 120,
           sortable: true,
+          cellRenderer: WriterCellRenderer,
           cellStyle: centeredCellTextStyle,
         },
         {
@@ -711,6 +735,8 @@ const BoardPreview = React.memo(function BoardPreview({
     articlesApiResponse,
     currentPage,
     pageSize,
+    viewMode,
+    menu?.url,
   ]);
 
   const defaultColDef = useMemo(

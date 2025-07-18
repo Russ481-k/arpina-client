@@ -322,7 +322,7 @@ export function ArticleEditor({
       {boardInfo?.bbsName === "공지사항" && (
         <Box>
           <Text fontWeight="bold" mb={1}>
-            카테고리
+            카테고리(필수)
           </Text>
           <chakra.select
             value={formData.categoryId || ""}

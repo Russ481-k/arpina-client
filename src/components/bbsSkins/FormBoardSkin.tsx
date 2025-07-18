@@ -39,10 +39,15 @@ import {
   ModuleRegistry,
   AllCommunityModule,
   RowClickedEvent,
+  CellStyle,
 } from "ag-grid-community";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
-import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config";
+import {
+  themeDarkMode,
+  themeLightMode,
+  WriterCellRenderer,
+} from "@/lib/ag-grid-config";
 import { env } from "process";
 import dayjs from "dayjs";
 
@@ -206,7 +211,12 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
         headerName: "번호",
         field: "no",
         width: 80,
-        cellStyle: { textAlign: "center" },
+        cellStyle: {
+          textAlign: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        } as CellStyle,
         sortable: false,
         cellRenderer: NoticeNumberRenderer,
       },
@@ -232,6 +242,7 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
         headerName: "작성자",
         field: "displayWriter",
         width: 120,
+        cellRenderer: WriterCellRenderer,
         cellStyle: { textAlign: "center" },
       },
       {
