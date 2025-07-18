@@ -11,7 +11,15 @@ import { ApiResponse } from "@/types/api-response";
 const CMS_API_URL = "/cms";
 
 export const contentApi = {
-  // 1a. (Public) 메뉴의 콘텐츠 블록 목록 조회
+  // 1a. (Public) 메인 페이지 콘텐츠 블록 목록 조회
+  getMainPageContentBlocks: async (): Promise<ContentBlock[]> => {
+    const response = await publicApi.get<ApiResponse<ContentBlock[]>>(
+      `${CMS_API_URL}/contents/main`
+    );
+    return response.data.data;
+  },
+
+  // 1b. (Public) 메뉴의 콘텐츠 블록 목록 조회
   getPublicContentBlocks: async (menuId: number): Promise<ContentBlock[]> => {
     const response = await publicApi.get<ApiResponse<ContentBlock[]>>(
       `${CMS_API_URL}/menus/${menuId}/contents/public`

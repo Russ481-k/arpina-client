@@ -10,7 +10,7 @@ import {
   AspectRatio,
 } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -18,25 +18,13 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
+import { ContentBlock } from "@/types/api/content";
 
-const slideData = [
-  {
-    image: {
-      base: "/images/contents/msec01_sld_img02m.png", // 모바일용 이미지
-      md: "/images/contents/msec01_sld_img02.png", // 데스크톱용 이미지
-    },
-    text: "도심 속 합리적인 컨벤션 & 스테이",
-  },
-  {
-    image: {
-      base: "/images/contents/msec01_sld_img01m.png", // 새로운 모바일용 이미지
-      md: "/images/contents/msec01_sld_img01.png", // 새로운 데스크톱용 이미지
-    },
-    text: "도심 속 합리적인 컨벤션 & 스테이",
-  },
-];
+interface MainHeroSectionProps {
+  data: ContentBlock[];
+}
 
-export function MainHeroSection() {
+export function MainHeroSection({ data }: MainHeroSectionProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
@@ -47,10 +35,25 @@ export function MainHeroSection() {
   const heroBoxWidth = useBreakpointValue({ base: "100%", lg: "30%" });
   const imageBoxWidth = useBreakpointValue({ base: "100%", lg: "69%" });
 
-  const imageSrc = useBreakpointValue({
-    base: "/images/contents/main_3_m.png", // 모바일용 이미지
-    md: "/images/contents/main_3.png", // 데스크톱용 이미지
-  });
+  // 1. 명확한 순서에 따라 각 영역의 데이터를 할당합니다.
+  // - data[0]: 슬라이더에 사용될 이미지 블록
+  // - data[1]: 우측 고정 배너에 사용될 이미지 블록
+  // - data[2]: 슬라이더에 오버레이될 텍스트 블록
+  const sliderBlock = data?.[0];
+  const staticImageBlock = data?.[1];
+  const textBlock = data?.[2];
+
+  // 2. 각 영역에 필요한 데이터를 추출합니다.
+  const swiperFiles = sliderBlock?.files ?? [];
+  const textContent = textBlock?.content;
+  const staticImageSrc = staticImageBlock?.files?.[0]?.fileId
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cms/file/public/view/${staticImageBlock.files[0].fileId}`
+    : "/images/contents/main_3.png"; // 기본 이미지
+
+  // 슬라이드할 이미지가 없으면 컴포넌트를 렌더링하지 않습니다.
+  if (swiperFiles.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -162,42 +165,32 @@ export function MainHeroSection() {
                 slidesPerView={1}
                 navigation
                 pagination={{ clickable: true }}
-                autoplay={{
-                  delay: 3000,
-                  disableOnInteraction: false,
-                }}
-                loop={true}
+                autoplay={
+                  swiperFiles.length > 1
+                    ? {
+                        delay: 3000,
+                        disableOnInteraction: false,
+                      }
+                    : false
+                }
+                loop={swiperFiles.length > 1}
                 effect="fade"
                 fadeEffect={{ crossFade: true }}
                 speed={1500}
                 onSwiper={(swiper) => {
                   swiperRef.current = swiper;
                 }}
-                onSlideChange={(swiper) => {
+                onSlideChangeTransitionStart={(swiper) => {
                   setActiveSlide(swiper.realIndex);
-
-                  // 모든 슬라이드 컨텐츠에서 active 클래스 제거
-                  const allContents =
-                    document.querySelectorAll(".slide-content");
-                  allContents.forEach((content) => {
-                    content.classList.remove("active");
-                  });
-
-                  // 현재 활성화된 슬라이드의 컨텐츠에 active 클래스 추가
-                  setTimeout(() => {
-                    const activeContents = document.querySelectorAll(
-                      `.swiper-slide-active .slide-content`
-                    );
-                    activeContents.forEach((content) => {
-                      content.classList.add("active");
-                    });
-                  }, 50);
                 }}
               >
-                {slideData.map((slide, index) => {
-                  const heroImageSrc = useBreakpointValue(slide.image);
+                {swiperFiles.map((slide) => {
+                  const heroImageSrc =
+                    process.env.NEXT_PUBLIC_API_URL +
+                    "/api/v1/cms/file/public/view/" +
+                    slide.fileId;
                   return (
-                    <SwiperSlide key={index}>
+                    <SwiperSlide key={slide.fileId}>
                       <Box
                         w="100%"
                         position="relative"
@@ -210,41 +203,38 @@ export function MainHeroSection() {
                         <AspectRatio ratio={1088 / 620} w="100%" h="100%">
                           <Image
                             src={heroImageSrc}
-                            alt="새로운 여정의 시작"
                             w="100%"
                             h="100%"
                             objectFit="cover"
                           />
                         </AspectRatio>
-                        <Box
-                          className={`slide-content ${
-                            activeSlide === index ? "active" : ""
-                          }`}
-                          position="absolute"
-                          bottom="0"
-                          left="0"
-                          zIndex="2"
-                        >
-                          <Box bg="transparent" pt={6} pr={6} pb={6} pl={0}>
-                            <Text
-                              fontSize={{
-                                base: "14px",
-                                md: "20px",
-                                lg: "28px",
-                              }}
-                              fontWeight="semibold"
-                              color="#1F2732"
-                              display={{ base: "none", md: "block" }}
-                            >
-                              {slide.text}
-                            </Text>
-                          </Box>
-                        </Box>
                       </Box>
                     </SwiperSlide>
                   );
                 })}
               </Swiper>
+              <Box
+                className={`slide-content`}
+                position="absolute"
+                bottom="0"
+                left="0"
+                zIndex="2"
+              >
+                <Box bg="transparent" pt={6} pr={6} pb={6} pl={0}>
+                  <Text
+                    fontSize={{
+                      base: "14px",
+                      md: "20px",
+                      lg: "28px",
+                    }}
+                    fontWeight="semibold"
+                    color="#1F2732"
+                    display={{ base: "none", md: "block" }}
+                  >
+                    {textContent}
+                  </Text>
+                </Box>
+              </Box>
               <Flex
                 className="progress-bar-container"
                 position="absolute"
@@ -289,7 +279,7 @@ export function MainHeroSection() {
                   minW="20px"
                   textAlign="center"
                 >
-                  {slideData.length}
+                  {swiperFiles.length}
                 </Text>
               </Flex>
             </Box>
@@ -302,7 +292,7 @@ export function MainHeroSection() {
               <Box>
                 <Link href="https://hub.hotelstory.com/aG90ZWxzdG9yeQ/rooms?v_Use=MTAwMTg5MA">
                   <Image
-                    src={imageSrc}
+                    src={staticImageSrc}
                     alt="호텔 실시간 예약"
                     w="100%"
                     h="auto"

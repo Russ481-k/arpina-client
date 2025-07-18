@@ -1,14 +1,21 @@
 "use client";
 
-import { Box, Text, useBreakpointValue } from "@chakra-ui/react";
+import { Text, useBreakpointValue } from "@chakra-ui/react";
 import { Global } from "@emotion/react";
+import { ContentBlock } from "@/types/api/content";
 
-export function MarqueeSection() {
+interface MarqueeSectionProps {
+  data?: ContentBlock;
+}
+
+export function MarqueeSection({ data }: MarqueeSectionProps) {
   const marqueeFontSize = useBreakpointValue({
     base: "80px",
     md: "120px",
     lg: "180px",
   });
+
+  const marqueeText = data?.content;
 
   return (
     <>
@@ -42,7 +49,7 @@ export function MarqueeSection() {
         }}
       />
       <Text className="mflox-txt">
-        <span>Busan Youth Hostel Arpina Busan Youth Hostel Arpina</span>
+        <span>{marqueeText}</span>
       </Text>
     </>
   );

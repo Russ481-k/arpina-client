@@ -25,13 +25,17 @@ import { fileApi } from "@/lib/api/file";
 
 interface ContentEditorProps {
   selectedMenu: TreeItem | null;
+  onSaveSuccess?: () => void;
 }
 
 const ItemTypes = {
   BLOCK: "block",
 };
 
-export function ContentEditor({ selectedMenu }: ContentEditorProps) {
+export function ContentEditor({
+  selectedMenu,
+  onSaveSuccess,
+}: ContentEditorProps) {
   const queryClient = useQueryClient();
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
   const [blockToDelete, setBlockToDelete] = useState<number | null>(null);
@@ -102,6 +106,7 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
     onSuccess: () => {
       toaster.create({ title: "블록이 추가되었습니다.", type: "success" });
       queryClient.invalidateQueries({ queryKey });
+      onSaveSuccess?.(); // 저장 성공 시 콜백 호출
     },
     onError: () => {
       toaster.create({ title: "블록 추가에 실패했습니다.", type: "error" });
@@ -114,6 +119,7 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
     onSuccess: (_, variables) => {
       toaster.create({ title: "블록이 수정되었습니다.", type: "success" });
       queryClient.invalidateQueries({ queryKey });
+      onSaveSuccess?.(); // 저장 성공 시 콜백 호출
       // 변경 이력도 함께 갱신합니다.
       queryClient.invalidateQueries({
         queryKey: contentKeys.history(variables.blockId),
@@ -134,7 +140,9 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
         type: "success",
       });
       queryClient.invalidateQueries({ queryKey: contentKeys.lists() });
+      onSaveSuccess?.(); // 복원 성공 시 콜백 호출
       editDialog.onClose();
+      imageEditDialog.onClose(); // 이미지 다이얼로그도 닫도록 추가
     },
     onError: (error: any) => {
       toaster.create({
@@ -242,10 +250,17 @@ export function ContentEditor({ selectedMenu }: ContentEditorProps) {
       );
 
       // 2. 블록 업데이트
-      updateMutation.mutate({
-        blockId: editingBlock.id,
-        dto: { type: "IMAGE", content: caption, fileIds: fileIds },
-      });
+      updateMutation.mutate(
+        {
+          blockId: editingBlock.id,
+          dto: { type: "IMAGE", content: caption, fileIds: fileIds },
+        },
+        {
+          onSuccess: () => {
+            onSaveSuccess?.(); // 이미지 저장 성공 시 명시적으로 콜백 호출
+          },
+        }
+      );
 
       imageEditDialog.onClose();
     } catch (error: any) {

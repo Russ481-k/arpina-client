@@ -13,8 +13,13 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { ContentBlock } from "@/types/api/content";
 
-export function ApplySection() {
+interface ApplySectionProps {
+  data: ContentBlock;
+}
+
+export function ApplySection({ data }: ApplySectionProps) {
   const sectionMarginBottom = useBreakpointValue({ base: "40px", md: "80px" });
   const headingFontSize = useBreakpointValue({ base: "30px", md: "40px" });
   const linkFontSize = useBreakpointValue({ base: "16px", md: "30px" });
@@ -35,6 +40,12 @@ export function ApplySection() {
     md: "space-between",
   });
   const flexGap = useBreakpointValue({ base: 4, md: 0 });
+
+  const image01 = data?.files[0];
+  const imageSrc =
+    process.env.NEXT_PUBLIC_API_URL +
+    "/api/v1/cms/file/public/view/" +
+    image01?.fileId;
 
   return (
     <Box className="msec03" mb={sectionMarginBottom}>
@@ -103,7 +114,7 @@ export function ApplySection() {
                     <Image
                       borderRadius="20px"
                       overflow="hidden"
-                      src="/images/contents/mapply_img01.jpg"
+                      src={imageSrc}
                       alt="수영장이미지"
                       w="100%"
                       height={{ base: "300px", md: "auto" }}

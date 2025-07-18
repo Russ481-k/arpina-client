@@ -16,6 +16,7 @@ import { articleApi } from "@/lib/api/article";
 import { BoardArticleCommon } from "@/types/api";
 import { findMenuByPath } from "@/lib/menu-utils";
 import { LuArrowRight } from "react-icons/lu";
+import { ContentBlock } from "@/types/api/content";
 
 const NOTICES_PATH = "/bbs/notices"; // 공지사항 경로 상수로 정의
 
@@ -41,7 +42,11 @@ const CATEGORY_COLORS: { [key: string]: string } = {
   전체: "#2E3192", // 기본값
 };
 
-export function NoticeSection() {
+interface NoticeSectionProps {
+  data: ContentBlock;
+}
+
+export function NoticeSection({ data }: NoticeSectionProps) {
   const [articles, setArticles] = useState<BoardArticleCommon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("전체");
@@ -160,15 +165,18 @@ export function NoticeSection() {
   const headingFontSize = useBreakpointValue({ base: "30px", md: "40px" });
   const sectionMarginBottom = useBreakpointValue({ base: "100px", md: "80px" });
 
-  const banner1Src = useBreakpointValue({
-    base: "/images/main/msec02_bnr_001m.png", // 모바일용 이미지
-    md: "/images/main/msec02_bnr_001.png", // 데스크톱용 이미지
-  });
+  const banner1 = data?.files[0];
+  const banner2 = data?.files[1];
 
-  const banner2Src = useBreakpointValue({
-    base: "/images/main/msec02_bnr_002m.png", // 모바일용 이미지
-    md: "/images/main/msec02_bnr_002.png", // 데스크톱용 이미지
-  });
+  const banner1Src =
+    process.env.NEXT_PUBLIC_API_URL +
+    "/api/v1/cms/file/public/view/" +
+    banner1?.fileId;
+
+  const banner2Src =
+    process.env.NEXT_PUBLIC_API_URL +
+    "/api/v1/cms/file/public/view/" +
+    banner2?.fileId;
 
   return (
     <>

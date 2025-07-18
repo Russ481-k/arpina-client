@@ -15,6 +15,7 @@ import {
 import { useState, useEffect } from "react";
 import { ContentBlock, ContentBlockHistory } from "@/types/api/content";
 import dayjs from "dayjs";
+import { LuUndo2 } from "react-icons/lu";
 
 interface TextEditDialogProps {
   open: boolean;
@@ -103,8 +104,13 @@ export function TextEditDialog({
                               수정자: {h.createdBy}
                             </Text>
                           </Box>
-                          <Button size="xs" onClick={() => onRestore(h.id)}>
-                            이 버전으로 되돌리기
+                          <Button
+                            size="xs"
+                            colorPalette="blue"
+                            variant="subtle"
+                            onClick={() => onRestore(h.id)}
+                          >
+                            <LuUndo2 />
                           </Button>
                         </HStack>
                       ))
@@ -121,7 +127,7 @@ export function TextEditDialog({
               <Button variant="ghost" onClick={onClose}>
                 취소
               </Button>
-              <Button colorScheme="blue" onClick={handleSave}>
+              <Button colorPalette="blue" onClick={handleSave}>
                 저장
               </Button>
             </Dialog.Footer>

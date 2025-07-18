@@ -14,14 +14,10 @@ import {
 } from "@chakra-ui/react";
 import { useDropzone } from "react-dropzone";
 import { FiUpload } from "react-icons/fi";
-import {
-  ContentBlock,
-  ContentBlockFile,
-  ContentBlockHistory,
-} from "@/types/api/content";
+import { ContentBlock, ContentBlockHistory } from "@/types/api/content";
 import dayjs from "dayjs";
 import { HStack, IconButton, Image as ChakraImage } from "@chakra-ui/react";
-import { LuGripVertical, LuTrash2, LuX } from "react-icons/lu";
+import { LuGripVertical, LuUndo2, LuX } from "react-icons/lu";
 import { useDrag, useDrop } from "react-dnd";
 
 // 수정된 파일 상태 인터페이스
@@ -331,8 +327,13 @@ export function ImageEditDialog({
                               </Text>
                             </Box>
                           </VStack>
-                          <Button size="xs" onClick={() => onRestore(h.id)}>
-                            이 버전으로 되돌리기
+                          <Button
+                            size="xs"
+                            colorPalette="blue"
+                            variant="subtle"
+                            onClick={() => onRestore(h.id)}
+                          >
+                            <LuUndo2 />
                           </Button>
                         </HStack>
                       ))
@@ -349,7 +350,7 @@ export function ImageEditDialog({
               <Button variant="ghost" onClick={onClose}>
                 취소
               </Button>
-              <Button colorScheme="blue" onClick={handleSave}>
+              <Button colorPalette="blue" onClick={handleSave}>
                 저장
               </Button>
             </Dialog.Footer>

@@ -43,6 +43,7 @@ export default function ContentManagementPage() {
   const [selectedContent, setSelectedContent] = useState<TreeItem | null>(
     mainPageDefault
   );
+  const [previewKey, setPreviewKey] = useState(Date.now());
 
   const colors = useColors();
   const bg = useColorModeValue(colors.bg, colors.darkBg);
@@ -64,6 +65,11 @@ export default function ContentManagementPage() {
 
   const handleEditContent = (content: TreeItem) => {
     setSelectedContent(content);
+    setPreviewKey(Date.now()); // 미리보기 리프레시
+  };
+
+  const handleSaveSuccess = () => {
+    setPreviewKey(Date.now()); // 저장 성공 시 미리보기 리프레시
   };
 
   const handleDeleteContent = async (contentId: number) => {
@@ -162,10 +168,14 @@ export default function ContentManagementPage() {
             </Box>
 
             <Box>
-              <ContentEditor selectedMenu={selectedContent} />
+              <ContentEditor
+                selectedMenu={selectedContent}
+                onSaveSuccess={handleSaveSuccess}
+              />
             </Box>
             <Box h="full" w="full">
               <ContentPreview
+                key={previewKey}
                 content={
                   selectedContent
                     ? convertTreeItemToContent(selectedContent)
