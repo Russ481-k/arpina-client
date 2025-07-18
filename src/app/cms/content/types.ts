@@ -33,26 +33,18 @@ export interface Content extends TreeItem {
   };
 }
 
-export function convertTreeItemToContent(
-  item: TreeItem | null
-): Content | null {
+export function convertTreeItemToContent(item: TreeItem | null): {
+  id: number;
+  name: string;
+  url: string;
+  type: string;
+} | null {
   if (!item) return null;
 
   return {
-    ...item,
-    title: item.name,
-    description: "",
-    content: "",
-    type: "page",
-    status: item.visible ? "PUBLISHED" : "DRAFT",
-    settings: {
-      layout: "default",
-      showThumbnail: true,
-      showTags: true,
-      showDate: true,
-      showAuthor: true,
-      showRelatedContent: true,
-      showTableOfContents: true,
-    },
+    id: item.id,
+    name: item.name,
+    url: item.url || "/", // url이 없으면 기본값으로 '/'
+    type: item.type,
   };
 }

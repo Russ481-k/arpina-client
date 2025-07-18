@@ -44,6 +44,7 @@ export default function ContentManagementPage() {
     mainPageDefault
   );
   const [previewKey, setPreviewKey] = useState(Date.now());
+  const [reloadSignal, setReloadSignal] = useState(Date.now());
 
   const colors = useColors();
   const bg = useColorModeValue(colors.bg, colors.darkBg);
@@ -65,11 +66,11 @@ export default function ContentManagementPage() {
 
   const handleEditContent = (content: TreeItem) => {
     setSelectedContent(content);
-    setPreviewKey(Date.now()); // 미리보기 리프레시
+    setPreviewKey(Date.now()); // 미리보기 리프레시 (key 변경으로 전체 리렌더링)
   };
 
   const handleSaveSuccess = () => {
-    setPreviewKey(Date.now()); // 저장 성공 시 미리보기 리프레시
+    setReloadSignal(Date.now()); // 저장 성공 시 리프레시 신호 발생 (내부 리로드)
   };
 
   const handleDeleteContent = async (contentId: number) => {
@@ -176,6 +177,7 @@ export default function ContentManagementPage() {
             <Box h="full" w="full">
               <ContentPreview
                 key={previewKey}
+                reloadSignal={reloadSignal}
                 content={
                   selectedContent
                     ? convertTreeItemToContent(selectedContent)
