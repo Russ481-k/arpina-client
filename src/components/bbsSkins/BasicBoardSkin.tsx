@@ -35,6 +35,7 @@ import { LuEye } from "react-icons/lu";
 // Import GenericArticleCard and the mapping function
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapPostToCommonCardData } from "@/lib/card-utils";
+import { WriterCellRenderer } from "@/lib/ag-grid-config";
 import TitleCellRenderer from "@/components/common/TitleCellRenderer";
 import { CustomPagination } from "@/components/common/CustomPagination";
 
@@ -217,6 +218,7 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
         field: "displayWriter",
         width: 120,
         sortable: true,
+        cellRenderer: WriterCellRenderer,
         cellStyle: {
           display: "flex",
           alignItems: "center",

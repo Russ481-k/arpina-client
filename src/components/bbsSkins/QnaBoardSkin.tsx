@@ -24,7 +24,11 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css"; // Basic theme
 import { useColorMode } from "@/components/ui/color-mode"; // For theme switching
 import { useColors } from "@/styles/theme"; // For custom theme colors
-import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config"; // Theme styles
+import {
+  themeDarkMode,
+  themeLightMode,
+  WriterCellRenderer,
+} from "@/lib/ag-grid-config"; // Theme styles
 import { LuImage, LuPaperclip, LuEye } from "react-icons/lu"; // Icons
 import TitleCellRenderer from "@/components/common/TitleCellRenderer"; // TitleCellRenderer 임포트
 
@@ -226,6 +230,7 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
         field: "displayWriter",
         width: 120,
         sortable: true,
+        cellRenderer: WriterCellRenderer,
         cellStyle: {
           display: "flex",
           alignItems: "center",

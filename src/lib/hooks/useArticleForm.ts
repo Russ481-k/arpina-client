@@ -61,7 +61,9 @@ export function useArticleForm({
     author: initialData?.writer || "",
     content: initialData?.content || "",
     category: initialData?.category || "",
-    categoryId: initialData?.categoryId,
+    categoryId: initialData?.categories && initialData.categories.length > 0 
+      ? initialData.categories[0].categoryId 
+      : initialData?.categoryId,
     externalLink: initialData?.externalLink || "",
     captcha: "",
     noticeState: (initialData?.noticeState || "N") as ArticleStatusFlag,
@@ -203,6 +205,10 @@ export function useArticleForm({
       return { success: false, message: "필수 항목을 모두 입력해주세요." };
     }
 
+    if (boardInfo?.bbsName === "공지사항" && !formData.categoryId) {
+      return { success: false, message: "카테고리를 선택해주세요." };
+    }
+
     // CAPTCHA 검증 (CMS 페이지가 아닐 때만 수행)
     if (!isAdminPageContext && expectedCaptchaText !== undefined) {
       if (!formData.captcha) {
@@ -285,9 +291,15 @@ export function useArticleForm({
         postedAt: formData.postedAt || dayjs().format("YYYY-MM-DDTHH:mm:ss"),
       };
 
-      // 카테고리 ID가 있는 경우 categoryIds 배열에 담아 추가
-      if (formData.categoryId) {
-        articleDtoPart.categoryIds = [formData.categoryId];
+      // 카테고리 처리 - 게시글 수정 시 명확한 카테고리 상태 전달
+      if (initialData?.nttId) {
+        // 기존 게시글 수정의 경우 - 카테고리 ID가 있으면 해당 카테고리로, 없으면 빈 배열
+        articleDtoPart.categoryIds = formData.categoryId ? [formData.categoryId] : [];
+      } else {
+        // 새 게시글 작성의 경우 - 카테고리 ID가 있을 때만 포함
+        if (formData.categoryId) {
+          articleDtoPart.categoryIds = [formData.categoryId];
+        }
       }
 
       // 2. Create FormData

@@ -33,7 +33,11 @@ import {
 } from "ag-grid-community";
 import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
 import { LuExternalLink } from "react-icons/lu";
-import { themeDarkMode, themeLightMode } from "@/lib/ag-grid-config";
+import {
+  themeDarkMode,
+  themeLightMode,
+  WriterCellRenderer,
+} from "@/lib/ag-grid-config";
 import GenericArticleCard from "@/components/common/cards/GenericArticleCard";
 import { mapPostToCommonCardData } from "@/lib/card-utils";
 import { useColors } from "@/styles/theme";
@@ -324,6 +328,7 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
         headerName: "작성자",
         field: "displayWriter",
         width: 150,
+        cellRenderer: WriterCellRenderer,
         cellStyle: writerDateCellStyle,
         headerClass: ["press-list-header", "ag-header-cell-centered"],
       },
