@@ -13,7 +13,6 @@ import "swiper/css/effect-fade";
 export const MainHeroSection = () => {
   const [activeSlide, setActiveSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
-  const [progressKey, setProgressKey] = useState(0);
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [totalSlides, setTotalSlides] = useState(1);
@@ -58,10 +57,7 @@ export const MainHeroSection = () => {
   }, [activeSlide, totalSlides]);
 
   return (
-    <Box
-      className="msec01"
-      mb={{ base: "15px", md: "20px", lg: "45px" }}
-    >
+    <Box className="msec01" mb={{ base: "15px", md: "20px", lg: "45px" }}>
       <Box w={"100%"} maxW={"1600px"} mx="auto" my={0}>
         <Heading
           as="h3"

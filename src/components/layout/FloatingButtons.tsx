@@ -5,6 +5,7 @@ import { LuArrowUp } from "react-icons/lu";
 import { useColors } from "@/styles/theme";
 import { useEffect, useState } from "react";
 import { LanguageModeToggle } from "../common/LanguageModeToggle";
+import { ColorModeToggle } from "../common/ColorModeToggle";
 
 export const FloatingButtons = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -42,7 +43,7 @@ export const FloatingButtons = () => {
       flexDirection="column"
       gap={4}
     >
-      <IconButton
+      {/* <IconButton
         aria-label="맨 위로 이동"
         onClick={scrollToTop}
         bg={colors.cardBg}
@@ -62,9 +63,9 @@ export const FloatingButtons = () => {
         }}
       >
         <LuArrowUp />
-      </IconButton>
-      {/* <ColorModeToggle size="lg" variant="icon" /> */}
-      <LanguageModeToggle />
+      </IconButton> */}
+      <ColorModeToggle size="lg" variant="icon" />
+      {/* <LanguageModeToggle /> */}
     </Box>
   );
 };

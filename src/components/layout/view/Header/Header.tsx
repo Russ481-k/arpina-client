@@ -6,6 +6,8 @@ import {
   Flex,
   Link,
   useBreakpointValue,
+  VStack,
+  Text,
 } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
 import Image from "next/image";
@@ -16,6 +18,74 @@ import { usePathname } from "next/navigation";
 import DesktopNav from "../DesktopNav";
 import { UtilityIcons } from "./UtilityIcons";
 import SitemapDrawer from "./SitemapDrawer";
+
+const newMenuItems: Menu[] = [
+  {
+    id: 1,
+    name: "센터안내",
+    url: "/center-info",
+    children: [],
+    sortOrder: 1,
+    visible: true,
+    type: "LINK",
+    displayPosition: "HEADER",
+    parentId: null,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: 2,
+    name: "상담안내",
+    url: "/counseling-info",
+    children: [],
+    sortOrder: 2,
+    visible: true,
+    type: "LINK",
+    displayPosition: "HEADER",
+    parentId: null,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: 3,
+    name: "자가진단",
+    url: "/self-diagnosis",
+    children: [],
+    sortOrder: 3,
+    visible: true,
+    type: "LINK",
+    displayPosition: "HEADER",
+    parentId: null,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: 4,
+    name: "성고충상담",
+    url: "/sexual-grievance",
+    children: [],
+    sortOrder: 4,
+    visible: true,
+    type: "LINK",
+    displayPosition: "HEADER",
+    parentId: null,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: 5,
+    name: "게시판",
+    url: "/board",
+    children: [],
+    sortOrder: 5,
+    visible: true,
+    type: "LINK",
+    displayPosition: "HEADER",
+    parentId: null,
+    createdAt: "",
+    updatedAt: "",
+  },
+];
 
 const buildVisibleMenuTree = (menus: Menu[]): Menu[] => {
   if (!menus) {
@@ -75,7 +145,7 @@ export const Header = memo(function Header({
     return pathname === menuUrl || pathname.startsWith(menuUrl + "/");
   };
 
-  const visibleMenus = buildVisibleMenuTree(menus);
+  const visibleMenus = buildVisibleMenuTree(newMenuItems); // Use new menu items
   const menusWithLastFlag = visibleMenus.map((menu, index) => ({
     ...menu,
     isLastMenuItem: index === visibleMenus.length - 1,
@@ -220,18 +290,19 @@ export const Header = memo(function Header({
                   alignItems="center"
                   transition="opacity 0.2s"
                 >
-                  <Box>
-                    <Image
-                      src={
-                        isNavHovered && isDark
-                          ? "/images/logo/logo_w.png"
-                          : "/images/logo/logo.png"
-                      }
-                      width={logoWidth}
-                      height={logoHeight}
-                      alt="logo"
-                    />
-                  </Box>
+                  <VStack gap={0} align="flex-start">
+                    <Text
+                      fontSize="lg"
+                      fontWeight="bold"
+                      color={iconColor}
+                      lineHeight={1.2}
+                    >
+                      울산과학대학교
+                    </Text>
+                    <Text fontSize="xs" color={iconColor} lineHeight={1.2}>
+                      학생상담센터
+                    </Text>
+                  </VStack>
                 </Link>
               </Flex>
               <DesktopNav
