@@ -37,10 +37,12 @@ const InteractiveButton = ({
   button,
   onElementHover,
   isLit,
+  activeBorderGradient,
 }: {
   button: any;
   onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
   isLit: boolean;
+  activeBorderGradient: string;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { colorMode } = useColorMode();
@@ -55,14 +57,14 @@ const InteractiveButton = ({
         transition: { duration: 0.3, delay: 0.2 },
       });
       fillControls.start({
-        scale: 3,
-        transition: { duration: 0.4, ease: "easeOut" },
+        clipPath: "circle(150% at 50% 100%)",
+        transition: { duration: 0.5, ease: "easeOut" },
       });
     } else {
       borderControls.start({ opacity: 0, transition: { duration: 0.3 } });
       fillControls.start({
-        scale: 0,
-        transition: { duration: 0.4, ease: "easeIn" },
+        clipPath: "circle(0% at 50% 100%)",
+        transition: { duration: 0.5, ease: "easeIn" },
       });
     }
   }, [isLit, borderControls, fillControls]);
@@ -79,6 +81,7 @@ const InteractiveButton = ({
       variants={buttonVariants}
       initial="initial"
       whileHover="hover"
+      cursor="none"
       onHoverStart={() => onElementHover(ref.current, button.id)}
       onHoverEnd={() => onElementHover(null, null)}
     >
@@ -93,17 +96,21 @@ const InteractiveButton = ({
         zIndex={-1}
       />
       <Flex
-        p={6}
+        p={4}
+        as="button"
+        w="full"
+        h="full"
+        align="center"
+        justify="center"
+        gap={2}
         borderRadius="2xl"
         bg={isDark ? "rgba(26, 32, 44, 0.8)" : "rgba(255, 255, 255, 0.8)"}
         backdropFilter="blur(2px)"
         boxShadow="0 8px 32px 0 rgba(100, 100, 150, 0.1)"
-        cursor="pointer"
-        h="full"
         position="relative"
         overflow="hidden"
-        justifyContent="space-between"
-        alignItems="center"
+        zIndex={1}
+        cursor="none"
       >
         <MotionBox
           position="absolute"
@@ -114,8 +121,7 @@ const InteractiveButton = ({
           bgGradient={`radial(circle, ${
             isDark ? "rgba(0, 123, 255, 0.3)" : "rgba(173, 216, 230, 0.4)"
           } 0%, transparent 70%)`}
-          transformOrigin="center"
-          initial={{ scale: 0 }}
+          initial={{ clipPath: "circle(0% at 50% 100%)" }}
           animate={fillControls}
           zIndex={0}
         />
@@ -131,7 +137,7 @@ const InteractiveButton = ({
             <Heading
               size="md"
               fontWeight="bold"
-              color={isDark ? "rgba(255, 255, 255, 0.9)" : "#3D4A82"}
+              color={isDark ? "rgba(255, 255, 255, 0.9)" : " #3D4A82"}
               transition="all 0.3s ease-in-out"
               style={{
                 background: isLit
@@ -146,10 +152,11 @@ const InteractiveButton = ({
             </Heading>
             <Text
               mt={2}
-              color={isDark ? "rgba(255, 255, 255, 0.7)" : "#5E7FDC"}
+              color={isDark ? "rgba(255, 255, 255, 0.7)" : "#3D4A82"}
               fontWeight="medium"
               w="80%"
               whiteSpace="pre-wrap"
+              textAlign="left"
             >
               {button.description}
             </Text>
@@ -169,9 +176,11 @@ const InteractiveButton = ({
 const InteractiveButtons = ({
   onElementHover,
   fullyLitButtonId,
+  activeBorderGradient,
 }: {
   onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
   fullyLitButtonId: string | null;
+  activeBorderGradient: string;
 }) => {
   return (
     <Flex direction="row" gap={8} justifyContent="center" alignItems="center">
@@ -181,6 +190,7 @@ const InteractiveButtons = ({
           button={button}
           onElementHover={onElementHover}
           isLit={fullyLitButtonId === button.id}
+          activeBorderGradient={activeBorderGradient}
         />
       ))}
     </Flex>

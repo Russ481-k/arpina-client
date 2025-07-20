@@ -1,8 +1,5 @@
 import { Box, Flex } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { contentApi, contentKeys } from "@/lib/api/content";
-import { ContentBlock } from "@/types/api/content";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
 import QuickMenu from "./QuickMenu";
@@ -170,7 +167,7 @@ const drawText = (
   canvasHeight: number,
   isDark: boolean
 ) => {
-  const titleSize = Math.min(canvasWidth * 0.15, 140);
+  const titleSize = Math.min(canvasWidth * 0.15, 90);
   const subtitleSize = Math.min(canvasWidth * 0.04, 42);
 
   const centerX = canvasWidth / 2;
@@ -198,14 +195,28 @@ const drawText = (
 
   ctx.textAlign = "center";
 
+  const largeTitleSize = titleSize * 1.8;
+  const verticalOffset = -largeTitleSize * 0.5;
+
   ctx.font = `900 ${titleSize}px sans-serif`;
-  ctx.fillText("울산과학대학교", canvasWidth / 2, canvasHeight / 2);
+  ctx.fillText(
+    "울산과학대학교",
+    canvasWidth / 2,
+    canvasHeight / 2 - titleSize + verticalOffset
+  );
+
+  ctx.font = `900 ${largeTitleSize}px sans-serif`;
+  ctx.fillText(
+    "심리상담센터",
+    canvasWidth / 2,
+    canvasHeight / 2 + largeTitleSize / 2.5 + verticalOffset
+  );
 
   ctx.font = `700 ${subtitleSize}px sans-serif`;
   ctx.fillText(
     "나를 이해하는 첫걸음, 당신의 성장을 응원합니다.",
     canvasWidth / 2,
-    canvasHeight / 2 + titleSize * 0.2 + subtitleSize
+    canvasHeight / 2 + largeTitleSize / 2 + subtitleSize * 1.5 + verticalOffset
   );
 };
 
@@ -213,21 +224,28 @@ const drawLaserLine = (
   ctx: CanvasRenderingContext2D,
   start: { x: number; y: number },
   end: { x: number; y: number },
-  time: number
+  time: number,
+  isDark: boolean
 ) => {
   if (!start || !end) return;
 
   const shimmer = Math.sin(time / 150) * 2;
+  const laserColor = isDark
+    ? "rgba(173, 216, 230, 0.5)"
+    : "rgba(0, 80, 150, 0.6)";
+  const shadowColor = isDark
+    ? "rgba(173, 216, 230, 0.7)"
+    : "rgba(0, 80, 150, 0.7)";
 
   const gradient = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
-  gradient.addColorStop(0, "rgba(173, 216, 230, 0)");
-  gradient.addColorStop(0.5, "rgba(173, 216, 230, 0.5)");
-  gradient.addColorStop(1, "rgba(173, 216, 230, 0)");
+  gradient.addColorStop(0, "rgba(0,0,0,0)");
+  gradient.addColorStop(0.5, laserColor);
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
 
   ctx.save();
   ctx.strokeStyle = gradient;
   ctx.lineWidth = 1.0;
-  ctx.shadowColor = "rgba(173, 216, 230, 0.7)";
+  ctx.shadowColor = shadowColor;
   ctx.shadowBlur = 5 + shimmer;
 
   ctx.beginPath();
@@ -268,6 +286,10 @@ const MainSection = () => {
   const { colorMode } = useColorMode();
   const colors = useColors();
   const isDark = colorMode === "dark";
+
+  const activeBorderGradient = isDark
+    ? "linear(to-r, cyan.300, blue.500, purple.500)"
+    : "linear(to-r, blue.500, blue.700)";
 
   const galaxies = useMemo(() => {
     const newGalaxies: Galaxy[] = [];
@@ -375,6 +397,9 @@ const MainSection = () => {
 
     let mouseRotationX = 0;
     let mouseRotationY = 0;
+    let mouseVelocity = { x: 0, y: 0 };
+    let lastMousePosition = { x: 0.5, y: 0.5 };
+    const dampingFactor = 0.95;
 
     const animate = () => {
       if (!ctx) return;
@@ -404,13 +429,22 @@ const MainSection = () => {
         setFullyLitButtonId(null);
       }
 
-      const targetMouseRotX = (mousePosition.current.y - 0.5) * 0.5;
-      const targetMouseRotY = laser.id
-        ? (laser.x / window.innerWidth - 0.5) * 0.5
-        : (mousePosition.current.x - 0.5) * 0.5;
+      // Calculate mouse velocity
+      mouseVelocity.x = mousePosition.current.x - lastMousePosition.x;
+      mouseVelocity.y = mousePosition.current.y - lastMousePosition.y;
+      lastMousePosition = { ...mousePosition.current };
 
-      mouseRotationX += (targetMouseRotX - mouseRotationX) * 0.05;
-      mouseRotationY += (targetMouseRotY - mouseRotationY) * 0.05;
+      // Apply damping to velocity
+      mouseVelocity.x *= dampingFactor;
+      mouseVelocity.y *= dampingFactor;
+
+      const targetMouseRotX = mousePosition.current.y - 0.5;
+      const targetMouseRotY = mousePosition.current.x - 0.5;
+
+      mouseRotationX +=
+        (targetMouseRotX - mouseRotationX) * 0.1 + mouseVelocity.y * 0.5;
+      mouseRotationY +=
+        (targetMouseRotY - mouseRotationY) * 0.1 + mouseVelocity.x * 0.5;
 
       const mouseRotation = { x: mouseRotationX, y: mouseRotationY };
 
@@ -435,7 +469,7 @@ const MainSection = () => {
           x: start.x + (target.x - start.x) * laser.progress,
           y: start.y + (target.y - start.y) * laser.progress,
         };
-        drawLaserLine(ctx, start, end, performance.now());
+        drawLaserLine(ctx, start, end, performance.now(), isDark);
       }
 
       animationRef.current = requestAnimationFrame(animate);
@@ -473,6 +507,7 @@ const MainSection = () => {
           <QuickMenu
             onElementHover={handleElementHover}
             fullyLitButtonId={fullyLitButtonId}
+            activeBorderGradient={activeBorderGradient}
           />
         </Box>
 
@@ -510,6 +545,7 @@ const MainSection = () => {
             <InteractiveButtons
               onElementHover={handleElementHover}
               fullyLitButtonId={fullyLitButtonId}
+              activeBorderGradient={activeBorderGradient}
             />
           </Flex>
         </Flex>
@@ -518,6 +554,7 @@ const MainSection = () => {
           <NewsSection
             onElementHover={handleElementHover}
             fullyLitButtonId={fullyLitButtonId}
+            activeBorderGradient={activeBorderGradient}
           />
         </Box>
       </Flex>

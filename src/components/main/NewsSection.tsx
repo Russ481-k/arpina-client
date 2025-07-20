@@ -32,17 +32,20 @@ const NewsItem = ({
   date,
   onElementHover,
   isLit,
+  activeBorderGradient,
 }: {
   title: string;
   date: string;
   onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
   isLit: boolean;
+  activeBorderGradient: string;
 }) => {
   const { colorMode } = useThemeColorMode();
   const isDark = colorMode === "dark";
   const borderControls = useAnimation();
   const fillControls = useAnimation();
-  const textColor = isDark ? "rgba(255, 255, 255, 0.7)" : "#5E7FDC";
+
+  const textColor = isDark ? "rgba(255, 255, 255, 0.7)" : "gray.600";
   const headingColor = isDark ? "rgba(255, 255, 255, 0.9)" : "#3D4A82";
   const ref = useRef<HTMLDivElement>(null);
 
@@ -53,14 +56,14 @@ const NewsItem = ({
         transition: { duration: 0.3, delay: 0.2 },
       });
       fillControls.start({
-        scale: 3,
-        transition: { duration: 0.4, ease: "easeOut" },
+        clipPath: "circle(150% at 0% 50%)",
+        transition: { duration: 0.5, ease: "easeOut" },
       });
     } else {
       borderControls.start({ opacity: 0, transition: { duration: 0.3 } });
       fillControls.start({
-        scale: 0,
-        transition: { duration: 0.4, ease: "easeIn" },
+        clipPath: "circle(0% at 0% 50%)",
+        transition: { duration: 0.5, ease: "easeIn" },
       });
     }
   }, [isLit, borderControls, fillControls]);
@@ -75,6 +78,7 @@ const NewsItem = ({
       bg="transparent"
       whileHover={{ scale: 1.05, y: -5 }}
       transition={{ type: "spring", stiffness: 300 }}
+      cursor="none"
       onHoverStart={() => onElementHover(ref.current, title)}
       onHoverEnd={() => onElementHover(null, null)}
     >
@@ -83,21 +87,24 @@ const NewsItem = ({
         position="absolute"
         inset="0"
         borderRadius="2xl"
-        bgGradient="linear(to-r, cyan.400, blue.500, purple.600)"
+        bgGradient={activeBorderGradient}
         initial={{ opacity: 0 }}
         animate={borderControls}
-        zIndex={-1}
+        zIndex={0}
       />
-      <LinkBox
-        as="div"
+      <Flex
         p={6}
         borderRadius="2xl"
         bg={isDark ? "rgba(26, 32, 44, 0.8)" : "rgba(255, 255, 255, 0.8)"}
         backdropFilter="blur(2px)"
         boxShadow="0 8px 32px 0 rgba(100, 100, 150, 0.1)"
+        direction="column"
+        align="start"
+        gap={1}
         h="full"
         position="relative"
         overflow="hidden"
+        zIndex={1}
       >
         <MotionBox
           position="absolute"
@@ -108,8 +115,7 @@ const NewsItem = ({
           bgGradient={`radial(circle, ${
             isDark ? "rgba(0, 123, 255, 0.3)" : "rgba(173, 216, 230, 0.4)"
           } 0%, transparent 70%)`}
-          transformOrigin="center"
-          initial={{ scale: 0 }}
+          initial={{ clipPath: "circle(0% at 0% 50%)" }}
           animate={fillControls}
           zIndex={0}
         />
@@ -119,11 +125,10 @@ const NewsItem = ({
           direction="column"
           align="start"
           gap={1}
-          minHeight="2.5em"
         >
           <Flex align="center">
             <Heading
-              size="sm"
+              size="md"
               as="h3"
               whiteSpace="nowrap"
               overflow="hidden"
@@ -140,15 +145,17 @@ const NewsItem = ({
                 WebkitTextFillColor: isLit ? "transparent" : "initial",
               }}
             >
-              <LinkOverlay href="#">{title}</LinkOverlay>
+              <LinkOverlay href="#" cursor="none">
+                {title}
+              </LinkOverlay>
             </Heading>
             {/* <Icon as={FiArrowUpRight} ml={2} color={textColor} /> */}
           </Flex>
-          <Text fontSize="xs" color={textColor}>
+          <Text fontSize="sm" color={textColor}>
             {date}
           </Text>
         </Flex>
-      </LinkBox>
+      </Flex>
     </MotionBox>
   );
 };
@@ -156,9 +163,11 @@ const NewsItem = ({
 const NewsSection = ({
   onElementHover,
   fullyLitButtonId,
+  activeBorderGradient,
 }: {
   onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
   fullyLitButtonId: string | null;
+  activeBorderGradient: string;
 }) => {
   const { colorMode } = useThemeColorMode();
   const isDark = colorMode === "dark";
@@ -173,11 +182,12 @@ const NewsSection = ({
       <Flex direction="column" gap={2}>
         {newsItems.map((item) => (
           <NewsItem
-            key={item.id}
+            key={item.title}
             title={item.title}
             date={item.date}
             onElementHover={onElementHover}
             isLit={fullyLitButtonId === item.title}
+            activeBorderGradient={activeBorderGradient}
           />
         ))}
       </Flex>

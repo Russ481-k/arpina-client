@@ -10,6 +10,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
+import { useColors } from "@/styles/theme";
 import Image from "next/image";
 import { useRef, useState, useEffect, memo } from "react";
 import NextLink from "next/link";
@@ -134,6 +135,7 @@ export const Header = memo(function Header({
   const pathname = usePathname();
   const isDark = colorMode === "dark";
   const isMainPage = pathname === "/";
+  const colors = useColors();
 
   const headerHeight = useBreakpointValue({
     base: "60px",
@@ -292,14 +294,20 @@ export const Header = memo(function Header({
                 >
                   <VStack gap={0} align="flex-start">
                     <Text
-                      fontSize="lg"
-                      fontWeight="bold"
-                      color={iconColor}
+                      fontSize="md"
+                      bgGradient={colors.gradient.primary}
+                      bgClip="text"
                       lineHeight={1.2}
                     >
                       울산과학대학교
                     </Text>
-                    <Text fontSize="xs" color={iconColor} lineHeight={1.2}>
+                    <Text
+                      fontSize="xl"
+                      fontWeight="bold"
+                      bgGradient={colors.gradient.primary}
+                      bgClip="text"
+                      lineHeight={1.2}
+                    >
                       학생상담센터
                     </Text>
                   </VStack>

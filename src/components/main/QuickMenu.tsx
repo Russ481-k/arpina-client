@@ -39,11 +39,13 @@ const MenuItem = ({
   description,
   onElementHover,
   isLit,
+  activeBorderGradient,
 }: {
   title: string;
   description: string;
   onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
   isLit: boolean;
+  activeBorderGradient: string;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { colorMode } = useColorMode();
@@ -51,7 +53,7 @@ const MenuItem = ({
   const borderControls = useAnimation();
   const fillControls = useAnimation();
 
-  const textColor = isDark ? "rgba(255, 255, 255, 0.7)" : "#5E7FDC";
+  const textColor = isDark ? "rgba(255, 255, 255, 0.7)" : "gray.600";
   const headingColor = isDark ? "rgba(255, 255, 255, 0.9)" : "#3D4A82";
 
   useEffect(() => {
@@ -61,14 +63,14 @@ const MenuItem = ({
         transition: { duration: 0.3, delay: 0.2 },
       });
       fillControls.start({
-        scale: 3,
-        transition: { duration: 0.4, ease: "easeOut" },
+        clipPath: "circle(150% at 100% 50%)",
+        transition: { duration: 0.5, ease: "easeOut" },
       });
     } else {
       borderControls.start({ opacity: 0, transition: { duration: 0.3 } });
       fillControls.start({
-        scale: 0,
-        transition: { duration: 0.4, ease: "easeIn" },
+        clipPath: "circle(0% at 100% 50%)",
+        transition: { duration: 0.5, ease: "easeIn" },
       });
     }
   }, [isLit, borderControls, fillControls]);
@@ -91,10 +93,10 @@ const MenuItem = ({
         position="absolute"
         inset="0"
         borderRadius="2xl"
-        bgGradient="linear(to-r, cyan.400, blue.500, purple.600)"
+        bgGradient={activeBorderGradient}
         initial={{ opacity: 0 }}
         animate={borderControls}
-        zIndex={-1}
+        zIndex={0}
       />
       <Flex
         p={6}
@@ -108,6 +110,7 @@ const MenuItem = ({
         h="full"
         position="relative"
         overflow="hidden"
+        zIndex={1}
       >
         <MotionBox
           position="absolute"
@@ -118,8 +121,7 @@ const MenuItem = ({
           bgGradient={`radial(circle, ${
             isDark ? "rgba(0, 123, 255, 0.3)" : "rgba(173, 216, 230, 0.4)"
           } 0%, transparent 70%)`}
-          transformOrigin="center"
-          initial={{ scale: 0 }}
+          initial={{ clipPath: "circle(0% at 100% 50%)" }}
           animate={fillControls}
           zIndex={0}
         />
@@ -161,9 +163,11 @@ const MenuItem = ({
 const QuickMenu = ({
   onElementHover,
   fullyLitButtonId,
+  activeBorderGradient,
 }: {
   onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
   fullyLitButtonId: string | null;
+  activeBorderGradient: string;
 }) => {
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
@@ -182,6 +186,7 @@ const QuickMenu = ({
             description={item.description}
             onElementHover={onElementHover}
             isLit={fullyLitButtonId === item.title}
+            activeBorderGradient={activeBorderGradient}
           />
         ))}
       </Flex>
