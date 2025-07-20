@@ -235,6 +235,9 @@ export const SwimmingLessonList = () => {
         <Text mt={2} fontSize={{ base: "sm", md: "md" }}>
           이용에 불편을 드려 죄송합니다.
         </Text>
+        <Text fontSize={{ base: "lg", md: "2xl" }}>
+          21일 오전 10시에 신청을 재개할 예정입니다.
+        </Text>
       </Box>
     );
   } else {
