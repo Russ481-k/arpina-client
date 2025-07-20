@@ -168,7 +168,7 @@ const drawText = (
   isDark: boolean
 ) => {
   const titleSize = Math.min(canvasWidth * 0.15, 90);
-  const subtitleSize = Math.min(canvasWidth * 0.04, 42);
+  const subtitleSize = Math.min(canvasWidth * 0.05, 46);
 
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
