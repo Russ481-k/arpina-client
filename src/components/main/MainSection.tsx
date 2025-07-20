@@ -202,14 +202,14 @@ const drawText = (
   ctx.fillText(
     "울산과학대학교",
     canvasWidth / 2,
-    canvasHeight / 2 - titleSize + verticalOffset
+    canvasHeight / 2 - titleSize / 1.5 + verticalOffset
   );
 
   ctx.font = `900 ${largeTitleSize}px sans-serif`;
   ctx.fillText(
     "심리상담센터",
     canvasWidth / 2,
-    canvasHeight / 2 + largeTitleSize / 2.5 + verticalOffset
+    canvasHeight / 2 + largeTitleSize / 1.9 + verticalOffset
   );
 
   ctx.font = `700 ${subtitleSize}px sans-serif`;
@@ -492,7 +492,7 @@ const MainSection = () => {
       mx="auto"
       cursor="none"
       bg={colors.bg}
-      h="calc(100vh - 300px)"
+      h="calc(100vh - 200px)"
       overflow="hidden"
     >
       <Flex
@@ -501,7 +501,6 @@ const MainSection = () => {
         justifyContent="space-between"
         alignItems="center"
         px={8}
-        pt={20}
       >
         <Box flex="0 0 350px" position="relative" zIndex={2}>
           <QuickMenu

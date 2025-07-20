@@ -46,21 +46,20 @@ export function Footer() {
       as="footer"
       bg={colors.bg}
       color={colors.text.secondary}
-      py={12}
+      py={4}
       cursor="none"
     >
       <Container maxW="container.xl">
-        <VStack gap={6} align="stretch">
+        <VStack align="stretch">
           <Flex
             justify="space-between"
             align="center"
             borderBottom="1px"
             borderColor={colors.border}
-            pb={6}
             wrap="wrap"
           >
             <HStack
-              gap={6}
+              gap={2}
               wrap="wrap"
               justify={{ base: "center", md: "flex-start" }}
             >
@@ -121,7 +120,7 @@ export function Footer() {
           >
             <VStack align="stretch" gap={4}>
               <Text fontWeight="bold" fontSize="lg" color={colors.text.primary}>
-                학생상담센터
+                울산과학대학교 학생상담센터
               </Text>
               <HStack gap={8} align="flex-start">
                 <Box>
