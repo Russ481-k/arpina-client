@@ -42,7 +42,13 @@ export function Footer() {
   };
 
   return (
-    <Box as="footer" bg={colors.bg} color={colors.text.secondary} py={12}>
+    <Box
+      as="footer"
+      bg={colors.bg}
+      color={colors.text.secondary}
+      py={12}
+      cursor="none"
+    >
       <Container maxW="container.xl">
         <VStack gap={6} align="stretch">
           <Flex

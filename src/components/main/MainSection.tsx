@@ -196,7 +196,7 @@ const drawText = (
   ctx.textAlign = "center";
 
   const largeTitleSize = titleSize * 1.8;
-  const verticalOffset = -largeTitleSize * 0.5;
+  const verticalOffset = largeTitleSize * 0.1;
 
   ctx.font = `900 ${titleSize}px sans-serif`;
   ctx.fillText(
