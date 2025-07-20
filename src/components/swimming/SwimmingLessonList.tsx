@@ -228,15 +228,12 @@ export const SwimmingLessonList = () => {
     );
   } else if (lessonsError) {
     lessonContent = (
-      <Box textAlign="center" py={10} color="blue.500" width="100%">
+      <Box textAlign="center" py={10} color="red.500" width="100%">
         <Text fontSize={{ base: "md", md: "lg" }}>
-          현재 일부환경에서 접속이 불가능한 문제가 발견되어 수정중에 있습니다.
+          강습 정보를 불러오는데 문제가 발생했습니다.
         </Text>
         <Text mt={2} fontSize={{ base: "sm", md: "md" }}>
-          이용에 불편을 드려 죄송합니다.
-        </Text>
-        <Text fontSize={{ base: "lg", md: "2xl" }}>
-          21일 오전 10시에 신청을 재개할 예정입니다.
+          다시 시도해주세요.
         </Text>
       </Box>
     );
