@@ -1,11 +1,4 @@
-import {
-  Box,
-  Heading,
-  Text,
-  LinkBox,
-  LinkOverlay,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, Heading, Text, LinkOverlay, Flex } from "@chakra-ui/react";
 import { motion, useAnimation } from "framer-motion";
 import { useRef, useEffect } from "react";
 import { useColorMode as useThemeColorMode } from "@/components/ui/color-mode";

@@ -249,29 +249,26 @@ export const Header = memo(function Header({
         overflow="visible"
         opacity={1}
         pointerEvents={"auto"}
-        _after={{
-          content: '""',
-          position: "absolute",
-          bottom: "0",
-          left: "0",
-          width: "100%",
-          height: "1px",
-          bg: isMainPage ? "#0D344E" : isDark ? "blue.200" : "black",
-          transition: "all 0.3s ease",
-          opacity: isNavHovered && lastHoveredMenuId ? "1" : "0",
-          transform:
-            isNavHovered && lastHoveredMenuId ? "scaleX(1)" : "scaleX(0)",
-          transformOrigin: "left",
-        }}
+        w="100%"
+        // _after={{
+        //   content: '""',
+        //   position: "absolute",
+        //   bottom: "0",
+        //   left: "0",
+        //   width: "100%",
+        //   height: "1px",
+        //   bg: isMainPage ? "#0D344E" : isDark ? "blue.200" : "black",
+        //   transition: "all 0.3s ease",
+        //   opacity: isNavHovered && lastHoveredMenuId ? "1" : "0",
+        //   transformOrigin: "left",
+        // }}
       >
         <Container
           position="relative"
           p={0}
           transition="all 0.3s"
-          m={0}
-          w="100%"
-          maxW={{ base: "90%", "2xl": "1600px" }}
-          margin="0 auto"
+          m="0 4rem"
+          maxW="92vw"
           height="100%"
         >
           <Flex position="relative" direction="column" height="100%">
@@ -285,7 +282,6 @@ export const Header = memo(function Header({
                 <Link
                   as={NextLink}
                   href="/"
-                  _hover={{ textDecoration: "none", opacity: 0.8 }}
                   display="flex"
                   alignItems="center"
                   transition="opacity 0.2s"
@@ -303,7 +299,7 @@ export const Header = memo(function Header({
                   </VStack>
                 </Link>
               </Flex>
-              <Flex align="center" gap={2} w="50%">
+              <Flex align="center" gap={2} w="45%">
                 <DesktopNav
                   menusWithLastFlag={menusWithLastFlag}
                   isNavHovered={isNavHovered}
@@ -326,7 +322,7 @@ export const Header = memo(function Header({
       </Box>
 
       {/* 통합된 확장 영역 */}
-      <Box
+      {/* <Box
         position="fixed"
         top={(isPreview ? 50 : 0) + parseInt(headerHeight || "70")}
         left={0}
@@ -346,7 +342,7 @@ export const Header = memo(function Header({
         pointerEvents={isNavHovered ? "auto" : "none"}
         overflow="hidden"
         boxShadow="0 4px 20px rgba(0, 0, 0, 0.1)"
-      />
+      /> */}
       <SitemapDrawer
         isOpen={isSitemapDrawerOpen}
         onClose={() => setIsSitemapDrawerOpen(false)}

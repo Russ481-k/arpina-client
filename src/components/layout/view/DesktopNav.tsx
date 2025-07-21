@@ -33,15 +33,13 @@ export const DesktopNav = memo(
         mx="auto"
         position="relative"
         flex={1}
-        width="100%"
-        justifyContent="space-between"
+        justifyContent="space-around"
         zIndex={1000}
       >
         <Box>
           <Flex
             as="nav"
             display={{ base: "none", md: "flex" }}
-            width="100%"
             justifyContent="space-between"
             alignItems="flex-start"
           >

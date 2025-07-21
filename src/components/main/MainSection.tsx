@@ -1,10 +1,46 @@
 import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
 import InteractiveButtons from "./InteractiveButtons";
 
+const MotionHeading = motion(Heading);
+const MotionText = motion(Text);
+const MotionBox = motion(Box);
+
+const mainTitle = "울산과학대학교";
+const subTitle = "학생상담센터";
+const description =
+  "울산과학대학교 학생상담센터는 학생들의 심리적 건강과 성장을 지원하기 위해 전문 상담사와 함께 개인 및 집단 상담을 제공합니다.";
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, x: -50 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } },
+};
+
+const typingContainerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+};
+
+const typingLetterVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
 // 뉴런 노드 타입 정의
 interface NeuronNode {
   id: number;
@@ -317,7 +353,7 @@ const MainSection = () => {
       mx="auto"
       cursor="none"
       bg={colors.bg}
-      h="calc(100vh - 200px)"
+      h="calc(100vh - 130px)"
       overflow="hidden"
     >
       <Flex
@@ -328,40 +364,138 @@ const MainSection = () => {
         px={{ base: 4, md: 8, lg: 16 }}
       >
         <Flex
-          flex={{ base: 1, lg: "0 0 45%" }}
+          flex={{ base: 1, lg: "0 0 55%" }}
           h="100%"
           justifyContent="center"
           direction="column"
           alignItems="flex-start"
           pr={{ lg: 8 }}
         >
-          <Heading
-            as="h1"
-            fontSize={{ base: "4xl", md: "6xl", lg: "7xl" }}
-            fontWeight="900"
-            lineHeight="1.1"
+          <MotionBox
+            w="full"
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="flex-start"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            울산과학대학교{" "}
-            <Box as="p" fontSize="8xl" color={isDark ? "gray.400" : "gray.500"}>
-              학생상담센터
-            </Box>
-          </Heading>
-          <Text mt={6} fontSize={{ base: "lg", md: "xl" }} maxW="xl">
-            울산과학대학교 학생상담센터는 학생들의 심리적 건강과 성장을 지원하기
-            위해 전문 상담사와 함께 개인 및 집단 상담을 제공합니다.
-          </Text>
-          <Box mt={10}>
-            <InteractiveButtons />
-          </Box>
+            <MotionHeading
+              as="h1"
+              fontSize={{ base: "6xl", md: "7xl", lg: "8xl" }}
+              fontWeight="900"
+              lineHeight="1.1"
+              variants={itemVariants}
+            >
+              <motion.span
+                variants={typingContainerVariants}
+                style={{ display: "inline-block" }}
+              >
+                {mainTitle.split("").map((char, i) => (
+                  <motion.span key={i} variants={typingLetterVariants}>
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.span>
+            </MotionHeading>
+            <MotionHeading
+              as="h2"
+              fontSize={{ base: "7xl", md: "8xl", lg: "9xl" }}
+              fontWeight="900"
+              lineHeight="1"
+              color={isDark ? "gray.400" : "gray.500"}
+              variants={itemVariants}
+            >
+              <motion.span
+                variants={typingContainerVariants}
+                style={{ display: "inline-block" }}
+              >
+                {subTitle.split("").map((char, i) => (
+                  <motion.span key={i} variants={typingLetterVariants}>
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.span>
+            </MotionHeading>
+            <MotionText
+              mt={6}
+              fontSize={{ base: "lg", md: "xl" }}
+              maxW="xl"
+              variants={itemVariants}
+            >
+              <motion.span
+                variants={{
+                  ...typingContainerVariants,
+                  visible: { transition: { staggerChildren: 0.015 } },
+                }}
+                style={{ display: "inline-block" }}
+              >
+                {description.split("").map((char, i) => (
+                  <motion.span key={i} variants={typingLetterVariants}>
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.span>
+            </MotionText>
+            <MotionBox mt={10} variants={itemVariants}>
+              <InteractiveButtons />
+            </MotionBox>
+          </MotionBox>
         </Flex>
         <Flex
           display={{ base: "none", lg: "flex" }}
-          flex="0 0 55%"
+          flex="0 0 45%"
           h="100%"
           justifyContent="center"
           alignItems="center"
           position="relative"
         >
+          <svg width="0" height="0" style={{ position: "absolute" }}>
+            <defs>
+              <clipPath id="fractal-cutout" clipPathUnits="objectBoundingBox">
+                <motion.path
+                  initial={{
+                    d: "M0,0 L1,0 L1,1 L0.05,1 C 0.02,1 0.02,0.99 0,0.99 L0,0 Z",
+                  }}
+                  animate={{
+                    d: "M0,0 L1,0 L1,1 L0.55,1 C 0.4,1 0.4,0.95 0.3,0.95 S 0.15,0.9 0,0.85 L0,0 Z",
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: 0.5,
+                  }}
+                />
+              </clipPath>
+            </defs>
+          </svg>
+          <Box position="absolute" bottom={0} left={0} zIndex={2}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 1.2 }}
+            >
+              <Heading
+                color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
+                fontSize={{ base: "sm", md: "md" }}
+                fontWeight="bold"
+                letterSpacing="widest"
+                lineHeight="1"
+              >
+                REVEAL YOURSELF
+              </Heading>
+              <Text
+                color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
+                fontSize={{ base: "sm", md: "md" }}
+                fontWeight="bold"
+                letterSpacing="widest"
+                lineHeight="1.2"
+              >
+                TRANSFORM YOUR LIFE
+              </Text>
+            </motion.div>
+          </Box>
           <Box
             ref={containerRef}
             w="full"
@@ -369,6 +503,8 @@ const MainSection = () => {
             position="relative"
             bg={isDark ? "gray.800" : "gray.50"}
             borderRadius="4xl"
+            zIndex={3}
+            style={{ clipPath: "url(#fractal-cutout)" }}
           >
             <canvas
               ref={canvasRef}
@@ -389,7 +525,7 @@ const MainSection = () => {
               top: "40%",
               left: "10%",
               transform: "translateY(-50%)",
-              zIndex: 2,
+              zIndex: 4,
             }}
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -404,7 +540,7 @@ const MainSection = () => {
               alignItems="center"
               borderRadius="xl"
               bg={isDark ? "rgba(255, 255, 255, 0)" : "rgba(255, 255, 255, 0)"}
-              backdropFilter="blur(3px) saturate(150%)"
+              backdropFilter="blur(2px) saturate(150%)"
               boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.20)"
               border="1px solid"
               borderColor={
@@ -426,7 +562,7 @@ const MainSection = () => {
                   color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
                   mt={2}
                 >
-                  내 마음을 살피는 첫걸음, 자가진단.
+                  내 마음을 살피는 첫걸음.
                 </Text>
               </Box>
             </Flex>
@@ -436,7 +572,7 @@ const MainSection = () => {
               position: "absolute",
               bottom: "10%",
               right: "10%",
-              zIndex: 2,
+              zIndex: 4,
             }}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -450,18 +586,14 @@ const MainSection = () => {
               justifyContent="center"
               alignItems="center"
               borderRadius="xl"
-              bg={
-                isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.2)"
-              }
-              backdropFilter="blur(10px) saturate(150%)"
-              boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+              backdropFilter="blur(2px) saturate(150%)"
+              boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.20)"
               border="1px solid"
               borderColor={
                 isDark
                   ? "rgba(255, 255, 255, 0.18)"
                   : "rgba(255, 255, 255, 0.3)"
               }
-              cursor="pointer"
             >
               <Text
                 fontSize={{ base: "lg", md: "xl" }}

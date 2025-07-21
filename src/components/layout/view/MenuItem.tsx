@@ -138,34 +138,13 @@ export function MenuItem({
                 ? "visible"
                 : "hidden",
           }}
-          _after={{
-            content: '""',
-            position: "absolute",
-            bottom: "1px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "1px",
-            height: "20px",
-            bg: "black",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            opacity:
-              (isSelfHovered && isNavHovered) ||
-              (lastHoveredMenuId === menu.id && isNavHovered)
-                ? 1
-                : 0,
-            visibility:
-              (isSelfHovered && isNavHovered) ||
-              (lastHoveredMenuId === menu.id && isNavHovered)
-                ? "visible"
-                : "hidden",
-          }}
         >
           {menu.name}
         </Link>
       </Box>
 
       {/* 하위 메뉴 컨테이너 */}
-      <Box
+      {/* <Box
         position="absolute"
         top="100%"
         left="0%"
@@ -251,7 +230,6 @@ export function MenuItem({
                       {child.name || "Menu"}
                     </Link>
 
-                    {/* 3차 메뉴 */}
                     {child.children && child.children.length > 0 && (
                       <VStack
                         align="start"
@@ -300,7 +278,7 @@ export function MenuItem({
               })}
           </Flex>
         </Box>
-      </Box>
+      </Box> */}
     </Box>
   );
 }

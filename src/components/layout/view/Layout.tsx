@@ -9,6 +9,7 @@ import { Menu } from "@/types/api";
 import { Global } from "@emotion/react";
 import { getScrollbarStyle } from "@/styles/scrollbar";
 import { useColorMode } from "@/components/ui/color-mode";
+import { motion, Variants } from "framer-motion";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,11 @@ const MemoizedHeader = memo(Header);
 // Footer를 메모이제이션
 const MemoizedFooter = memo(Footer);
 
+const headerVariants: Variants = {
+  hidden: { y: -100, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
 export default function Layout({
   children,
   currentPage = "홈",
@@ -34,13 +40,27 @@ export default function Layout({
   const isDark = colorMode === "dark";
 
   return (
-    <Box bg={colors.bg} minHeight="100vh" fontFamily="'Inter', sans-serif">
+    <Box bg={colors.bg} minHeight="80vh" fontFamily="'Inter', sans-serif">
       <Global styles={[getScrollbarStyle(isDark)]} />
-      <MemoizedHeader
-        currentPage={currentPage}
-        menus={menus}
-        isPreview={isPreview}
-      />
+      <motion.div
+        variants={headerVariants}
+        initial="hidden"
+        animate="visible"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1100,
+          width: "100%",
+        }}
+      >
+        <MemoizedHeader
+          currentPage={currentPage}
+          menus={menus}
+          isPreview={isPreview}
+        />
+      </motion.div>
       <Box as="main" mx="auto" position="relative" w="full" mt="100px">
         {children}
       </Box>
