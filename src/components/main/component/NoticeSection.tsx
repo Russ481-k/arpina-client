@@ -322,11 +322,9 @@ export function NoticeSection({ data }: NoticeSectionProps) {
                       {/* 나머지 탭 */}
                       {TABS.slice(1).map((tab, index) => (
                         <React.Fragment key={tab}>
-                          {index > 0 && (
-                            <Text color="gray.300" mx={2}>
-                              |
-                            </Text>
-                          )}
+                          <Text color="gray.300" mx={2}>
+                            |
+                          </Text>
                           <Tabs.Trigger
                             value={tab}
                             fontSize={{ base: "14px", md: "lg" }}
