@@ -42,6 +42,12 @@ const CATEGORY_COLORS: { [key: string]: string } = {
   전체: "#2E3192", // 기본값
 };
 
+const CATEGORY_IDS = {
+  전체: undefined,
+  공지: 4,
+  홍보: 5,
+  "유관기관 홍보": 6,
+};
 interface NoticeSectionProps {
   data: ContentBlock;
 }
@@ -59,12 +65,12 @@ export function NoticeSection({ data }: NoticeSectionProps) {
         const noticeMenu = await findMenuByPath(NOTICES_PATH);
 
         if (noticeMenu && noticeMenu.targetId) {
-          // 2. 찾은 bbsId와 menuId로 게시글 조회
           const response = await articleApi.getArticles({
-            bbsId: noticeMenu.targetId, // targetId가 bbsId
+            bbsId: noticeMenu.targetId,
             menuId: noticeMenu.id,
-            size: 5,
+            size: 6,
             sort: "createdAt,desc",
+            categoryId: CATEGORY_IDS[selectedTab as keyof typeof CATEGORY_IDS],
           });
 
           if (response.data.success && response.data.data?.content) {
@@ -77,7 +83,7 @@ export function NoticeSection({ data }: NoticeSectionProps) {
           console.error(`Menu not found for path: ${NOTICES_PATH}`);
           setArticles([]);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error fetching notices:", error);
         setArticles([]);
       } finally {
@@ -86,14 +92,9 @@ export function NoticeSection({ data }: NoticeSectionProps) {
     };
 
     fetchNotices();
-  }, []);
+  }, [selectedTab]); // selectedTab을 의존성 배열에 추가
 
-  const filteredArticles =
-    selectedTab === "전체"
-      ? articles
-      : articles.filter((article) =>
-          article.categories?.some((c) => c.name === selectedTab)
-        );
+  const filteredArticles = articles;
 
   const noticeItemPadding = useBreakpointValue({ base: "10px", md: "26px" });
   const noticeCateWidth = useBreakpointValue({ base: "70px", md: "130px" });
@@ -112,7 +113,7 @@ export function NoticeSection({ data }: NoticeSectionProps) {
     }
 
     return (
-      <Flex className="mnotice-list" flexDirection={"column"} gap={5}>
+      <Flex className="mnotice-list" flexDirection={"column"} gap={4}>
         {items.map((article) => {
           const categoryName =
             article.categories && article.categories.length > 0
