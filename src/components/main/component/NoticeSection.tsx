@@ -140,6 +140,10 @@ export function NoticeSection({ data }: NoticeSectionProps) {
                 as="span"
                 className="notice-title"
                 fontSize={noticeTitleFontSize}
+                whiteSpace="nowrap"
+                overflow="hidden"
+                textOverflow="ellipsis"
+                maxWidth="100%"
               >
                 {article.title}
               </Box>
