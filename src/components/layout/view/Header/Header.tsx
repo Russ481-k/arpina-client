@@ -241,7 +241,6 @@ export const Header = memo(function Header({
             ? "gray.800"
             : "white"
         }
-        backdropFilter={isNavHovered ? "blur(30px)" : "none"}
         transition="all 0.3s ease"
         ref={navRef}
         role="navigation"
@@ -250,7 +249,6 @@ export const Header = memo(function Header({
         overflow="visible"
         opacity={1}
         pointerEvents={"auto"}
-        boxShadow={isNavHovered ? "none" : "0 4px 20px rgba(0, 0, 0, 0.1)"}
         _after={{
           content: '""',
           position: "absolute",
@@ -294,40 +292,34 @@ export const Header = memo(function Header({
                 >
                   <VStack gap={0} align="flex-start">
                     <Text
-                      fontSize="md"
-                      bgGradient={colors.gradient.primary}
-                      bgClip="text"
-                      lineHeight={1.2}
-                    >
-                      울산과학대학교
-                    </Text>
-                    <Text
                       fontSize="xl"
                       fontWeight="bold"
                       bgGradient={colors.gradient.primary}
                       bgClip="text"
                       lineHeight={1.2}
                     >
-                      학생상담센터
+                      울산과학대학교
                     </Text>
                   </VStack>
                 </Link>
               </Flex>
-              <DesktopNav
-                menusWithLastFlag={menusWithLastFlag}
-                isNavHovered={isNavHovered}
-                isDark={isDark}
-                currentPage={currentPage}
-                isMainPage={isMainPage}
-                lastHoveredMenuId={lastHoveredMenuId}
-                onMenuHover={handleMenuHover}
-                onMenuLeave={handleMenuLeave}
-              />
-              <UtilityIcons
-                menus={menus}
-                iconColor={iconColor}
-                onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
-              />
+              <Flex align="center" gap={2} w="50%">
+                <DesktopNav
+                  menusWithLastFlag={menusWithLastFlag}
+                  isNavHovered={isNavHovered}
+                  isDark={isDark}
+                  currentPage={currentPage}
+                  isMainPage={isMainPage}
+                  lastHoveredMenuId={lastHoveredMenuId}
+                  onMenuHover={handleMenuHover}
+                  onMenuLeave={handleMenuLeave}
+                />
+                <UtilityIcons
+                  menus={menus}
+                  iconColor={iconColor}
+                  onSitemapOpen={() => setIsSitemapDrawerOpen(true)}
+                />
+              </Flex>
             </Flex>
           </Flex>
         </Container>

@@ -36,15 +36,15 @@ export default function Layout({
   return (
     <Box bg={colors.bg} minHeight="100vh" fontFamily="'Inter', sans-serif">
       <Global styles={[getScrollbarStyle(isDark)]} />
-      {/* <MemoizedHeader
+      <MemoizedHeader
         currentPage={currentPage}
         menus={menus}
         isPreview={isPreview}
-      /> */}
-      <Box as="main" mx="auto" position="relative" w="full">
+      />
+      <Box as="main" mx="auto" position="relative" w="full" mt="100px">
         {children}
       </Box>
-      <MemoizedFooter />
+      {/* <MemoizedFooter /> */}
     </Box>
   );
 }

@@ -1,199 +1,61 @@
-import { Box, Text, Flex, Heading, Icon } from "@chakra-ui/react";
-import { motion, useAnimation } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { Box, Flex, Heading, Icon, HStack } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import { IoArrowForward } from "react-icons/io5";
 import { useColorMode } from "@/components/ui/color-mode";
 
-const MotionBox = motion(Box);
-
-const buttons = [
+const buttonsData = [
   {
     id: "personal",
-    title: "개인상담",
-    description: "전문 상담사와 1:1로 만나 마음의 어려움을 나눠보세요.",
-  },
-  {
-    id: "group",
-    title: "집단상담",
-    description: "또래 친구들과 함께 공감하고 성장하는 집단 프로그램",
+    title: "자가진단",
+    href: "/self-diagnosis",
   },
   {
     id: "apply",
-    title: "심리상담신청",
-    description: "온라인으로 간편하게 상담을 예약하고 일정을 확인하세요.",
+    title: "상담신청",
+    href: "/counseling-apply",
   },
 ];
 
-const buttonVariants = {
-  initial: { y: 0 },
-  hover: {
-    y: -10,
-    scale: 1.05,
-    transition: { type: "spring" as const, stiffness: 300, damping: 15 },
-  },
-};
-
-const InteractiveButton = ({
-  button,
-  onElementHover,
-  isLit,
-  activeBorderGradient,
-}: {
-  button: any;
-  onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
-  isLit: boolean;
-  activeBorderGradient: string;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
+const StaticButton = ({ button }: { button: (typeof buttonsData)[0] }) => {
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
-  const borderControls = useAnimation();
-  const fillControls = useAnimation();
-
-  useEffect(() => {
-    if (isLit) {
-      borderControls.start({
-        opacity: 1,
-        transition: { duration: 0.3, delay: 0.2 },
-      });
-      fillControls.start({
-        clipPath: "circle(150% at 50% 100%)",
-        transition: { duration: 0.5, ease: "easeOut" },
-      });
-    } else {
-      borderControls.start({ opacity: 0, transition: { duration: 0.3 } });
-      fillControls.start({
-        clipPath: "circle(0% at 50% 100%)",
-        transition: { duration: 0.5, ease: "easeIn" },
-      });
-    }
-  }, [isLit, borderControls, fillControls]);
+  const router = useRouter();
 
   return (
-    <MotionBox
-      ref={ref}
-      key={button.id}
-      w="400px"
-      p="1px" // for border gradient
-      borderRadius="2xl"
-      position="relative"
-      bg="transparent"
-      variants={buttonVariants}
-      initial="initial"
-      whileHover="hover"
-      cursor="none"
-      onHoverStart={() => onElementHover(ref.current, button.id)}
-      onHoverEnd={() => onElementHover(null, null)}
+    <Flex
+      as="button"
+      onClick={() => router.push(button.href)}
+      w="200px"
+      p={4}
+      align="center"
+      justify="space-between"
+      gap={2}
+      borderRadius="xl"
+      bg={isDark ? "gray.700" : "white"}
+      color={isDark ? "white" : "gray.800"}
+      boxShadow="md"
+      transition="all 0.2s ease-in-out"
+      cursor="pointer"
+      _hover={{
+        transform: "translateY(-2px)",
+        boxShadow: "lg",
+      }}
     >
-      <MotionBox
-        className="gradient-border"
-        position="absolute"
-        inset="0"
-        borderRadius="2xl"
-        bgGradient="linear(to-r, cyan.400, blue.500, purple.600)"
-        initial={{ opacity: 0 }}
-        animate={borderControls}
-        zIndex={-1}
-      />
-      <Flex
-        p={4}
-        as="button"
-        w="full"
-        h="full"
-        align="center"
-        justify="center"
-        gap={2}
-        borderRadius="2xl"
-        bg={isDark ? "rgba(26, 32, 44, 0.8)" : "rgba(255, 255, 255, 0.8)"}
-        backdropFilter="blur(2px)"
-        boxShadow="0 8px 32px 0 rgba(100, 100, 150, 0.1)"
-        position="relative"
-        overflow="hidden"
-        zIndex={1}
-        cursor="none"
-      >
-        <MotionBox
-          position="absolute"
-          top="0"
-          left="0"
-          right="0"
-          bottom="0"
-          bgGradient={`radial(circle, ${
-            isDark ? "rgba(0, 123, 255, 0.3)" : "rgba(173, 216, 230, 0.4)"
-          } 0%, transparent 70%)`}
-          initial={{ clipPath: "circle(0% at 50% 100%)" }}
-          animate={fillControls}
-          zIndex={0}
-        />
-        <Flex
-          position="relative"
-          zIndex={1}
-          justifyContent="space-between"
-          w="full"
-          h="full"
-          alignItems="center"
-        >
-          <Box>
-            <Heading
-              size="md"
-              fontWeight="bold"
-              color={isDark ? "rgba(255, 255, 255, 0.9)" : " #3D4A82"}
-              transition="all 0.3s ease-in-out"
-              style={{
-                background: isLit
-                  ? "linear-gradient(to right, #007bff, #6c5ce7)"
-                  : "none",
-                backgroundClip: isLit ? "text" : "initial",
-                WebkitBackgroundClip: isLit ? "text" : "initial",
-                WebkitTextFillColor: isLit ? "transparent" : "initial",
-              }}
-            >
-              {button.title}
-            </Heading>
-            <Text
-              mt={2}
-              color={isDark ? "rgba(255, 255, 255, 0.7)" : "#3D4A82"}
-              fontWeight="medium"
-              w="80%"
-              whiteSpace="pre-wrap"
-              textAlign="left"
-            >
-              {button.description}
-            </Text>
-          </Box>
-          <Icon
-            as={IoArrowForward}
-            w={8}
-            h={8}
-            color={isDark ? "rgba(255, 255, 255, 0.7)" : "#5E7FDC"}
-          />
-        </Flex>
-      </Flex>
-    </MotionBox>
+      <Heading size="md" fontWeight="bold">
+        {button.title}
+      </Heading>
+      <Icon as={IoArrowForward} w={6} h={6} />
+    </Flex>
   );
 };
 
-const InteractiveButtons = ({
-  onElementHover,
-  fullyLitButtonId,
-  activeBorderGradient,
-}: {
-  onElementHover: (element: HTMLDivElement | null, id: string | null) => void;
-  fullyLitButtonId: string | null;
-  activeBorderGradient: string;
-}) => {
+const InteractiveButtons = () => {
   return (
-    <Flex direction="row" gap={8} justifyContent="center" alignItems="center">
-      {buttons.map((button) => (
-        <InteractiveButton
-          key={button.id}
-          button={button}
-          onElementHover={onElementHover}
-          isLit={fullyLitButtonId === button.id}
-          activeBorderGradient={activeBorderGradient}
-        />
+    <HStack gap={4}>
+      {buttonsData.map((button) => (
+        <StaticButton key={button.id} button={button} />
       ))}
-    </Flex>
+    </HStack>
   );
 };
 

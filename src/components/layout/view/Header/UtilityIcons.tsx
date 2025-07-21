@@ -66,7 +66,7 @@ export const UtilityIcons = ({
       zIndex={1001}
     >
       {/* User Menu */}
-      <Menu.Root>
+      {/* <Menu.Root>
         <Menu.Trigger asChild>
           <IconButton
             aria-label="User Menu"
@@ -124,9 +124,9 @@ export const UtilityIcons = ({
             </Menu.Content>
           </Menu.Positioner>
         </Portal>
-      </Menu.Root>
+      </Menu.Root> */}
 
-      <IconButton
+      {/* <IconButton
         aria-label="Search"
         variant="ghost"
         color={iconColor}
@@ -136,7 +136,7 @@ export const UtilityIcons = ({
         onClick={onSearchOpen}
       >
         <Search />
-      </IconButton>
+      </IconButton> */}
       <IconButton
         aria-label="Sitemap"
         variant="ghost"

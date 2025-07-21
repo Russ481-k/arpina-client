@@ -1,9 +1,8 @@
-import { Box, Flex } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Box, Flex, Heading, Text } from "@chakra-ui/react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
-import QuickMenu from "./QuickMenu";
-import NewsSection from "./NewsSection";
 import InteractiveButtons from "./InteractiveButtons";
 
 // 뉴런 노드 타입 정의
@@ -161,135 +160,16 @@ const drawFractalsLayer = (
   });
 };
 
-const drawText = (
-  ctx: CanvasRenderingContext2D,
-  canvasWidth: number,
-  canvasHeight: number,
-  isDark: boolean
-) => {
-  const titleSize = Math.min(canvasWidth * 0.15, 90);
-  const subtitleSize = Math.min(canvasWidth * 0.05, 46);
-
-  const centerX = canvasWidth / 2;
-  const centerY = canvasHeight / 2;
-  const gradRadius = titleSize * 2;
-
-  const grad = ctx.createRadialGradient(
-    centerX,
-    centerY,
-    0,
-    centerX,
-    centerY,
-    gradRadius
-  );
-  if (isDark) {
-    grad.addColorStop(0, "#5E7FDC");
-    grad.addColorStop(0.5, "#64C9CF");
-    grad.addColorStop(1, "#8E7DE4");
-  } else {
-    grad.addColorStop(0, "#4299E1");
-    grad.addColorStop(0.5, "#38B2AC");
-    grad.addColorStop(1, "#9F7AEA");
-  }
-  ctx.fillStyle = grad;
-
-  ctx.textAlign = "center";
-
-  const largeTitleSize = titleSize * 1.8;
-  const verticalOffset = largeTitleSize * 0.1;
-
-  ctx.font = `900 ${titleSize}px sans-serif`;
-  ctx.fillText(
-    "울산과학대학교",
-    canvasWidth / 2,
-    canvasHeight / 2 - titleSize / 1.5 + verticalOffset
-  );
-
-  ctx.font = `900 ${largeTitleSize}px sans-serif`;
-  ctx.fillText(
-    "심리상담센터",
-    canvasWidth / 2,
-    canvasHeight / 2 + largeTitleSize / 1.9 + verticalOffset
-  );
-
-  ctx.font = `700 ${subtitleSize}px sans-serif`;
-  ctx.fillText(
-    "나를 이해하는 첫걸음, 당신의 성장을 응원합니다.",
-    canvasWidth / 2,
-    canvasHeight / 2 + largeTitleSize / 2 + subtitleSize * 1.5 + verticalOffset
-  );
-};
-
-const drawLaserLine = (
-  ctx: CanvasRenderingContext2D,
-  start: { x: number; y: number },
-  end: { x: number; y: number },
-  time: number,
-  isDark: boolean
-) => {
-  if (!start || !end) return;
-
-  const shimmer = Math.sin(time / 150) * 2;
-  const laserColor = isDark
-    ? "rgba(173, 216, 230, 0.5)"
-    : "rgba(0, 80, 150, 0.6)";
-  const shadowColor = isDark
-    ? "rgba(173, 216, 230, 0.7)"
-    : "rgba(0, 80, 150, 0.7)";
-
-  const gradient = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
-  gradient.addColorStop(0, "rgba(0,0,0,0)");
-  gradient.addColorStop(0.5, laserColor);
-  gradient.addColorStop(1, "rgba(0,0,0,0)");
-
-  ctx.save();
-  ctx.strokeStyle = gradient;
-  ctx.lineWidth = 1.0;
-  ctx.shadowColor = shadowColor;
-  ctx.shadowBlur = 5 + shimmer;
-
-  ctx.beginPath();
-  ctx.moveTo(start.x, start.y);
-  ctx.lineTo(end.x, end.y);
-  ctx.stroke();
-  ctx.restore();
-};
-
 const MainSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const mousePosition = useRef({ x: 0.5, y: 0.5 });
-  const laserStateRef = useRef<{
-    id: string | null;
-    pendingId: string | null;
-    x: number;
-    y: number;
-    pendingX: number;
-    pendingY: number;
-    progress: number;
-  }>({
-    id: null,
-    pendingId: null,
-    x: 0,
-    y: 0,
-    pendingX: 0,
-    pendingY: 0,
-    progress: 0,
-  });
-
-  const [fullyLitButtonId, setFullyLitButtonId] = useState<string | null>(null);
-  const litButtonIdRef = useRef(fullyLitButtonId);
-  litButtonIdRef.current = fullyLitButtonId;
 
   const { colorMode } = useColorMode();
   const colors = useColors();
   const isDark = colorMode === "dark";
-
-  const activeBorderGradient = isDark
-    ? "linear(to-r, cyan.300, blue.500, purple.500)"
-    : "linear(to-r, blue.500, blue.700)";
 
   const galaxies = useMemo(() => {
     const newGalaxies: Galaxy[] = [];
@@ -344,25 +224,6 @@ const MainSection = () => {
     }
   }, []);
 
-  const handleElementHover = useCallback(
-    (element: HTMLElement | null, id: string | null) => {
-      const laser = laserStateRef.current;
-      if (element && id) {
-        const rect = element.getBoundingClientRect();
-        laser.pendingId = id;
-        laser.pendingX = rect.left + rect.width / 2;
-        laser.pendingY = rect.top + rect.height / 2;
-        if (laser.id && laser.id !== id) {
-          laser.id = null;
-        }
-      } else {
-        laser.pendingId = null;
-        laser.id = null;
-      }
-    },
-    []
-  );
-
   useEffect(() => {
     window.addEventListener("mousemove", handleGlobalMouseMove);
     return () => window.removeEventListener("mousemove", handleGlobalMouseMove);
@@ -405,30 +266,6 @@ const MainSection = () => {
       if (!ctx) return;
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      const laser = laserStateRef.current;
-
-      if (
-        laser.id === null &&
-        laser.pendingId !== null &&
-        laser.progress === 0
-      ) {
-        laser.id = laser.pendingId;
-        laser.x = laser.pendingX;
-        laser.y = laser.pendingY;
-      }
-
-      if (laser.id !== null) {
-        laser.progress = Math.min(1, laser.progress + 0.07);
-      } else {
-        laser.progress = Math.max(0, laser.progress - 0.07);
-      }
-
-      if (laser.progress >= 1 && litButtonIdRef.current !== laser.id) {
-        setFullyLitButtonId(laser.id);
-      } else if (laser.progress < 1 && litButtonIdRef.current !== null) {
-        setFullyLitButtonId(null);
-      }
-
       // Calculate mouse velocity
       mouseVelocity.x = mousePosition.current.x - lastMousePosition.x;
       mouseVelocity.y = mousePosition.current.y - lastMousePosition.y;
@@ -458,19 +295,7 @@ const MainSection = () => {
         FOCAL_LENGTH
       );
       drawFractalsLayer(ctx, galaxies, MAX_CONNECT_DISTANCE_SQR, false, isDark);
-      drawText(ctx, canvasWidth, canvasHeight, isDark);
       drawFractalsLayer(ctx, galaxies, MAX_CONNECT_DISTANCE_SQR, true, isDark);
-
-      if (laser.progress > 0) {
-        const rect = canvas.getBoundingClientRect();
-        const start = { x: canvasWidth / 2, y: canvasHeight / 2 };
-        const target = { x: laser.x - rect.left, y: laser.y - rect.top };
-        const end = {
-          x: start.x + (target.x - start.x) * laser.progress,
-          y: start.y + (target.y - start.y) * laser.progress,
-        };
-        drawLaserLine(ctx, start, end, performance.now(), isDark);
-      }
 
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -488,7 +313,7 @@ const MainSection = () => {
       as="main"
       id="mainContent"
       fontFamily="'Paperlogy', sans-serif"
-      lineHeight="1"
+      lineHeight="1.2"
       mx="auto"
       cursor="none"
       bg={colors.bg}
@@ -500,25 +325,51 @@ const MainSection = () => {
         h="100%"
         justifyContent="space-between"
         alignItems="center"
-        px={8}
+        px={{ base: 4, md: 8, lg: 16 }}
       >
-        <Box flex="0 0 350px" position="relative" zIndex={2}>
-          <QuickMenu
-            onElementHover={handleElementHover}
-            fullyLitButtonId={fullyLitButtonId}
-            activeBorderGradient={activeBorderGradient}
-          />
-        </Box>
-
         <Flex
-          flex={1}
+          flex={{ base: 1, lg: "0 0 45%" }}
+          h="100%"
+          justifyContent="center"
+          direction="column"
+          alignItems="flex-start"
+          pr={{ lg: 8 }}
+        >
+          <Heading
+            as="h1"
+            fontSize={{ base: "4xl", md: "6xl", lg: "7xl" }}
+            fontWeight="900"
+            lineHeight="1.1"
+          >
+            울산과학대학교{" "}
+            <Box as="p" fontSize="8xl" color={isDark ? "gray.400" : "gray.500"}>
+              학생상담센터
+            </Box>
+          </Heading>
+          <Text mt={6} fontSize={{ base: "lg", md: "xl" }} maxW="xl">
+            울산과학대학교 학생상담센터는 학생들의 심리적 건강과 성장을 지원하기
+            위해 전문 상담사와 함께 개인 및 집단 상담을 제공합니다.
+          </Text>
+          <Box mt={10}>
+            <InteractiveButtons />
+          </Box>
+        </Flex>
+        <Flex
+          display={{ base: "none", lg: "flex" }}
+          flex="0 0 55%"
           h="100%"
           justifyContent="center"
           alignItems="center"
           position="relative"
-          direction="column"
         >
-          <Box ref={containerRef} w="full" h="full" position="relative">
+          <Box
+            ref={containerRef}
+            w="full"
+            h="full"
+            position="relative"
+            bg={isDark ? "gray.800" : "gray.50"}
+            borderRadius="4xl"
+          >
             <canvas
               ref={canvasRef}
               style={{
@@ -532,30 +383,96 @@ const MainSection = () => {
               }}
             />
           </Box>
-          <Flex
-            position="absolute"
-            bottom="2vh"
-            left="0"
-            right="0"
-            zIndex="2"
-            justifyContent="center"
-            py={2}
+          <motion.div
+            style={{
+              position: "absolute",
+              top: "40%",
+              left: "10%",
+              transform: "translateY(-50%)",
+              zIndex: 2,
+            }}
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <InteractiveButtons
-              onElementHover={handleElementHover}
-              fullyLitButtonId={fullyLitButtonId}
-              activeBorderGradient={activeBorderGradient}
-            />
-          </Flex>
+            <Flex
+              w={{ base: "160px", md: "180px" }}
+              h={{ base: "90px", md: "100px" }}
+              justifyContent="center"
+              alignItems="center"
+              borderRadius="xl"
+              bg={isDark ? "rgba(255, 255, 255, 0)" : "rgba(255, 255, 255, 0)"}
+              backdropFilter="blur(3px) saturate(150%)"
+              boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.20)"
+              border="1px solid"
+              borderColor={
+                isDark
+                  ? "rgba(255, 255, 255, 0.18)"
+                  : "rgba(255, 255, 255, 0.3)"
+              }
+            >
+              <Box p={3}>
+                <Text
+                  fontSize={{ base: "lg", md: "xl" }}
+                  fontWeight="bold"
+                  color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
+                >
+                  자가진단
+                </Text>
+                <Text
+                  fontSize="sm"
+                  color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
+                  mt={2}
+                >
+                  내 마음을 살피는 첫걸음, 자가진단.
+                </Text>
+              </Box>
+            </Flex>
+          </motion.div>
+          <motion.div
+            style={{
+              position: "absolute",
+              bottom: "10%",
+              right: "10%",
+              zIndex: 2,
+            }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Flex
+              w={{ base: "160px", md: "180px" }}
+              h={{ base: "90px", md: "100px" }}
+              justifyContent="center"
+              alignItems="center"
+              borderRadius="xl"
+              bg={
+                isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.2)"
+              }
+              backdropFilter="blur(10px) saturate(150%)"
+              boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+              border="1px solid"
+              borderColor={
+                isDark
+                  ? "rgba(255, 255, 255, 0.18)"
+                  : "rgba(255, 255, 255, 0.3)"
+              }
+              cursor="pointer"
+            >
+              <Text
+                fontSize={{ base: "lg", md: "xl" }}
+                fontWeight="bold"
+                color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
+              >
+                상담신청
+              </Text>
+            </Flex>
+          </motion.div>
         </Flex>
-
-        <Box flex="0 0 350px" position="relative" zIndex={2}>
-          <NewsSection
-            onElementHover={handleElementHover}
-            fullyLitButtonId={fullyLitButtonId}
-            activeBorderGradient={activeBorderGradient}
-          />
-        </Box>
       </Flex>
       <Box
         ref={cursorRef}
