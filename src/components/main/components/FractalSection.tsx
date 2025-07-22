@@ -77,7 +77,7 @@ const FractalSection = ({ mouse }: FractalSectionProps) => {
                   repeatType: "loop",
                   ease: "easeInOut",
                   delay: index * 0.1,
-                  repeatDelay: 5,
+                  repeatDelay: 3,
                 }}
               >
                 <Text
