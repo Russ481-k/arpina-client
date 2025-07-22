@@ -7,7 +7,6 @@ import {
   Link,
   useBreakpointValue,
   VStack,
-  Text,
 } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
@@ -212,8 +211,8 @@ export const Header = memo(function Header({
     }, 150);
   };
 
-  const logoWidth = useBreakpointValue({ base: 120, lg: 160 }) || 120;
-  const logoHeight = useBreakpointValue({ base: 22, lg: 30 }) || 22;
+  const logoWidth = useBreakpointValue({ base: 28, lg: 32 }) || 32;
+  const logoHeight = useBreakpointValue({ base: 28, lg: 32 }) || 32;
 
   const iconColor = isNavHovered
     ? isDark
@@ -287,15 +286,12 @@ export const Header = memo(function Header({
                   transition="opacity 0.2s"
                 >
                   <VStack gap={0} align="flex-start">
-                    <Text
-                      fontSize="xl"
-                      fontWeight="bold"
-                      bgGradient={colors.gradient.primary}
-                      bgClip="text"
-                      lineHeight={1.2}
-                    >
-                      울산과학대학교
-                    </Text>
+                    <Image
+                      src="/images/logo/logo.png"
+                      alt="logo"
+                      width={logoWidth}
+                      height={logoHeight}
+                    />
                   </VStack>
                 </Link>
               </Flex>

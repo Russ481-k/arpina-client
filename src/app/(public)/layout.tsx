@@ -32,7 +32,7 @@ export default async function RoutesLayout({
       >
         <Layout menus={menus}>{children}</Layout>
       </Suspense>
-      <FloatingButtons />
+      {/* <FloatingButtons /> */}
     </Box>
   );
 }
