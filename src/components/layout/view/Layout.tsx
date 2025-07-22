@@ -61,7 +61,7 @@ export default function Layout({
           isPreview={isPreview}
         />
       </motion.div>
-      <Box as="main" mx="auto" position="relative" w="full" mt="100px">
+      <Box as="main" mx="auto" position="relative" w="full" mt="70px">
         {children}
       </Box>
       {/* <MemoizedFooter /> */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useColorMode } from "@/components/ui/color-mode";
+import { MotionValue } from "framer-motion";
 import { MutableRefObject, useEffect, useMemo, useRef } from "react";
 
 // Interfaces
@@ -18,6 +19,8 @@ interface NeuronNode {
   screenY: number;
   scale: number;
   alpha: number;
+  angle: number;
+  angularVelocity: number;
 }
 
 interface Galaxy {
@@ -82,6 +85,9 @@ const updateGalaxies = (
       node.screenY = canvasHeight / 2 + node.rotatedY * node.scale;
       node.alpha =
         Math.max(0, 1 - Math.abs(node.rotatedZ) / FOCAL_LENGTH) * overallAlpha;
+
+      // Update angle
+      node.angle += node.angularVelocity;
     });
   });
 };
@@ -150,19 +156,30 @@ const drawFractalsLayer = (
       if (node.alpha <= 0) return;
       const hue = baseHue + (node.phi / (2 * Math.PI)) * hueRange;
       ctx.fillStyle = `hsla(${hue}, ${saturation}, ${lightness}, ${node.alpha})`;
+
+      ctx.save();
+      ctx.translate(node.screenX, node.screenY);
+      ctx.rotate(node.angle);
+
       ctx.beginPath();
-      ctx.arc(node.screenX, node.screenY, node.scale * 1.5, 0, Math.PI * 2);
+      const size = node.scale * 1.5;
+      ctx.rect(-size / 2, -size / 2, size, size); // Draw a square instead of arc for clear rotation
       ctx.fill();
+
+      ctx.restore();
     });
   });
 };
 
 interface FractalCanvasProps {
-  mousePosition: MutableRefObject<{ x: number; y: number }>;
+  mouse: {
+    x: MotionValue<number>;
+    y: MotionValue<number>;
+  };
   containerRef: MutableRefObject<HTMLDivElement | null>;
 }
 
-const FractalCanvas = ({ mousePosition, containerRef }: FractalCanvasProps) => {
+const FractalCanvas = ({ mouse, containerRef }: FractalCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const { colorMode } = useColorMode();
@@ -190,6 +207,8 @@ const FractalCanvas = ({ mousePosition, containerRef }: FractalCanvasProps) => {
           screenY: 0,
           scale: 0,
           alpha: 0,
+          angle: Math.random() * Math.PI * 2,
+          angularVelocity: (Math.random() - 0.5) * 0.05, // Increased velocity
         });
       }
       newGalaxies.push({
@@ -245,18 +264,36 @@ const FractalCanvas = ({ mousePosition, containerRef }: FractalCanvasProps) => {
     const dampingFactor = 0.95;
 
     const animate = () => {
-      if (!ctx) return;
+      if (!canvasRef.current || !containerRef.current) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      const ctx = canvasRef.current.getContext("2d");
+      if (!ctx) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      mouseVelocity.x = mousePosition.current.x - lastMousePosition.x;
-      mouseVelocity.y = mousePosition.current.y - lastMousePosition.y;
-      lastMousePosition = { ...mousePosition.current };
+      const mousePos = {
+        x: mouse.x.get(),
+        y: mouse.y.get(),
+      };
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const scale = window.devicePixelRatio || 1;
+
+      mouseVelocity.x = mousePos.x - lastMousePosition.x;
+      mouseVelocity.y = mousePos.y - lastMousePosition.y;
+      lastMousePosition = { ...mousePos };
 
       mouseVelocity.x *= dampingFactor;
       mouseVelocity.y *= dampingFactor;
 
-      const targetMouseRotX = mousePosition.current.y - 0.5;
-      const targetMouseRotY = mousePosition.current.x - 0.5;
+      const targetMouseRotX = mousePos.y - 0.5;
+      const targetMouseRotY = mousePos.x - 0.5;
 
       mouseRotationX +=
         (targetMouseRotX - mouseRotationX) * 0.1 + mouseVelocity.y * 0.5;
@@ -286,7 +323,7 @@ const FractalCanvas = ({ mousePosition, containerRef }: FractalCanvasProps) => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (containerRef.current) resizeObserver.unobserve(containerRef.current);
     };
-  }, [galaxies, isDark, mousePosition, containerRef]);
+  }, [galaxies, isDark, mouse, containerRef]);
 
   return (
     <canvas

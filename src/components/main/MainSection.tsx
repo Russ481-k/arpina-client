@@ -1,22 +1,34 @@
 "use client";
 
 import { Box, Flex } from "@chakra-ui/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useColors } from "@/styles/theme";
 import CustomCursor from "./components/CustomCursor";
 import MainContent from "./components/MainContent";
 import FractalSection from "./components/FractalSection";
+import { useMotionValue, useSpring } from "framer-motion";
 
 const MainSection = () => {
-  const mousePosition = useRef({ x: 0.5, y: 0.5 });
+  const mouse = {
+    x: useMotionValue(0.5),
+    y: useMotionValue(0.5),
+  };
+  const smoothMouse = {
+    x: useSpring(mouse.x, { stiffness: 100, damping: 30, restDelta: 0.001 }),
+    y: useSpring(mouse.y, { stiffness: 100, damping: 30, restDelta: 0.001 }),
+  };
+
   const colors = useColors();
 
-  const handleGlobalMouseMove = useCallback((e: MouseEvent) => {
-    mousePosition.current = {
-      x: e.clientX / window.innerWidth,
-      y: e.clientY / window.innerHeight,
-    };
-  }, []);
+  const handleGlobalMouseMove = useCallback(
+    (e: MouseEvent) => {
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      mouse.x.set(clientX / innerWidth);
+      mouse.y.set(clientY / innerHeight);
+    },
+    [mouse.x, mouse.y]
+  );
 
   useEffect(() => {
     window.addEventListener("mousemove", handleGlobalMouseMove);
@@ -44,8 +56,8 @@ const MainSection = () => {
         alignItems="center"
         px={{ base: 4, md: 8, lg: 16 }}
       >
-        <MainContent />
-        <FractalSection mousePosition={mousePosition} />
+        <MainContent mouse={smoothMouse} />
+        <FractalSection mouse={mouse} />
       </Flex>
       <CustomCursor />
     </Box>

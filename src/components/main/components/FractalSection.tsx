@@ -1,26 +1,33 @@
 "use client";
 
 import { Box, Flex, Text, Heading } from "@chakra-ui/react";
-import { motion } from "framer-motion";
-import { MutableRefObject, useRef } from "react";
+import { motion, MotionValue } from "framer-motion";
+import { useRef } from "react";
 import FractalCanvas from "./FractalCanvas";
 import CounselCard from "./card/CounselCard";
 import { useColorMode } from "@/components/ui/color-mode";
 
 interface FractalSectionProps {
-  mousePosition: MutableRefObject<{ x: number; y: number }>;
+  mouse: {
+    x: MotionValue<number>;
+    y: MotionValue<number>;
+  };
 }
 
-const FractalSection = ({ mousePosition }: FractalSectionProps) => {
+const FractalSection = ({ mouse }: FractalSectionProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
+
+  const gradient = isDark
+    ? "linear-gradient(to right, hsl(184, 51%, 70%), hsl(204, 51%, 75%), hsl(224, 51%, 80%))"
+    : "linear-gradient(to right, hsl(184, 51%, 40%), hsl(204, 51%, 45%), hsl(224, 51%, 50%))";
 
   return (
     <Flex
       display={{ base: "none", lg: "flex" }}
       flex="0 0 45%"
-      h="100%"
+      h="97vh"
       justifyContent="center"
       alignItems="center"
       position="relative"
@@ -59,21 +66,42 @@ const FractalSection = ({ mousePosition }: FractalSectionProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1.2 }}
         >
-          <Heading
-            color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
+          <Flex>
+            {"REVEAL YOURSELF".split("").map((char, index) => (
+              <motion.div
+                key={index}
+                animate={{ y: [0, -3, 0] }}
+                transition={{
+                  duration: 0.5,
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  ease: "easeInOut",
+                  delay: index * 0.1,
+                  repeatDelay: 5,
+                }}
+              >
+                <Text
+                  fontSize={{ base: "sm", md: "md" }}
+                  fontWeight="bold"
+                  letterSpacing="widest"
+                  lineHeight="1.1"
+                  bgGradient={gradient}
+                  bgClip="text"
+                  color="transparent"
+                >
+                  {char === " " ? "\u00A0" : char}
+                </Text>
+              </motion.div>
+            ))}
+          </Flex>
+          <Text
             fontSize={{ base: "sm", md: "md" }}
             fontWeight="bold"
             letterSpacing="widest"
-            lineHeight="1"
-          >
-            REVEAL YOURSELF
-          </Heading>
-          <Text
-            color={isDark ? "whiteAlpha.800" : "blackAlpha.800"}
-            fontSize={{ base: "sm", md: "md" }}
-            fontWeight="bold"
-            mt={2}
-            letterSpacing="wide"
+            lineHeight="1.1"
+            bgGradient={gradient}
+            bgClip="text"
+            color="transparent"
           >
             TRANSFORM YOUR LIFE
           </Text>
@@ -90,10 +118,7 @@ const FractalSection = ({ mousePosition }: FractalSectionProps) => {
           clipPath: "url(#fractal-cutout)",
         }}
       >
-        <FractalCanvas
-          mousePosition={mousePosition}
-          containerRef={containerRef}
-        />
+        <FractalCanvas mouse={mouse} containerRef={containerRef} />
       </Box>
       <CounselCard />
     </Flex>

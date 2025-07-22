@@ -1,13 +1,28 @@
 "use client";
 
 import { Box, Button, Flex, Heading, Icon, Text } from "@chakra-ui/react";
-import { motion, Variants } from "framer-motion";
+import {
+  motion,
+  Variants,
+  useTransform,
+  MotionValue,
+  useMotionTemplate,
+} from "framer-motion";
 import { ChevronRightIcon } from "lucide-react";
 import NoticeCard from "./card/NoticeCard";
+import { useState, useEffect, useRef } from "react";
 
 const MotionHeading = motion(Heading);
 const MotionText = motion(Text);
 const MotionBox = motion(Box);
+const MotionFlex = motion(Flex);
+
+interface MainContentProps {
+  mouse: {
+    x: MotionValue<number>;
+    y: MotionValue<number>;
+  };
+}
 
 const mainTitle = "울산과학대학교";
 const subTitle = "학생상담센터";
@@ -42,9 +57,62 @@ const typingLetterVariants: Variants = {
   visible: { opacity: 1 },
 };
 
-const MainContent = () => {
+const MainContent = ({ mouse }: MainContentProps) => {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const [dimensions, setDimensions] = useState<{
+    el: DOMRect | null;
+    win: { width: number; height: number };
+  }>({ el: null, win: { width: 0, height: 0 } });
+  const [gradientStyle, setGradientStyle] = useState("");
+  const [isOverflowVisible, setOverflowVisible] = useState(false);
+  const [isButtonHovered, setButtonHovered] = useState(false);
+
+  useEffect(() => {
+    const measure = () => {
+      setDimensions({
+        el: headingRef.current?.getBoundingClientRect() || null,
+        win: { width: window.innerWidth, height: window.innerHeight },
+      });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  const gradientX = useTransform(
+    mouse.x,
+    (normX) => normX * dimensions.win.width - (dimensions.el?.left || 0)
+  );
+  const gradientY = useTransform(
+    mouse.y,
+    (normY) => normY * dimensions.win.height - (dimensions.el?.top || 0)
+  );
+
+  const baseColor = { r: 41, g: 125, b: 131 };
+  const hue = useTransform(mouse.x, [0, 1], [200, 240]);
+  const lightness = useTransform(mouse.y, [0, 1], [0.3, 0.4]);
+
+  const background = useMotionTemplate`radial-gradient(circle at ${gradientX}px ${gradientY}px, hsl(${hue}, 90%, ${useTransform(
+    lightness,
+    (l) => l * 100
+  )}%), rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 1) 70%)`;
+
+  useEffect(() => {
+    // Set the initial value on mount
+    setGradientStyle(background.get());
+
+    // Subscribe to subsequent changes
+    const unsubscribe = background.on("change", (latest) => {
+      setGradientStyle(latest);
+    });
+    return () => unsubscribe();
+  }, [background]);
+
+  const rotateX = useTransform(mouse.y, [0, 1], [8, -8]);
+  const rotateY = useTransform(mouse.x, [0, 1], [-8, 8]);
+
   return (
-    <Box position="relative" w="full" h="60vh">
+    <Box position="relative" w="full" h="70vh">
       <Flex
         flex={{ base: 1, lg: "0 0 55%" }}
         h="100%"
@@ -52,6 +120,7 @@ const MainContent = () => {
         direction="column"
         alignItems="flex-start"
         pr={{ lg: 8 }}
+        style={{ perspective: "800px" }}
       >
         <MotionBox
           w="full"
@@ -86,8 +155,12 @@ const MainContent = () => {
             fontSize={{ base: "7xl", md: "8xl", lg: "9xl" }}
             fontWeight="900"
             lineHeight="1"
-            color="rgb(41, 125, 131)"
+            bgGradient={gradientStyle}
+            bgClip="text"
+            color="transparent"
             variants={itemVariants}
+            ref={headingRef}
+            style={{ rotateX, rotateY }}
           >
             <motion.span
               variants={typingContainerVariants}
@@ -119,22 +192,96 @@ const MainContent = () => {
                 </motion.span>
               ))}
             </motion.span>
-            <Box mt={6}>
-              <Button
+            <MotionBox mt={6} variants={itemVariants}>
+              <MotionFlex
+                display="inline-flex"
                 bg="rgb(41, 125, 131)"
                 color="white"
                 borderRadius="full"
-                pl={6}
-                pr={1}
+                align="center"
                 py={0}
+                pr={1}
+                overflow={isOverflowVisible ? "visible" : "hidden"}
                 cursor="none"
+                variants={{
+                  hidden: { width: "44px" },
+                  visible: {
+                    width: "210px",
+                    x: 0,
+                    transition: { duration: 0.6, ease: "easeInOut" },
+                  },
+                  hover: {
+                    width: "210px",
+                    x: 5,
+                    transition: { type: "spring", stiffness: 300, damping: 15 },
+                  },
+                }}
+                animate={isButtonHovered ? "hover" : "visible"}
+                onHoverStart={() => setButtonHovered(true)}
+                onHoverEnd={() => setButtonHovered(false)}
+                onAnimationComplete={(definition) => {
+                  if (definition === "visible") {
+                    setOverflowVisible(true);
+                  }
+                }}
               >
-                <Text>자가진단 하러가기</Text>
-                <Box bg="white" borderRadius="full" ml={1} p={1}>
-                  <Icon as={ChevronRightIcon} color="rgb(41, 125, 131)" />
+                <Box
+                  flex={1}
+                  pl={6}
+                  py={2}
+                  whiteSpace="nowrap"
+                  overflow="visible"
+                >
+                  <motion.div
+                    style={{ display: "inline-block" }}
+                    animate={isButtonHovered ? "hover" : "visible"}
+                    variants={{
+                      visible: {
+                        clipPath: "inset(0 0% 0 0)",
+                        transition: {
+                          duration: 0.3,
+                          ease: "easeInOut",
+                        },
+                      },
+                      hover: {
+                        transition: { staggerChildren: 0.05 },
+                      },
+                    }}
+                  >
+                    {"자가진단 하러가기".split("").map((char, index) => (
+                      <motion.span
+                        key={index}
+                        style={{ display: "inline-block" }}
+                        variants={{
+                          hover: { y: [0, -5, 0] },
+                          visible: { y: 0 },
+                        }}
+                        transition={{
+                          duration: 0.3,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        {char === " " ? "\u00A0" : char}
+                      </motion.span>
+                    ))}
+                  </motion.div>
                 </Box>
-              </Button>
-            </Box>
+                <motion.div
+                  style={{ display: "flex" }}
+                  variants={{
+                    hidden: { scale: 0 },
+                    visible: {
+                      scale: 1,
+                      transition: { delay: 0.3, duration: 0.4 },
+                    },
+                  }}
+                >
+                  <Box bg="white" borderRadius="full" ml={1} p={1}>
+                    <Icon as={ChevronRightIcon} color="rgb(41, 125, 131)" />
+                  </Box>
+                </motion.div>
+              </MotionFlex>
+            </MotionBox>
           </MotionText>
         </MotionBox>
       </Flex>
