@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { useColors } from "@/styles/theme";
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
+import { UserChatButton } from "../chat/UserChatButton";
 
 function Layout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -75,18 +76,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         >
           {children}
         </Box>
-        {/* CMS 화면에서만 컬러 모드 토글 버튼 표시 */}
-        {/* {shouldShowCMSLayout && (
-          <Flex
-            position="fixed"
-            bottom="4"
-            right="4"
-            zIndex="1001"
-            display={{ base: "none", md: "flex" }}
-          >
-            <ColorModeToggle size="md" variant="icon" />
-          </Flex>
-        )} */}
+        {!shouldShowCMSLayout && <UserChatButton />}
       </Box>
     </Box>
   );

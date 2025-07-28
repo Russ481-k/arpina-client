@@ -1,8 +1,18 @@
 import { api } from './index';
-import {ChatMessageDto, SendMessageRequest, ApiResponse } from '@/types/api/chat';
+import { ChatMessageDto, SendMessageRequest, ApiResponse } from '@/types/api/chat';
+
+interface InitializeChatRequest {
+  threadId: number;
+  userName: string;
+  userType: 'USER' | 'ADMIN';
+}
 
 // API 기본 URL은 index.ts에서 설정하므로 여기서는 제거
 export const chatApi = {
+  // 채팅방 초기화
+  initializeChat: (data: InitializeChatRequest) =>
+    api.post<ApiResponse<void>>('/chat/initialize', data),
+
   // 메시지 관련
   getMessages: (threadId: number) =>
     api.get<ApiResponse<ChatMessageDto[]>>(`/chat/threads/${threadId}/messages`),

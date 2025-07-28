@@ -25,6 +25,13 @@ export interface SendMessageRequest {
   fileUrl?: string;
 }
 
+// 채팅 초기화 요청
+export interface InitializeChatRequest {
+  threadId: number;
+  userName: string;
+  userType: 'USER' | 'ADMIN';
+}
+
 // API 응답 타입
 export interface ApiResponse<T> {
   success: boolean;

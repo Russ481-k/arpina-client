@@ -6,15 +6,14 @@ import { IoChatbubblesOutline } from "react-icons/io5";
 import { useColors } from "@/styles/theme";
 import { useEffect, useState } from "react";
 import { LanguageModeToggle } from "../common/LanguageModeToggle";
-import { openChatPopup } from "@/app/cms/CMSLayoutClient";
 import { useRecoilValue } from "recoil";
 import { authState } from "@/stores/auth";
+import { openChatPopup } from "@/lib/chat-utils";
 
 export const FloatingButtons = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const colors = useColors();
   const { user } = useRecoilValue(authState);
-  const isAdmin = user?.role === "ADMIN" || user?.role === "SYSTEM_ADMIN";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,9 +39,10 @@ export const FloatingButtons = () => {
   };
 
   const handleChatClick = () => {
-    if (user) {
-      openChatPopup("admin", user.name);
-    }
+    openChatPopup({
+      userName: user?.name || "관리자",
+      userType: "ADMIN",
+    });
   };
 
   return (
@@ -55,26 +55,24 @@ export const FloatingButtons = () => {
       flexDirection="column"
       gap={4}
     >
-      {isAdmin && (
-        <IconButton
-          aria-label="채팅"
-          onClick={handleChatClick}
-          bg={colors.cardBg}
-          color={colors.primary.default}
-          borderWidth="1px"
-          borderColor={colors.border}
-          boxShadow={colors.shadow.lg}
-          borderRadius="full"
-          size="lg"
-          _hover={{
-            bg: "rgba(99, 102, 241, 0.1)",
-            color: colors.primary.hover,
-            transform: "translateY(-4px)",
-          }}
-        >
-          <IoChatbubblesOutline />
-        </IconButton>
-      )}
+      <IconButton
+        aria-label="채팅"
+        onClick={handleChatClick}
+        bg={colors.cardBg}
+        color={colors.primary.default}
+        borderWidth="1px"
+        borderColor={colors.border}
+        boxShadow={colors.shadow.lg}
+        borderRadius="full"
+        size="lg"
+        _hover={{
+          bg: "rgba(99, 102, 241, 0.1)",
+          color: colors.primary.hover,
+          transform: "translateY(-4px)",
+        }}
+      >
+        <IoChatbubblesOutline size={24} />
+      </IconButton>
       <IconButton
         aria-label="맨 위로 이동"
         onClick={scrollToTop}
