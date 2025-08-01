@@ -11,7 +11,7 @@ import {
 import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api"; // Post 타입에 FAQ 질문(title)과 답변(content)이 있다고 가정
 import { PaginationData } from "@/types/common"; // PaginationData import
-import { useRouter } from "next/navigation"; // for onPageChange
+import { useRouter, useSearchParams } from "next/navigation"; // for onPageChange
 import { ArticleDisplay } from "@/components/articles/ArticleDisplay"; // Import ArticleDisplay
 import PostTitleDisplay from "@/components/common/PostTitleDisplay"; // PostTitleDisplay 임포트
 import { CustomPagination } from "@/components/common/CustomPagination";
@@ -30,6 +30,7 @@ const FaqBoardSkin: React.FC<FaqBoardSkinProps> = ({
   currentPathId, // prop 받기
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   // 반응형 폰트 크기 설정
   const fontSize = useBreakpointValue({
     base: "sm",
@@ -38,13 +39,16 @@ const FaqBoardSkin: React.FC<FaqBoardSkinProps> = ({
   });
 
   const handlePageChange = (page: number) => {
-    router.push(
-      `/bbs/${currentPathId}?page=${page + 1}&size=${pagination.pageSize}`
-    );
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", String(page + 1));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   const handlePageSizeChange = (newSize: number) => {
-    router.push(`/bbs/${currentPathId}?page=1&size=${newSize}`);
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", "1");
+    query.set("size", String(newSize));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   return (

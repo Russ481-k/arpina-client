@@ -15,7 +15,7 @@ import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api";
 import { PaginationData } from "@/types/common";
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CustomPagination } from "@/components/common/CustomPagination";
 
 import { AgGridReact } from "ag-grid-react";
@@ -207,6 +207,7 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
   viewMode,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const gridRef = useRef<AgGridReact<Post>>(null);
   const { colorMode } = useColorMode();
   const colors = useColors(); // For theme-dependent fallbacks
@@ -216,14 +217,20 @@ const PressBoardSkin: React.FC<PressBoardSkinProps> = ({
   const selectedAgGridThemeStyles =
     colorMode === "dark" ? themeDarkMode : themeLightMode;
 
-  const handlePageChange = (page: number) =>
-    router.push(
-      `${currentPathId}?page=${page + 1}&size=${
-        pagination.pageSize
-      }&view=${viewMode}`
-    );
-  const handlePageSizeChange = (newSize: number) =>
-    router.push(`${currentPathId}?page=1&size=${newSize}&view=${viewMode}`);
+  const handlePageChange = (page: number) => {
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", String(page + 1));
+    query.set("view", viewMode);
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", "1");
+    query.set("size", String(newSize));
+    query.set("view", viewMode);
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
+  };
   const onRowClicked = useCallback(
     (event: RowClickedEvent<Post>) => {
       if (event.data && event.eventPath) {

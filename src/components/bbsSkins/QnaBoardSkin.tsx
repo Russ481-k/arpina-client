@@ -6,7 +6,7 @@ import { PageDetailsDto } from "@/types/menu";
 import { Post } from "@/types/api";
 import { PaginationData } from "@/types/common";
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CustomPagination } from "@/components/common/CustomPagination";
 import dayjs from "dayjs";
 
@@ -148,18 +148,22 @@ const QnaBoardSkin: React.FC<QnaBoardSkinProps> = ({
   currentPathId,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const gridRef = useRef<AgGridReact<Post>>(null); // AG Grid ref
   const { colorMode } = useColorMode(); // For theme
   const colors = useColors(); // For theme
 
   const handlePageChange = (page: number) => {
-    router.push(
-      `/bbs/${currentPathId}?page=${page + 1}&size=${pagination.pageSize}`
-    );
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", String(page + 1));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   const handlePageSizeChange = (newSize: number) => {
-    router.push(`/bbs/${currentPathId}?page=1&size=${newSize}`);
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", "1");
+    query.set("size", String(newSize));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   const agGridContext = useMemo(

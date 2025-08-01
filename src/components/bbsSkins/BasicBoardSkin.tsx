@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AgGridReact } from "ag-grid-react";
 import {
   type ColDef,
@@ -133,18 +133,22 @@ const BasicBoardSkin: React.FC<BasicBoardSkinProps> = ({
   viewMode,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const gridRef = useRef<AgGridReact<Post>>(null);
   const { colorMode } = useColorMode();
   const colors = useColors();
 
   const handlePageChange = (page: number) => {
-    router.push(
-      `/bbs/${currentPathId}?page=${page + 1}&size=${pagination.pageSize}`
-    );
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", String(page + 1));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   const handlePageSizeChange = (newSize: number) => {
-    router.push(`/bbs/${currentPathId}?page=1&size=${newSize}`);
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", "1");
+    query.set("size", String(newSize));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   const agGridThemeClass =

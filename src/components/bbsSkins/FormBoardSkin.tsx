@@ -17,7 +17,7 @@ import { PageDetailsDto } from "@/types/menu";
 import { Post, FileDto } from "@/types/api";
 import { PaginationData } from "@/types/common";
 import NextLink from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CustomPagination } from "@/components/common/CustomPagination";
 import {
   FaFilePdf,
@@ -180,6 +180,7 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
   currentPathId,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const gridRef = useRef<AgGridReact<Post>>(null);
   const { colorMode } = useColorMode();
   const colors = useColors();
@@ -189,13 +190,16 @@ const FormBoardSkin: React.FC<FormBoardSkinProps> = ({
     pageDetails.boardWriteAuth !== "NONE_OR_SIMILAR_RESTRICTIVE_VALUE";
 
   const handlePageChange = (page: number) => {
-    router.push(
-      `/${currentPathId}?page=${page + 1}&size=${pagination.pageSize}`
-    );
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", String(page + 1));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   const handlePageSizeChange = (newSize: number) => {
-    router.push(`/${currentPathId}?page=1&size=${newSize}`);
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("page", "1");
+    query.set("size", String(newSize));
+    router.push(`/bbs/${currentPathId}?${query.toString()}`);
   };
 
   const agGridContext = useMemo(() => ({ currentPathId }), [currentPathId]);
