@@ -86,7 +86,7 @@ export const SwimmingLessonList = () => {
     error: lessonsError,
   } = useLessons({
     page: 0,
-    size: 200,
+    size: 300,
     // Use the determined statusForApi for the query.
     // Month is removed from API query and will be filtered on the client-side
     // to ensure correctness regardless of backend behavior.
