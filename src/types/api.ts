@@ -451,6 +451,9 @@ export interface EnrollInitiationResponseDto {
   userIp: string; // User IP address
   goodsSplAmt: string; // Supply amount
   goodsVat: string; // VAT amount
+  // Optional: pending hold info for 5-minute reservation window
+  holdId?: string;
+  holdExpireAt?: string; // ISO8601
 }
 
 /**

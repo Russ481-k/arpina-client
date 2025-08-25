@@ -500,14 +500,12 @@ const ApplicationConfirmPage = () => {
       console.error("Enrollment Error:", err);
       console.error("Error Response:", err.response);
 
-      const errMsg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.message ||
-        "강습 신청 중 오류가 발생했습니다.";
+      // 상태별 사용자 친화적 메시지 처리
+      const statusCode: number | undefined = err?.response?.status;
+      let friendlyMsg: string | undefined =
+        err?.response?.data?.message || err?.response?.data?.error;
 
-      // 401 Unauthorized 체크
-      if (err.response?.status === 401) {
+      if (statusCode === 401) {
         toaster.create({
           title: "인증 필요",
           description: "로그인이 필요합니다. 로그인 페이지로 이동합니다.",
@@ -516,6 +514,17 @@ const ApplicationConfirmPage = () => {
         router.push("/login?redirect=/application/confirm");
         return;
       }
+
+      if (statusCode === 409) {
+        friendlyMsg =
+          friendlyMsg ||
+          "정원이 초과되었거나, 결제 중인 인원이 많아 현재 결제를 시작할 수 없습니다.";
+      } else if (statusCode === 400) {
+        friendlyMsg = friendlyMsg || "입력 값이 유효하지 않습니다.";
+      }
+
+      const errMsg =
+        friendlyMsg || err?.message || "강습 신청 중 오류가 발생했습니다.";
 
       setError(errMsg);
       toaster.create({
@@ -552,12 +561,30 @@ const ApplicationConfirmPage = () => {
         duration: 5000,
       });
 
+      // 실패 시에도 선택적으로 즉시 해제 시도
+      try {
+        if (paymentData?.holdId) {
+          await swimmingPaymentService.releasePendingHold(paymentData.holdId);
+        }
+      } catch (e) {
+        console.warn("releasePendingHold on failure failed", e);
+      }
+
       setIsSubmitting(false);
     }
   };
 
-  const handlePaymentClose = () => {
+  const handlePaymentClose = async () => {
     setIsSubmitting(false);
+    try {
+      // 선택적 최적화: holdId가 응답에 포함된 경우 즉시 해제 요청
+      if (paymentData?.holdId) {
+        await swimmingPaymentService.releasePendingHold(paymentData.holdId);
+      }
+    } catch (e) {
+      // 해제 실패는 치명적이지 않음(TTL 자동 소멸). 조용히 무시
+      console.warn("releasePendingHold failed", e);
+    }
   };
 
   const spinnerColor = primaryDefault;

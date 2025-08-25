@@ -389,6 +389,20 @@ export const swimmingPaymentService = {
   ),
 
   /**
+   * Releases a pending payment hold (optional optimization).
+   * Corresponds to POST /api/v1/payment/release-pending
+   */
+  releasePendingHold: withAuthRedirect(
+    async (holdId: string): Promise<{ success: boolean }> => {
+      const response = await privateApi.post<{ success: boolean }>(
+        `${PAYMENT_BASE_PATH}/release-pending`,
+        { holdId }
+      );
+      return response.data;
+    }
+  ),
+
+  /**
    * Approves KISPG payment and creates enrollment record.
    * Corresponds to POST /api/v1/payment/approve-and-create-enrollment
    * This is the CORRECT API to call after KISPG payment completion!

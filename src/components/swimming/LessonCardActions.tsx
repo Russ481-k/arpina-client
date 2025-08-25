@@ -365,7 +365,16 @@ const LessonCardActions: React.FC<LessonCardActionsProps> = ({
       now <= applicationEndTime
     ) {
       // 3. Within application period
-      if (lesson.remaining != null && lesson.remaining > 0) {
+      // 우선순위: availablePaymentSlots(있으면 사용) > remaining(기존)
+      const availableSlots = (lesson as any).availablePaymentSlots as
+        | number
+        | undefined;
+      const canApplyBySlots =
+        typeof availableSlots === "number"
+          ? availableSlots > 0
+          : lesson.remaining != null && lesson.remaining > 0;
+
+      if (canApplyBySlots) {
         buttonContent = "신청하기";
         buttonDisabled = false;
         buttonBgColor = "#2D3092"; // Primary blue
