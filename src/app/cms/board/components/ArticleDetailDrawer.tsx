@@ -114,10 +114,20 @@ export const ArticleDetailDrawer = ({
     }
   };
 
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SYSTEM_ADMIN";
+
+  // ADMIN 권한이 있으면 모든 게시글 수정/삭제 가능
+  // 일반 사용자는 자신의 게시글만 수정/삭제 가능
   const effectiveCanEdit =
-    canEdit && article && isAuthenticated && user?.name === article.writer;
+    canEdit &&
+    article &&
+    isAuthenticated &&
+    (isAdmin || user?.name === article.writer);
   const effectiveCanDelete =
-    canDelete && article && isAuthenticated && user?.name === article.writer;
+    canDelete &&
+    article &&
+    isAuthenticated &&
+    (isAdmin || user?.name === article.writer);
 
   return (
     <Drawer.Root

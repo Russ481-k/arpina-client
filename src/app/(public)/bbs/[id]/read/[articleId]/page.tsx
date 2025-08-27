@@ -22,6 +22,8 @@ import { PageDetailsDto } from "@/types/menu";
 import { findMenuByPath } from "@/lib/menu-utils";
 import { Menu, BoardArticleCommon } from "@/types/api";
 import { AdminComment } from "@/components/comments/AdminComment";
+import { useRecoilValue } from "recoil";
+import { authState } from "@/stores/auth";
 
 interface PrevNextArticleInfo {
   nttId: number;
@@ -182,8 +184,19 @@ export default function ArticleDetailPage() {
     );
   }
 
-  const canEdit = pageDetails?.boardWriteAuth === "AUTHORIZED";
-  const canDelete = pageDetails?.boardDeleteAuth === "AUTHORIZED";
+  const { user, isAuthenticated } = useRecoilValue(authState);
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SYSTEM_ADMIN";
+
+  // ADMIN 권한이 있으면 모든 게시글 수정/삭제 가능
+  // 일반 사용자는 자신의 게시글만 수정/삭제 가능
+  const canEdit =
+    pageDetails?.boardWriteAuth === "AUTHORIZED" &&
+    isAuthenticated &&
+    (isAdmin || user?.name === article.writer);
+  const canDelete =
+    pageDetails?.boardDeleteAuth === "AUTHORIZED" &&
+    isAuthenticated &&
+    (isAdmin || user?.name === article.writer);
 
   return (
     <Container maxW="container.lg" py={8}>
@@ -291,12 +304,28 @@ export default function ArticleDetailPage() {
 
       <Flex justify="flex-end" gap={3} mt={4}>
         {canEdit && (
-          <Button colorPalette="blue" variant="outline" size="xs">
-            수정
-          </Button>
+          <NextLink href={`/bbs/${id}/edit/${article.nttId}`} passHref>
+            <Button colorPalette="blue" variant="outline" size="xs">
+              수정
+            </Button>
+          </NextLink>
         )}
         {canDelete && (
-          <Button colorPalette="red" size="xs">
+          <Button
+            colorPalette="red"
+            size="xs"
+            onClick={async () => {
+              if (window.confirm("정말 삭제하시겠습니까?")) {
+                try {
+                  await articleApi.deleteArticle(article.nttId);
+                  window.location.href = listUrl;
+                } catch (error) {
+                  console.error("Failed to delete article:", error);
+                  alert("게시글 삭제 중 오류가 발생했습니다.");
+                }
+              }
+            }}
+          >
             삭제
           </Button>
         )}
