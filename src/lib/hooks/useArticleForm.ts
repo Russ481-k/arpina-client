@@ -61,9 +61,10 @@ export function useArticleForm({
     author: initialData?.writer || "",
     content: initialData?.content || "",
     category: initialData?.category || "",
-    categoryId: initialData?.categories && initialData.categories.length > 0 
-      ? initialData.categories[0].categoryId 
-      : initialData?.categoryId,
+    categoryId:
+      initialData?.categories && initialData.categories.length > 0
+        ? initialData.categories[0].categoryId
+        : initialData?.categoryId,
     externalLink: initialData?.externalLink || "",
     captcha: "",
     noticeState: (initialData?.noticeState || "N") as ArticleStatusFlag,
@@ -134,9 +135,7 @@ export function useArticleForm({
           if (responseData.success && responseData.data) {
             boardData = responseData.data;
           } else {
-            throw new Error(
-              responseData.message || "Failed to retrieve data."
-            );
+            throw new Error(responseData.message || "Failed to retrieve data.");
           }
         } else if (responseData && typeof responseData.bbsId !== "undefined") {
           // Duck-typing to check if it's a BoardMaster object
@@ -294,7 +293,9 @@ export function useArticleForm({
       // 카테고리 처리 - 게시글 수정 시 명확한 카테고리 상태 전달
       if (initialData?.nttId) {
         // 기존 게시글 수정의 경우 - 카테고리 ID가 있으면 해당 카테고리로, 없으면 빈 배열
-        articleDtoPart.categoryIds = formData.categoryId ? [formData.categoryId] : [];
+        articleDtoPart.categoryIds = formData.categoryId
+          ? [formData.categoryId]
+          : [];
       } else {
         // 새 게시글 작성의 경우 - 카테고리 ID가 있을 때만 포함
         if (formData.categoryId) {
@@ -469,6 +470,11 @@ export function useArticleForm({
   };
 
   // --- Effects ---
+
+  // files가 변경될 때 newlyAddedFiles도 함께 업데이트
+  useEffect(() => {
+    setNewlyAddedFiles(files);
+  }, [files]);
 
   // Set initial author if user is authenticated and it's an admin page context
   useEffect(() => {
