@@ -116,7 +116,7 @@ export default function ArticleDetailPage() {
           throw new Error(articleResponse.message || "Failed to fetch article");
         }
 
-        const menuPath = `/cms/bbs/${id}`;
+        const menuPath = `/bbs/${id}`;
         const menu: Menu | null = await findMenuByPath(menuPath);
         if (menu && typeof menu.id === "number") {
           const details = await menuApi.getPageDetails(menu.id);
