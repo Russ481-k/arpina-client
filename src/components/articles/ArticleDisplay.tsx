@@ -100,6 +100,7 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => {
     setIsMounted(true);
+    return () => setIsMounted(false);
   }, []);
 
   const initialConfig = React.useMemo(
@@ -274,7 +275,8 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
                   !file ||
                   typeof file.fileId === "undefined" ||
                   typeof file.originName === "undefined" ||
-                  typeof file.size === "undefined"
+                  typeof file.size === "undefined" ||
+                  !file.downloadUrl
                 ) {
                   console.error(
                     "Invalid file object found in ArticleDisplay:",
@@ -284,6 +286,7 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
                 }
 
                 const FileIcon = getFileIcon(file.mimeType, file.ext);
+                // downloadUrl이 이미 체크되었으므로 안전하게 사용 가능
                 const downloadUrl = file.downloadUrl;
                 return (
                   <Flex
