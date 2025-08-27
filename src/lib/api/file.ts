@@ -63,7 +63,7 @@ export const fileApi = {
       formData,
       {
         headers: {
-          "Content-Type": undefined,
+          "Content-Type": "multipart/form-data",
         },
       }
     );

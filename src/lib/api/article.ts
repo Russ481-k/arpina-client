@@ -113,7 +113,7 @@ export const articleApi = {
       formData,
       {
         headers: {
-          "Content-Type": undefined,
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -130,7 +130,7 @@ export const articleApi = {
       formData,
       {
         headers: {
-          "Content-Type": undefined,
+          "Content-Type": "multipart/form-data",
         },
       }
     );
