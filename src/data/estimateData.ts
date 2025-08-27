@@ -51,6 +51,18 @@ export const Seminars: Seminar[] = [
     ],
   },
   {
+    name: "마리나",
+    location: "2F / 중회의실",
+    maxPeople: 60,
+    area: "289.24",
+    price: 770000,
+    images: [
+      { src: "/images/contents/seminar07_img01.jpg" },
+      { src: "/images/contents/seminar07_img02.jpg" },
+      { src: "/images/contents/seminar07_img03.jpg" },
+    ],
+  },
+  {
     name: "가람",
     location: "1F / 소회의실",
     maxPeople: 10,

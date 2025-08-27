@@ -33,7 +33,7 @@ import { SIGNUP_AGREEMENT_TEMPLATES } from "@/data/agreements";
 
 const seminarRoomsData = {
   대회의실: ["그랜드볼룸"],
-  중회의실: ["시걸", "클로버", "자스민"],
+  중회의실: ["시걸", "클로버", "자스민", "마리나"],
   소회의실: ["가람", "누리", "오션"],
 };
 

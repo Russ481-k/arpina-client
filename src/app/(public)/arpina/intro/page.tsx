@@ -175,7 +175,7 @@ export default function ParticipantsPage() {
     { src: "/images/contents/intro_floor_img07.jpg", description: "객실" },
     {
       src: "/images/contents/intro_floor_img08.jpg",
-      description: "클로버, 자스민, 시걸",
+      description: "클로버, 자스민, 시걸, 마리나",
     },
     {
       src: "/images/contents/intro_floor_img09.png",

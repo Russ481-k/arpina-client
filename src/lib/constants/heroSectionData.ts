@@ -168,6 +168,16 @@ export const heroSectionData: Record<
       { label: "중회의실", url: "/meeting/medium/seagull" },
     ],
   },
+  "/meeting/medium/marina": {
+    header: "회의실",
+    title: "마리나",
+    image: "/images/meeting/sub_visual.png",
+    breadcrumbBorderColor: "#2E3192",
+    breadcrumb: [
+      { label: "홈", url: "/" },
+      { label: "중회의실", url: "/meeting/medium/seagull" },
+    ],
+  },
   "/meeting/small/garam-nuri": {
     header: "회의실",
     title: "가람&누리",
