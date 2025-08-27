@@ -103,7 +103,18 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
   React.useEffect(() => {
     const content = contentString ?? article?.content ?? null;
     if (content !== editorContent) {
-      setEditorContent(content);
+      try {
+        // content가 JSON 문자열인 경우 파싱
+        if (content && typeof content === "string" && content.startsWith("{")) {
+          const parsedContent = JSON.parse(content);
+          setEditorContent(JSON.stringify(parsedContent));
+        } else {
+          setEditorContent(content);
+        }
+      } catch (error) {
+        console.error("Error parsing content:", error);
+        setEditorContent(content);
+      }
     }
   }, [contentString, article?.content, editorContent]);
 
