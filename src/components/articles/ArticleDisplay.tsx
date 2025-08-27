@@ -104,16 +104,66 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
     const content = contentString ?? article?.content ?? null;
     if (content !== editorContent) {
       try {
-        // content가 JSON 문자열인 경우 파싱
+        // content가 JSON 문자열인 경우 파싱하여 직접 사용
         if (content && typeof content === "string" && content.startsWith("{")) {
-          const parsedContent = JSON.parse(content);
-          setEditorContent(JSON.stringify(parsedContent));
+          setEditorContent(content); // JSON 문자열을 그대로 사용
         } else {
-          setEditorContent(content);
+          // 일반 텍스트인 경우 Lexical JSON 형식으로 변환
+          const textContent = {
+            root: {
+              children: [
+                {
+                  children: [
+                    {
+                      detail: 0,
+                      format: 0,
+                      mode: "normal",
+                      style: "",
+                      text: content || "",
+                      type: "text",
+                      version: 1,
+                    },
+                  ],
+                  direction: "ltr",
+                  format: "",
+                  indent: 0,
+                  type: "paragraph",
+                  version: 1,
+                },
+              ],
+              direction: "ltr",
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1,
+            },
+          };
+          setEditorContent(JSON.stringify(textContent));
         }
       } catch (error) {
-        console.error("Error parsing content:", error);
-        setEditorContent(content);
+        console.error("Error handling content:", error);
+        // 에러 발생 시 빈 에디터 상태로 설정
+        setEditorContent(
+          JSON.stringify({
+            root: {
+              children: [
+                {
+                  children: [],
+                  direction: "ltr",
+                  format: "",
+                  indent: 0,
+                  type: "paragraph",
+                  version: 1,
+                },
+              ],
+              direction: "ltr",
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1,
+            },
+          })
+        );
       }
     }
   }, [contentString, article?.content, editorContent]);

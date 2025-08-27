@@ -51,6 +51,10 @@ export default function ArticleDetailPage() {
 
   const listUrl = id ? `/bbs/${id}` : "/bbs/voice";
 
+  // Recoil 훅은 조건부 렌더 전에 항상 호출되어야 함
+  const { user, isAuthenticated } = useRecoilValue(authState);
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SYSTEM_ADMIN";
+
   useEffect(() => {
     async function fetchData() {
       if (!currentNttIdString || !id) {
@@ -183,9 +187,6 @@ export default function ArticleDetailPage() {
       </Container>
     );
   }
-
-  const { user, isAuthenticated } = useRecoilValue(authState);
-  const isAdmin = user?.role === "ADMIN" || user?.role === "SYSTEM_ADMIN";
 
   // ADMIN 권한이 있으면 모든 게시글 수정/삭제 가능
   // 일반 사용자는 자신의 게시글만 수정/삭제 가능
