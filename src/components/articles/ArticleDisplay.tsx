@@ -97,20 +97,15 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
   contentStyle,
   boardInfo,
 }) => {
-  const [isMounted, setIsMounted] = React.useState(false);
   const [editorContent, setEditorContent] = React.useState<string | null>(null);
-
-  // 컴포넌트 마운트 상태 관리
-  React.useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
-  }, []);
 
   // 콘텐츠 변경 시 에디터 상태 업데이트
   React.useEffect(() => {
     const content = contentString ?? article?.content ?? null;
-    setEditorContent(content);
-  }, [contentString, article?.content]);
+    if (content !== editorContent) {
+      setEditorContent(content);
+    }
+  }, [contentString, article?.content, editorContent]);
 
   const initialConfig = React.useMemo(
     () => ({
@@ -119,7 +114,7 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
       editable: false,
       editorState: editorContent,
     }),
-    [editorContent, article?.nttId]
+    [article?.nttId, editorContent]
   );
 
   const colors = useColors();
@@ -235,9 +230,9 @@ export const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
                 A:
               </Text>
             )}
-            {isMounted && editorContent !== null && (
+            {editorContent !== null && (
               <LexicalComposer
-                key={article?.nttId || "default"}
+                key={`${article?.nttId || "default"}-${editorContent}`}
                 initialConfig={initialConfig}
               >
                 <RichTextPlugin
