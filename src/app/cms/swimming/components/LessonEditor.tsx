@@ -26,13 +26,22 @@ const formatDateTime = (date: Date): string => {
   return dayjs(date).format("YYYY-MM-DDTHH:mm:ss");
 };
 
+const parseDateTime = (dateTimeStr: string): string => {
+  // YYYY-MM-DDTHH:mm 형식으로 변환 (HTML datetime-local 입력과 호환)
+  return dayjs(dateTimeStr).format("YYYY-MM-DDTHH:mm");
+};
+
 // RESTORED INTERFACE DEFINITION
+interface LessonFormData extends AdminLessonDto {
+  _registrationEndDateTime?: string;
+}
+
 interface LessonEditorProps {
   lesson: AdminLessonDto | null;
   onSubmit: (lessonData: AdminLessonDto) => Promise<void>;
   onDelete: () => Promise<void>;
   isLoading: boolean;
-  onAddNew?: () => void; // For add new lesson functionality
+  onAddNew?: () => void;
 }
 
 export const LessonEditor: React.FC<LessonEditorProps> = ({
@@ -43,7 +52,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
   onAddNew,
 }) => {
   const colors = useColors();
-  const [formData, setFormData] = useState<AdminLessonDto>({
+  const [formData, setFormData] = useState<LessonFormData>({
     title: "",
     instructorName: "",
     lessonTime: "",
@@ -72,7 +81,9 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         lessonTime: lesson.lessonTime || "",
         startDate: lesson.startDate,
         endDate: lesson.endDate,
-        registrationEndDateTime: lesson.registrationEndDateTime || "",
+        registrationEndDateTime: lesson.registrationEndDateTime
+          ? parseDateTime(lesson.registrationEndDateTime)
+          : "",
         capacity: lesson.capacity,
         price: lesson.price,
         status: lesson.status,
@@ -112,6 +123,17 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       setFormData({
         ...formData,
         [name]: parseInt(value, 10) || 0,
+      });
+    } else if (
+      type === "datetime-local" &&
+      name === "registrationEndDateTime"
+    ) {
+      // datetime-local 입력의 값을 ISO 8601 형식으로 변환
+      const dateTime = dayjs(value).format("YYYY-MM-DDTHH:mm:ss");
+      setFormData({
+        ...formData,
+        [name]: value, // 입력 필드용 값은 그대로 유지
+        _registrationEndDateTime: dateTime, // API 전송용 값은 별도로 저장
       });
     } else {
       setFormData({
@@ -168,7 +190,16 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       setError(null);
       setIsSubmitting(true);
 
-      await onSubmit(formData);
+      // API 전송 시 registrationEndDateTime을 ISO 8601 형식으로 변환
+      const submitData = {
+        ...formData,
+        registrationEndDateTime:
+          formData._registrationEndDateTime ||
+          dayjs(formData.registrationEndDateTime).format("YYYY-MM-DDTHH:mm:ss"),
+      };
+      delete submitData._registrationEndDateTime;
+
+      await onSubmit(submitData);
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error submitting lesson data:", error);
