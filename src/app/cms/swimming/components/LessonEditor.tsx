@@ -6,23 +6,24 @@ import {
   Button,
   VStack,
   Input,
-  Textarea,
   Flex,
   Text,
   Heading,
-  Select,
-  Portal,
-  createListCollection,
 } from "@chakra-ui/react";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import { useColors } from "@/styles/theme";
 import type { AdminLessonDto } from "@/types/api";
-import { CheckIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, Trash2Icon } from "lucide-react";
 import dayjs from "dayjs";
 
-// Helper function to format date to YYYY-MM-DD
+// Helper functions for date formatting
 const formatDate = (date: Date): string => {
   return dayjs(date).format("YYYY-MM-DD");
+};
+
+const formatDateTime = (date: Date): string => {
+  // ISO 8601 형식으로 변환 (백엔드의 LocalDateTime과 호환)
+  return dayjs(date).format("YYYY-MM-DDTHH:mm:ss");
 };
 
 // RESTORED INTERFACE DEFINITION
@@ -89,7 +90,9 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         lessonTime: "09:00~10:00",
         startDate: formatDate(firstDayOfMonth.toDate()),
         endDate: formatDate(lastDayOfMonth.toDate()),
-        registrationEndDateTime: formatDate(lastDayOfLastMonth.toDate()),
+        registrationEndDateTime: formatDateTime(
+          lastDayOfLastMonth.hour(23).minute(59).second(59).toDate()
+        ),
         capacity: 0,
         price: 0,
         status: "OPEN",
@@ -141,13 +144,14 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         return;
       }
 
-      if (
-        formData.registrationEndDateTime &&
-        formData.startDate &&
-        formData.registrationEndDateTime > formData.startDate
-      ) {
-        setError("등록 마감일은 시작일보다 이전이거나 같아야 합니다.");
-        return;
+      if (formData.registrationEndDateTime && formData.startDate) {
+        const registrationEnd = dayjs(formData.registrationEndDateTime);
+        const startDate = dayjs(formData.startDate);
+
+        if (registrationEnd.isAfter(startDate, "day")) {
+          setError("등록 마감일은 시작일보다 이전이거나 같아야 합니다.");
+          return;
+        }
       }
 
       if (formData.capacity <= 0) {
