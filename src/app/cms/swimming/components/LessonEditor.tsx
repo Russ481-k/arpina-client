@@ -27,8 +27,8 @@ const formatDateTime = (date: Date): string => {
 };
 
 const parseDateTime = (dateTimeStr: string): string => {
-  // YYYY-MM-DDTHH:mm 형식으로 변환 (HTML datetime-local 입력과 호환)
-  return dayjs(dateTimeStr).format("YYYY-MM-DDTHH:mm");
+  // 서버 형식(YYYY-MM-DD HH:mm:ss)에서 HTML datetime-local 형식(YYYY-MM-DDTHH:mm)으로 변환
+  return dayjs(dateTimeStr, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DDTHH:mm");
 };
 
 // RESTORED INTERFACE DEFINITION
@@ -129,7 +129,10 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       name === "registrationEndDateTime"
     ) {
       // datetime-local 입력의 값을 ISO 8601 형식으로 변환
-      const dateTime = dayjs(value).format("YYYY-MM-DD HH:mm:ss");
+      // HTML datetime-local 입력값을 서버 형식으로 변환
+      const dateTime = dayjs(value, "YYYY-MM-DDTHH:mm").format(
+        "YYYY-MM-DD HH:mm:ss"
+      );
       setFormData({
         ...formData,
         [name]: value, // 입력 필드용 값은 그대로 유지
