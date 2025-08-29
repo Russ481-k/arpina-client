@@ -129,7 +129,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       name === "registrationEndDateTime"
     ) {
       // datetime-local 입력의 값을 ISO 8601 형식으로 변환
-      const dateTime = dayjs(value).format("YYYY-MM-DDTHH:mm:ss");
+      const dateTime = dayjs(value).format("YYYY-MM-DD HH:mm:ss");
       setFormData({
         ...formData,
         [name]: value, // 입력 필드용 값은 그대로 유지
@@ -195,7 +195,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
         ...formData,
         registrationEndDateTime:
           formData._registrationEndDateTime ||
-          dayjs(formData.registrationEndDateTime).format("YYYY-MM-DDTHH:mm:ss"),
+          dayjs(formData.registrationEndDateTime).format("YYYY-MM-DD HH:mm:ss"),
       };
       delete submitData._registrationEndDateTime;
 
