@@ -92,11 +92,20 @@ export const LessonManager: React.FC = () => {
       enabled:
         !!selectedYear && !!selectedMonth && yearCollection.items.length > 0,
     });
+  useEffect(() => {
+    console.log("[LessonManager] query result", {
+      isLoading: isAdminLessonsLoading,
+      count: adminLessonsResponse?.data?.content?.length,
+    });
+  }, [adminLessonsResponse, isAdminLessonsLoading]);
 
   const adminLessons = adminLessonsResponse?.data?.content || [];
 
   // Effect to handle selection changes based on list updates
   useEffect(() => {
+    console.log("[LessonManager] selection effect start", {
+      selectedAdminLessonId: selectedAdminLesson?.lessonId,
+    });
     const lessonsList = adminLessonsResponse?.data?.content || [];
 
     if (selectedAdminLesson) {
@@ -104,10 +113,14 @@ export const LessonManager: React.FC = () => {
         (l) => l.lessonId === selectedAdminLesson.lessonId
       );
       if (!selectedStillExists) {
+        console.log(
+          "[LessonManager] previously selected lesson not in list; resetting selection"
+        );
         setSelectedAdminLesson(lessonsList.length > 0 ? lessonsList[0] : null);
       }
     } else {
       if (lessonsList.length > 0) {
+        console.log("[LessonManager] no selection; selecting first lesson");
         setSelectedAdminLesson(lessonsList[0]);
       }
     }
@@ -121,6 +134,7 @@ export const LessonManager: React.FC = () => {
     mutationFn: (newData: AdminLessonDto) =>
       adminApi.createAdminLesson(newData),
     onSuccess: () => {
+      console.log("[LessonManager] create success; invalidating list");
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
       toaster.create({
         title: "성공",
@@ -143,6 +157,7 @@ export const LessonManager: React.FC = () => {
     mutationFn: ({ lessonId, data }) =>
       adminApi.updateAdminLesson(lessonId, data),
     onSuccess: (updatedLesson) => {
+      console.log("[LessonManager] update success", { updatedLesson });
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
       if (updatedLesson.lessonId)
         queryClient.setQueryData(
@@ -165,6 +180,7 @@ export const LessonManager: React.FC = () => {
   const deleteAdminLessonMutation = useMutation<void, Error, number>({
     mutationFn: (lessonId: number) => adminApi.deleteAdminLesson(lessonId),
     onSuccess: (_, deletedLessonId) => {
+      console.log("[LessonManager] delete success", { deletedLessonId });
       toaster.create({
         title: "성공",
         description: "강습이 삭제되었습니다.",
@@ -183,11 +199,16 @@ export const LessonManager: React.FC = () => {
   });
 
   const handleAddLesson = () => setSelectedAdminLesson(null);
-  const handleEditLesson = (lesson: AdminLessonDto) =>
+  const handleEditLesson = (lesson: AdminLessonDto) => {
+    console.log("[LessonManager] edit clicked", { lessonId: lesson.lessonId });
     setSelectedAdminLesson(lesson);
-  const handleDeleteLesson = async (lessonId: number) =>
-    deleteAdminLessonMutation.mutateAsync(lessonId);
+  };
+  const handleDeleteLesson = async (lessonId: number) => {
+    console.log("[LessonManager] delete clicked", { lessonId });
+    return deleteAdminLessonMutation.mutateAsync(lessonId);
+  };
   const handleSaveLesson = async (data: AdminLessonDto) => {
+    console.log("[LessonManager] save requested", { data });
     if (selectedAdminLesson?.lessonId) {
       const u = await updateAdminLessonMutation.mutateAsync({
         lessonId: selectedAdminLesson.lessonId,

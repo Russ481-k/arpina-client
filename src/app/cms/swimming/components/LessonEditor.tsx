@@ -73,7 +73,11 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
 
   // Reset the form when a new lesson is selected or set to null for new lesson
   useEffect(() => {
+    console.log("[LessonEditor] useEffect lesson changed", { lesson });
     if (lesson) {
+      console.log("[LessonEditor] initializing formData from lesson", {
+        registrationEndDateTime: lesson.registrationEndDateTime,
+      });
       setFormData({
         lessonId: lesson.lessonId,
         title: lesson.title,
@@ -119,6 +123,12 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
     >
   ) => {
     const { name, value, type } = e.target;
+    if (name === "registrationEndDateTime") {
+      console.log("[LessonEditor] input change registrationEndDateTime", {
+        raw: value,
+        type,
+      });
+    }
     if (type === "number") {
       setFormData({
         ...formData,
@@ -133,6 +143,10 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       const dateTime = dayjs(value, "YYYY-MM-DDTHH:mm").format(
         "YYYY-MM-DD HH:mm:ss"
       );
+      console.log("[LessonEditor] normalized registrationEndDateTime", {
+        display: value,
+        api: dateTime,
+      });
       setFormData({
         ...formData,
         [name]: value, // 입력 필드용 값은 그대로 유지
@@ -147,6 +161,7 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
   };
 
   const handleSubmit = async () => {
+    console.log("[LessonEditor] submit clicked", { formData });
     try {
       // Validate form
       if (!formData.title.trim()) {
@@ -202,7 +217,10 @@ export const LessonEditor: React.FC<LessonEditorProps> = ({
       };
       delete submitData._registrationEndDateTime;
 
+      console.log("[LessonEditor] submit data (to API)", { submitData });
+
       await onSubmit(submitData);
+      console.log("[LessonEditor] submit success");
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error submitting lesson data:", error);
