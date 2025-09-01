@@ -102,6 +102,14 @@ export const LessonManager: React.FC = () => {
 
   const adminLessons = adminLessonsResponse?.data?.content || [];
 
+  // ApiResponse<T> 또는 T 자체를 안전하게 구분하기 위한 타입 가드
+  const hasDataField = (value: unknown): value is { data: unknown } => {
+    return typeof value === "object" && value !== null && "data" in value;
+  };
+  const isApiResponse = <T,>(value: unknown): value is ApiResponse<T> => {
+    return hasDataField(value);
+  };
+
   // Effect to handle selection changes based on list updates
   useEffect(() => {
     console.log("[LessonManager] selection effect start", {
@@ -135,7 +143,9 @@ export const LessonManager: React.FC = () => {
     mutationFn: (newData: AdminLessonDto) =>
       adminApi.createAdminLesson(newData),
     onSuccess: (createdRes) => {
-      const createdLesson = (createdRes as any)?.data ?? createdRes;
+      const createdLesson = isApiResponse<AdminLessonDto>(createdRes)
+        ? createdRes.data
+        : createdRes;
       console.log("[LessonManager] create success; invalidating list");
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
       if ((createdLesson as AdminLessonDto)?.lessonId) {
@@ -165,7 +175,9 @@ export const LessonManager: React.FC = () => {
     mutationFn: ({ lessonId, data }) =>
       adminApi.updateAdminLesson(lessonId, data),
     onSuccess: (updatedRes) => {
-      const updatedLesson = (updatedRes as any)?.data ?? updatedRes;
+      const updatedLesson = isApiResponse<AdminLessonDto>(updatedRes)
+        ? updatedRes.data
+        : updatedRes;
       console.log("[LessonManager] update success", { updatedLesson });
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
       if ((updatedLesson as AdminLessonDto).lessonId)
@@ -223,11 +235,11 @@ export const LessonManager: React.FC = () => {
         lessonId: selectedAdminLesson.lessonId,
         data,
       });
-      const updated = (u as any)?.data ?? u;
+      const updated = isApiResponse<AdminLessonDto>(u) ? u.data : u;
       if (updated) setSelectedAdminLesson(updated as AdminLessonDto);
     } else {
       const c = await createAdminLessonMutation.mutateAsync(data);
-      const created = (c as any)?.data ?? c;
+      const created = isApiResponse<AdminLessonDto>(c) ? c.data : c;
       if (created) setSelectedAdminLesson(created as AdminLessonDto);
     }
   };
