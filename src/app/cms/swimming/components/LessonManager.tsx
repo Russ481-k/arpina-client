@@ -16,6 +16,7 @@ import type {
   AdminLessonDto,
   PaginationParams,
   PaginatedResponse,
+  ApiResponse,
 } from "@/types/api";
 import { toaster } from "@/components/ui/toaster";
 import { GridSection } from "@/components/ui/grid-section";
@@ -127,15 +128,22 @@ export const LessonManager: React.FC = () => {
   }, [adminLessonsResponse, selectedAdminLesson, setSelectedAdminLesson]);
 
   const createAdminLessonMutation = useMutation<
-    AdminLessonDto,
+    ApiResponse<AdminLessonDto> | AdminLessonDto,
     Error,
     AdminLessonDto
   >({
     mutationFn: (newData: AdminLessonDto) =>
       adminApi.createAdminLesson(newData),
-    onSuccess: () => {
+    onSuccess: (createdRes) => {
+      const createdLesson = (createdRes as any)?.data ?? createdRes;
       console.log("[LessonManager] create success; invalidating list");
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
+      if ((createdLesson as AdminLessonDto)?.lessonId) {
+        queryClient.setQueryData(
+          adminLessonKeys.detail((createdLesson as AdminLessonDto).lessonId!),
+          createdLesson
+        );
+      }
       toaster.create({
         title: "성공",
         description: "강습이 생성되었습니다.",
@@ -150,18 +158,19 @@ export const LessonManager: React.FC = () => {
       }),
   });
   const updateAdminLessonMutation = useMutation<
-    AdminLessonDto,
+    ApiResponse<AdminLessonDto> | AdminLessonDto,
     Error,
     { lessonId: number; data: AdminLessonDto }
   >({
     mutationFn: ({ lessonId, data }) =>
       adminApi.updateAdminLesson(lessonId, data),
-    onSuccess: (updatedLesson) => {
+    onSuccess: (updatedRes) => {
+      const updatedLesson = (updatedRes as any)?.data ?? updatedRes;
       console.log("[LessonManager] update success", { updatedLesson });
       queryClient.invalidateQueries({ queryKey: adminLessonKeys.lists() });
-      if (updatedLesson.lessonId)
+      if ((updatedLesson as AdminLessonDto).lessonId)
         queryClient.setQueryData(
-          adminLessonKeys.detail(updatedLesson.lessonId),
+          adminLessonKeys.detail((updatedLesson as AdminLessonDto).lessonId!),
           updatedLesson
         );
       toaster.create({
@@ -214,10 +223,12 @@ export const LessonManager: React.FC = () => {
         lessonId: selectedAdminLesson.lessonId,
         data,
       });
-      if (u) setSelectedAdminLesson(u);
+      const updated = (u as any)?.data ?? u;
+      if (updated) setSelectedAdminLesson(updated as AdminLessonDto);
     } else {
       const c = await createAdminLessonMutation.mutateAsync(data);
-      if (c) setSelectedAdminLesson(c);
+      const created = (c as any)?.data ?? c;
+      if (created) setSelectedAdminLesson(created as AdminLessonDto);
     }
   };
   const handleRemoveLesson = async () => {
