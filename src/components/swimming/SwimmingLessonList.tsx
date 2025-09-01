@@ -42,6 +42,26 @@ const parseKSTDateString = (
   return date.toDate();
 };
 
+// 접수 마감 여부 판단: 정원 마감이거나, 접수 마감 시간이 지난 경우
+const isLessonApplicationClosed = (
+  lesson: LessonDTO,
+  now: dayjs.Dayjs
+): boolean => {
+  if (!lesson) {
+    return true;
+  }
+  if (lesson.remaining === 0) {
+    return true;
+  }
+  const applicationEndTime = parseKSTDateString(
+    lesson.receiptId as unknown as string | undefined
+  );
+  if (applicationEndTime && now.isAfter(dayjs(applicationEndTime))) {
+    return true;
+  }
+  return false;
+};
+
 // Updated FilterState to support multi-select (array-based)
 interface FilterState {
   status: string[];
@@ -198,7 +218,25 @@ export const SwimmingLessonList = () => {
 
       return true;
     });
-    return result;
+    // 정렬: 접수 마감 항목을 최대한 마지막으로 보이도록
+    const sorted = result.slice().sort((a: LessonDTO, b: LessonDTO) => {
+      const aClosed = isLessonApplicationClosed(a, now);
+      const bClosed = isLessonApplicationClosed(b, now);
+      if (aClosed === bClosed) {
+        return 0;
+      }
+      return aClosed ? 1 : -1;
+    });
+
+    // 표시용: 마감된 강습의 잔여석은 0으로 보이도록 매핑
+    const displayReady = sorted.map((lesson: LessonDTO) => {
+      if (isLessonApplicationClosed(lesson, now)) {
+        return { ...lesson, remaining: 0 } as LessonDTO;
+      }
+      return lesson;
+    });
+
+    return displayReady;
   }, [lessons, filter, showAvailableOnly]);
 
   const handleSetFilter = useCallback((newFilter: FilterState) => {

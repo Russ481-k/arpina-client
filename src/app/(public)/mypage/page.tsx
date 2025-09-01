@@ -110,6 +110,32 @@ const getApiErrorMessage = (error: any, defaultMessage: string): string => {
   return defaultMessage;
 };
 
+// "YYYY.MM.DD HH:MM:SS 까지" 형태를 Date로 변환
+const parseKSTDateString = (
+  kstDateStringWithSuffix?: string | null
+): Date | null => {
+  if (!kstDateStringWithSuffix) return null;
+  try {
+    let parsableDateStr = kstDateStringWithSuffix
+      .replace(/부터|까지/g, "")
+      .trim()
+      .replace(/\./g, "-"); // YYYY-MM-DD HH:MM:SS
+    const d = new Date(parsableDateStr);
+    if (isNaN(d.getTime())) return null;
+    return d;
+  } catch {
+    return null;
+  }
+};
+
+// 접수 마감 여부: 잔여석 0이거나 접수 종료 시간이 지난 경우
+const isApplicationClosed = (lesson: any): boolean => {
+  if (!lesson) return true;
+  if (lesson.remaining === 0) return true;
+  const end = parseKSTDateString(lesson.receiptId);
+  return end ? new Date().getTime() > end.getTime() : false;
+};
+
 export default function MyPage() {
   const [profile, setProfile] = useState<ProfileDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -136,7 +162,6 @@ export default function MyPage() {
   >(null);
 
   // Payment module state
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [currentPaymentData, setCurrentPaymentData] =
     useState<KISPGPaymentInitResponseDto | null>(null);
   const [currentPaymentEnrollId, setCurrentPaymentEnrollId] = useState<
@@ -147,10 +172,10 @@ export default function MyPage() {
   // Tab management with URL sync
   const initialTabFromQuery = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(() => {
-    if (initialTabFromQuery === "수영장_신청정보") {
-      return "수영장_신청정보";
+    if (initialTabFromQuery) {
+      return initialTabFromQuery;
     }
-    return "회원정보_수정"; // Default tab
+    return "수영장_신청정보"; // Default tab
   });
 
   // Data loading flags to prevent unnecessary reloads
@@ -394,8 +419,8 @@ export default function MyPage() {
         // Mark profile data as loaded
         setDataLoaded((prev) => ({ ...prev, profile: true }));
 
-        // Only load enrollments if we're starting on the enrollment tab
-        if (initialTabFromQuery === "수영장_신청정보") {
+        // Load enrollments if starting on the enrollment tab or no tab specified (default)
+        if (initialTabFromQuery === "수영장_신청정보" || !initialTabFromQuery) {
           await fetchEnrollments();
         }
 
@@ -800,8 +825,6 @@ export default function MyPage() {
         colorPalette="blue"
       >
         <Tabs.List mb={6}>
-          <Tabs.Trigger value="회원정보_수정">회원정보 수정</Tabs.Trigger>
-          <Tabs.Trigger value="비밀번호_변경">비밀번호 변경</Tabs.Trigger>
           <Tabs.Trigger
             value="수영장_신청정보"
             onClick={() => {
@@ -824,211 +847,9 @@ export default function MyPage() {
           >
             수영장 결제정보
           </Tabs.Trigger>
+          <Tabs.Trigger value="회원정보_수정">회원정보 수정</Tabs.Trigger>
+          <Tabs.Trigger value="비밀번호_변경">비밀번호 변경</Tabs.Trigger>
         </Tabs.List>
-
-        <Tabs.Content value="회원정보_수정">
-          {isLoading ? (
-            <Box textAlign="center" p={8}>
-              <Text>로딩 중...</Text>
-            </Box>
-          ) : profile ? (
-            <Box
-              as="form"
-              onSubmit={handleProfileUpdate}
-              py={4}
-              maxW="672px"
-              mx="auto"
-            >
-              <Fieldset.Root>
-                <Fieldset.Content>
-                  <Field.Root>
-                    <Field.Label>이름</Field.Label>
-                    <Input
-                      value={profile.name || ""}
-                      readOnly
-                      bg="gray.100"
-                      placeholder="이름"
-                    />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>아이디</Field.Label>
-                    <Input
-                      value={profile.userId || ""}
-                      readOnly
-                      bg="gray.100"
-                    />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>핸드폰 번호</Field.Label>
-                    <Input
-                      value={profile.phone || ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, phone: e.target.value })
-                      }
-                      placeholder="핸드폰 번호를 입력해주세요 (ex: 123-1234-1234)"
-                    />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>주소</Field.Label>
-                    <Input
-                      value={profile.address || ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, address: e.target.value })
-                      }
-                      placeholder="주소를 입력해주세요"
-                    />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>이메일</Field.Label>
-                    <Input
-                      value={profile.email || ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, email: e.target.value })
-                      }
-                      placeholder="이메일을 입력해주세요"
-                    />
-                  </Field.Root>
-
-                  <Field.Root>
-                    <Field.Label>차량번호</Field.Label>
-                    <Input
-                      value={profile.carNo || ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, carNo: e.target.value })
-                      }
-                      placeholder="차량번호를 입력해주세요"
-                    />
-                  </Field.Root>
-
-                  <Field.Root mt={4}>
-                    <Field.Label>본인 확인을 위한 비밀번호</Field.Label>
-                    <Input
-                      type="password"
-                      value={profilePw}
-                      onChange={(e) => setProfilePw(e.target.value)}
-                      placeholder="회원정보 변경을 위해 현재 비밀번호를 입력해주세요"
-                      required
-                    />
-                  </Field.Root>
-                </Fieldset.Content>
-
-                <Box textAlign="center" mt={4}>
-                  <Button type="submit" colorPalette="orange" size="md" px={8}>
-                    정보변경
-                  </Button>
-                </Box>
-              </Fieldset.Root>
-            </Box>
-          ) : (
-            <Box textAlign="center" p={8}>
-              <Text>사용자 정보를 불러올 수 없습니다.</Text>
-            </Box>
-          )}
-        </Tabs.Content>
-
-        <Tabs.Content value="비밀번호_변경">
-          <Box
-            as="form"
-            onSubmit={handlePasswordChange}
-            py={4}
-            maxW="672px"
-            mx="auto"
-          >
-            <Fieldset.Root>
-              <Fieldset.Content>
-                <Box p={4} bg="gray.50" borderRadius="md" mb={4}>
-                  <Text fontSize="sm">
-                    <strong>현재 비밀번호를 입력하세요.</strong>
-                    <br />
-                    안전을 위해 새 비밀번호를 설정해주세요.
-                    <br />
-                    비밀번호는 최소 6자 이상이며, 영문+숫자+특수문자를 포함해야
-                    합니다.
-                  </Text>
-                </Box>
-
-                <Field.Root>
-                  <Field.Label>아이디</Field.Label>
-                  <Input value={profile?.userId || ""} readOnly bg="gray.100" />
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>현재 비밀번호</Field.Label>
-                  <PasswordInput
-                    value={currentPw}
-                    onChange={(e) => setCurrentPw(e.target.value)}
-                    placeholder="현재 비밀번호를 입력해주세요"
-                  />
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>새 비밀번호</Field.Label>
-                  <Stack w="full">
-                    <Tooltip
-                      content={passwordTooltipContent}
-                      open={isPasswordTooltipVisible}
-                      positioning={{ placement: "bottom-start" }}
-                      contentProps={{
-                        bg: "white",
-                        color: "gray.800",
-                        _dark: {
-                          bg: "gray.700",
-                          color: "whiteAlpha.900",
-                        },
-                        mt: 2,
-                        p: 3,
-                        fontSize: "sm",
-                        borderRadius: "md",
-                        boxShadow: "md",
-                        zIndex: "tooltip",
-                      }}
-                    >
-                      <PasswordInput
-                        value={newPw}
-                        onChange={handleNewPasswordChange}
-                        onFocus={() => setIsPasswordTooltipVisible(true)}
-                        onBlur={() => setIsPasswordTooltipVisible(false)}
-                        placeholder="새로운 비밀번호를 입력해주세요"
-                      />
-                    </Tooltip>
-                    {newPw.length > 0 && (
-                      <PasswordStrengthMeter
-                        value={newPasswordStrength}
-                        max={4}
-                      />
-                    )}
-                  </Stack>
-                </Field.Root>
-
-                <Field.Root
-                  invalid={!passwordsMatch && newPwConfirm.length > 0}
-                >
-                  <Field.Label>새 비밀번호 확인</Field.Label>
-                  <PasswordInput
-                    value={newPwConfirm}
-                    onChange={handleNewPasswordConfirmChange}
-                    placeholder="새로운 비밀번호를 한번 더 입력해주세요"
-                  />
-                  {!passwordsMatch && newPwConfirm.length > 0 && (
-                    <Field.ErrorText>
-                      비밀번호가 일치하지 않습니다.
-                    </Field.ErrorText>
-                  )}
-                </Field.Root>
-              </Fieldset.Content>
-
-              <Box textAlign="center" mt={4}>
-                <Button type="submit" colorPalette="orange" size="md" px={8}>
-                  정보변경
-                </Button>
-              </Box>
-            </Fieldset.Root>
-          </Box>
-        </Tabs.Content>
 
         <Tabs.Content value="수영장_신청정보">
           {isLoading ? (
@@ -1039,6 +860,7 @@ export default function MyPage() {
             <Grid templateColumns="repeat(auto-fill, minmax(360px, 1fr))">
               {enrollments.map((enroll) => {
                 // Prepare data for LessonCard from enroll.lesson
+                const closedForDisplay = isApplicationClosed(enroll.lesson);
                 const lessonDataForCard: LessonDTO = {
                   id: enroll.lesson.lessonId,
                   title: enroll.lesson.title,
@@ -1049,7 +871,7 @@ export default function MyPage() {
                   timePrefix: enroll.lesson.timePrefix, // from enroll.lesson
                   days: enroll.lesson.days, // from enroll.lesson
                   capacity: enroll.lesson.capacity, // from enroll.lesson
-                  remaining: enroll.lesson.remaining, // from enroll.lesson
+                  remaining: closedForDisplay ? 0 : enroll.lesson.remaining, // close -> 0
                   price: enroll.lesson.price, // from enroll.lesson
                   reservationId: enroll.lesson.reservationId, // from enroll.lesson
                   receiptId: enroll.lesson.receiptId, // from enroll.lesson
@@ -1262,6 +1084,209 @@ export default function MyPage() {
               <Text>결제 내역이 없습니다.</Text>
             </Box>
           )}
+        </Tabs.Content>
+        <Tabs.Content value="회원정보_수정">
+          {isLoading ? (
+            <Box textAlign="center" p={8}>
+              <Text>로딩 중...</Text>
+            </Box>
+          ) : profile ? (
+            <Box
+              as="form"
+              onSubmit={handleProfileUpdate}
+              py={4}
+              maxW="672px"
+              mx="auto"
+            >
+              <Fieldset.Root>
+                <Fieldset.Content>
+                  <Field.Root>
+                    <Field.Label>이름</Field.Label>
+                    <Input
+                      value={profile.name || ""}
+                      readOnly
+                      bg="gray.100"
+                      placeholder="이름"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>아이디</Field.Label>
+                    <Input
+                      value={profile.userId || ""}
+                      readOnly
+                      bg="gray.100"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>핸드폰 번호</Field.Label>
+                    <Input
+                      value={profile.phone || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, phone: e.target.value })
+                      }
+                      placeholder="핸드폰 번호를 입력해주세요 (ex: 123-1234-1234)"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>주소</Field.Label>
+                    <Input
+                      value={profile.address || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, address: e.target.value })
+                      }
+                      placeholder="주소를 입력해주세요"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>이메일</Field.Label>
+                    <Input
+                      value={profile.email || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, email: e.target.value })
+                      }
+                      placeholder="이메일을 입력해주세요"
+                    />
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>차량번호</Field.Label>
+                    <Input
+                      value={profile.carNo || ""}
+                      onChange={(e) =>
+                        setProfile({ ...profile, carNo: e.target.value })
+                      }
+                      placeholder="차량번호를 입력해주세요"
+                    />
+                  </Field.Root>
+
+                  <Field.Root mt={4}>
+                    <Field.Label>본인 확인을 위한 비밀번호</Field.Label>
+                    <Input
+                      type="password"
+                      value={profilePw}
+                      onChange={(e) => setProfilePw(e.target.value)}
+                      placeholder="회원정보 변경을 위해 현재 비밀번호를 입력해주세요"
+                      required
+                    />
+                  </Field.Root>
+                </Fieldset.Content>
+
+                <Box textAlign="center" mt={4}>
+                  <Button type="submit" colorPalette="orange" size="md" px={8}>
+                    정보변경
+                  </Button>
+                </Box>
+              </Fieldset.Root>
+            </Box>
+          ) : (
+            <Box textAlign="center" p={8}>
+              <Text>사용자 정보를 불러올 수 없습니다.</Text>
+            </Box>
+          )}
+        </Tabs.Content>
+
+        <Tabs.Content value="비밀번호_변경">
+          <Box
+            as="form"
+            onSubmit={handlePasswordChange}
+            py={4}
+            maxW="672px"
+            mx="auto"
+          >
+            <Fieldset.Root>
+              <Fieldset.Content>
+                <Box p={4} bg="gray.50" borderRadius="md" mb={4}>
+                  <Text fontSize="sm">
+                    <strong>현재 비밀번호를 입력하세요.</strong>
+                    <br />
+                    안전을 위해 새 비밀번호를 설정해주세요.
+                    <br />
+                    비밀번호는 최소 6자 이상이며, 영문+숫자+특수문자를 포함해야
+                    합니다.
+                  </Text>
+                </Box>
+
+                <Field.Root>
+                  <Field.Label>아이디</Field.Label>
+                  <Input value={profile?.userId || ""} readOnly bg="gray.100" />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>현재 비밀번호</Field.Label>
+                  <PasswordInput
+                    value={currentPw}
+                    onChange={(e) => setCurrentPw(e.target.value)}
+                    placeholder="현재 비밀번호를 입력해주세요"
+                  />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>새 비밀번호</Field.Label>
+                  <Stack w="full">
+                    <Tooltip
+                      content={passwordTooltipContent}
+                      open={isPasswordTooltipVisible}
+                      positioning={{ placement: "bottom-start" }}
+                      contentProps={{
+                        bg: "white",
+                        color: "gray.800",
+                        _dark: {
+                          bg: "gray.700",
+                          color: "whiteAlpha.900",
+                        },
+                        mt: 2,
+                        p: 3,
+                        fontSize: "sm",
+                        borderRadius: "md",
+                        boxShadow: "md",
+                        zIndex: "tooltip",
+                      }}
+                    >
+                      <PasswordInput
+                        value={newPw}
+                        onChange={handleNewPasswordChange}
+                        onFocus={() => setIsPasswordTooltipVisible(true)}
+                        onBlur={() => setIsPasswordTooltipVisible(false)}
+                        placeholder="새로운 비밀번호를 입력해주세요"
+                      />
+                    </Tooltip>
+                    {newPw.length > 0 && (
+                      <PasswordStrengthMeter
+                        value={newPasswordStrength}
+                        max={4}
+                      />
+                    )}
+                  </Stack>
+                </Field.Root>
+
+                <Field.Root
+                  invalid={!passwordsMatch && newPwConfirm.length > 0}
+                >
+                  <Field.Label>새 비밀번호 확인</Field.Label>
+                  <PasswordInput
+                    value={newPwConfirm}
+                    onChange={handleNewPasswordConfirmChange}
+                    placeholder="새로운 비밀번호를 한번 더 입력해주세요"
+                  />
+                  {!passwordsMatch && newPwConfirm.length > 0 && (
+                    <Field.ErrorText>
+                      비밀번호가 일치하지 않습니다.
+                    </Field.ErrorText>
+                  )}
+                </Field.Root>
+              </Fieldset.Content>
+
+              <Box textAlign="center" mt={4}>
+                <Button type="submit" colorPalette="orange" size="md" px={8}>
+                  정보변경
+                </Button>
+              </Box>
+            </Fieldset.Root>
+          </Box>
         </Tabs.Content>
       </Tabs.Root>
 
