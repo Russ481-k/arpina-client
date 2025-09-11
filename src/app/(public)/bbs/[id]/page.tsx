@@ -301,7 +301,12 @@ export default function BoardPage({
           if (data) {
             setBoardData(data);
             const initialSkinType = data.pageDetails.boardSkinType;
-            if (initialSkinType === "BASIC" || initialSkinType === "PRESS") {
+            if (currentPathId === "notices") {
+              setViewMode("list");
+            } else if (
+              initialSkinType === "BASIC" ||
+              initialSkinType === "PRESS"
+            ) {
               setViewMode("card");
             } else {
               setViewMode("list");

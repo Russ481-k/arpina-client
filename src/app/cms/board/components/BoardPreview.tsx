@@ -296,11 +296,14 @@ const BoardPreview = React.memo(function BoardPreview({
   }, []);
 
   const initialViewMode = useMemo(() => {
+    if (board?.bbsName === "공지사항") {
+      return "list";
+    }
     const initialSkinType = board?.skinType;
     return initialSkinType === "BASIC" || initialSkinType === "PRESS"
       ? "card"
       : "list";
-  }, [board?.skinType]);
+  }, [board?.skinType, board?.bbsName]);
   const [viewMode, setViewMode] = useState<"list" | "card">(initialViewMode);
 
   const { data: menuResponse, isLoading: isMenusLoading } = useQuery<Menu[]>({
@@ -464,8 +467,14 @@ const BoardPreview = React.memo(function BoardPreview({
 
   useEffect(() => {
     const skinType = board?.skinType;
-    setViewMode(skinType === "BASIC" || skinType === "PRESS" ? "card" : "list");
-  }, [board?.skinType]);
+    if (board?.bbsName === "공지사항") {
+      setViewMode("list");
+    } else {
+      setViewMode(
+        skinType === "BASIC" || skinType === "PRESS" ? "card" : "list"
+      );
+    }
+  }, [board?.skinType, board?.bbsName]);
 
   const agGridContext = useMemo(
     () => ({

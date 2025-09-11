@@ -154,6 +154,15 @@ export function useArticleForm({
                 : prev
             );
           }
+
+          // 공지사항 게시판에서 새 글 작성 시 기본 공지 상태를 Y로 설정
+          if (!initialData?.nttId && boardData.bbsName === "공지사항") {
+            setFormData((prev) =>
+              prev.noticeState === "N" || !prev.noticeState
+                ? { ...prev, noticeState: "Y" as any }
+                : prev
+            );
+          }
         } else {
           console.error(
             `Failed to fetch valid board info for bbsId ${bbsId}. Received:`,
@@ -193,6 +202,11 @@ export function useArticleForm({
 
   // 폼 제출 핸들러
   const handleSubmit = async (expectedCaptchaText?: string) => {
+    console.log("[ArticleForm] submit:start", {
+      bbsName: boardInfo?.bbsName,
+      noticeState: formData.noticeState,
+      categoryId: formData.categoryId,
+    });
     if (!bbsId) {
       return { success: false, message: "게시판 ID가 없습니다." };
     }
@@ -204,8 +218,21 @@ export function useArticleForm({
       return { success: false, message: "필수 항목을 모두 입력해주세요." };
     }
 
-    if (boardInfo?.bbsName === "공지사항" && !formData.categoryId) {
-      return { success: false, message: "카테고리를 선택해주세요." };
+    if (boardInfo?.bbsName === "공지사항") {
+      // 공지사항 게시판에서는 noticeState를 자동 보정(Y 기본)
+      if (formData.noticeState === "N") {
+        setFormData((prev) => ({ ...prev, noticeState: "Y" as any }));
+      }
+      const effectiveNoticeState =
+        formData.noticeState === "Y" || formData.noticeState === "P"
+          ? formData.noticeState
+          : ("Y" as any);
+      if (
+        (effectiveNoticeState === "Y" || effectiveNoticeState === "P") &&
+        !formData.categoryId
+      ) {
+        return { success: false, message: "카테고리를 선택해주세요." };
+      }
     }
 
     // CAPTCHA 검증 (CMS 페이지가 아닐 때만 수행)
@@ -272,13 +299,20 @@ export function useArticleForm({
 
     try {
       // 1. Prepare the object for the 'articleData' part (matching backend BbsArticleDto, excluding content)
+      const isNoticeBoard = boardInfo?.bbsName === "공지사항";
+      const effectiveNoticeState = isNoticeBoard
+        ? formData.noticeState === "Y" || formData.noticeState === "P"
+          ? formData.noticeState
+          : "Y"
+        : formData.noticeState;
+
       const articleDtoPart: Record<string, any> = {
         bbsId: bbsId,
         menuId: menuId,
         title: formData.title,
         writer: formData.author,
         content: formData.content,
-        noticeState: formData.noticeState,
+        noticeState: effectiveNoticeState,
         noticeStartDt: formData.noticeStartDt,
         noticeEndDt: formData.noticeEndDt,
         publishState: formData.publishState,
@@ -290,18 +324,22 @@ export function useArticleForm({
         postedAt: formData.postedAt || dayjs().format("YYYY-MM-DDTHH:mm:ss"),
       };
 
-      // 카테고리 처리 - 게시글 수정 시 명확한 카테고리 상태 전달
-      if (initialData?.nttId) {
-        // 기존 게시글 수정의 경우 - 카테고리 ID가 있으면 해당 카테고리로, 없으면 빈 배열
-        articleDtoPart.categoryIds = formData.categoryId
-          ? [formData.categoryId]
-          : [];
-      } else {
-        // 새 게시글 작성의 경우 - 카테고리 ID가 있을 때만 포함
-        if (formData.categoryId) {
+      // 카테고리 처리: 공지(Y,P)일 때만 포함, 비공지(N)일 때는 전송하지 않음
+      const isNoticeActive =
+        effectiveNoticeState === "Y" || effectiveNoticeState === "P";
+      if (isNoticeActive) {
+        if (initialData?.nttId) {
+          articleDtoPart.categoryIds = formData.categoryId
+            ? [formData.categoryId]
+            : [];
+        } else if (formData.categoryId) {
           articleDtoPart.categoryIds = [formData.categoryId];
         }
       }
+      console.log("[ArticleForm] submit:payload", {
+        noticeState: articleDtoPart.noticeState,
+        categoryIds: articleDtoPart.categoryIds,
+      });
 
       // 2. Create FormData
       const dataToSend = new FormData();

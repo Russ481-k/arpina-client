@@ -24,7 +24,7 @@ interface BoardControlsProps {
   onKeywordChange: (value: string) => void;
   onSearch: () => void;
   onClearSearch: () => void;
-  viewMode: "list" | "card";
+  viewMode?: "list" | "card";
   onViewModeChange: (mode: "list" | "card") => void;
   currentKeyword?: string; // For showing 'Clear' button
   requestedPageSize: number; // For 'Clear' button to retain page size
@@ -39,7 +39,7 @@ const BoardControls: React.FC<BoardControlsProps> = ({
   onKeywordChange,
   onSearch,
   onClearSearch,
-  viewMode,
+  viewMode = "list",
   onViewModeChange,
   currentKeyword,
 }) => {
