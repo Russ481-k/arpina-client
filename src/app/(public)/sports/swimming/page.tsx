@@ -35,7 +35,11 @@ export default function ParticipantsPage() {
               기존회원(매월20일~24일) <br />
               신규회원은(매월25일~선착순마감) <br />
               <Box as="span" color="#FAB20B">
-                ※ 개인 수건 사용 / 수건 미지급
+                ※ 개인 수건 사용 / 수건 미지급 <br />
+              </Box>
+              <Box as="span" color="#FAB20B">
+                ※ 신장(키) 150cm 이하인 경우 메인풀 입장이 제한됩니다. <br />
+                단, 25m이상 영법이 가능한 경우에는 메인풀 이용이 가능합니다.
               </Box>
             </Box>
           ),
